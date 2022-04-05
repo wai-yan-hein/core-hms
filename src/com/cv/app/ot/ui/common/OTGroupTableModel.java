@@ -138,7 +138,7 @@ public class OTGroupTableModel extends AbstractTableModel {
     }
 
     public void getOTGroup() {
-        listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.groupName");
+        listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.userCode");
         if (listOTG == null) {
             listOTG = new ArrayList();
         }

@@ -385,6 +385,9 @@ public class OTTableModel extends AbstractTableModel {
 
         listOPDDetailHis.remove(row);
         fireTableRowsDeleted(0, listOPDDetailHis.size() - 1);
+        if (row - 1 >= 0) {
+            parent.setRowSelectionInterval(row - 1, row - 1);
+        }
     }
 
     public void addNewRow() {

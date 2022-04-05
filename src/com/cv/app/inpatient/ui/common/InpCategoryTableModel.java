@@ -190,7 +190,7 @@ public class InpCategoryTableModel extends AbstractTableModel {
     }
 
     public void getCategory() {
-        listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.catName");
+        listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.userCode");
         if (listInpCategory == null) {
             listInpCategory = new ArrayList();
         }
