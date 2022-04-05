@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSessionCheckClinicSein" language="groovy" pageWidth="421" pageHeight="595" columnWidth="381" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="bb537899-4f71-4174-bdee-67e8d70e8f71">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="comp_name" class="java.lang.String"/>
+	<parameter name="session_date" class="java.lang.String"/>
+	<parameter name="session_name" class="java.lang.String"/>
+	<parameter name="user" class="java.lang.String"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select vstc.*
+from v_sess_ttl_clinic vstc, session_filter sf
+where vstc.tran_option = sf.tran_source
+and vstc.user_id = $P{user_id}
+and sf.program_id in ('CLINICTTL','SUBGOPD','SUBGOT','SUBRTN','SUBULT','SUBULTIPD')
+and sf.apply = true
+order by sf.sort_order]]>
+	</queryString>
+	<field name="tran_option" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="curr_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="user_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="41" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="381" height="20" uuid="2e444fd2-a1de-48f3-940b-0dbb6eaa4bdc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="381" height="20" uuid="45dc75eb-429b-46a1-883c-7574c5ed3117"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Clinic Session Report]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="43" splitType="Stretch">
+			<textField>
+				<reportElement x="261" y="0" width="120" height="20" uuid="24ad79d2-46c7-4cd8-8760-fca51ba8a6b2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{session_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="43" y="0" width="100" height="20" uuid="89312562-a370-467a-b7f1-3f7f172b836c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{session_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="190" y="0" width="71" height="20" uuid="4819ebf5-7335-4da7-8edb-7cc536b5b723"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Session Date : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="43" height="20" uuid="77af5820-6343-4a63-8516-0b6c4368b7a7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Session : ]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="22" width="380" height="1" uuid="aad6c751-68a3-4016-aaef-12722c7640e2"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="24" width="100" height="15" uuid="087a4633-4f91-4b76-8cf3-036219fe555b"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Description]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="172" y="24" width="55" height="15" uuid="21ff2229-a2a8-4de1-a7ef-234842a38352"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Currency]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="24" width="100" height="15" uuid="b9804962-71cf-4a47-a852-3f1e34b3bd2c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="41" width="380" height="1" uuid="da0aa3b8-649e-4891-91ca-291d328f158d"/>
+			</line>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="206" height="20" uuid="7b1b980b-eea7-4fa6-bc9e-bd683c9b03b3"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_option}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;(#,##0.00)" isBlankWhenNull="true">
+				<reportElement x="280" y="0" width="100" height="20" uuid="825ad828-bda0-494c-ae17-2a472a23bf05"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="17" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="1" width="380" height="1" uuid="c1cdd85c-e1bf-43d0-a378-222a8c65a829"/>
+			</line>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="265" y="2" width="115" height="15" uuid="6a1b8649-0e99-407a-87e8-6bcb19d0df74"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="172" y="2" width="93" height="15" uuid="2be50c03-522a-4a76-bcdd-e3e1919ea838"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Printed Date : ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="2" width="100" height="15" uuid="4e736a3e-5c4c-4004-bfe6-018c252bb53c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{user}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

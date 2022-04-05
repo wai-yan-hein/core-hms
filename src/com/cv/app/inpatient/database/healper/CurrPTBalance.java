@@ -1,0 +1,59 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.cv.app.inpatient.database.healper;
+
+/**
+ *
+ * @author ACER
+ */
+public class CurrPTBalance {
+    private String regNo;
+    private String admNo;
+    private String ptName;
+    private Double balance;
+
+    public CurrPTBalance(){}
+    
+    public CurrPTBalance(String regNo, String admNo, String ptName, Double balance) {
+        this.regNo = regNo;
+        this.admNo = admNo;
+        this.ptName = ptName;
+        this.balance = balance;
+    }
+
+    public String getRegNo() {
+        return regNo;
+    }
+
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
+    }
+
+    public String getAdmNo() {
+        return admNo;
+    }
+
+    public void setAdmNo(String admNo) {
+        this.admNo = admNo;
+    }
+
+    public String getPtName() {
+        return ptName;
+    }
+
+    public void setPtName(String ptName) {
+        this.ptName = ptName;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
+    
+}

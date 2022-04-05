@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" pageWidth="216" pageHeight="1600" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="72"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="user" class="java.lang.String"/>
+	<parameter name="session_name" class="java.lang.String"/>
+	<parameter name="session_user" class="java.lang.String"/>
+	<parameter name="session_date" class="java.lang.String"/>
+	<parameter name="session_fdate" class="java.lang.String"/>
+	<parameter name="session_tdate" class="java.lang.String"/>
+	<parameter name="session_id" class="java.lang.String"/>
+	<parameter name="session_currency" class="java.lang.String"/>
+	<parameter name="session_paymentname" class="java.lang.String"/>
+	<parameter name="session_paymentid" class="java.lang.String"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<parameter name="pt_id" class="java.lang.String"/>
+	<parameter name="dr_id" class="java.lang.String"/>
+	<parameter name="tran_option" class="java.lang.String"/>
+	<parameter name="deleted" class="java.lang.String"/>
+	<parameter name="comp_name" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["D:\\data_and_program\\cv_inventory\\Inventory_Report\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="session_user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select * from
+(select oc.cat_name,sum(ifnull(odh.amount,0)) ttl,'OPD' tran_option
+from opd_service os,opd_details_his odh,opd_his oh,opd_join oj,opd_category oc
+where oh.opd_inv_id=oj.opd_inv_id and oj.opd_detail_id=odh.opd_detail_id and
+odh.service_id=os.service_id and os.cat_id=oc.cat_id 
+and date(oh.opd_date) between $P{session_fdate} and $P{session_tdate}
+and (oh.session_id = $P{session_id} or '-1' = $P{session_id})
+and (oh.currency_id = $P{session_currency} or 'All' = $P{session_currency})
+and (oh.payment_id = $P{session_paymentid} or '-1' = $P{session_paymentid})
+and (oh.patient_id = $P{pt_id} or '-1' = $P{pt_id})
+and (oh.doctor_id = $P{dr_id} or '-1' = $P{dr_id})
+and (oh.created_by =  $P{session_user_id} or $P{session_user_id} = 'All')
+and (oh.deleted = false)
+group by oc.cat_name
+Union
+select oc.cat_name,sum(ifnull(odh.amount,0)) ttl,'DC' tran_option
+from inp_service os,dc_details_his odh,dc_his oh,dc_join oj,inp_category oc
+where oh.dc_inv_id=oj.dc_inv_id and oj.dc_detail_id=odh.dc_detail_id and
+odh.service_id=os.service_id and os.cat_id=oc.cat_id 
+and date(oh.dc_date) between $P{session_fdate} and $P{session_tdate} 
+and (oh.session_id = $P{session_id} or '-1' = $P{session_id}) and (oh.currency_id = $P{session_currency} or 'All' = $P{session_currency})
+and (oh.payment_id = $P{session_paymentid} or '-1' = $P{session_paymentid})
+and (oh.created_by = $P{session_user_id} or $P{session_user_id} = 'All') and (oh.patient_id = $P{pt_id} or '-1' = $P{pt_id})
+and (oh.doctor_id = $P{dr_id} or '-1' = $P{dr_id})
+and (oh.deleted = false)
+group by oc.cat_name
+Union
+select oc.group_name,sum(ifnull(odh.amount,0)) ttl,'OT' tran_option
+from ot_service os,ot_details_his odh,ot_his oh,ot_join oj,ot_group oc
+where oh.ot_inv_id=oj.ot_inv_id and oj.ot_detail_id=odh.ot_detail_id and
+odh.service_id=os.service_id and os.group_id=oc.group_id 
+and date(oh.ot_date) between $P{session_fdate} and $P{session_tdate} 
+and (oh.session_id = $P{session_id} or '-1' = $P{session_id}) and (oh.currency_id = $P{session_currency} or 'All' = $P{session_currency})
+and (oh.payment_id = $P{session_paymentid} or '-1' = $P{session_paymentid})
+and (oh.created_by = $P{session_user_id} or $P{session_user_id} = 'All') and (oh.patient_id = $P{pt_id} or '-1' = $P{pt_id})
+and (oh.doctor_id = $P{dr_id} or '-1' = $P{dr_id})
+and (oh.deleted = false)
+group by oc.group_name
+) aa
+where aa.tran_option = $P{tran_option} or 'All' = $P{tran_option}]]>
+	</queryString>
+	<field name="cat_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl" class="java.lang.Double"/>
+	<field name="tran_option" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="ttlamount" class="java.lang.Double" resetType="Group" resetGroup="trangroup" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl}]]></variableExpression>
+	</variable>
+	<variable name="amount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl}]]></variableExpression>
+	</variable>
+	<group name="trangroup">
+		<groupExpression><![CDATA[$F{tran_option}]]></groupExpression>
+		<groupHeader>
+			<band height="17">
+				<textField>
+					<reportElement x="20" y="0" width="71" height="17" uuid="6028c062-5550-4866-b4ff-a3137107339a"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One" size="8" isBold="true" isItalic="true" isUnderline="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{tran_option}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="143" y="0" width="47" height="12" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Amount]]></text>
+				</staticText>
+				<line>
+					<reportElement x="20" y="16" width="170" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+					<graphicElement>
+						<pen lineWidth="0.5"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement x="20" y="0" width="170" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+					<graphicElement>
+						<pen lineWidth="0.5"/>
+					</graphicElement>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="19">
+				<line>
+					<reportElement x="20" y="1" width="170" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+					<graphicElement>
+						<pen lineWidth="0.5"/>
+					</graphicElement>
+				</line>
+				<textField pattern="#,##0">
+					<reportElement x="91" y="2" width="99" height="16" uuid="a21efd59-29ae-4db0-92a3-b445483aa7e2"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Zawgyi-One" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttlamount}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="20" y="2" width="71" height="16" uuid="b1896633-4557-4344-bfe9-959aa5b3d72e"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Zawgyi-One" size="8"/>
+					</textElement>
+					<text><![CDATA[Sub Total : ]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="34" splitType="Stretch">
+			<textField>
+				<reportElement x="20" y="-1" width="170" height="19" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="20" y="18" width="170" height="16" uuid="a5f7c78e-0ecc-49f5-a8dc-56e0c612ff7c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<text><![CDATA[Session Report Clinic]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="17" splitType="Stretch">
+			<textField>
+				<reportElement x="20" y="0" width="123" height="17" uuid="76e3f6e8-7671-424e-8f30-4402b58aee12"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{session_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="143" y="0" width="47" height="17" uuid="86e10383-f010-4df3-85f2-9c089703611e"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{session_name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement x="20" y="0" width="112" height="15" uuid="cebd867a-2628-4fd7-8319-9d1cca481f58"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cat_name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="132" y="0" width="58" height="15" uuid="c6fc663f-dcb8-4df6-bf86-5b970746eabd"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="169" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="h.mm a" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="143" y="154" width="47" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="91" y="154" width="52" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="20" y="154" width="71" height="15" uuid="87a3c607-83e2-4536-b0fb-09356f028c43"/>
+				<textElement>
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{user}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="20" y="1" width="170" height="1" uuid="2828991d-36f9-4f5b-9c6d-f6051f9940b0"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="20" y="2" width="71" height="17" uuid="1cacdb61-d859-424a-96c5-d441577b6e77"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Total Amount : ]]></text>
+			</staticText>
+			<textField pattern="#,##0">
+				<reportElement x="91" y="2" width="99" height="17" uuid="96365519-58cb-49e0-950f-78cc4cae52f6"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{amount}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement positionType="Float" x="21" y="122" width="50" height="1" uuid="a2ff2f17-a2c5-453c-9e3c-68f13324262b"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement positionType="Float" x="79" y="122" width="50" height="1" uuid="414c2394-ef04-4e09-a1be-efb253135ac2"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement positionType="Float" x="139" y="122" width="50" height="1" uuid="ce35a81e-f92f-440b-a222-41edc4ca36b5"/>
+				<graphicElement>
+					<pen lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement positionType="Float" x="19" y="123" width="51" height="29" uuid="2884fd53-adcb-412f-b6a7-e61e8f132b3f"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Counter Cashier]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="78" y="122" width="51" height="29" uuid="736848f0-8bd3-4972-8d02-71a2f99966d0"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Seller]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="137" y="123" width="51" height="29" uuid="eda200f1-820a-458b-ad6b-3ec0144d8e50"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Hospital Cashier]]></text>
+			</staticText>
+			<subreport>
+				<reportElement x="21" y="26" width="170" height="29" uuid="119649ec-d5f8-47fa-9e73-c8e3660ebb95"/>
+				<subreportParameter name="user">
+					<subreportParameterExpression><![CDATA[$P{user}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_name">
+					<subreportParameterExpression><![CDATA[$P{session_name}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_user">
+					<subreportParameterExpression><![CDATA[$P{session_user}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_date">
+					<subreportParameterExpression><![CDATA[$P{session_date}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_fdate">
+					<subreportParameterExpression><![CDATA[$P{session_fdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_tdate">
+					<subreportParameterExpression><![CDATA[$P{session_tdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_id">
+					<subreportParameterExpression><![CDATA[$P{session_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_currency">
+					<subreportParameterExpression><![CDATA[$P{session_currency}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_paymentname">
+					<subreportParameterExpression><![CDATA[$P{session_paymentname}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_paymentid">
+					<subreportParameterExpression><![CDATA[$P{session_paymentid}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="user_id">
+					<subreportParameterExpression><![CDATA[$P{user_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="pt_id">
+					<subreportParameterExpression><![CDATA[$P{pt_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="dr_id">
+					<subreportParameterExpression><![CDATA[$P{dr_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="tran_option">
+					<subreportParameterExpression><![CDATA[$P{tran_option}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="deleted">
+					<subreportParameterExpression><![CDATA[$P{deleted}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="comp_name">
+					<subreportParameterExpression><![CDATA[$P{comp_name}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="session_user_id">
+					<subreportParameterExpression><![CDATA[$P{session_user_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "rptInpSessionSub.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</summary>
+</jasperReport>

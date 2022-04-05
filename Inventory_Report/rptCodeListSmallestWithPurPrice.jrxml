@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptCodeListPrice" language="groovy" pageWidth="725" pageHeight="842" columnWidth="685" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cca4f321-290c-484e-adbc-e7c4432c94f5">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="compName" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="user_id" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[select med.med_id, med.med_name, rg.item_unit,rg.rel_group_id, itp.item_type_name,
+med.med_type_id,med.med_rel_str,med.active,
+med.pur_smallest_price pur_price,
+(ifnull(rg.sale_price,0)/rg.smallest_qty) sale_price,
+ifnull(rg.sale_pric_a,' ') sale_pric_a,
+ifnull(rg.sale_pric_b,' ') sale_pric_b,
+ifnull(rg.sale_pric_c,' ') sale_pric_c,
+ifnull(rg.sale_pric_d,' ') sale_pric_d,
+ifnull(ib.brand_name,'-') brand_name,
+pcost.smallest_pur_cost
+from (select distinct med.med_id, med.med_name,med.med_type_id,med.med_rel_str,med.active, med.pur_price,
+             (med.pur_price/rg.smallest_qty) pur_smallest_price, med.brand_id
+        from medicine med, med_rel mr, relation_group rg
+       where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id
+         and (med.pur_unit = rg.item_unit or med.pur_unit is null)) med
+left join item_brand ib on med.brand_id =ib.brand_id
+join med_rel mr on med.med_id = mr.med_id
+join relation_group rg on mr.rel_group_id = rg.rel_group_id
+join item_type itp on med.med_type_id = itp.item_type_code
+join v_med_rel_smallest_unit vmrs on rg.rel_group_id = vmrs.rel_group_id and med.med_id = vmrs.med_id
+join (select distinct med_id from tmp_stock_filter where user_id = $P{user_id}) filt on med.med_id = filt.med_id
+left join (select vp.med_id, vp.pur_unit_cost, vp.pur_unit, vmr.smallest_qty as unit_smallest_qty,
+(vp.pur_unit_cost/vmr.smallest_qty) as smallest_pur_cost
+from v_purchase vp
+join (select med_id, max(pur_detail_id) as detail_id
+        from pur_detail_his group by med_id) m on vp.med_id = m.med_id
+         and vp.pur_detail_id = m.detail_id
+join v_med_rel vmr on vp.med_id = vmr.med_id and vp.pur_unit = vmr.item_unit
+where vp.deleted = false
+order by vp.med_id) pcost on med.med_id = pcost.med_id
+group by med.med_id, med.med_name,med.pur_price,med.med_rel_str,med.active, rg.item_unit,rg.sale_price,rg.sale_pric_a,rg.sale_pric_b
+,rg.sale_pric_c,rg.sale_pric_d, itp.item_type_name, med.med_type_id,
+ib.brand_name
+order by med.active,med.med_type_id,med.med_id,rg.rel_group_id,ib.brand_name]]>
+	</queryString>
+	<field name="med_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_unit" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="rel_group_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_type_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_type_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_rel_str" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="active" class="java.lang.Boolean">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="pur_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_a" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_b" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_c" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_d" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="brand_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="smallest_pur_cost" class="java.lang.Double"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="43" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="20" width="263" height="22" uuid="c4c00dd0-dd6b-4386-962a-2667e3fbb4a9"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Code Listing With Pur Price]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="0" width="555" height="20" uuid="1b982238-4359-4f93-a856-12035ddf37f6"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="506" y="22" width="71" height="20" uuid="2481b6d7-8060-4e77-99f0-802ac6340e80"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="578" y="22" width="107" height="20" uuid="f79736d1-ab00-4658-bba7-a8617cf55a65"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="40" splitType="Stretch">
+			<staticText>
+				<reportElement x="84" y="22" width="50" height="15" uuid="e3b21589-8678-41b5-916c-46de8cd8d2d8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Item Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="136" y="22" width="126" height="15" uuid="85ac128e-6b73-4271-94ea-b2ca14102b54"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Item Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="479" y="22" width="25" height="15" uuid="4006a8d6-4a74-4c2a-b26e-72440ed51048"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[UOM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="262" y="22" width="152" height="15" uuid="eebed05a-91ef-4cb6-9f08-a5bf83c93d00"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Brand Name]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="39" width="685" height="1" uuid="6133f7d0-900b-40bc-97ad-0e08cf09ab3b"/>
+			</line>
+			<line>
+				<reportElement x="0" y="20" width="685" height="1" uuid="2217f2fc-86fb-4390-88ef-1d3b6ff07def"/>
+			</line>
+			<staticText>
+				<reportElement x="604" y="22" width="50" height="15" uuid="158ee7f5-d8e4-4e64-b2e4-65c71b7bf10b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sale Price]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="504" y="22" width="50" height="15" uuid="67c2ecef-7abd-4997-b35a-597f10c5d6f3"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Pur Price]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="414" y="22" width="65" height="15" uuid="ed004ff5-599f-4567-a363-14dbf7c6da18"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Packing]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="554" y="22" width="50" height="15" uuid="eca0b189-e886-4ac9-ae70-9270ca7a3a8d"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Pur Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="654" y="22" width="30" height="15" uuid="db150909-bc45-4756-85fd-50c0d3bd8dc2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="22" width="82" height="15" uuid="a26b0579-c792-42a5-b060-1918d6234da9"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Item Type]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="564" y="1" width="80" height="20" uuid="482693d6-8afb-43f9-8d4b-3fda7d98d3a4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="644" y="1" width="40" height="20" uuid="46445391-df24-441a-8290-a2d08d458a37"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="17" splitType="Stretch">
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="84" y="1" width="50" height="15" uuid="2611b2e0-c405-46c0-83da-122fda6016ce"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="136" y="1" width="126" height="15" uuid="11ca822f-dd63-4591-9749-bf6b190f338b"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="479" y="1" width="25" height="15" uuid="b7f980c9-c9e4-47ec-a1c1-dee86393b344"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{item_unit}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="262" y="1" width="152" height="15" uuid="a0ce492d-2de0-4d06-9f00-7d25725747a7"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{brand_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="504" y="1" width="50" height="15" uuid="1a1ffdfa-b02f-465f-b3ab-1d4cd4765c65"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{pur_price}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="414" y="1" width="65" height="15" uuid="2b38beaf-0afd-47f4-9414-97857a0e12f1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_rel_str}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="604" y="1" width="50" height="15" uuid="d8997a0c-e05e-4612-8aaa-bde5accd9f0f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_price}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="554" y="1" width="50" height="15" uuid="c9b5ac65-1e4e-460f-ad6b-1a9726bb63b4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{smallest_pur_cost}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="654" y="1" width="30" height="15" uuid="9456c2e4-161c-44e7-8b5d-a65e99918e27"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{active}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="1" width="82" height="15" uuid="e56657bb-a373-4e74-b234-e5fe24fed99f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{item_type_name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+</jasperReport>

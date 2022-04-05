@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleSummary" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="17b16060-d7e7-43e5-86b3-3f3958c7548d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="cv_inv"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="data_date" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String"/>
+	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="reg_no" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select reti.reg_no, pd.patient_name, reti.ret_in_date, reti.ret_in_id, reti.admission_no,
+reti.vou_total ret_in_vou_total, reti.paid ret_in_vou_paid, reti.med_id, reti.med_name,
+reti.ret_in_qty, reti.item_unit, reti.ret_in_price, reti.ret_in_amount, reti.sale_qty,
+reti.sale_item_unit, reti.sale_price, reti.sale_amount, reti.sale_inv_id, reti.sale_date,
+concat(TRIM(TRAILING '.0' FROM reti.ret_in_qty), reti.item_unit) ret_in_qty1,
+concat(TRIM(TRAILING '.0' FROM reti.sale_qty), reti.sale_item_unit) sale_qty1
+from v_return_in_with_sale_ref reti
+left join patient_detail pd on reti.reg_no = pd.reg_no
+where deleted = false and date(reti.ret_in_date) between $P{prm_from} and $P{prm_to} 
+and (reti.reg_no = $P{reg_no} or $P{reg_no} = '-')
+order by pd.patient_name, reti.ret_in_date, reti.ret_in_id]]>
+	</queryString>
+	<field name="reg_no" class="java.lang.String"/>
+	<field name="patient_name" class="java.lang.String"/>
+	<field name="ret_in_date" class="java.sql.Date"/>
+	<field name="ret_in_id" class="java.lang.String"/>
+	<field name="admission_no" class="java.lang.String"/>
+	<field name="ret_in_vou_total" class="java.lang.Double"/>
+	<field name="ret_in_vou_paid" class="java.lang.Double"/>
+	<field name="med_id" class="java.lang.String"/>
+	<field name="med_name" class="java.lang.String"/>
+	<field name="ret_in_qty" class="java.lang.Float"/>
+	<field name="item_unit" class="java.lang.String"/>
+	<field name="ret_in_price" class="java.lang.Double"/>
+	<field name="ret_in_amount" class="java.lang.Double"/>
+	<field name="sale_qty" class="java.lang.Float"/>
+	<field name="sale_item_unit" class="java.lang.String"/>
+	<field name="sale_price" class="java.lang.Double"/>
+	<field name="sale_amount" class="java.lang.Double"/>
+	<field name="sale_inv_id" class="java.lang.String"/>
+	<field name="sale_date" class="java.sql.Date"/>
+	<field name="ret_in_qty1" class="java.lang.String"/>
+	<field name="sale_qty1" class="java.lang.String"/>
+	<title>
+		<band height="63" splitType="Stretch">
+			<textField>
+				<reportElement x="1" y="1" width="554" height="20" uuid="ecb16cd7-8fc1-4d99-bb42-f1c4c8464130"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="21" width="298" height="25" uuid="39d05099-1d9f-437c-a506-af1bf88b5114"/>
+				<textElement>
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Return In By Sale Voucher]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="47" width="230" height="15" uuid="c727f7c3-2bd8-4cea-b7be-cad7ed25d834"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="632" y="48" width="67" height="15" uuid="45b2b92a-87af-4e98-9b71-be663cdf7db1"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h:mm a">
+				<reportElement x="701" y="48" width="100" height="15" uuid="6962d1e0-720f-495f-af13-f89a46320dfb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="36" splitType="Stretch">
+			<textField>
+				<reportElement x="645" y="1" width="100" height="15" uuid="d40b10c3-064f-4146-9917-c916a4549e2d"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="746" y="1" width="55" height="15" uuid="84f1f1d0-16c8-4d84-858c-0748c44e36fe"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="193" y="19" width="50" height="15" uuid="6525f1b9-171a-45f3-bbfa-52e22a61a53a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ret-In Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="53" y="19" width="139" height="15" uuid="67a68ba5-9501-45e5-92af-4cc346ef8b2e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Patient Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="368" y="19" width="45" height="15" uuid="aac901d3-dc89-4183-90a4-2b596386f670"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Med Id]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="17" width="802" height="1" uuid="b8e5ab42-6156-42f8-9e83-5a331e2bbacb"/>
+			</line>
+			<line>
+				<reportElement x="0" y="35" width="802" height="1" uuid="ffef9643-6055-4791-9a9f-7d7256624986"/>
+			</line>
+			<staticText>
+				<reportElement x="245" y="19" width="70" height="15" uuid="43191b25-11d5-4fa3-b271-8f6e93fdd77d"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Vou No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="19" width="50" height="15" uuid="ac7e12ba-727e-4b33-8975-992cf2e28c3d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reg No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="317" y="19" width="50" height="15" uuid="b9621c48-2418-41a2-9b1f-058b0a504d72"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Adm No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="591" y="19" width="50" height="15" uuid="f9759213-3d55-45df-aa1f-c7905759494a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ret-In Price]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="690" y="19" width="70" height="15" uuid="46c15e4b-ac42-4692-aaa3-6cec441b2559"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sale Vou No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="536" y="19" width="53" height="15" uuid="d6170baf-c830-491f-8126-5cad27179929"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ret-In Qty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="415" y="19" width="118" height="15" uuid="303ab6aa-81e5-4fdb-80e0-d626daf847d5"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Med Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="641" y="19" width="45" height="15" uuid="87641070-c317-433e-8a46-d9c21176927b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ret-In Amt]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="761" y="19" width="40" height="15" uuid="bd81512e-edc4-4c04-b5f3-ee4483db9c2b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sale Qty]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="193" y="1" width="50" height="15" uuid="17b2d06f-3213-46ce-b654-720d3baad175"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ret_in_date}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="53" y="1" width="139" height="15" uuid="f04998d5-51f6-4751-97b1-b5917cefeb71"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="368" y="1" width="45" height="15" uuid="95b3ef85-c271-4cb8-b508-031d6f78d0fc"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="245" y="1" width="70" height="15" uuid="879ec7c7-26f1-44db-8a08-0ef9448e83b4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ret_in_id}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="1" width="50" height="15" uuid="593651b1-0d1d-4671-90cb-d3b58473599a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{reg_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="317" y="1" width="50" height="15" uuid="6c236b9d-6022-43f0-b7cd-38eae3600d3d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)">
+				<reportElement x="641" y="1" width="45" height="15" uuid="337dbd70-92f4-40be-8b3e-c098bd56efc0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ret_in_amount}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)">
+				<reportElement x="591" y="1" width="50" height="15" uuid="cc3ba81f-2f30-49c4-95a3-a0c6d9da35d7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ret_in_price}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="536" y="1" width="53" height="15" uuid="3943b383-b788-4060-ab7a-79040dc8626c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ret_in_qty1}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="690" y="1" width="70" height="15" uuid="9b8e93a6-39c8-404f-8b26-bcdf691fd2c9"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_inv_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="415" y="1" width="118" height="15" uuid="1b3156d0-ca52-4518-8b75-a8397993971e"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="761" y="1" width="40" height="15" uuid="d164b856-c791-4599-8310-75fca23ca384"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_qty1}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

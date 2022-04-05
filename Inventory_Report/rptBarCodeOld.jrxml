@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptBarCode" columnCount="6" printOrder="Horizontal" pageWidth="595" pageHeight="842" columnWidth="86" columnSpacing="7" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c5bcf4e5-4b80-4ba7-a007-ce6da58c7665">
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="9"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select med.med_id, med.med_name, med.med_rel_str, itp.item_type_name, med.med_type_id,
+round(rg.sale_price,0) as sale_price, rg.sale_pric_a, rg.sale_pric_b, rg.sale_pric_c, rg.sale_pric_d,
+med.barcode, med.chemical_name, med.short_name, rg.item_unit
+from medicine med, med_rel mr, relation_group rg, item_type itp,
+(select item_id from tmp_barcode_filter where user_id = $P!{user_id}) filt
+where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id
+and med.med_id = filt.item_id and med.med_type_id = itp.item_type_code
+order by med_id;]]>
+	</queryString>
+	<field name="med_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_rel_str" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_type_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_type_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_a" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_b" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_c" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_d" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="barcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="chemical_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="short_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_unit" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="57" splitType="Stretch">
+			<textField pattern="#,##0;-#,##0">
+				<reportElement x="41" y="37" width="31" height="14" uuid="0dc1ed9f-0f80-4413-8768-48701b87834a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_price} == null ? ' ' : $F{sale_price}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="10" width="86" height="14" forecolor="#000000" uuid="15ab5df1-4ad2-4847-91f2-5259094a3d0a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name} == null ? ' ' : $F{med_name}]]></textFieldExpression>
+			</textField>
+			<componentElement>
+				<reportElement x="0" y="22" width="86" height="20" uuid="990bde14-a449-4321-96bc-b31744069f8f"/>
+				<jr:barbecue xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" type="Code39 (Extended)" drawText="false" checksumRequired="false">
+					<jr:codeExpression><![CDATA[$F{med_id}]]></jr:codeExpression>
+				</jr:barbecue>
+			</componentElement>
+			<textField>
+				<reportElement x="0" y="37" width="40" height="14" uuid="7741a5ab-14ed-49b0-ae1d-ab85ae5c1e47"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="16" height="12" uuid="14579d1c-21a2-43df-a9f5-82c203cf617f"/>
+				<textElement>
+					<font fontName="Palace Script MT" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[The]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="16" y="1" width="5" height="12" uuid="ac0594e8-2102-4bd5-9890-d66a2c8e3899"/>
+				<textElement>
+					<font fontName="Aharoni" size="9"/>
+				</textElement>
+				<text><![CDATA[L]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="21" y="0" width="20" height="12" uuid="32e443dc-b598-4375-b84a-4484ecd22927"/>
+				<textElement>
+					<font fontName="Aharoni" size="12"/>
+				</textElement>
+				<text><![CDATA[OO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="41" y="1" width="5" height="12" uuid="2a9fe340-d757-410b-bd1c-cfd8771dc37c"/>
+				<textElement>
+					<font fontName="Aharoni" size="9"/>
+				</textElement>
+				<text><![CDATA[K]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="49" y="1" width="37" height="11" uuid="99319c3d-749b-46ce-942f-5c384af63dbe"/>
+				<textElement>
+					<font fontName="Centaur" size="8" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[cosmetics]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="71" y="39" width="15" height="12" uuid="150489a2-d3db-49f6-b103-2282f8f4fd2e"/>
+				<textElement textAlignment="Right">
+					<font fontName="SansSerif" size="9" isBold="false" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Ks.]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>
