@@ -14,6 +14,7 @@ import com.cv.app.ui.common.MedPriceList;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -92,7 +93,7 @@ public class MedicineUP {
                             }
                             rs.close();
                         }
-                    } catch (Exception ex) {
+                    } catch (SQLException ex) {
                         log.error("add : " + ex);
                     } finally {
                         //dao.close();

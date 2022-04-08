@@ -1219,14 +1219,14 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
                     + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'"
                     + " and med_id in (" + selectIds + ")";
-            
-            if(selectIds.isEmpty()){
+
+            if (selectIds.isEmpty()) {
                 strSql1 = "select distinct med_id"
-                    + " from v_purchase where date(pur_date) between '"
-                    + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
-                    + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
+                        + " from v_purchase where date(pur_date) between '"
+                        + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
+                        + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
             }
-            
+
             strSql1 = strSql1 + " and deleted = false";
             if (locationId != -1) {
                 strSql1 = strSql1 + " and location = " + locationId;
