@@ -17,6 +17,7 @@ import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -382,7 +383,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                         }
                     }
                 }
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 log.error("setMed3 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
             } finally {
                 dao.closeStatment();
@@ -439,7 +440,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                         record.setMarketUnit(hmUnit.get(strUnit));
                     }
                 }
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 log.error("setMed4 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
             } finally {
                 dao.closeStatment();
@@ -554,5 +555,10 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
 
     public void fireDataChanged() {
         fireTableDataChanged();
+    }
+
+    public void clear() {
+        listDetail.clear();
+
     }
 }
