@@ -535,10 +535,6 @@ public class OTTableModel extends AbstractTableModel {
         this.otInvId = otInvId;
     }
 
-    public void fireDataChange() {
-        fireDataChange();
-    }
-
     private void doctorFeePopup(OTDetailHis record) {
         List<OTDoctorFee> listDrFee = record.getListOTDF();
         if (listDrFee == null) {
@@ -556,6 +552,7 @@ public class OTTableModel extends AbstractTableModel {
             }
         }
         OTDoctorFeeDialog dialog = new OTDoctorFeeDialog(listDrFee, record.getService().getServiceId());
+        dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
         record.setListOTDF(dialog.getEntryDrFee());
         record.setPrice(dialog.getTotal());
