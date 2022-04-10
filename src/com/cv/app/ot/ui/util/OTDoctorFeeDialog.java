@@ -24,106 +24,94 @@ import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author admin
  */
-public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropagate{
+public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropagate {
 
     static Logger log = Logger.getLogger(OPD.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private final OTDoctorFeeTableModel tblOTDoctorFeeTableModel;
-    
 
-    public OTDoctorFeeDialog(List<OTDoctorFee> listDrFee, Integer serviceId){
+    public OTDoctorFeeDialog(List<OTDoctorFee> listDrFee, Integer serviceId) {
         super(Util1.getParent(), true);
         tblOTDoctorFeeTableModel = new OTDoctorFeeTableModel(dao, serviceId);
         initComponents();
         initTable();
         tblOTDoctorFeeTableModel.setParent(tblOTDoctorFee);
-        setLocationRelativeTo(null);
         tblOTDoctorFeeTableModel.setListDrFee(listDrFee);
         tblOTDoctorFee.setRowSelectionInterval(0, 0);
+        tblOTDoctorFee.setColumnSelectionInterval(0, 0);
         tblOTDoctorFee.requestFocus();
         formActionKeyMapping(tblOTDoctorFee);
     }
-    
-    private void initTable(){
+
+    private void initTable() {
         tblOTDoctorFee.getTableHeader().setFont(Global.lableFont);
         tblOTDoctorFee.getColumnModel().getColumn(0).setPreferredWidth(200);//Doctor Name
         tblOTDoctorFee.getColumnModel().getColumn(0).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
         tblOTDoctorFee.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor(this));
         tblOTDoctorFee.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblOTDoctorFee.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                
-            }
+        tblOTDoctorFee.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
         });
-        tblOTDoctorFee.getModel().addTableModelListener(new TableModelListener() {
+        tblOTDoctorFee.getModel().addTableModelListener((TableModelEvent e) -> {
+            txtTotal.setText(getTotal().toString());
+        });
 
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                txtTotal.setText(getTotal().toString());
-            }
-        });
-        
         //tblOTDoctorFee.getInputMap().put(KeyStroke.getKeyStroke("F10"), "F10-Action");
         //tblOTDoctorFee.getActionMap().put("F10-Action", actionClose);
     }
-    
-    public Double getTotal(){
+
+    public Double getTotal() {
         List<OTDoctorFee> listFee = tblOTDoctorFeeTableModel.getListDrFee();
         String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDoctorFee"
                 + " EXECUTE ON ALL sum(drFee) AS total";
         Object total = JoSQLUtil.getSaveValue(listFee, strSql, "total");
-        if(total == null){
+        if (total == null) {
             return 0.0;
-        }else{
+        } else {
             return Double.parseDouble(total.toString());
         }
     }
-    
-    public List<OTDoctorFee> getEntryDrFee(){
+
+    public List<OTDoctorFee> getEntryDrFee() {
         return tblOTDoctorFeeTableModel.getEntryDrFee();
     }
-    
+
     private void formActionKeyMapping(JComponent jc) {
         //Save
         jc.getInputMap().put(KeyStroke.getKeyStroke("F10"), "F10-Action");
         jc.getActionMap().put("F10-Action", actionClose);
     }
-    
+
     private Action actionClose = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             dispose();
         }
     };
-    
+
     @Override
     public void keyEvent(KeyEvent e) {
         if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
-            
+
         } else if (e.isShiftDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F5) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F7) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F9) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F10) {
             dispose();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -138,7 +126,7 @@ public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
         txtTotal = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("OT Doctor Fee Entry");
 
         tblOTDoctorFee.setFont(Global.textFont);

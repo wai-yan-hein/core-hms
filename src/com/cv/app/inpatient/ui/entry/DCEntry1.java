@@ -935,8 +935,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
 
                 assignExtraParam(params, txtAdmissionNo.getText(), pt.getRegNo(),
-                        DateUtil.toDateTimeStrMYSQL(ams.getAmsDate()),
-                        params.get("tran_date").toString());
+                        DateUtil.toDateStr(ams.getAmsDate(), "yyyy-MM-dd"),
+                        DateUtil.toDateStr(txtDate.getText(), "yyyy-MM-dd"));
 
                 dao.close();
                 ReportUtil.viewReport(reportPath, params, dao.getConnection());
@@ -948,56 +948,110 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private void assignExtraParam(Map<String, Object> params, String admNo,
             String regNo, String admDate, String tranDate) {
         try {
-            String strSql = "select sum(a.total_expense) as total_expense, sum(a.total_paid) as total_paid, sum(a.total_disc) as total_disc,\n"
-                    + "sum(a.ttl_tax) as ttl_tax\n"
+            double ttlPaid = 0.0;
+            double ttlRefund = 0.0;
+            double ttlDiscount = 0.0;
+            double ttlDeposite = 0.0;
+            String paidSql = "#paid\n"
+                    + "select sum(paid) ttl_amt\n"
                     + "from (\n"
-                    + "select sum(vou_total) as total_expense, sum(paid_amount) as total_paid, sum(discount) as total_disc, sum(tax_amt) as ttl_tax\n"
+                    + "select sum(ifnull(paid_amount,0)) paid\n"
                     + "from sale_his\n"
-                    + "where deleted = false and admission_no = $P{adm_no} and reg_no =  $P{reg_no} \n"
-                    + "and date(sale_date) between date($P{adm_date}) and date($P{tran_date})\n"
-                    + "union all\n"
-                    + "select sum(vou_total)*-1 as tota_expense, sum(paid)*-1 as total_paid, 0 as total_disc, 0 as ttl_tax\n"
-                    + "from ret_in_his\n"
-                    + "where deleted = false and admission_no = $P{adm_no} and reg_no =  $P{reg_no} \n"
-                    + "and date(ret_in_date) between date($P{adm_date}) and date($P{tran_date})\n"
-                    + "union all\n"
-                    + "select sum(vou_total) as total_expense, sum(paid) as total_paid, sum(disc_a) as total_disc, sum(tax_a) as ttl_tax\n"
+                    + "where deleted = false and admission_no = '" + admNo + "'\n"
+                    + "and date(sale_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(paid,0)) amount\n"
                     + "from opd_his\n"
-                    + "where deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no} \n"
-                    + "and date(opd_date) between date($P{adm_date}) and date($P{tran_date})\n"
-                    + "union all\n"
-                    + "select sum(vou_total) as total_expense, sum(paid) as total_paid, sum(disc_a) as total_disc, sum(tax_a) as ttl_tax\n"
-                    + "from ot_his\n"
-                    + "where deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no} \n"
-                    + "and date(ot_date) between date($P{adm_date}) and date($P{tran_date})\n"
-                    + "union all\n"
-                    + "select sum(vou_total) as total_expense, sum(paid) as total_paid, sum(disc_a) as total_disc, sum(tax_a) as ttl_tax\n"
+                    + "where deleted = false and admission_no = '" + admNo + "'\n"
+                    + "and date(opd_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(paid,0))\n"
+                    + "from v_ot\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.ot.paid.id')) and deleted = false and admission_no = '" + admNo + "'\n"
+                    + "and date(ot_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(paid,0))\n"
+                    + "from v_dc\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.dc.paid.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + ")a";
+            String depositSql = "#deposite\n"
+                    + "select sum(deposite_amt) ttl_amt\n"
+                    + "from(\n"
+                    + "select sum(paid) deposite_amt\n"
+                    + "FROM v_dc\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.dc.deposite.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(paid) deposite_amt\n"
+                    + "FROM v_ot\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.ot.deposite.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(ot_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + ")a";
+            String disSql = "#discount\n"
+                    + "select sum(discount) ttl_amt\n"
+                    + "from (\n"
+                    + "select sum(ifnull(discount,0)) discount\n"
+                    + "FROM sale_his\n"
+                    + "where deleted = false and admission_no = '" + admNo + "'\n"
+                    + "and date(sale_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(disc_a,0)) amount\n"
+                    + "FROM opd_his\n"
+                    + "where deleted = false and admission_no = '" + admNo + "'\n"
+                    + "and date(opd_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(disc_a,0))\n"
+                    + "FROM v_ot\n"
+                    + "where deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(ot_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(ifnull(disc_a,0))\n"
                     + "from dc_his\n"
-                    + "where deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no} \n"
-                    + "and date(dc_date) between date($P{adm_date}) and date($P{tran_date})) a";
-            strSql = strSql.replace("$P{adm_no}", "'" + admNo + "'")
-                    .replace("$P{reg_no}", "'" + regNo + "'")
-                    .replace("$P{adm_date}", "'" + admDate + "'")
-                    .replace("$P{tran_date}", "'" + tranDate + "'");
-            ResultSet rs = dao.execSQL(strSql);
-            if (rs != null) {
-                if (rs.next()) {
-                    double ttlExpense = NumberUtil.NZero(rs.getDouble("total_expense"));
-                    double ttlPaid = NumberUtil.NZero(rs.getDouble("total_paid"));
-                    double ttlDisc = NumberUtil.NZero(rs.getDouble("total_disc"));
-                    double ttlTax = NumberUtil.NZero(rs.getDouble("ttl_tax"));
-                    double expBalance = ttlExpense - ttlDisc;
-                    double balance = ttlExpense - ttlPaid - ttlDisc + ttlTax;
-
-                    params.put("total_expense", ttlExpense);
-                    params.put("total_discount", ttlDisc * -1);
-                    params.put("expense_balance", expBalance);
-                    params.put("total_tax", ttlTax);
-                    params.put("total_paid", ttlPaid * -1);
-                    params.put("p_balance", balance);
-                }
+                    + "where deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + ")a";
+            String refundSql = "#refund\n"
+                    + "select sum(refund_amt) ttl_amt\n"
+                    + "from(\n"
+                    + "select sum(paid) refund_amt\n"
+                    + "FROM v_dc\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.dc.refund.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + "	union all\n"
+                    + "select sum(paid) refund_amt\n"
+                    + "FROM v_ot\n"
+                    + "where service_id in (select sys_prop_value from sys_prop\n"
+                    + "where sys_prop_desp in ('system.ot.refund.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
+                    + "and date(ot_date) between '" + admDate + "' and '" + tranDate + "'\n"
+                    + ")a";
+            ResultSet rs = dao.execSQL(paidSql);
+            if (rs.next()) {
+                ttlPaid = rs.getDouble("ttl_amt");
             }
-        } catch (Exception ex) {
+            rs = dao.execSQL(depositSql);
+            if (rs.next()) {
+                ttlDeposite = rs.getDouble("ttl_amt");
+            }
+            rs = dao.execSQL(disSql);
+            if (rs.next()) {
+                ttlDiscount = rs.getDouble("ttl_amt");
+            }
+            rs = dao.execSQL(refundSql);
+            if (rs.next()) {
+                ttlRefund = rs.getDouble("ttl_amt");
+            }
+            params.put("total_discount", ttlDiscount * -1);
+            params.put("total_paid", ttlPaid);
+            params.put("total_deposite", ttlDeposite);
+            params.put("total_refund", ttlRefund);
+
+        } catch (SQLException ex) {
             log.error("assignExtraParam : " + ex.getMessage());
         }
     }

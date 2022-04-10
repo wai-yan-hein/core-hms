@@ -52,6 +52,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -1219,14 +1220,14 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
                     + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'"
                     + " and med_id in (" + selectIds + ")";
-            
-            if(selectIds.isEmpty()){
+
+            if (selectIds.isEmpty()) {
                 strSql1 = "select distinct med_id"
-                    + " from v_purchase where date(pur_date) between '"
-                    + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
-                    + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
+                        + " from v_purchase where date(pur_date) between '"
+                        + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
+                        + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
             }
-            
+
             strSql1 = strSql1 + " and deleted = false";
             if (locationId != -1) {
                 strSql1 = strSql1 + " and location = " + locationId;
@@ -1244,7 +1245,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     }
                     rs1.close();
                 }
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 log.error("fillByPercent : " + ex.toString());
             } finally {
                 //selectIds = "";
@@ -1278,7 +1279,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 while (rs.next()) {
                     selectedMedId = rs.getString("med_id");
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (selectedMed.getRelationGroupId().size() > 0) {
+                    if (!selectedMed.getRelationGroupId().isEmpty()) {
                         selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
                     }
                     medUp.add(selectedMed);
@@ -1291,7 +1292,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                         selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
                     }*/
                 }
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
                 dao.closeStatment();
