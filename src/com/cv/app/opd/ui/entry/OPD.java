@@ -1198,8 +1198,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         if (vouTtl != modelTtl) {
             log.error(txtVouNo.getText().trim() + " Voucher Total Error : vouTtl : "
                     + vouTtl + " modelTtl : " + modelTtl);
-            /*JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
-                    "Voucher Total Error", JOptionPane.ERROR_MESSAGE);*/
+            JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
+                    "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
         }
 
         txtVouTotal.setValue(modelTtl);

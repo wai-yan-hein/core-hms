@@ -1258,4 +1258,46 @@ public class SaleTableModel extends AbstractTableModel {
         }
         return ttlQty;
     }
+
+    public Double getTotalAmount() {
+        double ttlAmt = 0;
+
+        for (SaleDetailHis sdh : listDetail) {
+            if (sdh.getMedId() != null) {
+                //String key = "";
+                double discount = NumberUtil.NZero(sdh.getDiscount());
+                float saleQty = NumberUtil.NZeroFloat(sdh.getQuantity());
+                double price = NumberUtil.NZero(sdh.getPrice());
+
+                /*key = sdh.getMedId().getMedId() + "-" + sdh.getUnitId().getItemUnitCode();
+
+                sdh.setSaleSmallestQty(saleQty * medUp.getQtyInSmallest(key));
+                key = "";
+
+                if (sdh.getFocUnit() != null) {
+                    key = sdh.getMedId().getMedId() + "-" + sdh.getFocUnit().getItemUnitCode();
+                }
+                float focQty = NumberUtil.NZeroFloat(sdh.getFocQty());
+                sdh.setFocSmallestQty(focQty * medUp.getQtyInSmallest(key));*/
+
+                String discType = Util1.getPropValue("system.app.sale.discount.calculation");
+                switch (discType) {
+                    case "Percent":
+                        discount = ((saleQty * price) * (discount / 100));
+                        break;
+                    case "Value":
+                        break;
+                    case "Each":
+                        discount = discount * saleQty;
+                        break;
+                }
+
+                double amount = (saleQty * price) - discount;
+                ttlAmt += amount;
+                sdh.setAmount(amount);
+            }
+        }
+
+        return ttlAmt;
+    }
 }

@@ -135,6 +135,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
     }
     
     private void saveValue(){
+        calcBalance();
         currOPDHis.setDiscountP(NumberUtil.NZero(txtDiscountP.getValue()));
         currOPDHis.setDiscountA(NumberUtil.NZero(txtDiscountA.getValue()));
         currOPDHis.setTaxP(NumberUtil.NZero(txtTaxP.getValue()));

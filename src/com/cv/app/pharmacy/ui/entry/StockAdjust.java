@@ -397,28 +397,29 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         tblAdjDetail.getColumnModel().getColumn(4).setPreferredWidth(50);//Sys-Bal
         tblAdjDetail.getColumnModel().getColumn(5).setPreferredWidth(50);//Usr-Balance
         tblAdjDetail.getColumnModel().getColumn(6).setPreferredWidth(30);//Usr-Unit
-        tblAdjDetail.getColumnModel().getColumn(7).setPreferredWidth(20);//Adj Qty
-        tblAdjDetail.getColumnModel().getColumn(8).setPreferredWidth(20);//Unit
-        tblAdjDetail.getColumnModel().getColumn(9).setPreferredWidth(30);//Type
-        tblAdjDetail.getColumnModel().getColumn(10).setPreferredWidth(30);//Balance
-        tblAdjDetail.getColumnModel().getColumn(11).setPreferredWidth(40);//Cost Price
-        tblAdjDetail.getColumnModel().getColumn(12).setPreferredWidth(40);//Amount
+        tblAdjDetail.getColumnModel().getColumn(7).setPreferredWidth(10);//Currency
+        tblAdjDetail.getColumnModel().getColumn(8).setPreferredWidth(20);//Adj Qty
+        tblAdjDetail.getColumnModel().getColumn(9).setPreferredWidth(20);//Unit
+        tblAdjDetail.getColumnModel().getColumn(10).setPreferredWidth(30);//Type
+        tblAdjDetail.getColumnModel().getColumn(11).setPreferredWidth(30);//Balance
+        tblAdjDetail.getColumnModel().getColumn(12).setPreferredWidth(40);//Cost Price
+        tblAdjDetail.getColumnModel().getColumn(13).setPreferredWidth(40);//Amount
 
         tblAdjDetail.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
         tblAdjDetail.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor(this));
         tblAdjDetail.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor(this));
-        tblAdjDetail.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
+        tblAdjDetail.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
         JComboBox cboAdjType = new JComboBox();
         BindingUtil.BindCombo(cboAdjType, dao.findAll("AdjType"));
-        tblAdjDetail.getColumnModel().getColumn(9).setCellEditor(
+        tblAdjDetail.getColumnModel().getColumn(10).setCellEditor(
                 new DefaultCellEditor(cboAdjType));
         tblAdjDetail.getColumnModel().getColumn(11).setCellEditor(new BestTableCellEditor(this));
 
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         tblAdjDetail.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
-        tblAdjDetail.getColumnModel().getColumn(10).setCellRenderer(rightRenderer);
+        tblAdjDetail.getColumnModel().getColumn(11).setCellRenderer(rightRenderer);
 
         tblAdjDetail.getModel().addTableModelListener(new TableModelListener() {
             @Override

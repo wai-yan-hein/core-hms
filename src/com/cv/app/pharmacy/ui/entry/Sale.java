@@ -1522,9 +1522,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         double totalExp = 0;
         double totalExpIn = 0;
 
-        for (SaleDetailHis sdh : listDetail) {
+        totalAmount = saleTableModel.getTotalAmount();
+        /*for (SaleDetailHis sdh : listDetail) {
             totalAmount += NumberUtil.NZero(sdh.getAmount());
-        }
+        }*/
 
         txtVouTotal.setValue(totalAmount);
 
