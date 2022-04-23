@@ -20,10 +20,12 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.common.Global;
+import com.cv.app.pharmacy.database.entity.TraderPayAccount;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.jms.MapMessage;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
@@ -42,6 +44,15 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
     // private AbstractDataAccess dao;
     private SelectionObserver observer;
     private final AbstractDataAccess dao = Global.dao;
+    private JComboBox cboPayment;
+
+    public JComboBox getCboPayment() {
+        return cboPayment;
+    }
+
+    public void setCboPayment(JComboBox cboPayment) {
+        this.cboPayment = cboPayment;
+    }
 
     @Override
     public String getColumnName(int column) {
@@ -215,7 +226,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
 
         Save(record);
         calculateBalance(record);
-        fireTableCellUpdated(row, 11);
+        fireTableRowsUpdated(row, row);
     }
 
     private void Save(VoucherPayment vp) {
@@ -225,6 +236,13 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
             if (vp.getPayDate() == null) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Please enter pay date.",
                         "Invalid Pay Date.", JOptionPane.ERROR_MESSAGE);
+                vp.setIsFullPaid(false);
+                return;
+            }
+            if (cboPayment.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Please select payment type.",
+                        "Invalid Payment Type.", JOptionPane.ERROR_MESSAGE);
+                vp.setIsFullPaid(false);
                 return;
             }
             Date vouTranDate = vp.getPayDate();
@@ -235,7 +253,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             TraderPayHis tph = new TraderPayHis();
             vp.setRemark("FullPaid");
             if (vp.getPayDate() == null) {
@@ -263,6 +281,8 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
             tph.setPayOption("Cash");
             tph.setParentCurr(tph.getCurrency());
             tph.setPayDt(vp.getPayDate());
+            TraderPayAccount h = (TraderPayAccount) cboPayment.getSelectedItem();
+            tph.setPayAccount(h);
             PaymentVou pv = new PaymentVou();
             pv.setBalance(vp.getVouBalance());
             pv.setVouNo(vp.getVouNo());

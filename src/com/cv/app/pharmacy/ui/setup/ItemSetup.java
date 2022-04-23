@@ -1230,7 +1230,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
 
                 if (listRelationGroup != null) {
-                    if (listRelationGroup.size() > 0) {
+                    if (!listRelationGroup.isEmpty()) {
                         currMedicine.setRelationGroupId(listRelationGroup);
                         listItemUnit.removeAll(listItemUnit);
                         for (RelationGroup rg : listRelationGroup) {

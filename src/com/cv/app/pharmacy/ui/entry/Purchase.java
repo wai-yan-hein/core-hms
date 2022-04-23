@@ -24,7 +24,6 @@ import com.cv.app.pharmacy.database.entity.PurchaseExpense;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
-import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
@@ -66,7 +65,6 @@ import java.util.*;
 import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
@@ -84,9 +82,9 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     private final AbstractDataAccess dao = Global.dao;
     private GenVouNoImpl vouEngine = null;
     private List<PurDetailHis> listDetail
-            = ObservableCollections.observableList(new ArrayList<PurDetailHis>());
+            = ObservableCollections.observableList(new ArrayList<>());
     private List<PurchaseExpense> listExpense
-            = ObservableCollections.observableList(new ArrayList<PurchaseExpense>());
+            = ObservableCollections.observableList(new ArrayList<>());
     private MedicineUP medUp = new MedicineUP(dao);
     private BestAppFocusTraversalPolicy focusPolicy;
     private PurHis currPurVou = new PurHis();
@@ -177,6 +175,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         this.setFocusTraversalPolicy(focusPolicy);
         purTableModel.setParent(tblPurchase);
         purTableModel.setLblItemBrand(lblBrandName);
+        purTableModel.setLblRemark(lblRemark);
         lblStatus.setText("NEW");
         assignDefaultValue();
         //F3 trader code
@@ -266,6 +265,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         chkCashOut.setSelected(false);
         currPurVou = new PurHis();
         purTableModel.clear();
+        lblRemark.setText("");
         assignDefaultValueModel();
         initTextBoxValue();
         if (strPrvDate != null) {
@@ -698,13 +698,10 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         }
 
         tblPurchase.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblPurchase.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblPurchase.getSelectedRow() < purTableModel.getRowCount()) {
-                    lblBrandName.setText(purTableModel.getBrandName(tblPurchase.getSelectedRow()));
-                }
+        tblPurchase.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            if (tblPurchase.getSelectedRow() < purTableModel.getRowCount()) {
+                lblBrandName.setText(purTableModel.getBrandName(tblPurchase.getSelectedRow()));
+                lblBrandName.setText(purTableModel.getRemark(tblPurchase.getSelectedRow()));
             }
         });
     }// </editor-fold>
@@ -1483,9 +1480,9 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
             PurDetailHis sdh = listDetail.get(row);
 
             if (col == 0 && sdh.getMedId().getMedId() != null) {
-                tblPurchase.setColumnSelectionInterval(4, 4); //Move to Qty
+                tblPurchase.setColumnSelectionInterval(3, 3); //Move to Qty
             } else if (col == 1 && sdh.getMedId().getMedId() != null) {
-                tblPurchase.setColumnSelectionInterval(4, 4); //Move to Qty
+                tblPurchase.setColumnSelectionInterval(3, 3); //Move to Qty
             } else if (col == 2 && sdh.getMedId().getMedId() != null) {
                 tblPurchase.setColumnSelectionInterval(4, 4); //Move to Qty
             } else if (col == 3 && sdh.getMedId().getMedId() != null) {
@@ -1800,7 +1797,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         }
 
         if (listOut != null) {
-            if (listOut.size() > 0) {
+            if (!listOut.isEmpty()) {
                 for (int i = 0; i < listOut.size(); i++) {
                     PurchaseOutstand po = listOut.get(i);
 
@@ -2030,6 +2027,8 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         lblPrvBalance = new javax.swing.JLabel();
         jLabel20 = new javax.swing.JLabel();
         lblBrandName = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
+        lblRemark = new javax.swing.JLabel();
         butOutstanding = new javax.swing.JButton();
         butItemPromo = new javax.swing.JButton();
 
@@ -2253,6 +2252,8 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
         tblPurchase.setFont(Global.textFont);
         tblPurchase.setModel(purTableModel);
+        tblPurchase.setToolTipText("");
+        tblPurchase.setCellSelectionEnabled(true);
         tblPurchase.setRowHeight(23);
         tblPurchase.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -2448,28 +2449,42 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         lblPrvBalance.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         lblPrvBalance.setText(":");
 
+        jLabel20.setFont(Global.lableFont);
         jLabel20.setText("Brand Name :");
 
-        lblBrandName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        lblBrandName.setFont(Global.textFont);
         lblBrandName.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        jLabel21.setFont(Global.lableFont);
+        jLabel21.setText("Remark :");
+
+        lblRemark.setFont(Global.textFont);
+        lblRemark.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         org.jdesktop.layout.GroupLayout jPanel6Layout = new org.jdesktop.layout.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel6Layout.createSequentialGroup()
+            jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+            .add(jPanel6Layout.createSequentialGroup()
                 .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(lblPrvBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jLabel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE))
+                    .add(jLabel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtPrvBalance)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtCusLastBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE)))
             .add(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jLabel20)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(lblBrandName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jPanel6Layout.createSequentialGroup()
+                        .add(0, 0, Short.MAX_VALUE)
+                        .add(jLabel20)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .add(lblBrandName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 181, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel6Layout.createSequentialGroup()
+                        .add(jLabel21, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .add(lblRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 181, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2482,9 +2497,13 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     .add(txtCusLastBalance, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel12))
                 .add(18, 18, 18)
-                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel20)
-                    .add(lblBrandName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 37, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jLabel20, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(lblBrandName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jLabel21, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(lblRemark, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -2700,6 +2719,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -2717,6 +2737,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblBrandName;
     private javax.swing.JLabel lblPrvBalance;
+    private javax.swing.JLabel lblRemark;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblExpense;
     private javax.swing.JTable tblPurchase;

@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.setup;
 
+import com.cv.app.opd.ui.entry.OPDView;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import javax.swing.JComponent;
 import org.springframework.richclient.application.PageComponentContext;
@@ -27,17 +28,19 @@ public class RegistrationView extends AbstractView {
     }
 
     @Override
-    public void componentFocusGained(){
+    public void componentFocusGained() {
         System.out.println("Focus in view.");
         panel.timerFocus();
     }
-    
+
     @Override
     protected void registerLocalCommandExecutors(PageComponentContext context) {
         context.register("saveCommand", new SaveExecutor());
         context.register("newVouCommand", new NewFormExecutor());
         context.register("deleteCommand", new DeleteExecutor());
         context.register("historyCommand", new HistoryExecutor());
+        context.register("printCommand", new PrintExecutor());
+
     }
 
     private class SaveExecutor implements ActionCommandExecutor {
@@ -45,6 +48,14 @@ public class RegistrationView extends AbstractView {
         @Override
         public void execute() {
             panel.save(); //Calling FormAction method
+        }
+    }
+
+    private class PrintExecutor implements ActionCommandExecutor {
+
+        @Override
+        public void execute() {
+            formAction.print(); //Calling FormAction method
         }
     }
 

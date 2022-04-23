@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" language="groovy" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="invoiceNo" class="java.lang.String"/>
+	<parameter name="customerName" class="java.lang.String"/>
+	<parameter name="saleDate" class="java.util.Date"/>
+	<parameter name="grandTotal" class="java.lang.Double"/>
+	<parameter name="paid" class="java.lang.Double"/>
+	<parameter name="discount" class="java.lang.Double"/>
+	<parameter name="tax" class="java.lang.Double"/>
+	<parameter name="balance" class="java.lang.Double"/>
+	<parameter name="user" class="java.lang.String"/>
+	<parameter name="vou_status" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="doctor" class="java.lang.String"/>
+	<parameter name="remark" class="java.lang.String"/>
+	<parameter name="reg_no" class="java.lang.String"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<parameter name="link_amt_status" class="java.lang.String"/>
+	<parameter name="link_amt" class="java.lang.Double"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["D:\\CoreValue\\Program\\cv_inventory\\Inventory_Report\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="phoneNo" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select if(ifnull(tmp.service_id,'') = '', service_name, concat(service_name,' (',tmp.doctor_name,')')) serviceName,qty quantity,amount,price
+from v_ot left join (SELECT d.doctor_name,vt.service_id FROM v_ot vt,ot_dr_fee_join odfj,ot_doctor_fee dof,doctor d,dr_detail_id ddi
+where vt.ot_inv_id = $P{invoiceNo} and vt.ot_detail_id=odfj.ot_detail_id and odfj.dr_fee_id=dof.dr_fee_id and d.doctor_id = dof.doctor_id and vt.service_id = ddi.service_id and ddi.option = 'OT') tmp on v_ot.service_id = tmp.service_id where ot_inv_id = $P{invoiceNo}]]>
+	</queryString>
+	<field name="serviceName" class="java.lang.String"/>
+	<field name="quantity" class="java.lang.Integer"/>
+	<field name="amount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="65" splitType="Stretch">
+			<textField>
+				<reportElement x="19" y="1" width="195" height="15" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<textElement textAlignment="Center">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="19" y="49" width="195" height="15" uuid="a5f7c78e-0ecc-49f5-a8dc-56e0c612ff7c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[OT Voucher]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="19" y="16" width="195" height="33" uuid="d1f066da-aedf-4534-86ef-15c106dcb007"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="66" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="146" y="1" width="68" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{saleDate}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="19" y="1" width="127" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{invoiceNo}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="152" y="53" width="17" height="12" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Qty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="19" y="53" width="105" height="12" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Description]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="53" width="44" height="12" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+			<line>
+				<reportElement x="19" y="52" width="196" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="19" y="65" width="196" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="77" y="12" width="137" height="12" uuid="8f25f22d-21ce-48f3-b1e1-e518d9e020a5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="19" y="23" width="45" height="15" uuid="c2435dd0-b7d0-46ec-9758-926758a8b5aa"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Doctor :]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="64" y="23" width="135" height="15" uuid="29f8f6c0-47f8-46cf-aa62-5e4716f3a0c5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{doctor}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="19" y="37" width="45" height="15" uuid="71989970-e0c4-4c56-ad73-02be89b2c3f2"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Remark :]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="64" y="37" width="135" height="15" uuid="d764e6c5-90a4-4aeb-9ec6-9e785edc269c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{remark}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="19" y="12" width="58" height="12" uuid="87ca1a17-d66c-48fe-9423-96fe6ba658bf"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{reg_no}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="12" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="170" y="0" width="44" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement x="19" y="0" width="133" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{serviceName}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="152" y="0" width="17" height="12" uuid="75d9eac6-7bcd-4d23-9f3b-4705d5d2146a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="128" splitType="Stretch">
+			<staticText>
+				<reportElement x="101" y="1" width="57" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Total :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="101" y="15" width="57" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Discount :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="101" y="29" width="57" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Paid :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="101" y="43" width="57" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Tax :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="101" y="57" width="57" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Balance :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="19" y="100" width="195" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[* Thank You *]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="19" y="115" width="48" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{user}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="160" y="43" width="54" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{tax}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="160" y="15" width="54" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{discount}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="160" y="1" width="54" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{grandTotal}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="160" y="57" width="54" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{balance}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="160" y="29" width="54" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{paid}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="h.mm a" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="160" y="115" width="54" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="19" y="0" width="196" height="1" uuid="f6ce3769-9838-44fa-b1e8-01b661c9e068"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="101" y="115" width="59" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="49" y="34" width="38" height="12" uuid="4d8b16e5-e0c6-4395-a44e-7c45dd96184e"/>
+				<textFieldExpression><![CDATA[$P{vou_status}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="19" y="72" width="196" height="1" uuid="b38757b7-0e38-416a-a5d1-7ad5dd34e19c">
+					<printWhenExpression><![CDATA[$P{link_amt_status} == "Y"]]></printWhenExpression>
+				</reportElement>
+			</line>
+			<subreport>
+				<reportElement x="19" y="73" width="195" height="12" uuid="0de1e5d6-9c3f-4487-8d36-e3241953aa0a">
+					<printWhenExpression><![CDATA[$P{link_amt_status} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="user_id">
+					<subreportParameterExpression><![CDATA[$P{user_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "LinkAmountSubX.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" pattern="#,##0" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="160" y="88" width="54" height="12" uuid="0b3f6704-9e9a-4b1f-a78f-ae014e7a4f7a">
+					<printWhenExpression><![CDATA[$P{link_amt_status} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{link_amt}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="101" y="88" width="57" height="12" uuid="43d62eb1-5410-40e7-96b4-1685f4d5dd8e">
+					<printWhenExpression><![CDATA[$P{link_amt_status} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[All Total :]]></text>
+			</staticText>
+			<line>
+				<reportElement x="19" y="85" width="196" height="1" uuid="82b0e425-1809-4c84-bf96-01c51ec835cb">
+					<printWhenExpression><![CDATA[$P{link_amt_status} == "Y"]]></printWhenExpression>
+				</reportElement>
+			</line>
+		</band>
+	</summary>
+</jasperReport>

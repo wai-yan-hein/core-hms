@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptReturnInSummary" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="17b16060-d7e7-43e5-86b3-3f3958c7548d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="8"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="data_date" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String"/>
+	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="prm_location" class="java.lang.Integer"/>
+	<parameter name="prm_currency" class="java.lang.String"/>
+	<parameter name="prm_payment" class="java.lang.Integer"/>
+	<parameter name="user_id" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT DISTINCT
+	DATE(rh.ret_in_date) 'Return In Date',
+	rh.ret_in_id 'Return In ID',
+	ifnull(t.trader_name,pd.patient_name) 'Trader Name',
+	rh.vou_total 'Vou Total',
+	rh.paid 'Paid Amount',
+	rh.balance 'Balance',
+	rh.currency 'Currency',
+	pt.payment_type_name
+FROM ret_in_his rh left join trader t on rh.cus_id = t.trader_id left join patient_detail pd on
+pd.reg_no = rh.reg_no, currency cur, payment_type pt,
+ ret_in_detail_his rdh
+WHERE 	rh.ret_in_id = rdh.vou_no
+	AND rh.currency = cur.cur_code
+	AND rh.payment_type = pt.payment_type_id
+	AND DATE(rh.ret_in_date) BETWEEN $P{prm_from} AND $P{prm_to}
+	AND deleted = FALSE
+	AND (location = $P{prm_location} or $P{prm_payment} =0)
+	AND (rh.currency = $P{prm_currency} or $P{prm_currency} = 'All')
+	AND (rh.payment_type = $P{prm_payment} or $P{prm_payment} = 0)
+	AND (rdh.med_id IN
+		(select distinct med_id from tmp_stock_filter where user_id = $P{user_id}))
+order by pt.payment_type_name,DATE(rh.ret_in_date),rh.ret_in_id]]>
+	</queryString>
+	<field name="Return In Date" class="java.sql.Date"/>
+	<field name="Return In ID" class="java.lang.String"/>
+	<field name="Trader Name" class="java.lang.String"/>
+	<field name="Vou Total" class="java.lang.Double"/>
+	<field name="Paid Amount" class="java.lang.Double"/>
+	<field name="Balance" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="Currency" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="payment_type_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="ttl_vou_total" class="java.lang.Double" resetType="Group" resetGroup="currency" calculation="Sum">
+		<variableExpression><![CDATA[$F{Vou Total}]]></variableExpression>
+	</variable>
+	<variable name="ttl_paid" class="java.lang.Double" resetType="Group" resetGroup="currency" calculation="Sum">
+		<variableExpression><![CDATA[$F{Paid Amount}]]></variableExpression>
+	</variable>
+	<variable name="ttl_balance" class="java.lang.Double" resetType="Group" resetGroup="currency" calculation="Sum">
+		<variableExpression><![CDATA[$F{Balance}]]></variableExpression>
+	</variable>
+	<group name="currency">
+		<groupExpression><![CDATA[$F{Currency}]]></groupExpression>
+		<groupFooter>
+			<band height="16">
+				<line>
+					<reportElement x="0" y="0" width="555" height="1" uuid="89a3f275-bfaa-4f68-a3d9-4e7769b304f4"/>
+					<graphicElement>
+						<pen lineWidth="0.5"/>
+					</graphicElement>
+				</line>
+				<staticText>
+					<reportElement x="290" y="1" width="32" height="15" uuid="290a6553-dc9f-460f-8583-de67836ed711"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="201" y="1" width="89" height="15" uuid="ef0c6ec0-18ca-476f-8b5c-97ddf53cba39"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{Currency}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00#;(#,##0.00#)">
+					<reportElement x="322" y="1" width="75" height="15" uuid="2096e398-9e04-44e3-9017-a3abbe05c6dc"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_vou_total}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00#;(#,##0.00#)">
+					<reportElement x="410" y="1" width="57" height="15" uuid="759d64d8-963f-40d7-add8-0db47fb6d469"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_paid}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00#;(#,##0.00#)">
+					<reportElement x="480" y="1" width="75" height="15" uuid="6a73e9aa-6d6d-4197-a538-4baa49850917"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_balance}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="66" splitType="Stretch">
+			<textField>
+				<reportElement x="1" y="1" width="554" height="20" uuid="ecb16cd7-8fc1-4d99-bb42-f1c4c8464130"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="21" width="230" height="30" uuid="39d05099-1d9f-437c-a506-af1bf88b5114"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Return In Summary]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="51" width="230" height="15" uuid="c727f7c3-2bd8-4cea-b7be-cad7ed25d834"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="386" y="51" width="67" height="15" uuid="45b2b92a-87af-4e98-9b71-be663cdf7db1"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed Date : ]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h:mm:ss a">
+				<reportElement x="455" y="51" width="100" height="15" uuid="6962d1e0-720f-495f-af13-f89a46320dfb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="33" splitType="Stretch">
+			<textField>
+				<reportElement x="419" y="0" width="100" height="15" uuid="99697084-aac5-460f-885a-20b79b76e6ab"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="520" y="0" width="35" height="15" uuid="52f3c49a-0f3a-4fb8-b027-dfc37069307b"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="17" width="58" height="15" uuid="6525f1b9-171a-45f3-bbfa-52e22a61a53a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="61" y="17" width="79" height="15" uuid="67a68ba5-9501-45e5-92af-4cc346ef8b2e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Invoice No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="144" y="17" width="160" height="15" uuid="a73d04c9-8b69-4251-9c0d-c2a65373f720"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Customer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="322" y="17" width="75" height="15" uuid="847f834c-8aac-472d-8a09-5c77bea3f182"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Vou-Total]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="410" y="17" width="57" height="15" uuid="7135fdd5-9eca-4e5e-b893-eba6677afd47"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Paid]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="480" y="17" width="75" height="15" uuid="aac901d3-dc89-4183-90a4-2b596386f670"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Balance]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="16" width="555" height="1" uuid="b8e5ab42-6156-42f8-9e83-5a331e2bbacb"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="32" width="555" height="1" uuid="ffef9643-6055-4791-9a9f-7d7256624986"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="0" y="0" width="58" height="15" uuid="17b2d06f-3213-46ce-b654-720d3baad175"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Return In Date}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00">
+				<reportElement x="61" y="0" width="79" height="15" uuid="f04998d5-51f6-4751-97b1-b5917cefeb71"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Return In ID}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="144" y="0" width="160" height="15" uuid="53d54caa-0158-473d-ba30-d81f74ec4370"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Trader Name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#)">
+				<reportElement x="322" y="0" width="75" height="15" uuid="e707f20d-18e0-45d2-be93-ebd52712cedb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Vou Total}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#)">
+				<reportElement x="410" y="0" width="57" height="15" uuid="b247bd5a-b2b0-4008-b822-60b0bffc44a1"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Paid Amount}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#)">
+				<reportElement x="480" y="0" width="75" height="15" uuid="95b3ef85-c271-4cb8-b508-031d6f78d0fc"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{Balance}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="15" width="555" height="1" uuid="3691d12f-dc92-4d92-b78b-1f8743f41d14"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

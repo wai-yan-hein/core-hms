@@ -48,9 +48,18 @@ public class PurchaseTableModel extends AbstractTableModel {
     private String deletedList;
     private Location location;
     private JLabel lblItemBrand;
+    private JLabel lblRemark;
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
     private final String purPriceType = Util1.getPropValue("system.purchase.purprice");
     private int maxUniqueId = 0;
+
+    public JLabel getLblRemark() {
+        return lblRemark;
+    }
+
+    public void setLblRemark(JLabel lblRemark) {
+        this.lblRemark = lblRemark;
+    }
 
     public PurchaseTableModel(List<PurDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo) {
@@ -432,6 +441,7 @@ public class PurchaseTableModel extends AbstractTableModel {
 
         if (med.getBrand() != null) {
             lblItemBrand.setText(med.getBrand().getBrandName());
+            lblRemark.setText(med.getChemicalName());
         }
         record.setMedId(med);
         record.setAmount(null);
@@ -456,7 +466,7 @@ public class PurchaseTableModel extends AbstractTableModel {
         setPurCost(record);
 
         fireTableCellUpdated(pos, 0);
-        parent.setColumnSelectionInterval(4, 4);
+        parent.setColumnSelectionInterval(3, 3);
     }
 
     public void delete(int row) {
@@ -484,6 +494,19 @@ public class PurchaseTableModel extends AbstractTableModel {
         }
 
         fireTableRowsDeleted(row, row);
+    }
+
+    public String getRemark(int index) {
+        try {
+            PurDetailHis sdh = listDetail.get(index);
+            if (sdh.getMedId() != null) {
+                return sdh.getMedId().getChemicalName();
+            } else {
+                return null;
+            }
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     // <editor-fold defaultstate="collapsed" desc="calculateAmont">

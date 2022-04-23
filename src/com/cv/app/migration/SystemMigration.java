@@ -1932,94 +1932,94 @@ public class SystemMigration extends javax.swing.JPanel {
 
     private void processItemSetupData1() {
         try {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(txaQuery.getText());
-
-            while (rs.next()) {
-                String medId = rs.getString("SHORT_CODE");
-                Medicine tmpMed = (Medicine) dao.find(Medicine.class, medId);
-                if (tmpMed != null) {
-                    log.info("Duplicate Medicine : " + medId + " : " + tmpMed.getMedName());
-                } else {
-                    Medicine mc = new Medicine();
-                    mc.setMedId(rs.getString("SHORT_CODE"));
-                    log.info("med_id : " + mc.getMedId());
-                    /*if(mc.getMedId().equals("119081")){
-                    System.out.println("aaa");
-                }*/
-                    String medDesp = getZawgyiText(rs.getString("MED_DESP"));
-                    mc.setMedName(medDesp);
-                    mc.setActive(rs.getBoolean("ACTIVE"));
-                    mc.setRelStr(getZawgyiText(rs.getString("RELATION_STR")));
-
-                    ItemType it = (ItemType) dao.find(ItemType.class, rs.getString("DRUG_TYPE_ID"));
-                    mc.setMedTypeId(it);
-
-                    List<ItemBrand> listIB = dao.findAllHSQL(
-                            "select o from ItemBrand o where o.migId = " + rs.getInt("MANUFACTURER_ID"));
-                    if (listIB != null) {
-                        if (!listIB.isEmpty()) {
-                            mc.setBrand(listIB.get(0));
+            try (Statement stmt = con.createStatement()) {
+                ResultSet rs = stmt.executeQuery(txaQuery.getText());
+                
+                while (rs.next()) {
+                    String medId = rs.getString("SHORT_CODE");
+                    Medicine tmpMed = (Medicine) dao.find(Medicine.class, medId);
+                    if (tmpMed != null) {
+                        log.info("Duplicate Medicine : " + medId + " : " + tmpMed.getMedName());
+                    } else {
+                        Medicine mc = new Medicine();
+                        mc.setMedId(rs.getString("SHORT_CODE"));
+                        log.info("med_id : " + mc.getMedId());
+                        /*if(mc.getMedId().equals("119081")){
+                        System.out.println("aaa");
+                        }*/
+                        String medDesp = getZawgyiText(rs.getString("MED_DESP"));
+                        mc.setMedName(medDesp);
+                        mc.setActive(rs.getBoolean("ACTIVE"));
+                        mc.setRelStr(getZawgyiText(rs.getString("RELATION_STR")));
+                        
+                        ItemType it = (ItemType) dao.find(ItemType.class, rs.getString("DRUG_TYPE_ID"));
+                        mc.setMedTypeId(it);
+                        
+                        List<ItemBrand> listIB = dao.findAllHSQL(
+                                "select o from ItemBrand o where o.migId = " + rs.getInt("MANUFACTURER_ID"));
+                        if (listIB != null) {
+                            if (!listIB.isEmpty()) {
+                                mc.setBrand(listIB.get(0));
+                            }
                         }
-                    }
-
-                    List<Category> listCAT = dao.findAllHSQL(
-                            "select o from Category o where o.migId = " + rs.getInt("CHEMICAL_ID"));
-                    if (listCAT != null) {
-                        if (!listCAT.isEmpty()) {
-                            mc.setCatId(listCAT.get(0));
+                        
+                        List<Category> listCAT = dao.findAllHSQL(
+                                "select o from Category o where o.migId = " + rs.getInt("CHEMICAL_ID"));
+                        if (listCAT != null) {
+                            if (!listCAT.isEmpty()) {
+                                mc.setCatId(listCAT.get(0));
+                            }
                         }
-                    }
-
-                    Statement sDetail = con.createStatement();
-                    ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
-                            + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
-                            + " ORDER BY QTY_IN_SMALLEST DESC");
-
-                    List<RelationGroup> listRG = new ArrayList();
-                    int uniqueId = 1;
-                    float prvQty = 0;
-
-                    while (rs1.next()) {
-                        RelationGroup rg = new RelationGroup();
-                        rg.setRelUniqueId(uniqueId);
-                        rg.setSalePrice(rs1.getDouble("SALE_PRICE"));
-                        rg.setSalePriceA(rs1.getDouble("WS_PRICE1"));
-                        rg.setSalePriceB(rs1.getDouble("WS_PRICE2"));
-                        rg.setSalePriceC(rs1.getDouble("WS_PRICE3"));
-                        rg.setSmallestQty(rs1.getFloat("QTY_IN_SMALLEST"));
-                        if (uniqueId == 1) {
-                            rg.setUnitQty(Float.parseFloat("1"));
-                        } else {
-                            rg.setUnitQty(prvQty / rg.getSmallestQty());
+                        
+                        Statement sDetail = con.createStatement();
+                        ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
+                                + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
+                                + " ORDER BY QTY_IN_SMALLEST DESC");
+                        
+                        List<RelationGroup> listRG = new ArrayList();
+                        int uniqueId = 1;
+                        float prvQty = 0;
+                        
+                        while (rs1.next()) {
+                            RelationGroup rg = new RelationGroup();
+                            rg.setRelUniqueId(uniqueId);
+                            rg.setSalePrice(rs1.getDouble("SALE_PRICE"));
+                            rg.setSalePriceA(rs1.getDouble("WS_PRICE1"));
+                            rg.setSalePriceB(rs1.getDouble("WS_PRICE2"));
+                            rg.setSalePriceC(rs1.getDouble("WS_PRICE3"));
+                            rg.setSmallestQty(rs1.getFloat("QTY_IN_SMALLEST"));
+                            if (uniqueId == 1) {
+                                rg.setUnitQty(Float.parseFloat("1"));
+                            } else {
+                                rg.setUnitQty(prvQty / rg.getSmallestQty());
+                            }
+                            prvQty = rg.getSmallestQty();
+                            
+                            ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, rs1.getString("UNIT_SHORT"));
+                            rg.setUnitId(iu);
+                            listRG.add(rg);
+                            
+                            uniqueId++;
                         }
-                        prvQty = rg.getSmallestQty();
-
-                        ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, rs1.getString("UNIT_SHORT"));
-                        rg.setUnitId(iu);
-                        listRG.add(rg);
-
-                        uniqueId++;
-                    }
-
-                    rs1.close();
-                    sDetail.close();
-
-                    mc.setRelationGroupId(listRG);
-                    mc.setActive(true);
-                    try {
-                        dao.save(mc);
-                    } catch (Exception ex) {
-                        log.error(mc.getMedId() + "@" + mc.getMedName() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-                        //dao.flush();
-                    } finally {
-                        dao.close();
+                        
+                        rs1.close();
+                        sDetail.close();
+                        
+                        mc.setRelationGroupId(listRG);
+                        mc.setActive(true);
+                        try {
+                            dao.save(mc);
+                        } catch (Exception ex) {
+                            log.error(mc.getMedId() + "@" + mc.getMedName() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                            //dao.flush();
+                        } finally {
+                            dao.close();
+                        }
                     }
                 }
+                
+                rs.close();
             }
-
-            rs.close();
-            stmt.close();
         } catch (Exception ex) {
             lblStatus.setText("processItemSetupData1 : " + ex.getMessage());
             log.error("processItemSetupData1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
@@ -2890,8 +2890,8 @@ public class SystemMigration extends javax.swing.JPanel {
                 //processItemTypeData();
                 //processCategoryData();
                 //processBrandNameData();
-                //processItemSetupData1();
-                processItemMarge();
+                processItemSetupData1();
+                //processItemMarge();
                 break;
             case "Lab Result":
                 //processLabResultData();

@@ -26,6 +26,7 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -68,6 +69,24 @@ public class SaleTableModel extends AbstractTableModel {
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
     private int maxUniqueId = 0;
     private StockList stockList;
+    private JLabel lblRemark;
+    private SaleStockTableModel stockTableModel;
+
+    public SaleStockTableModel getStockTableModel() {
+        return stockTableModel;
+    }
+
+    public void setStockTableModel(SaleStockTableModel stockTableModel) {
+        this.stockTableModel = stockTableModel;
+    }
+
+    public JLabel getLblRemark() {
+        return lblRemark;
+    }
+
+    public void setLblRemark(JLabel lblRemark) {
+        this.lblRemark = lblRemark;
+    }
 
     public SaleTableModel(List<SaleDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo, SelectionObserver observer) {
@@ -290,6 +309,8 @@ public class SaleTableModel extends AbstractTableModel {
                         dao.close();
                         if (record.getMedId() != null) {
                             if (record.getMedId().getMedId() != null) {
+                                lblRemark.setText(record.getMedId().getChemicalName());
+                                record.setExpireDate(stockTableModel.getExpireDate(record.getLocation().getLocationId()));
                                 if (Util1.getPropValue("system.app.sale.stockBalance").equals("D")) {
                                     assignBalance(record);
                                     fireTableCellUpdated(row, 12);
@@ -751,6 +772,7 @@ public class SaleTableModel extends AbstractTableModel {
                                     sdh.setUnitId(stock.getUnit());
                                     sdh.setExpireDate(stock.getExpDate());
                                     sdh.setChargeId(defaultChargeType);
+                                    sdh.setLocation(location);
 
                                     //Add sale price assign code
                                     String key = sdh.getMedId().getMedId() + "-"
@@ -821,7 +843,6 @@ public class SaleTableModel extends AbstractTableModel {
                                  * medUp.getQtyInSmallest(key)); listDetail.add(sdh);
                                  * calculateAmount(listDetail.size() - 1); }
                                  */
-
                             }
                         } catch (Exception ex) {
                             log.error("setMed : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
@@ -836,7 +857,8 @@ public class SaleTableModel extends AbstractTableModel {
             addEmptyRow();
         }
 
-        fireTableCellUpdated(pos, 0);
+        //fireTableCellUpdated(pos, 0);
+        fireTableRowsUpdated(pos, pos);
         /*
          * try{ parent.getCellEditor().stopCellEditing(); }catch(Exception ex){
          *
@@ -1040,6 +1062,14 @@ public class SaleTableModel extends AbstractTableModel {
 
     public void setLocation(Location location) {
         this.location = location;
+        if (this.location != null) {
+            for (SaleDetailHis sh : listDetail) {
+                if (sh.getMedId() != null && sh.getMedId().getMedId() != null) {
+                    sh.setLocation(location);
+                }
+            }
+            fireTableDataChanged();
+        }
         /*if (location != null) {
          if (hmLocPrice.containsKey(location.getLocationId())) {
          cusType = hmLocPrice.get(location.getLocationId());
@@ -1069,6 +1099,19 @@ public class SaleTableModel extends AbstractTableModel {
 
     public void setLblItemBrand(JLabel lblItemBrand) {
         this.lblItemBrand = lblItemBrand;
+    }
+
+    public String getRemark(int index) {
+        try {
+            SaleDetailHis sdh = listDetail.get(index);
+            if (sdh.getMedId() != null) {
+                return sdh.getMedId().getChemicalName();
+            } else {
+                return null;
+            }
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public String getBrandName(int index) {
@@ -1171,7 +1214,7 @@ public class SaleTableModel extends AbstractTableModel {
                 String qtyStr = MedicineUtil.getQtyInStr(record.getMedId(), balance);
                 record.setBalQtyInString(qtyStr);
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("assignBalance : " + ex.getMessage());
         }
     }

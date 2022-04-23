@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="GroundStockValue" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="07252212-5215-45bb-bb42-6335a6bfe51f">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<parameter name="data_date" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="prm_to" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="prm_flocation" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select vso.op_date, vso.med_id, med.med_name, med.med_rel_str, vso.expire_date,
+vso.op_qty,vso.op_smallest_qty, vso.item_unit, (vso.op_qty * ifnull(vso.cost_price,0))/ vso.op_smallest_qty cost_price, (vso.op_qty * ifnull(vso.cost_price,0)) ttl_cost, loc.location_name,
+vso.location, ps.system_desp, get_qty_in_str(vso.op_smallest_qty, medrel.unit_smallest, medrel.unit_str) ttl_stock_balance,
+if(vso.op_smallest_qty < 0, 0, ifnull((vso.op_smallest_qty*ifnull(vlc.smallest_price,0)),0)) as lst_ttl_cost
+from v_stock_op vso 
+join medicine med on vso.med_id = med.med_id
+join (select distinct med_id from tmp_stock_filter where user_id = $P{user_id}) filt on vso.med_id = filt.med_id
+join location loc on vso.location = loc.location_id
+join v_med_unit_smallest_rel medrel on vso.med_id = medrel.med_id
+left join phar_system ps on med.phar_sys_id = ps.id
+left join v_last_cost_prices_small vlc on vso.med_id = vlc.med_id
+where date(vso.op_date) between $P{prm_from} and $P{prm_to}
+and (vso.location = $P{prm_flocation} or $P{prm_flocation} = 0)
+and vso.op_qty <> 0
+order by loc.location_name, ps.system_desp, med.med_name, vso.expire_date]]>
+	</queryString>
+	<field name="op_date" class="java.sql.Date"/>
+	<field name="med_id" class="java.lang.String"/>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_rel_str" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="expire_date" class="java.sql.Date"/>
+	<field name="op_qty" class="java.lang.Float"/>
+	<field name="op_smallest_qty" class="java.lang.Float"/>
+	<field name="item_unit" class="java.lang.String"/>
+	<field name="cost_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_cost" class="java.lang.Double"/>
+	<field name="location_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="location" class="java.lang.Integer"/>
+	<field name="system_desp" class="java.lang.String"/>
+	<field name="ttl_stock_balance" class="java.lang.String"/>
+	<field name="lst_ttl_cost" class="java.lang.Double"/>
+	<variable name="ttl_cost" class="java.lang.Number" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl_cost}]]></variableExpression>
+	</variable>
+	<variable name="ttl_cost_loc" class="java.lang.Double" resetType="Group" resetGroup="phar_system" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl_cost}]]></variableExpression>
+	</variable>
+	<variable name="ttl_lst_cost_s" class="java.lang.Double" resetType="Group" resetGroup="phar_system" calculation="Sum">
+		<variableExpression><![CDATA[$F{lst_ttl_cost}]]></variableExpression>
+	</variable>
+	<variable name="ttl_lst_cost_r" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{lst_ttl_cost}]]></variableExpression>
+	</variable>
+	<group name="phar_system">
+		<groupExpression><![CDATA[$F{system_desp}]]></groupExpression>
+		<groupHeader>
+			<band height="15">
+				<staticText>
+					<reportElement x="0" y="0" width="40" height="15" uuid="f1c16d40-6979-4b8c-a8b1-d1d5ff7e6c44"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true" isItalic="false"/>
+					</textElement>
+					<text><![CDATA[System :]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="41" y="0" width="298" height="15" uuid="c3a6c72e-eaf0-4fb6-923c-6c5ff2737659"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true" isItalic="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{system_desp}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="16">
+				<textField pattern="#,##0;-#,##0">
+					<reportElement x="413" y="1" width="86" height="15" uuid="3c728482-b75b-456f-acd0-087dbc151de3"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_cost_loc}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="380" y="1" width="33" height="15" uuid="03b61d8f-b5b7-42b8-8fd5-04cdf2056a07"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total : ]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="158" y="1" width="220" height="15" uuid="b83d13b2-f33b-47c7-bd39-0603e3fd1686"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{system_desp}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="0" y="0" width="555" height="1" uuid="10b77abd-27f4-4305-b6e4-32aa44bff4d7"/>
+					<graphicElement>
+						<pen lineWidth="0.5"/>
+					</graphicElement>
+				</line>
+				<textField pattern="#,##0;(#,##0)">
+					<reportElement x="500" y="1" width="55" height="15" uuid="6b3d7e94-a827-481b-a88e-4a35828b5f96"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_lst_cost_s}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="location">
+		<groupHeader>
+			<band height="15">
+				<staticText>
+					<reportElement x="1" y="0" width="45" height="15" uuid="2399a0bf-c38d-4e94-b13d-8acb6a60f84a"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true" isItalic="false"/>
+					</textElement>
+					<text><![CDATA[Location :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="47" y="0" width="206" height="15" uuid="1d369e6d-8607-4126-b229-2bee77d5a6a2"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One" size="8" isBold="true" isItalic="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{location_name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="72" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="340" height="20" uuid="df68c8b7-f103-48f7-a33d-0ff17c1855fe"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="555" height="32" uuid="c9762802-be34-4446-93c6-0635ed8a93ec"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ground Stock Value with System]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="52" width="251" height="20" uuid="e33b5bd6-498f-43a3-9085-6237f9fac54b"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="455" y="52" width="100" height="20" uuid="72dc8e2d-21be-437f-b87c-c65e97f1293c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="381" y="52" width="70" height="20" uuid="bea99b8e-4e2b-425f-ad69-2f62c3b1a235"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement x="435" y="0" width="80" height="20" uuid="7dad1027-3ea7-4e8c-8cad-7ba1161a82cb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="515" y="0" width="40" height="20" uuid="ebd596f6-99aa-4e3d-a61d-817d2a4755e8"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="21" width="555" height="1" uuid="5b0242f3-ee94-4105-acdb-28a54e93bbe9"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="39" width="555" height="1" uuid="65049006-07d8-45af-b97a-91b5cbf3ffb8"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="0" y="23" width="42" height="15" uuid="f1fc577a-04d4-4eab-a4a2-a022d3774718"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Op-Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="43" y="23" width="43" height="15" uuid="2695bb44-b303-41e1-a8b3-ed96df6fb3c4"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Item Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="87" y="23" width="148" height="15" uuid="bc610798-7cad-4a2a-8dd2-f4b77381a8b9"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Item Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="236" y="23" width="76" height="15" uuid="57ec1aec-e2cc-484d-8bf9-6c259a0ee485"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Packing Size]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="313" y="23" width="43" height="15" uuid="81ba74ac-9436-4d32-bf65-8f524cc6135a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ex-Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="357" y="23" width="40" height="15" uuid="6502d32b-bc17-47c9-841c-e2f084c746e7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Qty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="398" y="23" width="50" height="15" uuid="f13b2ffa-fe14-4571-9426-a38c82a334de"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[S-Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="449" y="23" width="50" height="15" uuid="0df4daf8-28ea-4bbe-9f75-e9d3df156709"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ttl-Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="500" y="23" width="55" height="15" uuid="cc6c85a0-78da-4195-9ef7-96e69b1db7fd"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LP Cost]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="0" y="0" width="42" height="15" uuid="7b977a53-a3a1-4d36-a372-9efd30fa42e4"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{op_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="43" y="0" width="43" height="15" uuid="3bf438e2-869a-46bb-a44f-48ae93e50d2c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="87" y="0" width="148" height="15" uuid="bf34a221-3289-4f90-864a-2b4e8ede2847"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="236" y="0" width="76" height="15" uuid="caf73c90-db4d-4e26-ae72-c684881eef07"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_rel_str}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="313" y="0" width="43" height="15" uuid="7decc3cb-51b5-4345-a8d4-d5ec0ad6c4af"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{expire_date} == null ? " " : $F{expire_date}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="357" y="0" width="40" height="15" uuid="62dfd6ae-654a-4f1e-99e8-9c9fee83e775"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_stock_balance}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="449" y="0" width="50" height="15" uuid="d10d29b2-6d7b-4432-96d5-f1c13c082ea4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_cost}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00;-###0.00">
+				<reportElement x="398" y="0" width="50" height="15" uuid="a6166858-7cf6-4624-bfef-fba61db93589"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cost_price}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="15" width="555" height="1" uuid="fc22e0cd-e57c-4692-b0e8-18a50decfb41"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="500" y="0" width="55" height="15" uuid="83e7ac8d-34bb-4301-8a33-c6ca028b1ba6"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{lst_ttl_cost}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="17" splitType="Stretch">
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="413" y="1" width="86" height="15" uuid="2dc4e873-f534-4e89-ae5c-00e10b7ef264"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_cost}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="362" y="1" width="52" height="15" uuid="d2e50e10-c66b-4a40-add9-453aa9330725"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total : ]]></text>
+			</staticText>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="500" y="1" width="55" height="15" uuid="7def7623-739e-49c6-b12a-bd444867f44b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_lst_cost_r}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

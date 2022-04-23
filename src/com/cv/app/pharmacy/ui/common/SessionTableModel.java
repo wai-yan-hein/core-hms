@@ -94,7 +94,7 @@ public class SessionTableModel extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Tran Date
-                    return DateUtil.toDateStr(vSession.getTranDate());
+                    return DateUtil.toDateStr(vSession.getTranDate(), "dd/MM/yyyy hh.mm aa");
                 case 1: //Vou No
                     if (vSession.isDeleted()) {
                         return vSession.getKey().getInvId() + "*";
@@ -115,23 +115,23 @@ public class SessionTableModel extends AbstractTableModel {
                         return vSession.getTraderName();
                     }
                 case 4: //V-Total
-                    return NumberUtil.roundTo(vSession.getVouTotal(),0);
+                    return NumberUtil.roundTo(vSession.getVouTotal(), 0);
                 case 5: //V-Currency
                     return vSession.getCurrency();
                 case 6: //Paid
-                    return NumberUtil.roundTo(vSession.getPaid(),0);
+                    return NumberUtil.roundTo(vSession.getPaid(), 0);
                 case 7: //P-Currency
                     return vSession.getPaidCurrency();
                 case 8: //Disc
-                    return NumberUtil.roundTo(vSession.getDiscount(),0);
+                    return NumberUtil.roundTo(vSession.getDiscount(), 0);
                 case 9: //Balance
-                    return NumberUtil.roundTo(vSession.getBalance(),0);
+                    return NumberUtil.roundTo(vSession.getBalance(), 0);
                 case 10: //Exp-In
-                    return NumberUtil.roundTo(vSession.getExpIn(),0);
+                    return NumberUtil.roundTo(vSession.getExpIn(), 0);
                 case 11: //Exp-Out
-                    return NumberUtil.roundTo(vSession.getExpense(),0);
+                    return NumberUtil.roundTo(vSession.getExpense(), 0);
                 case 12: //Tax
-                    return NumberUtil.roundTo(vSession.getTaxAmt(),0);
+                    return NumberUtil.roundTo(vSession.getTaxAmt(), 0);
                 case 13: //User
                     return vSession.getUserShortName();
                 case 14: //Source

@@ -63,6 +63,7 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
     private final PaymentHisTableModel model = new PaymentHisTableModel();
     private int selectRow = -1;
     private int mouseClick = 2;
+
     //private final TableRowSorter<TableModel> tblTraderSorter;
     /**
      * Creates new form CustomerPayment1
@@ -81,13 +82,13 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
         initTable();
         calculateTotal();
         actionMapping();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -225,7 +226,7 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
                     + "	  left join customer_group cg on t.group_id = cg.group_id\n"
                     + "	 where bal > 0 and (t.group_id = '" + strCusGroup + "' or '" + strCusGroup + "' = '-')"
                     + "    and vob.trader_id in (select trader_id from v_location_trader_mapping where "
-                        + "location_id = strLocation and map_status = true)"
+                    + "location_id = strLocation and map_status = true)"
                     + " union all "
                     + "select sh.sale_date, sale_inv_id vou_no, sh.cus_id, t.trader_name, 'SALE' vou_type,\n"
                     + "       sh.due_date, sh.remark ref_no, sh.vou_total, (sh.paid_amount+ifnull(pah.pay_amt,0)) as ttl_paid, "
@@ -271,8 +272,7 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
                             rs.getDouble("ttl_paid"),
                             rs.getDouble("bal"),
                             rs.getInt("ttl_overdue1"),
-                            "MMK"
-                    ));
+                            "MMK", DateUtil.toDate(DateUtil.getTodayDateStr())));
                 }
                 //tblPaymentEntry.setListVP(listVP);
             }
@@ -524,7 +524,7 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
                                 "Payment delete", JOptionPane.YES_NO_OPTION);
                         if (yes_no == 0) {
                             TraderPayHis traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class, vtp.getPayId());
-                            
+
                             if (traderPayHis.getPaymentId() != null) {
                                 try {
                                     dao.getPro("bkpayment", traderPayHis.getPaymentId().toString(),
@@ -593,7 +593,7 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
                             msg.setString("sourceAccId", "-");
                         }
                         if (tph.getPayAccount() != null) {
-                            msg.setString("account_id", tph.getPayAccount().getAccountId());
+                            msg.setString("account_id", tph.getPayAccount().getAccount());
                         } else {
                             msg.setString("account_id", "-");
                         }
@@ -619,12 +619,13 @@ public class CustomerPayment1 extends javax.swing.JPanel implements SelectionObs
             }
         }
     }
-    
+
     private void actionMapping() {
         //F8 event on tblSale
         tblPayList.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblPayList.getActionMap().put("F8-Action", actionItemDelete);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

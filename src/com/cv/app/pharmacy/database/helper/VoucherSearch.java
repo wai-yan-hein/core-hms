@@ -12,6 +12,7 @@ import java.util.Date;
  * @author ACER
  */
 public class VoucherSearch {
+
     private Date tranDate;
     private String invNo;
     private String refNo;
@@ -22,6 +23,9 @@ public class VoucherSearch {
     private Double discount;
     private Double balance;
     private Double paid;
+    private Double taxAmt;
+    private Double expTotal;
+    private Double expInTotal;
     private String location;
     private Boolean isDeleted;
     private Integer dcStatus;
@@ -29,7 +33,7 @@ public class VoucherSearch {
     private String voucherChecker;
     private Boolean isPrinted;
     private Date tranDT;
-    
+
     public Date getTranDate() {
         return tranDate;
     }
@@ -165,4 +169,29 @@ public class VoucherSearch {
     public void setTranDT(Date tranDT) {
         this.tranDT = tranDT;
     }
+
+    public Double getTaxAmt() {
+        return taxAmt;
+    }
+
+    public void setTaxAmt(Double taxAmt) {
+        this.taxAmt = taxAmt;
+    }
+
+    public Double getExpTotal() {
+        return expTotal;
+    }
+
+    public void setExpTotal(Double expTotal) {
+        this.expTotal = expTotal;
+    }
+
+    public Double getExpInTotal() {
+        return expInTotal;
+    }
+
+    public void setExpInTotal(Double expInTotal) {
+        this.expInTotal = expInTotal;
+    }
+
 }

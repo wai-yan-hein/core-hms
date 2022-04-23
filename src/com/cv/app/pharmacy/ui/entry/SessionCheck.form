@@ -22,7 +22,7 @@
                   <Group type="102" attributes="0">
                       <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="jPanel2" pref="579" max="32767" attributes="0"/>
+                      <Component id="jPanel2" pref="586" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jScrollPane2" min="-2" pref="400" max="-2" attributes="0"/>
                   </Group>
@@ -105,7 +105,7 @@
                       <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="cboSession" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace pref="28" max="32767" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="butClear" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="butSearch" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -727,8 +727,10 @@
               <Connection code="tableModel" type="code"/>
             </Property>
             <Property name="rowHeight" type="int" value="23"/>
-            <Property name="showVerticalLines" type="boolean" value="false"/>
           </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="tblSessionMouseClicked"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

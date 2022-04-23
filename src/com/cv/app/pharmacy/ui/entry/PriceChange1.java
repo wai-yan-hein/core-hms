@@ -359,7 +359,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             switch (strSource) {
                 case "MedicineList":
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    if (selectedMed.getRelationGroupId().size() > 0) {
+                    if (!selectedMed.getRelationGroupId().isEmpty()) {
                         selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
                     }
                     medUp.add(selectedMed);
@@ -375,7 +375,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     txtVouNo.setText(currPriceChange.getPriceChangeVouId());
                     txtDate.setText(DateUtil.toDateStr(currPriceChange.getPriceChangeDate()));
                     txtRemark.setText(currPriceChange.getRemark());
-                    if (currPriceChange.getListDetail().size() > 0) {
+                    if (!currPriceChange.getListDetail().isEmpty()) {
                         listDetail = currPriceChange.getListDetail();
                         medTableModel.setListDetail(listDetail);
 
@@ -453,52 +453,49 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         //Define table selection model to single row selection.
         tblMedicine.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblMedicine.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int selectedRow = tblMedicine.getSelectedRow();
-                List<PriceChangeUnitHis1> listPcuh;
-                Medicine selectedMed;
+        tblMedicine.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            int selectedRow = tblMedicine.getSelectedRow();
+            List<PriceChangeUnitHis1> listPcuh;
+            Medicine selectedMed;
 
-                try {
-                    listDetailUnit.removeAll(listDetailUnit);
-                    unitTableModel.dataChange();
-                    lblInfo.setText("");
-                    if (selectedRow >= 0) {
-                        listPcuh = listDetail.get(selectedRow).getListUnit();
-                        PriceChangeMedHis1 pcmh = listDetail.get(selectedRow);
-                        selectedMed = pcmh.getMed();
-                        unitTableModel.setCurrMed(selectedMed);
+            try {
+                listDetailUnit.removeAll(listDetailUnit);
+                unitTableModel.dataChange();
+                lblInfo.setText("");
+                if (selectedRow >= 0) {
+                    listPcuh = listDetail.get(selectedRow).getListUnit();
+                    PriceChangeMedHis1 pcmh = listDetail.get(selectedRow);
+                    selectedMed = pcmh.getMed();
+                    unitTableModel.setCurrMed(selectedMed);
 
-                        String purUnit = "";
-                        if (pcmh.getPurchaseUnit() != null) {
-                            purUnit = pcmh.getPurchaseUnit().getItemUnitCode();
-                        }
-                        txtPurPrice.setText(NumberUtil.NZero(pcmh.getPurchasePrice()).toString()
-                                + " " + purUnit);
-
-                        String costUnit = "";
-                        if (pcmh.getCostUnit() != null) {
-                            costUnit = pcmh.getCostUnit().getItemUnitCode();
-                        }
-                        txtCostPrice.setText(NumberUtil.NZero(pcmh.getCostPrice()).toString()
-                                + " " + costUnit);
-
-                        if (selectedMed != null) {
-                            lblInfo.setText(selectedMed.getMedName());
-                            getCostDetail(selectedMed.getMedId());
-                        } else {
-                            modelSCDT.removeAll();
-                        }
-
-                        if (listPcuh != null) {
-                            listDetailUnit.addAll(listPcuh);
-                        }
-
+                    String purUnit = "";
+                    if (pcmh.getPurchaseUnit() != null) {
+                        purUnit = pcmh.getPurchaseUnit().getItemUnitCode();
                     }
-                } catch (IndexOutOfBoundsException ex) {
-                    log.error(ex.toString());
+                    txtPurPrice.setText(NumberUtil.NZero(pcmh.getPurchasePrice()).toString()
+                            + " " + purUnit);
+
+                    String costUnit = "";
+                    if (pcmh.getCostUnit() != null) {
+                        costUnit = pcmh.getCostUnit().getItemUnitCode();
+                    }
+                    txtCostPrice.setText(NumberUtil.NZero(pcmh.getCostPrice()).toString()
+                            + " " + costUnit);
+
+                    if (selectedMed != null) {
+                        lblInfo.setText(selectedMed.getMedName());
+                        getCostDetail(selectedMed.getMedId());
+                    } else {
+                        modelSCDT.removeAll();
+                    }
+
+                    if (listPcuh != null) {
+                        listDetailUnit.addAll(listPcuh);
+                    }
+
                 }
+            } catch (IndexOutOfBoundsException ex) {
+                log.error(ex.toString());
             }
         });
     }// </editor-fold>

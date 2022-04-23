@@ -37,7 +37,15 @@
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="txtFilter" pref="398" max="32767" attributes="0"/>
+                      <Component id="txtFilter" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" min="-2" max="-2" attributes="0"/>
+                      <Component id="txtPayDate" linkSize="2" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="cboAccount" linkSize="2" min="-2" pref="156" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="chkOverdue" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -57,6 +65,10 @@
                   <Component id="txtFilter" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="chkOverdue" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="butRefresh" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel17" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="cboAccount" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtPayDate" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Component id="jScrollPane1" pref="223" max="32767" attributes="0"/>
@@ -79,6 +91,9 @@
   <SubComponents>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Filter"/>
       </Properties>
     </Component>
@@ -162,6 +177,46 @@
         <Property name="editable" type="boolean" value="false"/>
         <Property name="horizontalAlignment" type="int" value="4"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="cboAccount">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.textFont" type="code"/>
+        </Property>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="0"/>
+        </Property>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel17">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
+        <Property name="text" type="java.lang.String" value="Pyament Type"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel10">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
+        <Property name="text" type="java.lang.String" value="Pay Date "/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JFormattedTextField" name="txtPayDate">
+      <Properties>
+        <Property name="editable" type="boolean" value="false"/>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.textFont" type="code"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="txtPayDateMouseClicked"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>
