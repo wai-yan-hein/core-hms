@@ -10,6 +10,7 @@ import com.cv.app.pharmacy.database.entity.AdjDetailHis;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.DateUtil;
@@ -33,8 +34,8 @@ public class StockAdjTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(StockAdjTableModel.class.getName());
     private List<AdjDetailHis> listDetail;
     private final String[] columnNames = {"Code", "Description", "Relation-Str",
-        "Exp-Date", "Sys-Bal", "Usr-Balance", "Usr-Unit", "Adj Qty", "Unit", "Type", "Balance",
-        "Cost Price", "Amount"};
+        "Exp-Date", "Sys-Bal", "Usr-Balance", "Usr-Unit", "Currency", "Adj Qty", 
+        "Unit", "Type", "Balance", "Cost Price", "Amount"};
     private JTable parent;
     private final AbstractDataAccess dao;
     private final MedicineUP medUp;
@@ -88,17 +89,19 @@ public class StockAdjTableModel extends AbstractTableModel {
                 return Float.class;
             case 6: //Usr Unit
                 return String.class;
-            case 7: //Adj Qty
+            case 7: //Currency
+                return String.class;
+            case 8: //Adj Qty
                 return Float.class;
-            case 8: //Unit
+            case 9: //Unit
                 return String.class;
-            case 9: //Type
+            case 10: //Type
                 return String.class;
-            case 10: //Balance
+            case 11: //Balance
                 return String.class;
-            case 11: //Cost Price
+            case 12: //Cost Price
                 return Double.class;
-            case 12: //Amount
+            case 13: //Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -157,17 +160,19 @@ public class StockAdjTableModel extends AbstractTableModel {
                     } else {
                         return null;
                     }
-                case 7: //Qty
+                case 7: //Currency
+                    return record.getCurrencyId();
+                case 8: //Qty
                     return record.getQty();
-                case 8: //Unit
+                case 9: //Unit
                     return record.getUnit();
-                case 9: //Adj Type
+                case 10: //Adj Type
                     return record.getAdjType();
-                case 10: //Balance
+                case 11: //Balance
                     return record.getStrBalance();
-                case 11: //Cost Price
+                case 12: //Cost Price
                     return record.getCostPrice();
-                case 12: //Amount
+                case 13: //Amount
                     return record.getAmount();
                 default:
                     return new Object();
@@ -265,7 +270,15 @@ public class StockAdjTableModel extends AbstractTableModel {
                     break;
                 case 6: //Usr-Unit
                     break;
-                case 7: //Qty
+                case 7: //Currency
+                    if(value == null){
+                        record.setCurrencyId(null);
+                    }else{
+                        Currency curr = (Currency)value;
+                        record.setCurrencyId(curr.getCurrencyCode());
+                    }
+                    break;
+                case 8: //Qty
                     String tmpQtyStr = NumberUtil.getEngNumber(value.toString().trim());
                     record.setQty(NumberUtil.NZeroFloat(tmpQtyStr));
                     //For unit popup
@@ -283,14 +296,14 @@ public class StockAdjTableModel extends AbstractTableModel {
                     fireTableCellUpdated(row, 6);
                     assignPrice(record);
                     break;
-                case 8: //Unit
+                case 9: //Unit
                     record.setUnit((ItemUnit) value);
                     break;
-                case 9: //Adj Type
+                case 10: //Adj Type
                     record.setAdjType((AdjType) value);
                     //assignPrice(record);
                     break;
-                case 11: //Cost Price
+                case 12: //Cost Price
                     String tmpCostPriceStr = NumberUtil.getEngNumber(value.toString().trim());
                     record.setCostPrice(NumberUtil.NZero(tmpCostPriceStr));
                     //assignPrice(record);

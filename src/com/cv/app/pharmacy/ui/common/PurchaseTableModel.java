@@ -546,7 +546,12 @@ public class PurchaseTableModel extends AbstractTableModel {
 
         if ((NumberUtil.NZeroFloat(pdh.getQuantity())
                 + NumberUtil.NZeroFloat(pdh.getFocQty())) > 0) {
-            if (pdh.getChargeId().getChargeTypeId() != 1) {
+            int chargeType = 1;
+            if (pdh.getChargeId() != null) {
+                chargeType = pdh.getChargeId().getChargeTypeId();
+            }
+            
+            if (chargeType == 2) {
                 pdh.setUnitCost(NumberUtil.NZero(pdh.getPrice())
                         + NumberUtil.NZero(pdh.getItemExpense()));
             } else {
