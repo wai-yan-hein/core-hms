@@ -6,6 +6,7 @@ package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +104,8 @@ public class TmpEXRateTableModel extends AbstractTableModel {
             switch (column) {
                 case 0: //from
                     if (value != null) {
-                        record.getKey().setFromCurr(value.toString());
+                        Currency curr = (Currency)value;
+                        record.getKey().setFromCurr(curr.getCurrencyCode());
                         record.getKey().setToCurr(fromCurr);
                         record.getKey().setUserId(Global.loginUser.getUserId());
                     } else {
@@ -228,5 +230,10 @@ public class TmpEXRateTableModel extends AbstractTableModel {
         } finally {
             dao.close();
         }
+    }
+    
+    public void clear(){
+        list = new ArrayList();
+        fireTableDataChanged();
     }
 }

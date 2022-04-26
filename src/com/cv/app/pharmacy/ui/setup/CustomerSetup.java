@@ -1122,7 +1122,8 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private void butGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGroupActionPerformed
         showDialog("Customer Group Setup");
         CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
-        BindingUtil.BindCombo(cboGroup, dao.findAll("CustomerGroup"));
+        BindingUtil.BindCombo(cboGroup, 
+                dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
         cboGroup.setSelectedItem(cg);
     }//GEN-LAST:event_butGroupActionPerformed
 

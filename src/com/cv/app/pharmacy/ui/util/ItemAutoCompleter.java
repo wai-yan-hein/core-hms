@@ -381,11 +381,11 @@ public class ItemAutoCompleter implements KeyListener {
     private final RowFilter<Object, Object> inStringFilter = new RowFilter<Object, Object>() {
         @Override
         public boolean include(RowFilter.Entry<? extends Object, ? extends Object> entry) {
-            String text = textComp.getText().toUpperCase();
+            String text = textComp.getText();
             String[] strList = text.split(" ");
             if (completeModel.equals("O")) {
-                String tmp1 = entry.getStringValue(0).toUpperCase();
-                String tmp2 = entry.getStringValue(1).toUpperCase();
+                String tmp1 = entry.getStringValue(0);
+                String tmp2 = entry.getStringValue(1);
                 boolean result = tmp1.startsWith(text);
                 int result1 = tmp2.indexOf(text);
 

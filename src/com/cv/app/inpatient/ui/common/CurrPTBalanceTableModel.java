@@ -23,7 +23,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(CurrPTBalanceTableModel.class.getName());
     private List<CurrPTBalance> listBal;
-    private final String[] columnNames = {"Reg No.", "Adm No", "Patient", "Vou Total"};
+    private final String[] columnNames = {"Reg No.", "Adm No", "Patient", "Balance"};
     private final AbstractDataAccess dao = Global.dao;
     private Double total = 0.0;
     
@@ -108,10 +108,11 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
         try {
             String regNo = "-";
             String appCurr = Util1.getPropValue("system.app.currency");
-            dao.execProc("patient_balance", DateUtil.getTodayDateStrMYSQL(),
-                    appCurr, Global.loginUser.getUserId(), regNo);
             String strDate = DateUtil.getTodayDateStrMYSQL();
             String userId = Global.loginUser.getUserId();
+            dao.execProc("patient_balance", DateUtil.getTodayDateStrMYSQL(),
+                    appCurr, userId, regNo);
+            
             String strSQLs = "update tmp_bill_payment tbp, (\n"
                     + "select dh.patient_id, max(dh.admission_no) admission_no, max(dh.dc_date) dc_date\n"
                     + "from dc_his dh\n"

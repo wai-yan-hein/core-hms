@@ -1667,15 +1667,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }*/
         }
     };
+    
     private Action actionTblSaleEnterKey = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
+            /*try {
                 if (tblSale.getCellEditor() != null) {
                     tblSale.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
-            }
+            }*/
 
             if (!Util1.getPropValue("system.sale.barcode").equals("Y")) {
                 int row = tblSale.getSelectedRow();
