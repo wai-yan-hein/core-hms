@@ -7,7 +7,9 @@ package com.cv.app.pharmacy.ui.common;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.util.DateUtil;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
 
@@ -72,7 +74,7 @@ public class SaleStockTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        if(listStock == null){
+        if (listStock == null) {
             return 0;
         }
         return listStock.size();
@@ -90,5 +92,19 @@ public class SaleStockTableModel extends AbstractTableModel {
     public void setListStock(List<Stock> listStock) {
         this.listStock = listStock;
         fireTableDataChanged();
+    }
+
+    public Date getExpireDate(Integer locId) {
+        if (!listStock.isEmpty()) {
+            for (int i = listStock.size(); i <= listStock.size(); i--) {
+                if (i > 0) {
+                    Stock s = listStock.get(i - 1);
+                    if (s.getLocationId().equals(locId)) {
+                        return s.getExpDate();
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

@@ -36,6 +36,7 @@ import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Color;
 import java.awt.Component;
+import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -63,7 +64,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     private final javax.swing.JTable ttlTable = new javax.swing.JTable(1, 14);
     private String strSessionFilter = "-";
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form SessionCheck
      */
@@ -78,11 +79,11 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         //jScrollPane2.setVisible(false);
         //initTotalTable();
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -169,7 +170,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             strSql = strSql + " and s.sessionId = " + session.getSessionId();
         }
 
-        return strSql;
+        return strSql + " order by s.tranDate desc";
     }
 
     private void search() {
@@ -184,7 +185,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     private void initTable() {
         tblSession.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
-        tblSession.getColumnModel().getColumn(0).setPreferredWidth(20);//Tran Date
+        tblSession.getColumnModel().getColumn(0).setPreferredWidth(60);//Tran Date
         tblSession.getColumnModel().getColumn(1).setPreferredWidth(70);//Vou No
         tblSession.getColumnModel().getColumn(2).setPreferredWidth(40);//Ref. Vou.
         tblSession.getColumnModel().getColumn(3).setPreferredWidth(130);//Cus-Name
@@ -1552,15 +1553,15 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             }
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 int locationId = -1;
-                if(cboLocation.getSelectedItem() instanceof Location){
-                    locationId = ((Location)cboLocation.getSelectedItem()).getLocationId();
+                if (cboLocation.getSelectedItem() instanceof Location) {
+                    locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
                 }
                 List<Trader> listTrader = dao.findAllHSQL("select o from Trader o where "
-                            + "o.active = true and o.traderId in (select a.key.traderId "
-                            + "from LocationTraderMapping a where a.key.locationId = "
-                            + locationId + ") order by o.traderName");
-                if(listTrader != null){
-                    if(!listTrader.isEmpty()){
+                        + "o.active = true and o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ") order by o.traderName");
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);
                     }
                 }
@@ -1575,7 +1576,26 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
 
         return cus;
     }
-    
+
+    private void viewReport() {
+        int row = tblSession.convertRowIndexToModel(tblSession.getSelectedRow());
+        if (row >= 0) {
+            String vouNo = tableModel.getVSession(row).getKey().getInvId();
+            String reportName = Util1.getPropValue("report.file.comp");
+            String reportPath = Util1.getAppWorkFolder()
+                    + Util1.getPropValue("report.folder.path")
+                    + reportName;
+            Map<String, Object> params = new HashMap();
+            String compName = Util1.getPropValue("report.company.name");
+            params.put("comp_name", compName);
+            params.put("comp_address", Util1.getPropValue("report.address"));
+            params.put("phone", Util1.getPropValue("report.phone"));
+            params.put("inv_id", vouNo);
+            ReportUtil.viewReport(reportPath, params, dao.getConnection());
+        }
+
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1713,7 +1733,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butClear)
                     .addComponent(butSearch))
@@ -2050,7 +2070,11 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     tblSession.setFont(Global.textFont);
     tblSession.setModel(tableModel);
     tblSession.setRowHeight(23);
-    tblSession.setShowVerticalLines(false);
+    tblSession.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseClicked(java.awt.event.MouseEvent evt) {
+            tblSessionMouseClicked(evt);
+        }
+    });
     jScrollPane1.setViewportView(tblSession);
 
     jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Total"));
@@ -2070,7 +2094,7 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 575, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 586, Short.MAX_VALUE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1190, Short.MAX_VALUE))
@@ -2296,6 +2320,13 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private void cboCusGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCusGroupActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cboCusGroupActionPerformed
+
+    private void tblSessionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSessionMouseClicked
+        // TODO add your handling code here:
+        if (evt.getClickCount() > 1) {
+            viewReport();
+        }
+    }//GEN-LAST:event_tblSessionMouseClicked
 
     public String getExpStr(String str, int i) {
         if (i == 0) {

@@ -5,6 +5,7 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
+import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 //import com.cv.app.common.SelectionObserver;
@@ -18,6 +19,8 @@ import com.cv.app.pharmacy.database.entity.TraderPayHis;
 import com.cv.app.pharmacy.database.helper.VoucherPayment;
 import com.cv.app.pharmacy.ui.common.SPaymentEntryTableModel;
 import com.cv.app.ui.common.TableDateFieldRenderer;
+import com.cv.app.util.BindingUtil;
+import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
@@ -41,7 +44,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
     private final StartWithRowFilter swrf;
     private final AbstractDataAccess dao = Global.dao;
     private int mouseClick = 2;
-    
+
     //private final TableRowSorter<TableModel> tblTraderSorter;
     /**
      * Creates new form CustomerPayment1
@@ -49,17 +52,23 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
     public SupplierPayment() {
         initComponents();
         initTableCusPay();
-       // tblPaymentEntry.setObserver(this);
+        txtPayDate.setText(DateUtil.getTodayDateStr());
+        BindingUtil.BindCombo(cboAccount,
+                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.desp"));
+        new ComBoBoxAutoComplete(cboAccount);
+        tblPaymentEntry.setCboPayment(cboAccount);
+        cboAccount.setSelectedIndex(0);
+        // tblPaymentEntry.setObserver(this);
         swrf = new StartWithRowFilter(txtFilter);
         sorter = new TableRowSorter(tblVouList.getModel());
         tblVouList.setRowSorter(sorter);
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -99,7 +108,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     //ttlBalance += rs.getDouble("bal");
                     //ttlDiscount += rs.getDouble("discount");
                     //ttlPaid += rs.getDouble("ttl_paid");
-                    
+
                     listVP.add(new VoucherPayment(
                             rs.getDate("pur_date"),
                             rs.getString("vou_no"),
@@ -112,7 +121,8 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                             rs.getDouble("ttl_paid"),
                             rs.getDouble("bal"),
                             rs.getInt("ttl_overdue1"),
-                            rs.getString("currency")
+                            rs.getString("currency"),
+                            DateUtil.toDate(DateUtil.getTodayDateStr())
                     ));
                 }
                 //txtTotalBalance.setValue(ttlBalance);
@@ -152,7 +162,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         Double totalBalance = 0.0;
         Double totalDiscount = 0.0;
         Double totalPayment = 0.0;
-        
+
         for (int i = 0; i < tblVouList.getRowCount(); i++) {
             totalBalance += NumberUtil.NZero(tblVouList.getValueAt(i, 12));
             totalDiscount += NumberUtil.NZero(tblVouList.getValueAt(i, 11));
@@ -185,7 +195,12 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         txtTotalDiscount = new javax.swing.JFormattedTextField();
         jLabel2 = new javax.swing.JLabel();
         txtTotalBalance = new javax.swing.JFormattedTextField();
+        cboAccount = new javax.swing.JComboBox<>();
+        jLabel17 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        txtPayDate = new javax.swing.JFormattedTextField();
 
+        jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Filter");
 
         txtFilter.setFont(Global.textFont);
@@ -235,6 +250,22 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         txtTotalBalance.setEditable(false);
         txtTotalBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
+        cboAccount.setFont(Global.textFont);
+
+        jLabel17.setFont(Global.lableFont);
+        jLabel17.setText("Pyament Type");
+
+        jLabel10.setFont(Global.lableFont);
+        jLabel10.setText("Pay Date ");
+
+        txtPayDate.setEditable(false);
+        txtPayDate.setFont(Global.textFont);
+        txtPayDate.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtPayDateMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -259,7 +290,15 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtPayDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jLabel17)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboAccount, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkOverdue)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -269,6 +308,8 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtTotalDiscount, txtTotalPaid});
 
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboAccount, txtPayDate});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
@@ -277,7 +318,11 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     .addComponent(jLabel1)
                     .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(chkOverdue)
-                    .addComponent(butRefresh))
+                    .addComponent(butRefresh)
+                    .addComponent(jLabel17)
+                    .addComponent(cboAccount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel10)
+                    .addComponent(txtPayDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 223, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -320,17 +365,37 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         // TODO add your handling code here:
     }//GEN-LAST:event_txtFilterActionPerformed
 
+    private void txtPayDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtPayDateMouseClicked
+        if (evt.getClickCount() > 1) {
+            String strDate = DateUtil.getDateDialogStr();
+            if (strDate != null) {
+                txtPayDate.setText(strDate);
+                List<VoucherPayment> payments = tblPaymentEntry.getListVP();
+                if (!payments.isEmpty()) {
+                    for (VoucherPayment p : payments) {
+                        p.setPayDate(DateUtil.toDate(strDate));
+                    }
+                }
+                tblPaymentEntry.fireTableDataChanged();
+            }
+        }
+    }//GEN-LAST:event_txtPayDateMouseClicked
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butRefresh;
+    private javax.swing.JComboBox<String> cboAccount;
     private javax.swing.JCheckBox chkOverdue;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblVouList;
     private javax.swing.JTextField txtFilter;
+    private javax.swing.JFormattedTextField txtPayDate;
     private javax.swing.JFormattedTextField txtTotalBalance;
     private javax.swing.JFormattedTextField txtTotalDiscount;
     private javax.swing.JFormattedTextField txtTotalPaid;
@@ -404,10 +469,10 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         List<PaymentVou> listPV = new ArrayList();
         listPV.add(pv);
         tph.setListDetail(listPV);
-        try{
-        dao.save(tph);
-        }catch(Exception ex){
-            
+        try {
+            dao.save(tph);
+        } catch (Exception ex) {
+
         }
     }
 

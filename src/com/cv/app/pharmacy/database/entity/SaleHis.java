@@ -72,7 +72,7 @@ public class SaleHis implements java.io.Serializable {
     private String visitId;
     private Boolean isPrinted;
     private Long exrId;
-    
+
     public SaleHis() {
     }
 
@@ -561,7 +561,7 @@ public class SaleHis implements java.io.Serializable {
         this.isOverdue = isOverdue;
     }
 
-    @Column(name="payment_id")
+    @Column(name = "payment_id")
     public Integer getPaymentId() {
         return paymentId;
     }
@@ -570,7 +570,7 @@ public class SaleHis implements java.io.Serializable {
         this.paymentId = paymentId;
     }
 
-    @Column(name="visit_id", length=45)
+    @Column(name = "visit_id", length = 45)
     public String getVisitId() {
         return visitId;
     }
@@ -579,9 +579,9 @@ public class SaleHis implements java.io.Serializable {
         this.visitId = visitId;
     }
 
-    @Column(name="is_printed")
+    @Column(name = "is_printed")
     public Boolean getIsPrinted() {
-        if(isPrinted == null){
+        if (isPrinted == null) {
             return false;
         }
         return isPrinted;
@@ -590,8 +590,8 @@ public class SaleHis implements java.io.Serializable {
     public void setIsPrinted(Boolean isPrinted) {
         this.isPrinted = isPrinted;
     }
-    
-    @Column(name="exr_id")
+
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }

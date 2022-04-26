@@ -36,9 +36,6 @@
   <SubComponents>
     <Container class="javax.swing.JSplitPane" name="jSplitPane1">
       <Properties>
-        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-          <Border info="null"/>
-        </Property>
         <Property name="dividerLocation" type="int" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
           <Connection code="500" type="code"/>
         </Property>
@@ -318,7 +315,6 @@
                       <Connection code="tblPayListModel" type="code"/>
                     </Property>
                     <Property name="rowHeight" type="int" value="23"/>
-                    <Property name="showVerticalLines" type="boolean" value="false"/>
                   </Properties>
                   <Events>
                     <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="tblPayListMouseClicked"/>
@@ -376,7 +372,6 @@
                       </Table>
                     </Property>
                     <Property name="rowHeight" type="int" value="23"/>
-                    <Property name="showVerticalLines" type="boolean" value="false"/>
                   </Properties>
                 </Component>
               </SubComponents>
@@ -448,7 +443,7 @@
                               <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
                               <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
-                              <Component id="txtLastBalance" pref="48" max="32767" attributes="0"/>
+                              <Component id="txtLastBalance" pref="118" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
@@ -517,7 +512,7 @@
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel11" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" min="-2" max="-2" attributes="0"/>
-                                      <Component id="cboLocation1" pref="181" max="32767" attributes="0"/>
+                                      <Component id="cboLocation1" pref="171" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="txtCusName1" max="32767" attributes="0"/>
                               </Group>
@@ -531,7 +526,7 @@
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                                      <Component id="cboAccount" max="32767" attributes="0"/>
+                                      <Component id="cboAccount" pref="63" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -995,7 +990,10 @@
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel17">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Account : "/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="Global.lableFont" type="code"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Pyament Type"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="cboAccount">

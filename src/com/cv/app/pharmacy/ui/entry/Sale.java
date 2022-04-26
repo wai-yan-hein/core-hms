@@ -257,7 +257,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         //jPanel7.setFocusTraversalPolicyProvider(true);
         //jPanel7.setFocusCycleRoot(false);
         saleTableModel.setParent(tblSale);
+        saleTableModel.setLblRemark(lblRemark);
         saleTableModel.setLblItemBrand(lblBrandName);
+        saleTableModel.setStockTableModel(stockTableModel);
         lblStatus.setText("NEW");
 
         String cusType = Util1.getPropValue("system.sale.default.cus.type");
@@ -758,7 +760,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     med.setRelationGroupId(listRel);
                     List<Stock> listStock = null;
 
-                    if (listRel.size() > 0) {
+                    if (!listRel.isEmpty()) {
                         medUp.add(med);
                         if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
                             stockList.add(med, (Location) cboLocation.getSelectedItem());
@@ -1227,7 +1229,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblSale.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
             txtRecNo.setText(Integer.toString(tblSale.getSelectedRow() + 1));
             if (tblSale.getSelectedRow() < saleTableModel.getRowCount()) {
-                lblBrandName.setText(saleTableModel.getBrandName(tblSale.getSelectedRow()));
+                int row = tblSale.convertRowIndexToModel(tblSale.getSelectedRow());
+                lblBrandName.setText(saleTableModel.getBrandName(row));
+                lblRemark.setText(saleTableModel.getRemark(row));
                 Object tmp = tblSale.getValueAt(tblSale.getSelectedRow(), 0);
                 if (tmp != null) {
                     String selectMedId = tmp.toString();
@@ -1325,7 +1329,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         if (listMed != null) {
                             if (!listMed.isEmpty()) {
                                 medicine = listMed.get(0);
-                                if (medicine.getRelationGroupId().size() > 0) {
+                                if (!medicine.getRelationGroupId().isEmpty()) {
                                     List<RelationGroup> listRG = medicine.getRelationGroupId();
                                     medicine.setRelationGroupId(listRG);
 
@@ -1644,23 +1648,23 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private Action actionMedList = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            /*try {
+            //if (tblSale.getCellEditor() != null) {
+            //tblSale.getCellEditor().stopCellEditing();
+            //}
+            
+            //No entering medCode, only press F3
             try {
-                if (tblSale.getCellEditor() != null) {
-                    tblSale.getCellEditor().stopCellEditing();
-                }
-
-                //No entering medCode, only press F3
-                try {
-                    dao.open();
-                    //getMedInfo("");
-                    getMedList("");
-                    dao.close();
-                } catch (Exception ex1) {
-                    log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
-                }
-            } catch (Exception ex) {
-
+            dao.open();
+            //getMedInfo("");
+            getMedList("");
+            dao.close();
+            } catch (Exception ex1) {
+            log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
             }
+            } catch (Exception ex) {
+            
+            }*/
         }
     };
     
@@ -1767,7 +1771,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private Action actionNewForm = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            newForm();
+            clear();
         }
     };
 
@@ -1941,6 +1945,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         lblDueRemark.setVisible(false);
         lblDate.setText("");
         lblTranOption.setText("");
+        lblRemark.setText(null);
         currSaleVou = new SaleHis();
         assignDefaultValueModel();
         initTextBoxValue();
@@ -2217,7 +2222,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 //Upload to Account
                 uploadToAccount(currSaleVou);
 
-                newForm();
+                clear();
 
             } else {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Need Permission",
@@ -2240,6 +2245,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             return;
         }
         if (isValidEntry() && saleTableModel.isValidEntry() && expTableModel.isValidEntry()) {
+            log.info("Sale Date" + currSaleVou.getSaleDate().toString());
             Date vouSaleDate = DateUtil.toDate(txtSaleDate.getText());
             Date lockDate = PharmacyUtil.getLockDate(dao);
             if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
@@ -2374,7 +2380,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         //Upload to Account
                         uploadToAccount(currSaleVou);
 
-                        newForm();
+                        clear();
 
                     } else {
                         JOptionPane.showMessageDialog(Util1.getParent(), "Need Permission",
@@ -2395,7 +2401,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     @Override
     public void newForm() {
-        clear();
+        int status = JOptionPane.showConfirmDialog(this, "Are you sure to want new voucher?", "Message", JOptionPane.CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (status == 0) {
+            clear();
+        }
     }
 
     @Override
@@ -3091,7 +3100,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             } catch (Exception ex) {
                 log.error("print : " + ex.getMessage());
             }
-            newForm();
+            clear();
         }
     }
 
@@ -3191,7 +3200,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
                 }
             }
-
             currSaleVou.setCurrencyId((Currency) cboCurrency.getSelectedItem());
             if (lblStatus.getText().equals("NEW")) {
                 currSaleVou.setCreatedBy(Global.loginUser);
@@ -3527,7 +3535,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     
                      dao.save(tt);*/
                 }
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 log.error("getTraderLastBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
         }
@@ -3660,7 +3668,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         } else if (keyCode == KeyEvent.VK_F9) {
             history();
         } else if (keyCode == KeyEvent.VK_F10) {
-            newForm();
+            clear();
         }
     }
 
@@ -4295,6 +4303,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblStockList = new javax.swing.JTable();
         jLabel12 = new javax.swing.JLabel();
         lblBrandName = new javax.swing.JLabel();
+        jLabel13 = new javax.swing.JLabel();
+        lblRemark = new javax.swing.JLabel();
         jPanel12 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tblTransaction = new javax.swing.JTable();
@@ -4571,6 +4581,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         cboLocation.setFont(Global.textFont);
         cboLocation.setModel(new javax.swing.DefaultComboBoxModel());
         cboLocation.setName("cboLocation"); // NOI18N
+        cboLocation.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboLocationItemStateChanged(evt);
+            }
+        });
         cboLocation.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 cboLocationFocusGained(evt);
@@ -4753,6 +4768,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         tblSale.setAutoCreateColumnsFromModel(false);
         tblSale.setFont(Global.textFont);
+        tblSale.setCellSelectionEnabled(true);
         tblSale.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         tblSale.setRowHeight(23);
         tblSale.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -4776,7 +4792,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
+            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
         );
 
         jScrollPane2.setPreferredSize(new java.awt.Dimension(454, 150));
@@ -4893,20 +4909,32 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblStockList.setRowHeight(23);
         jScrollPane6.setViewportView(tblStockList);
 
+        jLabel12.setFont(Global.lableFont);
         jLabel12.setText("Brand Name : ");
 
-        lblBrandName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        lblBrandName.setFont(Global.textFont);
         lblBrandName.setText(" ");
+
+        jLabel13.setFont(Global.lableFont);
+        jLabel13.setText("Remark :");
+
+        lblRemark.setFont(Global.textFont);
+        lblRemark.setText(" ");
 
         org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE)
+            .add(jScrollPane6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
             .add(jPanel4Layout.createSequentialGroup()
                 .add(jLabel12)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(lblBrandName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(lblBrandName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 164, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(jLabel13)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(lblRemark, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -4915,8 +4943,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel12)
-                    .add(lblBrandName))
-                .add(0, 7, Short.MAX_VALUE))
+                    .add(lblBrandName)
+                    .add(jLabel13)
+                    .add(lblRemark))
+                .add(0, 13, Short.MAX_VALUE))
         );
 
         org.jdesktop.layout.GroupLayout jPanel10Layout = new org.jdesktop.layout.GroupLayout(jPanel10);
@@ -5108,6 +5138,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         jPanel13Layout.linkSize(new java.awt.Component[] {jLabel22, jLabel23}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
 
+        jPanel13Layout.linkSize(new java.awt.Component[] {chkAmount, chkPrintOption, chkVouComp}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
+
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel13Layout.createSequentialGroup()
@@ -5216,7 +5248,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtVouBalance)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel9Layout.createSequentialGroup()
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(txtTaxP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 62, Short.MAX_VALUE)
+                            .add(txtTaxP)
                             .add(txtDiscP))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
@@ -5291,13 +5323,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel3Layout.createSequentialGroup()
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel12, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 245, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel13, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 183, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(0, 0, Short.MAX_VALUE))
+            .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(jPanel12, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 245, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(jPanel13, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
         );
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
@@ -5320,7 +5349,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 208, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -5689,6 +5719,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             dialog.setVisible(true);
         }
     }//GEN-LAST:event_lblPatientMouseClicked
+
+    private void cboLocationItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboLocationItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboLocationItemStateChanged
     // </editor-fold>
 
     private void saleOutstanding() {
@@ -5822,6 +5856,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
@@ -5868,6 +5903,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel lblLastBalance;
     private javax.swing.JLabel lblOTID;
     private javax.swing.JLabel lblPatient;
+    private javax.swing.JLabel lblRemark;
     private javax.swing.JLabel lblRemark1;
     private javax.swing.JLabel lblSaleLastBal;
     private javax.swing.JLabel lblStatus;

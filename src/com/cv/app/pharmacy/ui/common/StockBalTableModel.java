@@ -174,7 +174,7 @@ public class StockBalTableModel extends AbstractTableModel {
                 default:
                     System.out.println("invalid index");
             }
-        } catch (Exception ex) {
+        } catch (NumberFormatException ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }
         fireTableCellUpdated(row, column);

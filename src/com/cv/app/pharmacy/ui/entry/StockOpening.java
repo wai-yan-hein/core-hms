@@ -59,6 +59,7 @@ import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1616,18 +1617,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     List<StockOpeningDetailHis> listDetail = new ArrayList();
                     while ((nextRecord = csvReader.readNext()) != null) {
                         //String medId = getNewMedCode(nextRecord[0]);
-                        String medId = nextRecord[0];
-                        Float smallestQty = Float.parseFloat(nextRecord[1].replace(",", ""));
-                        Double costPrice = 0.0;
-                        Date expDate = null;
-                        if (!nextRecord[2].isEmpty() && !nextRecord[2].equals("-")) {
-                            //costPrice = Double.parseDouble(nextRecord[2].replace(",", ""));
-                            expDate = DateUtil.toDate(nextRecord[2], "dd/MM/yy");
-                        }
-                        ttlRec++;
-                        log.info("getNewMedCode : " + medId + " Qty : " + smallestQty.toString()
-                                + " Cnt : " + ttlRec);
-
+                        Date expDate = DateUtil.toDate(nextRecord[0], "dd/MM/yyyy");
+                        String medId = nextRecord[1];
+                        float smallestQty = Float.valueOf(nextRecord[2]);
                         Medicine med = (Medicine) dao.find(Medicine.class, medId);
                         if (med != null) {
                             StockOpeningDetailHis tsodh = new StockOpeningDetailHis();
@@ -1637,14 +1629,14 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                             ItemUnit iu = getUnit(med);
                             tsodh.setUnit(iu);
                             tsodh.setExpDate(expDate);
-                            tsodh.setCostPrice(costPrice);
+                            //tsodh.setCostPrice(costPrice);
                             listDetail.add(tsodh);
                         }
                     }
                     sopTableModel.setListDetail(listDetail);
                     log.info("processCSV End: " + ttlRec);
                 }
-            } catch (Exception ex) {
+            } catch (IOException | NumberFormatException ex) {
                 log.error("processCSV : " + ex.getMessage());
             } finally {
                 dao.close();

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptBarCode" language="groovy" columnCount="3" printOrder="Horizontal" pageWidth="595" pageHeight="842" columnWidth="171" columnSpacing="20" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c5bcf4e5-4b80-4ba7-a007-ce6da58c7665">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select med.med_id, med.med_name, med.med_rel_str, itp.item_type_name, med.med_type_id,
+rg.sale_price, rg.sale_pric_a, rg.sale_pric_b, rg.sale_pric_c, rg.sale_pric_d,
+med.barcode, med.chemical_name, med.short_name, rg.item_unit
+from medicine med, v_med_rel_smallest_unit mr, relation_group rg, item_type itp,
+(select item_id from tmp_barcode_filter where user_id = $P!{user_id}) filt
+where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id
+and med.med_id = filt.item_id and med.med_type_id = itp.item_type_code
+order by med_id;]]>
+	</queryString>
+	<field name="med_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_rel_str" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_type_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_type_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_a" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_b" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_c" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_pric_d" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="barcode" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="chemical_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="short_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_unit" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="89" splitType="Stretch">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="46" y="69" width="91" height="20" uuid="0dc1ed9f-0f80-4413-8768-48701b87834a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sale_price} == null ? ' ' : $F{sale_price}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="137" height="20" uuid="15ab5df1-4ad2-4847-91f2-5259094a3d0a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{short_name} == null ? ' ' : $F{short_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="69" width="46" height="20" uuid="365d2102-fdbe-4673-8905-549507ccac6c"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{chemical_name} == null ? ' ' : $F{chemical_name}]]></textFieldExpression>
+			</textField>
+			<componentElement>
+				<reportElement x="0" y="21" width="137" height="29" uuid="990bde14-a449-4321-96bc-b31744069f8f"/>
+				<jr:barbecue xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" type="Code39 (Extended)" drawText="false" checksumRequired="false">
+					<jr:codeExpression><![CDATA[$F{med_id}]]></jr:codeExpression>
+				</jr:barbecue>
+			</componentElement>
+			<textField>
+				<reportElement x="0" y="50" width="137" height="20" uuid="7741a5ab-14ed-49b0-ae1d-ab85ae5c1e47"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

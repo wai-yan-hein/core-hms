@@ -7,6 +7,8 @@ package com.cv.app.pharmacy.database.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -17,21 +19,33 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "trader_pay_account")
 public class TraderPayAccount implements java.io.Serializable {
-    
-    private String accountId;
+
+    private Integer payId;
+    private String account;
     private String desp;
     private Boolean status;
 
-    @Id @Column(name="acc_id", nullable=false, length=15)
-    public String getAccountId() {
-        return accountId;
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    @Column(name = "pay_id", unique = true, nullable = false)
+    public Integer getPayId() {
+        return payId;
     }
 
-    public void setAccountId(String accountId) {
-        this.accountId = accountId;
+    public void setPayId(Integer payId) {
+        this.payId = payId;
     }
 
-    @Column(name="desp", length=100)
+    @Column(name = "acc_id", nullable = false, length = 15)
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    @Column(name = "desp", length = 100)
     public String getDesp() {
         return desp;
     }
@@ -40,7 +54,7 @@ public class TraderPayAccount implements java.io.Serializable {
         this.desp = desp;
     }
 
-    @Column(name="active")
+    @Column(name = "active")
     public Boolean getStatus() {
         return status;
     }
@@ -48,9 +62,9 @@ public class TraderPayAccount implements java.io.Serializable {
     public void setStatus(Boolean status) {
         this.status = status;
     }
-    
+
     @Override
-    public String toString(){
-        return desp + " (" + accountId + ")";
+    public String toString() {
+        return desp;
     }
 }

@@ -40,6 +40,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -195,7 +196,8 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat());
+        txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat1());
+        txtGrandTotal.setFormatterFactory(NumberUtil.getDecimalFormat1());
     }
 
     private void initFocus() {
@@ -468,7 +470,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -549,7 +551,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         + "join medicine med on sdh.med_id = med.med_id\n"*/
         String strSql = "select distinct date(sh.sale_date) sale_date, sh.sale_inv_id, sh.remark, \n"
                 + "ifnull(sh.cus_id,ifnull(sh.reg_no, sh.stu_no)) cus_id, ifnull(tr.trader_name, ifnull(pd.patient_name, sh.stu_name)) cus_name, "
-                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted\n"
+                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted,sh.tax_amt,sale_exp_total_in,sale_exp_total,discount\n"
                 + "from sale_his sh\n"
                 + "join sale_detail_his sdh on sh.sale_inv_id = sdh.vou_no\n"
                 + "join appuser usr on sh.created_by = usr.user_id\n"
@@ -718,12 +720,14 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
                     vs.setTranDate(rs.getDate("sale_date"));
                     vs.setUserName(rs.getString("user_name"));
                     vs.setVouTotal(rs.getDouble("vou_total"));
-
+                    vs.setTaxAmt(rs.getDouble("tax_amt"));
+                    vs.setExpTotal(rs.getDouble("sale_exp_total"));
+                    vs.setExpInTotal(rs.getDouble("sale_exp_total_in"));
+                    vs.setDiscount(rs.getDouble("discount"));
                     listVS.add(vs);
                 }
             }
-
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("getSearchVoucher : " + ex.toString());
         } finally {
             dao.close();
@@ -736,7 +740,25 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         log.info("Start Time : " + new Date());
         tableVouModel.setListVS(getSearchVoucher());
         lblTotalRec.setText("Total Records : " + tableVouModel.getRowCount());
-        txtTotalAmount.setValue(tableVouModel.getTotal());
+        List<VoucherSearch> listVS = tableVouModel.getListVS();
+        double ttlAmt = 0.0;
+        double grandAmt = 0.0;
+        if (listVS != null) {
+            if (!listVS.isEmpty()) {
+                for (VoucherSearch vs : listVS) {
+                    if (!vs.getIsDeleted()) {
+                        ttlAmt += NumberUtil.NZero(vs.getVouTotal());
+                        double taxAmt = NumberUtil.NZero(vs.getTaxAmt());
+                        double expIn = NumberUtil.NZero(vs.getExpInTotal());
+                        double exp = NumberUtil.NZero(vs.getExpTotal());
+                        double dis = NumberUtil.NZero(vs.getDiscount());
+                        grandAmt += NumberUtil.NZero(vs.getVouTotal()) + taxAmt + expIn + exp - dis;
+                    }
+                }
+            }
+        }
+        txtTotalAmount.setValue(ttlAmt);
+        txtGrandTotal.setValue(grandAmt);
         tblVoucher.requestFocus();
         log.info("End Time : " + new Date());
     }
@@ -983,6 +1005,8 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         lblTotalRec = new javax.swing.JLabel();
         lblTotalAmount = new javax.swing.JLabel();
         txtTotalAmount = new javax.swing.JFormattedTextField();
+        lblTotalAmount1 = new javax.swing.JLabel();
+        txtGrandTotal = new javax.swing.JFormattedTextField();
 
         setPreferredSize(new java.awt.Dimension(1200, 600));
 
@@ -1096,7 +1120,6 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
 
         tblMedicine.setFont(Global.textFont);
         tblMedicine.setRowHeight(23);
-        tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
         jLabel10.setFont(Global.lableFont);
@@ -1235,7 +1258,6 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblVoucher.setModel(tableVouModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 tblVoucherFocusGained(evt);
@@ -1275,6 +1297,13 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
 
         txtTotalAmount.setEditable(false);
         txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtTotalAmount.setFont(Global.lableFont);
+
+        lblTotalAmount1.setText("Grand Amount : ");
+
+        txtGrandTotal.setEditable(false);
+        txtGrandTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtGrandTotal.setFont(Global.lableFont);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -1288,10 +1317,14 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(lblTotalAmount1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtGrandTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblTotalAmount)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
+                        .addGap(7, 7, 7)
                         .addComponent(butSearch)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -1305,14 +1338,16 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 442, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butSelect)
                     .addComponent(butSearch)
                     .addComponent(lblTotalRec)
                     .addComponent(lblTotalAmount)
-                    .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblTotalAmount1)
+                    .addComponent(txtGrandTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1455,12 +1490,14 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblTotalAmount;
+    private javax.swing.JLabel lblTotalAmount1;
     private javax.swing.JLabel lblTotalRec;
     private javax.swing.JTable tblMedicine;
     private javax.swing.JTable tblVoucher;
     private javax.swing.JTextField txtCusCode;
     private javax.swing.JTextField txtCusName;
     private javax.swing.JFormattedTextField txtFromDate;
+    private javax.swing.JFormattedTextField txtGrandTotal;
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtToDate;
     private javax.swing.JFormattedTextField txtTotalAmount;

@@ -41,7 +41,7 @@ public class VoucherPayment {
     public VoucherPayment(Date tranDate, String vouNo, String traderId,
             String traderName, String vouType, Date dueDate, Double vouTotal,
             Double discount, Double ttlPaid, Double vouBalance, int ttlOverdue,
-            String currency) {
+            String currency,Date payDate) {
         this.tranDate = tranDate;
         this.vouNo = vouNo;
         this.traderId = traderId;
@@ -54,6 +54,7 @@ public class VoucherPayment {
         this.vouBalance = vouBalance;
         this.ttlOverdue = ttlOverdue;
         this.currency = currency;
+        this.payDate = payDate;
     }
 
     public Date getTranDate() {

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="imagePath" class="java.lang.String"/>
+	<parameter name="comAddress" class="java.lang.String"/>
+	<parameter name="phoneNo" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String"/>
+	<parameter name="p_user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select v.patient_id, v.admission_no, v.patient_name, concat(if(v.age=0,pd.age, v.age), 'yrs', ',   ', pd.sex) as age,
+concat(a.initial_name,reader_doctor_name) as reader_doctor_name, v.service_name, v.xray_no
+from v_opd v
+left join patient_detail pd on v.patient_id = pd.reg_no
+left join doctor dr on v.reader_doctor_id = dr.doctor_id
+left join initial a on dr.initial_id = a.initial_id
+join tmp_xray_print txp on v.opd_detail_id = txp.opd_detail_id
+where txp.user_id = $P{p_user_id}]]>
+	</queryString>
+	<field name="patient_id" class="java.lang.String"/>
+	<field name="admission_no" class="java.lang.String"/>
+	<field name="patient_name" class="java.lang.String"/>
+	<field name="age" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="reader_doctor_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="service_name" class="java.lang.String"/>
+	<field name="xray_no" class="java.lang.String"/>
+	<group name="Service">
+		<groupExpression><![CDATA[$F{service_name}]]></groupExpression>
+		<groupHeader>
+			<band height="21">
+				<textField>
+					<reportElement x="1" y="0" width="212" height="20" uuid="25abeebd-1cba-42e2-88d5-db072721ec29"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="12" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{service_name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="186" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="78" width="555" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<box>
+					<pen lineStyle="Solid" lineColor="#004ECA"/>
+					<topPen lineStyle="Solid" lineColor="#004ECA"/>
+					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
+					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
+					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="18" isBold="true" isItalic="false"/>
+				</textElement>
+				<text><![CDATA[X' Ray Report]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="123" width="59" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Adm No. : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="143" width="59" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Name : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="385" y="103" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Date : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="163" width="59" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Age : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="351" y="123" width="72" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[X' Ray No : ]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="60" y="123" width="126" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="60" y="143" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="60" y="163" width="90" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement x="0" y="0" width="230" height="75" uuid="9aa64300-3dda-4f53-a243-7721e8a0a550"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/pan_hlaing.png"]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="255" y="37" width="288" height="15" uuid="0a5bb6cb-cd87-4816-ad1d-793ad30b4615"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="255" y="56" width="288" height="15" uuid="b4881b6f-683a-4a67-81eb-c1f5392cc874"/>
+				<textElement textAlignment="Center" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="103" width="59" height="20" uuid="c6aa10ed-5a35-48a2-a278-b40d71ac958a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Reg No. : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="367" y="143" width="56" height="20" uuid="71900543-606e-4365-a77e-4595afa3dcf4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[Room No :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="60" y="103" width="78" height="20" uuid="97becd64-3ada-414d-89d3-b6499432aaef"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patient_id}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="423" y="122" width="132" height="1" uuid="2967dbf6-a57b-4cd5-8257-707628cf0dc7"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="423" y="143" width="132" height="1" uuid="bbfd7eb2-8808-4f13-8a1b-7e7ab4da91e0"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="423" y="162" width="132" height="1" uuid="f5bf0b46-c068-450b-a852-b972fbdf03ac"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="423" y="123" width="132" height="20" uuid="3394c466-418f-4efc-b229-2493e18a276d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{xray_no}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<detail>
+		<band height="211"/>
+	</detail>
+	<lastPageFooter>
+		<band height="65">
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="351" y="0" width="189" height="20" uuid="2b9a731c-3bd9-43e6-9cf3-c63d4e1e9c6c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{reader_doctor_name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</lastPageFooter>
+</jasperReport>

@@ -192,7 +192,7 @@ public class ExpenseTypeSetup extends javax.swing.JPanel {
         //listUseFor.add("Admission");
         //BindingUtil.BindCombo(cboAccUseFor, listUseFor);
         //tblAccount.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboAccUseFor));
-        
+
     }
 
     public void setFocus() {
@@ -263,11 +263,6 @@ public class ExpenseTypeSetup extends javax.swing.JPanel {
                         break;
                 }
                 currExpenseType.setCusGroupoId(id);
-            } else {
-                currExpenseType.setCusGroupoId(null);
-                status = false;
-                JOptionPane.showMessageDialog(this, "Invalid group. Please select one of the group.",
-                        "Invalid group.", JOptionPane.ERROR_MESSAGE);
             }
         }
 

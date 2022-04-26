@@ -6,7 +6,6 @@ package com.cv.app.pharmacy.ui.entry;
 
 import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
-import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
@@ -29,6 +28,7 @@ import com.cv.app.util.Util1;
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -210,10 +210,9 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 txtDiscount.setValue(traderPayHis.getDiscount());
                 txtExRate.setValue(traderPayHis.getExRate());
                 txtPaidP.setValue(traderPayHis.getPaidAmtP());
-
+                cboAccount.setSelectedItem(traderPayHis.getPayAccount());
                 tblPaidVouListModel.setListVou(listVou);
                 dao.close();
-
                 lock();
                 break;
         }
@@ -359,6 +358,10 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         } else if (!tblPaidVouListModel.isValidEntry()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "You must fill total pay amount in voucher.",
                     "Invalid Vou Paid Amount.", JOptionPane.ERROR_MESSAGE);
+            status = false;
+        } else if (cboAccount.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Select Payment Type.",
+                    "Invalid Vou Type.", JOptionPane.ERROR_MESSAGE);
             status = false;
         } else {
             traderPayHis.setPayDate(DateUtil.toDateTime(txtPayDate.getText()));
@@ -639,7 +642,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     //System.out.println(resultSet.getString("cur_ttl_paid_amtp"));
                 }
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("calcTotalAmount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
 
@@ -690,6 +693,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         cboCurrency.setEnabled(false);
         txtExRate.setEnabled(false);
         tblPaidVouListModel.setEditable(false);
+        cboAccount.setEnabled(false);
     }
 
     private void unLock() {
@@ -704,6 +708,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         cboCurrency.setEnabled(true);
         txtExRate.setEnabled(true);
         tblPaidVouListModel.setEditable(true);
+        cboAccount.setEnabled(true);
     }
 
     private void delete() {
@@ -810,7 +815,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 if (resultSet != null) {
                     while (resultSet.next()) {
                         txtLastPaidDate.setValue(resultSet.getDate("VAR_LAST_PAY_DATE"));
-                        txtPrvBalance.setValue(resultSet.getDouble("VAR_LAST_BALANCE")+resultSet.getDouble("VAR_RE_RETIN"));
+                        txtPrvBalance.setValue(resultSet.getDouble("VAR_LAST_BALANCE") + resultSet.getDouble("VAR_RE_RETIN"));
                         txtRePurchase.setValue(resultSet.getDouble("VAR_RE_PUR"));
                         txtReturnIn.setValue(resultSet.getDouble("VAR_RE_RETIN"));
                         strOpDate = resultSet.getString("VAR_OP_DATE");
@@ -1043,7 +1048,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         jLabel17 = new javax.swing.JLabel();
         cboAccount = new javax.swing.JComboBox<>();
 
-        jSplitPane1.setBorder(null);
         jSplitPane1.setDividerLocation(500);
 
         jLabel1.setFont(Global.lableFont);
@@ -1114,7 +1118,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         tblPayList.setFont(Global.textFont);
         tblPayList.setModel(tblPayListModel);
         tblPayList.setRowHeight(23);
-        tblPayList.setShowVerticalLines(false);
         tblPayList.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblPayListMouseClicked(evt);
@@ -1148,7 +1151,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             }
         ));
         tblTotal.setRowHeight(23);
-        tblTotal.setShowVerticalLines(false);
         jScrollPane3.setViewportView(tblTotal);
 
         butClearSearch.setFont(Global.textFont);
@@ -1180,15 +1182,15 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     .addGroup(searchPaneLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addGap(10, 10, 10)
-                        .addComponent(cboUser, 0, 93, Short.MAX_VALUE)
+                        .addComponent(cboUser, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(23, 23, 23)
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboCurrencySearch, 0, 90, Short.MAX_VALUE)
+                        .addComponent(cboCurrencySearch, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cboPayOpt, 0, 90, Short.MAX_VALUE))
+                        .addComponent(cboPayOpt, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(searchPaneLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addGap(18, 18, 18)
@@ -1198,15 +1200,15 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     .addGroup(searchPaneLayout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtFrom, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
+                        .addComponent(txtFrom)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtTo, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
+                        .addComponent(txtTo)
                         .addGap(18, 18, 18)
                         .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(cboLocation, 0, 130, Short.MAX_VALUE))
+                        .addComponent(cboLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, searchPaneLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1468,7 +1470,8 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         jLabel22.setFont(Global.lableFont);
         jLabel22.setText("Discount");
 
-        jLabel17.setText("Account : ");
+        jLabel17.setFont(Global.lableFont);
+        jLabel17.setText("Pyament Type");
 
         cboAccount.setFont(Global.textFont);
 
@@ -1502,7 +1505,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                         .addGap(44, 44, 44)
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtLastBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE))
+                        .addComponent(txtLastBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE))
                     .addGroup(entryPaneLayout.createSequentialGroup()
                         .addGroup(entryPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(entryPaneLayout.createSequentialGroup()
@@ -1555,7 +1558,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                             .addGroup(entryPaneLayout.createSequentialGroup()
                                 .addComponent(jLabel11)
                                 .addGap(18, 18, 18)
-                                .addComponent(cboLocation1, 0, 181, Short.MAX_VALUE))
+                                .addComponent(cboLocation1, 0, 171, Short.MAX_VALUE))
                             .addComponent(txtCusName1))
                         .addGap(18, 18, 18)
                         .addGroup(entryPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1566,7 +1569,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                             .addGroup(entryPaneLayout.createSequentialGroup()
                                 .addComponent(jLabel17)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cboAccount, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                                .addComponent(cboAccount, 0, 63, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
 
@@ -1761,7 +1764,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
     private void tblPayListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblPayListMouseClicked
         int row = tblPayList.getSelectedRow();
-
         if (evt.getClickCount() == 2 && row >= 0) {
             selected("PayHis", tblPayListModel.getSelectVou(tblPayList.convertRowIndexToModel(row)));
         }

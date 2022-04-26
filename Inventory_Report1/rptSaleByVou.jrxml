@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleByVou" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="17b16060-d7e7-43e5-86b3-3f3958c7548d">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="69"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="data_date" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String"/>
+	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="prm_location" class="java.lang.Integer"/>
+	<parameter name="prm_currency" class="java.lang.String"/>
+	<parameter name="prm_payment" class="java.lang.Integer"/>
+	<parameter name="prm_vou_type" class="java.lang.Integer"/>
+	<parameter name="prm_user_id" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT *
+FROM best_pharmacy.v_sale sale, medicine
+WHERE DATE(sale.sale_date) BETWEEN $P{prm_from} AND $P{prm_to}
+AND medicine.med_id = sale.med_id
+AND sale.deleted = FALSE
+ORDER BY sale.sale_inv_id]]>
+	</queryString>
+	<field name="sale_inv_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="balance" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="created_date" class="java.sql.Timestamp">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="deleted" class="java.lang.Boolean">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="disc_p" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="discount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="due_date" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_exp_total" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="paid_amount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="paid_currency_amt" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="paid_currency_ex_rate" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="remark" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_date" class="java.sql.Timestamp">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="session_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tax_amt" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tax_p" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="updated_date" class="java.sql.Timestamp">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vou_total" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="created_by" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="currency_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="cus_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="location_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="paid_currency" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="payment_type_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="updated_by" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="vou_status" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_detail_id" class="java.lang.Long">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_amount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_discount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="expire_date" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_price" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_qty" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="sale_smallest_qty" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="unique_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="charge_type" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="item_unit" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="trader_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="active" class="java.lang.Boolean">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="brand_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="chemical_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_rel_str" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="category_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_type_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="amt_qty" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{sale_smallest_qty}]]></variableExpression>
+	</variable>
+	<variable name="amy_amount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{vou_total}]]></variableExpression>
+	</variable>
+	<group name="currency">
+		<groupExpression><![CDATA[$F{sale_inv_id}]]></groupExpression>
+		<groupHeader>
+			<band height="85">
+				<textField>
+					<reportElement x="96" y="2" width="135" height="20" uuid="593651b1-0d1d-4671-90cb-d3b58473599a"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{sale_inv_id}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="3" y="3" width="93" height="20" uuid="ac7e12ba-727e-4b33-8975-992cf2e28c3d"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Vou-ID :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="528" y="62" width="57" height="20" uuid="cbee0d0b-b206-4b30-98cc-9c0c69287798"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Unit]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="661" y="1" width="135" height="20" uuid="b2bb3fa8-9ad3-4056-ae1b-b79961f8ca88"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{sale_date}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="587" y="62" width="57" height="20" uuid="7135fdd5-9eca-4e5e-b893-eba6677afd47"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Price]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="306" y="62" width="75" height="20" uuid="847f834c-8aac-472d-8a09-5c77bea3f182"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Packaging Size]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="469" y="62" width="57" height="20" uuid="d89cfbe9-7204-4388-bee5-cad0cd43437c"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Qty]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="646" y="62" width="57" height="20" uuid="64dff01b-5e8f-469b-9053-55d6ea94e98a"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="3" y="62" width="58" height="20" uuid="6525f1b9-171a-45f3-bbfa-52e22a61a53a"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Code]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="62" y="62" width="242" height="20" uuid="67a68ba5-9501-45e5-92af-4cc346ef8b2e"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Description]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="96" y="23" width="135" height="20" uuid="53d54caa-0158-473d-ba30-d81f74ec4370"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{trader_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="1" y="23" width="95" height="20" uuid="959fba86-bc8b-44e0-b67c-550b95ca4193"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Customer Name :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="705" y="62" width="91" height="20" uuid="0b8c6629-5bbc-4dfa-928d-fbbfd5813df2"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<text><![CDATA[Charge Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1" y="42" width="95" height="20" uuid="1507c9be-5096-4f6d-976d-92edfebcc579"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Customer Name :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="96" y="44" width="135" height="20" uuid="5ed18872-c200-40f0-ba71-1a9430e7bd2b"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{location_id}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="568" y="1" width="93" height="20" uuid="476e09d6-b5de-408e-a3b1-e7579309f0b9"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Date:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="568" y="22" width="93" height="20" uuid="6e9f2247-af9e-42c1-a23b-a107faa84c40"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[Payment:]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="661" y="22" width="135" height="20" uuid="7f842935-412d-41d9-aedf-ad1cf8dea026"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{payment_type_id}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="661" y="42" width="135" height="20" uuid="df1b55a1-b729-496b-b947-dc534a31e0f4"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{created_by}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="566" y="40" width="95" height="20" uuid="7e5572eb-e9bb-4f89-9545-ebef32095c8c"/>
+					<textElement verticalAlignment="Middle"/>
+					<text><![CDATA[User:]]></text>
+				</staticText>
+			</band>
+			<band height="18"/>
+		</groupHeader>
+		<groupFooter>
+			<band height="28">
+				<line>
+					<reportElement x="1" y="1" width="800" height="1" uuid="89a3f275-bfaa-4f68-a3d9-4e7769b304f4"/>
+				</line>
+				<line>
+					<reportElement x="1" y="26" width="800" height="1" uuid="3691d12f-dc92-4d92-b78b-1f8743f41d14"/>
+				</line>
+				<staticText>
+					<reportElement x="471" y="6" width="116" height="20" uuid="290a6553-dc9f-460f-8583-de67836ed711"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<text><![CDATA[Total :]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="647" y="6" width="54" height="20" uuid="ef0c6ec0-18ca-476f-8b5c-97ddf53cba39"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Zawgyi-One"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{vou_total}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="71" splitType="Stretch">
+			<textField>
+				<reportElement x="1" y="1" width="554" height="20" uuid="ecb16cd7-8fc1-4d99-bb42-f1c4c8464130"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="21" width="554" height="30" uuid="39d05099-1d9f-437c-a506-af1bf88b5114"/>
+				<textElement>
+					<font fontName="Verdana" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sale History By Document]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="51" width="230" height="20" uuid="c727f7c3-2bd8-4cea-b7be-cad7ed25d834"/>
+				<textElement>
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="559" y="50" width="67" height="20" uuid="45b2b92a-87af-4e98-9b71-be663cdf7db1"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="626" y="50" width="175" height="20" uuid="6962d1e0-720f-495f-af13-f89a46320dfb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="23" splitType="Stretch">
+			<textField>
+				<reportElement x="701" y="2" width="100" height="20" uuid="6eabae7c-7f4e-4cec-819d-31ef1e7c1b67"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Page: " + $V{PAGE_COUNT} + " of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="661" y="1" width="135" height="20" uuid="b2bb3fa8-9ad3-4056-ae1b-b79961f8ca88"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_date}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="2" y="1" width="58" height="20" uuid="17b2d06f-3213-46ce-b654-720d3baad175"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_id}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00">
+				<reportElement x="61" y="1" width="243" height="20" uuid="f04998d5-51f6-4751-97b1-b5917cefeb71"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="305" y="1" width="75" height="20" uuid="e707f20d-18e0-45d2-be93-ebd52712cedb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="532" y="2" width="57" height="20" uuid="572bfb07-9c5c-4832-a5c5-2f60da959eed"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{item_unit}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="590" y="2" width="57" height="20" uuid="12c81705-bd7f-4af1-8128-0b536f1863fe"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_price}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="646" y="2" width="55" height="20" uuid="b247bd5a-b2b0-4008-b822-60b0bffc44a1"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_amount}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="708" y="2" width="88" height="20" uuid="f8cc42ce-a3c0-4a3c-b0d8-eda8e62ef642"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{charge_type}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="471" y="2" width="57" height="20" uuid="ab258c0f-8621-4631-b48b-8c63485fba28"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sale_qty}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="6" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="6" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="46" splitType="Stretch">
+			<staticText>
+				<reportElement x="306" y="14" width="116" height="20" uuid="b15c5c21-bd1c-474d-b661-a64ade5278cb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<text><![CDATA[Total :]]></text>
+			</staticText>
+			<textField pattern="#,##0.00">
+				<reportElement x="426" y="14" width="100" height="20" uuid="4f8b03f2-ef10-40aa-864d-e55a12e9653e"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{amt_qty}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00">
+				<reportElement x="601" y="14" width="100" height="20" uuid="a2517463-2eaf-4d38-abdc-b269974432bb"/>
+				<textFieldExpression><![CDATA[$V{amy_amount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

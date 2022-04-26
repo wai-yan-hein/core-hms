@@ -6,8 +6,6 @@ package com.cv.app.pharmacy.ui.util;
 
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.MachineInfo;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.common.StockBalTableModel;
 import com.cv.app.pharmacy.util.MedicineUP;
@@ -15,18 +13,15 @@ import com.cv.app.pharmacy.util.StockList;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.KeyStroke;
-import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
@@ -66,7 +61,7 @@ public class StockBalListDialog extends javax.swing.JDialog {
         lblLocation.setText(stockList.getLocation());
 
         this.setLocation(x, y);
-        this.show();
+        this.setVisible(true);
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
@@ -80,10 +75,9 @@ public class StockBalListDialog extends javax.swing.JDialog {
     private void initTable() {
         rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
         tblBalList.setModel(tblBalListModel);
-        
+
         //tblBalList.getInputMap().put(KeyStroke.getKeyStroke("F5"), "F5-Action");
         //tblBalList.getActionMap().put("F5-Action", actionMedList);
-        
         tblBalList.getColumnModel().getColumn(0).setPreferredWidth(100);
         tblBalList.getColumnModel().getColumn(1).setPreferredWidth(30);
         tblBalList.getColumnModel().getColumn(2).setPreferredWidth(50);
@@ -121,21 +115,22 @@ public class StockBalListDialog extends javax.swing.JDialog {
     };
 
     private void timerFocus() {
-        Timer timer = new Timer(500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    System.out.println("Focus Timer");
-                    tblBalList.requestFocus();
-                    tblBalList.setColumnSelectionInterval(3, 3);
-                    tblBalList.setRowSelectionInterval(0, 0);
-                } catch (Exception ex) {
-                    System.out.println("Error : " + ex.toString());
-                }
-            }
+        /*Timer timer = new Timer(500, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        
+        }
         });
         timer.setRepeats(false);
-        timer.start();
+        timer.start();*/
+        try {
+            //System.out.println("Focus Timer");
+            tblBalList.requestFocus();
+            tblBalList.setColumnSelectionInterval(3, 3);
+            tblBalList.setRowSelectionInterval(0, 0);
+        } catch (Exception ex) {
+            System.out.println("Error : " + ex.toString());
+        }
     }
 
     /**

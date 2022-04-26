@@ -33,7 +33,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
-    
+
     static Logger log = Logger.getLogger(TraderPayAccountSetupDialog.class.getName());
     private final AbstractDataAccess dao = Global.dao; // Data access object.    
     private TraderPayAccountTableModel model = new TraderPayAccountTableModel();
@@ -42,14 +42,14 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
     private int selectedRow = -1;
     private final TableRowSorter<TableModel> sorter;
     private final StartWithRowFilter swrf;
-    
+
     /**
      * Creates new form TraderPayAccountSetupDialog
      */
     public TraderPayAccountSetupDialog() {
         super(Util1.getParent(), true);
         initComponents();
-        
+
         try {
             dao.open();
             initTable();
@@ -69,7 +69,7 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
 
     public void setRecord(TraderPayAccount account) {
         this.currTraderPayAccount = account;
-        txtAccountId.setText(currTraderPayAccount.getAccountId());
+        txtAccountId.setText(currTraderPayAccount.getAccount());
         txtDescription.setText(currTraderPayAccount.getDesp());
         chkActive.setSelected(currTraderPayAccount.getStatus());
         lblStatus.setText("EDIT");
@@ -97,18 +97,18 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
         //Adding table row selection listener.
         tblAccount.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblAccount.getSelectedRow() >= 0) {
-                            selectedRow = tblAccount.convertRowIndexToModel(
-                                    tblAccount.getSelectedRow());
-                        }
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblAccount.getSelectedRow() >= 0) {
+                    selectedRow = tblAccount.convertRowIndexToModel(
+                            tblAccount.getSelectedRow());
+                }
 
-                        if (selectedRow >= 0) {
-                            setRecord(model.getAccount(selectedRow));
-                        }
-                    }
-                });
+                if (selectedRow >= 0) {
+                    setRecord(model.getAccount(selectedRow));
+                }
+            }
+        });
     }
 
     public void setFocus() {
@@ -143,10 +143,10 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
     private boolean isValidEntry() {
         boolean status = true;
 
-        if (Util1.nullToBlankStr(txtAccountId.getText()).equals("")) {
+        if (Util1.nullToBlankStr(txtDescription.getText()).equals("")) {
             status = false;
         } else {
-            currTraderPayAccount.setAccountId(txtAccountId.getText().trim());
+            currTraderPayAccount.setAccount(txtAccountId.getText().trim());
             currTraderPayAccount.setDesp(txtDescription.getText().trim());
             currTraderPayAccount.setStatus(chkActive.isSelected());
         }
@@ -179,7 +179,7 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
 
         clear();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -209,7 +209,7 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
         tblAccount.setModel(model);
         jScrollPane1.setViewportView(tblAccount);
 
-        jLabel1.setText("Account ID : ");
+        jLabel1.setText("Account Code :");
 
         jLabel2.setText("Description : ");
 
@@ -277,12 +277,12 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(txtAccountId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(txtDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(txtAccountId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkActive)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)

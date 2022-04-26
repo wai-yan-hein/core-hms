@@ -7,10 +7,14 @@ package com.cv.app.util;
 import com.cv.app.common.Global;
 import datechooser.beans.DateChooserDialog;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.springframework.richclient.application.Application;
 
@@ -122,10 +126,11 @@ public class DateUtil {
     public static Date toDate(Object objDate) {
         SimpleDateFormat formatter = new SimpleDateFormat(Global.dateFormat);
         Date date = null;
-
         try {
-            date = formatter.parse(objDate.toString());
-        } catch (Exception ex) {
+            if (objDate != null) {
+                date = formatter.parse(objDate.toString());
+            }
+        } catch (ParseException ex) {
             //System.out.println("toDateStr : " + ex.getMessage());
         }
 
@@ -133,12 +138,12 @@ public class DateUtil {
     }
 
     public static Date toDate(String strDate, String format) {
-        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        DateFormat formatter = new SimpleDateFormat(format);
         Date date = null;
 
         try {
             date = formatter.parse(strDate);
-        } catch (Exception ex) {
+        } catch (ParseException ex) {
             //System.out.println("toDateStr : " + ex.getMessage());
         }
 
@@ -160,18 +165,15 @@ public class DateUtil {
 
     public static Date toDateTime(Object objDate) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        Date date = new Date();
-        String strDate = objDate.toString() + " " + date.getHours() + ":"
-                + date.getMinutes() + ":" + date.getSeconds();
-
-        date = null;
-
+        LocalDateTime now = LocalDateTime.now();
+        String strDate = objDate.toString() + " " + now.getHour() + ":"
+                + now.getMinute() + ":" + now.getSecond();
+        Date date = null;
         try {
             date = formatter.parse(strDate);
-        } catch (Exception ex) {
-            //System.out.println("DateUtil.toDateTime : " + ex.toString());
+        } catch (ParseException ex) {
+            Logger.getLogger(DateUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         return date;
     }
 
@@ -185,7 +187,7 @@ public class DateUtil {
                 Date date = formatter.parse(objDate.toString());
                 System.out.println("Date : " + date);
             }
-        } catch (Exception ex) {
+        } catch (ParseException ex) {
             status = false;
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid date format. You should enter '"
                     + Global.dateFormat + "' format pattern.",
@@ -239,9 +241,8 @@ public class DateUtil {
         try {
             strDate = formatter.format(date);
         } catch (Exception ex) {
-            //System.out.println("toDateStr : " + ex.getMessage());
+            System.out.println("toDateStr : " + ex.getMessage());
         }
-
         return strDate;
     }
 

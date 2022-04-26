@@ -65,6 +65,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
     private final PaymentHisTableModel model = new PaymentHisTableModel();
     private int selectRow = -1;
     private int mouseClick = 2;
+
     //private final TableRowSorter<TableModel> tblTraderSorter;
     /**
      * Creates new form CustomerPayment1
@@ -83,13 +84,13 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         initTable();
         calculateTotal();
         actionMapping();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -271,8 +272,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                             rs.getDouble("ttl_paid"),
                             rs.getDouble("bal"),
                             rs.getInt("ttl_overdue1"),
-                            "MMK"
-                    ));
+                            "MMK", DateUtil.toDate(DateUtil.getTodayDateStr())));
                 }
                 //tblPaymentEntry.setListVP(listVP);
             }
@@ -488,7 +488,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         tblPayList.getColumnModel().getColumn(1).setPreferredWidth(30);
         tblPayList.getColumnModel().getColumn(2).setPreferredWidth(100);
         tblPayList.getColumnModel().getColumn(3).setPreferredWidth(40);
-        
+
         tblPayList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblPayList.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -521,7 +521,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                                 "Payment delete", JOptionPane.YES_NO_OPTION);
                         if (yes_no == 0) {
                             TraderPayHis traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class, vtp.getPayId());
-                            
+
                             if (traderPayHis.getPaymentId() != null) {
                                 try {
                                     dao.getPro("bkpayment", traderPayHis.getPaymentId().toString(),
@@ -590,7 +590,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                             msg.setString("sourceAccId", "-");
                         }
                         if (tph.getPayAccount() != null) {
-                            msg.setString("account_id", tph.getPayAccount().getAccountId());
+                            msg.setString("account_id", tph.getPayAccount().getAccount());
                         } else {
                             msg.setString("account_id", "-");
                         }
@@ -616,13 +616,13 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
             }
         }
     }
-    
+
     private void actionMapping() {
         //F8 event on tblSale
         tblPayList.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblPayList.getActionMap().put("F8-Action", actionItemDelete);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

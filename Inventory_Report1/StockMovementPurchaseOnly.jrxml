@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalanceSummary" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="user_id" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="data_date" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="compName" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select vsm.user_id, vsm.location_id, loc.location_name, vsm.med_id, med.med_name,
+get_qty_in_str(vsm.ttl_op, med.unit_smallest, med.unit_str) ttl_op,
+get_qty_in_str(vsm.ttl_put, med.unit_smallest, med.unit_str) ttl_pur,
+get_qty_in_str(vsm.ttl_ret_in, med.unit_smallest, med.unit_str) ttl_ret_in,
+get_qty_in_str(vsm.ttl_trn_to, med.unit_smallest, med.unit_str) ttl_trn_to,
+get_qty_in_str(vsm.ttl_rec, med.unit_smallest, med.unit_str) ttl_rec,
+get_qty_in_str(vsm.ttl_adj_in, med.unit_smallest, med.unit_str) ttl_adj_in,
+get_qty_in_str(vsm.ttl_stock_in, med.unit_smallest, med.unit_str) ttl_stock_in,
+get_qty_in_str(vsm.ttl_sale, med.unit_smallest, med.unit_str) ttl_sale,
+get_qty_in_str(vsm.ttl_ret_out, med.unit_smallest, med.unit_str) ttl_ret_out,
+get_qty_in_str(vsm.ttl_trn_from, med.unit_smallest, med.unit_str) ttl_trn_from,
+get_qty_in_str(vsm.ttl_iss, med.unit_smallest, med.unit_str) ttl_iss,
+get_qty_in_str(vsm.ttl_adj_out, med.unit_smallest, med.unit_str) ttl_adj_out,
+get_qty_in_str(vsm.ttl_damage, med.unit_smallest, med.unit_str) ttl_damage,
+get_qty_in_str(vsm.ttl_stock_out, med.unit_smallest, med.unit_str) ttl_stock_out,
+get_qty_in_str(vsm.ttl_stock_balance, med.unit_smallest, med.unit_str) ttl_stock_balance, vsm.ttl_stock_balance as ttl_bal
+from v_stock_movement vsm, v_med_unit_smallest_rel med, location loc
+where vsm.med_id = med.med_id and vsm.location_id = loc.location_id
+and vsm.user_id = $P{user_id}
+order by vsm.location_id, vsm.med_id]]>
+	</queryString>
+	<field name="user_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="location_id" class="java.lang.Integer">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="location_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="med_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_op" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_pur" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_ret_in" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_trn_to" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_rec" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_adj_in" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_stock_in" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_sale" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_ret_out" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_trn_from" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_iss" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_adj_out" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_damage" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_stock_out" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_stock_balance" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ttl_bal" class="java.math.BigDecimal"/>
+	<variable name="Amount" class="java.lang.Number" resetType="Group" resetGroup="Location" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl_bal}]]></variableExpression>
+	</variable>
+	<variable name="Total" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl_bal}]]></variableExpression>
+	</variable>
+	<group name="Location">
+		<groupExpression><![CDATA[$F{location_id}]]></groupExpression>
+		<groupHeader>
+			<band height="23">
+				<staticText>
+					<reportElement x="5" y="2" width="47" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+					<textElement textAlignment="Left">
+						<font fontName="Zawgyi-One" size="9" isBold="true" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Location :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement x="59" y="2" width="161" height="20" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+					<textElement>
+						<font fontName="Zawgyi-One" size="9" isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{location_name}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="1" y="22" width="554" height="1" uuid="dc185c32-73a3-44cf-901b-f9553d47b94c"/>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="29">
+				<textField pattern="#,##0.00">
+					<reportElement x="451" y="0" width="100" height="20" uuid="8a32b101-1ae3-4974-bb14-4648f9b0368d"/>
+					<textElement textAlignment="Right">
+						<font fontName="Zawgyi-One" size="11" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{Amount}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="351" y="0" width="100" height="20" uuid="12dfe9b4-c3a7-4e6c-8df4-753e61393b1d"/>
+					<textElement textAlignment="Right">
+						<font fontName="Zawgyi-One" size="11" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="50" splitType="Stretch">
+			<staticText>
+				<reportElement x="1" y="20" width="344" height="30" uuid="1cea8bb8-8cc4-42bd-a843-59f47537f67e"/>
+				<box>
+					<pen lineStyle="Solid" lineColor="#004ECA"/>
+					<topPen lineStyle="Solid" lineColor="#004ECA"/>
+					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
+					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
+					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font fontName="Zawgyi-One" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Stock Movement]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="366" y="30" width="78" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="444" y="30" width="104" height="20" uuid="9db83743-f7c8-4121-bdf8-46e02d9d6a2f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="1" width="345" height="20" uuid="10953596-feb6-4da9-8270-94dd657c5d0f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="70" splitType="Stretch">
+			<textField>
+				<reportElement x="425" y="1" width="80" height="20" uuid="c1e378a6-01b4-4837-acdc-c15ba807527c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="507" y="1" width="40" height="20" uuid="f9dd744a-33cb-4a31-9c0c-c9636d7ef480"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="4" y="49" width="55" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sr. No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="60" y="49" width="135" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Products]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="196" y="49" width="101" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Opening Balance]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="316" y="49" width="97" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[This month sale]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="476" y="49" width="75" height="20" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Closing]]></text>
+			</staticText>
+			<line>
+				<reportElement x="-80" y="9" width="1" height="44" uuid="c4736f8c-6a4b-4178-bca9-b881b3e656f2"/>
+			</line>
+			<line>
+				<reportElement x="312" y="49" width="1" height="20" uuid="c4736f8c-6a4b-4178-bca9-b881b3e656f2"/>
+			</line>
+			<line>
+				<reportElement x="414" y="50" width="1" height="18" uuid="3df443d3-da38-43d0-9e56-c5bd3a1a06a4"/>
+			</line>
+			<line>
+				<reportElement x="1" y="50" width="1" height="19" uuid="c4736f8c-6a4b-4178-bca9-b881b3e656f2"/>
+			</line>
+			<line>
+				<reportElement x="195" y="50" width="1" height="18" uuid="3df443d3-da38-43d0-9e56-c5bd3a1a06a4"/>
+			</line>
+			<line>
+				<reportElement x="1" y="69" width="554" height="1" uuid="071a845d-6e16-4820-beb1-baf58a8d48bb"/>
+			</line>
+			<line>
+				<reportElement x="1" y="49" width="554" height="1" uuid="071a845d-6e16-4820-beb1-baf58a8d48bb"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="1" width="275" height="20" uuid="d9725a21-a26c-42a5-b300-d0c3e7b36599"/>
+				<textElement>
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="554" y="50" width="1" height="18" uuid="f6f9ea11-8ff2-40ee-a285-6c5236f6aff5"/>
+			</line>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="60" y="2" width="135" height="20" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement>
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement x="198" y="2" width="99" height="20" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_op}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement x="316" y="1" width="96" height="20" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_pur}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0" isBlankWhenNull="true">
+				<reportElement x="476" y="2" width="75" height="20" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_stock_balance}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="414" y="1" width="1" height="20" uuid="aac486f6-7a75-46c6-a7d9-849f5f4b83f8"/>
+			</line>
+			<line>
+				<reportElement x="312" y="1" width="1" height="20" uuid="aac486f6-7a75-46c6-a7d9-849f5f4b83f8"/>
+			</line>
+			<line>
+				<reportElement x="196" y="1" width="1" height="20" uuid="aac486f6-7a75-46c6-a7d9-849f5f4b83f8"/>
+			</line>
+			<line>
+				<reportElement x="1" y="21" width="554" height="1" uuid="62a9938a-e120-4402-9484-14f40251298e"/>
+			</line>
+			<line>
+				<reportElement x="1" y="0" width="1" height="20" uuid="aac486f6-7a75-46c6-a7d9-849f5f4b83f8"/>
+			</line>
+			<line>
+				<reportElement x="554" y="1" width="1" height="20" uuid="aac486f6-7a75-46c6-a7d9-849f5f4b83f8"/>
+			</line>
+			<textField>
+				<reportElement x="5" y="2" width="54" height="20" uuid="fae7a072-87f8-463a-90a6-fe874e4c01d6"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="22" splitType="Stretch">
+			<textField pattern="#,##0.00">
+				<reportElement x="451" y="2" width="100" height="20" uuid="56c341df-efdc-4370-8921-c1c99eb1656b"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{Total}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="351" y="2" width="100" height="20" uuid="69c9e5f0-64d0-4374-9952-a9d5971a3341"/>
+				<textElement textAlignment="Right">
+					<font fontName="Zawgyi-One" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Grand Total]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

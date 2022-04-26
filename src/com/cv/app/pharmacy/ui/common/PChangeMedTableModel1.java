@@ -306,7 +306,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
 
         try {
             med = (Medicine) dao.find(Medicine.class, med.getMedId());
-            if (med.getRelationGroupId().size() > 0) {
+            if (!med.getRelationGroupId().isEmpty()) {
                 med.setRelationGroupId(med.getRelationGroupId());
             }
         } catch (Exception ex) {
@@ -373,8 +373,11 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                             + med.getMedId() + "'");
                     if (sodhList != null) {
                         if (!sodhList.isEmpty()) {
-                            smallestCost = sodhList.get(0).getCostPrice().floatValue()
-                                    / (sodhList.get(0).getSmallestQty() / sodhList.get(0).getQty());
+                            float costPrice = NumberUtil.FloatZero(sodhList.get(0).getCostPrice());
+                            float smallQty = sodhList.get(0).getSmallestQty();
+                            float qty = sodhList.get(0).getQty();
+                            smallestCost = costPrice
+                                    / (smallQty / qty);
                             if (Double.isNaN(smallestCost)) {
                                 smallestCost = 0;
                             }

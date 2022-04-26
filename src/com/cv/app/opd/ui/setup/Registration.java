@@ -9,7 +9,6 @@ import com.cv.app.opd.database.entity.City;
 import com.cv.app.opd.database.entity.Gender;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
-import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.RegNo;
@@ -82,6 +81,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private Boolean bkPTF = false;
     private final StartWithRowFilter swrfGroup;
     private final TableRowSorter<TableModel> sorterGroup;
+    private boolean print = false;
 
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
@@ -240,6 +240,26 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
+                if (print) {
+                    String printMode = Util1.getPropValue("report.vou.printer.mode");
+                    String path = Util1.getAppWorkFolder()
+                            + Util1.getPropValue("report.folder.path")
+                            + "Clinic/PatientInfo";
+                    String printerName = Util1.getPropValue("label.printer");
+                    Map<String, Object> p = new HashMap();
+                    p.put("p_patient", currPatient.getPatientName());
+                    p.put("p_dob", DateUtil.toDateStr(currPatient.getDob(), "dd/MM/yyyy"));
+                    p.put("p_age", getAge() + "," + currPatient.getSex().getGenderId());
+                    p.put("p_address", currPatient.getAddress());
+                    p.put("p_phone", currPatient.getContactNo());
+                    p.put("p_reg_no", currPatient.getRegNo());
+                    if (printMode.equals("View")) {
+                        ReportUtil.viewReport(path, p, dao.getConnection());
+                    } else {
+                        JasperPrint jp = ReportUtil.getReport(path, p, dao.getConnection());
+                        ReportUtil.printJasper(jp, printerName);
+                    }
+                }
                 newForm();
             } catch (Exception ex) {
                 dao.rollBack();
@@ -248,6 +268,24 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 dao.close();
             }
         }
+    }
+
+    private String getAge() {
+        String age = txtAge.getText();
+        String m = txtMonth.getText();
+        String d = txtDay.getText();
+        String str = "";
+        if (!age.isEmpty() && Integer.parseInt(age) > 0) {
+            str = "," + age + "y";
+        }
+        if (!m.isEmpty() && Integer.parseInt(m) > 0) {
+            str += "," + m + "m";
+
+        }
+        if (!d.isEmpty() && Integer.parseInt(d) > 0) {
+            str += "," + d + "d";
+        }
+        return str;
     }
 
     @Override
@@ -272,6 +310,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         txtBillID.setText(null);
         txtAdmissionNo.setText(null);
         lblAgeStr.setText(null);
+        print = false;
     }
 
     @Override
@@ -289,6 +328,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
 
     @Override
     public void print() {
+        print = true;
+        save();
     }
 
     @Override
@@ -523,6 +564,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         bkDoctor.setText("");
         bkPhone.setText("");
         bkPTF = false;
+        print = false;
     }
 
     private Date getDOB() {

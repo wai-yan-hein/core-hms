@@ -138,7 +138,7 @@ public class VSession implements java.io.Serializable {
         this.traderName = traderName;
     }
 
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "tran_date")
     public Date getTranDate() {
         return tranDate;
