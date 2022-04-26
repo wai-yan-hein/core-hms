@@ -142,7 +142,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 new Currency("000", "All")));
         BindingUtil.BindCombo(cboPCurrency, dao.findAll("Currency"));
         BindingUtil.BindCombo(cboAccount,
-                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.desp"));
+                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
 
         cboUser.setSelectedIndex(0);
         cboCurrencySearch.setSelectedIndex(0);
@@ -154,7 +154,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         new ComBoBoxAutoComplete(cboCurrencySearch);
         new ComBoBoxAutoComplete(cboPCurrency);
         new ComBoBoxAutoComplete(cboAccount);
-        cboAccount.setSelectedItem(null);
+        cboAccount.setSelectedIndex(0);
         bindStatus = true;
     }// </editor-fold>
 

@@ -19,7 +19,6 @@ import java.util.Properties;
 import org.springframework.richclient.application.Application;
 import org.apache.log4j.Logger;
 
-
 /**
  *
  * @author WSwe
@@ -66,6 +65,16 @@ public class Util1 {
 
     public static String getAppWorkFolder() {
         return System.getProperty("user.dir");
+    }
+
+    public static String isNull(String strValue, String value) {
+        if (strValue == null) {
+            return value;
+        } else if (strValue.isEmpty() || strValue.equals("")) {
+            return value;
+        } else {
+            return strValue;
+        }
     }
 
     public static Dimension getScreenSize() {
@@ -172,7 +181,7 @@ public class Util1 {
     public static String getNullTo(String value, String value1) {
         if (value == null) {
             return value1;
-        } else if (value.isEmpty()){
+        } else if (value.isEmpty()) {
             return value1;
         } else {
             return value;

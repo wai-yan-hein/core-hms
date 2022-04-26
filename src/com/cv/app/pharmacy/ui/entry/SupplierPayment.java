@@ -54,7 +54,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         initTableCusPay();
         txtPayDate.setText(DateUtil.getTodayDateStr());
         BindingUtil.BindCombo(cboAccount,
-                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.desp"));
+                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
         new ComBoBoxAutoComplete(cboAccount);
         tblPaymentEntry.setCboPayment(cboAccount);
         cboAccount.setSelectedIndex(0);

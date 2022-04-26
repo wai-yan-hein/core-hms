@@ -126,7 +126,6 @@ public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
         txtTotal = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("OT Doctor Fee Entry");
 
         tblOTDoctorFee.setFont(Global.textFont);
