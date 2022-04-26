@@ -11,8 +11,11 @@ import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.StockIssueDetailHis;
 import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.helper.CurrencyTtl;
 import com.cv.app.pharmacy.database.helper.StockOutstanding;
 import com.cv.app.pharmacy.database.tempentity.StockCosting;
+import com.cv.app.pharmacy.database.tempentity.StockCostingDetail;
+import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.pharmacy.util.MedicineUtil;
@@ -20,7 +23,9 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.util.NumberUtil;
+import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -277,21 +282,21 @@ public class IssueTableModel extends AbstractTableModel {
 
                     break;
                 case 8: //Currency
-                    if(value == null){
+                    if (value == null) {
                         sidh.setCurrency(null);
-                    }else{
-                        sidh.setCurrency((Currency)value);
+                    } else {
+                        sidh.setCurrency((Currency) value);
                     }
-                    
+
                     try {
                         String medId = sidh.getIssueMed().getMedId();
                         String key = medId + "-" + sidh.getUnit().getItemUnitCode();
                         Currency tmpCurr = sidh.getCurrency();
-                        if(tmpCurr == null){
+                        if (tmpCurr == null) {
                             tmpCurr = currency;
                         }
                         String curr = "MMK";
-                        if(tmpCurr != null){
+                        if (tmpCurr != null) {
                             curr = tmpCurr.getCurrencyCode();
                         }
                         calculateMed(medId, curr);
@@ -337,11 +342,11 @@ public class IssueTableModel extends AbstractTableModel {
                     try {
                         String key = medId + "-" + sidh.getUnit().getItemUnitCode();
                         Currency tmpCurr = sidh.getCurrency();
-                        if(tmpCurr == null){
+                        if (tmpCurr == null) {
                             tmpCurr = currency;
                         }
                         String curr = "MMK";
-                        if(tmpCurr != null){
+                        if (tmpCurr != null) {
                             curr = tmpCurr.getCurrencyCode();
                         }
                         calculateMed(medId, curr);
@@ -436,7 +441,7 @@ public class IssueTableModel extends AbstractTableModel {
             sidh.setRefVou(outs.getInvId());
             if (outs.getCusId() != null) {
                 sidh.setTrader((Trader) dao.find(Trader.class,
-                         outs.getCusId()));
+                        outs.getCusId()));
             }
             sidh.setStrOutstanding(outs.getQtyStr());
 
@@ -558,7 +563,7 @@ public class IssueTableModel extends AbstractTableModel {
             StockIssueDetailHis record = listDetail.get(row);
             dao.open();
             Medicine tmpMed = (Medicine) dao.find(Medicine.class,
-                     med.getMedId());
+                    med.getMedId());
             medUp.add(tmpMed);
             record.setIssueMed(tmpMed);
             dao.close();
@@ -637,6 +642,29 @@ public class IssueTableModel extends AbstractTableModel {
         return total;
     }
 
+    public List<CurrencyTtl> getCurrTotal() {
+        List<CurrencyTtl> listCTTL = new ArrayList();
+        HashMap<String, CurrencyTtl> hmCTTL = new HashMap();
+
+        listDetail.forEach(sidh -> {
+            Currency currId = sidh.getCurrency();
+            if (currId != null) {
+                if (hmCTTL.containsKey(currId.getCurrencyCode())) {
+                    CurrencyTtl cttl = hmCTTL.get(currId.getCurrencyCode());
+                    cttl.setTtlPaid(NumberUtil.NZero(cttl.getTtlPaid())
+                            + NumberUtil.NZero(sidh.getAmount()));
+                } else {
+                    CurrencyTtl cttl = new CurrencyTtl(currId.getCurrencyCode(),
+                            NumberUtil.NZero(sidh.getAmount()));
+                    listCTTL.add(cttl);
+                    hmCTTL.put(currId.getCurrencyCode(), cttl);
+                }
+            }
+        });
+
+        return listCTTL;
+    }
+
     private void calculateMed(String medId, String currency) {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
@@ -653,17 +681,32 @@ public class IssueTableModel extends AbstractTableModel {
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(tmpDate), "Opening",
                     Global.loginUser.getUserId());
-            
+
+            List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
+                    + Global.loginUser.getUserId() + "'");
+            boolean localCost = false;
+            if (listEXR != null) {
+                if (!listEXR.isEmpty()) {
+                    localCost = true;
+                }
+            }
+
             if (Util1.getPropValue("system.multicurrency").equals("Y")) {
-                dao.execProc("insert_cost_detail_mc",
-                        "Opening", DateUtil.toDateStrMYSQL(tmpDate),
-                        Global.loginUser.getUserId(), strMethod, currency);
+                if (localCost) {
+                    calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(tmpDate),
+                            Global.loginUser.getUserId(), strMethod, currency);
+                } else {
+                    dao.execProc("insert_cost_detail_mc",
+                            "Opening", DateUtil.toDateStrMYSQL(tmpDate),
+                            Global.loginUser.getUserId(), strMethod, currency);
+                }
             } else {
                 dao.execProc("insert_cost_detail",
                         "Opening", DateUtil.toDateStrMYSQL(tmpDate),
                         Global.loginUser.getUserId(), strMethod);
+                dao.commit();
             }
-            dao.commit();
+            
         } catch (Exception ex) {
             log.error("calculate : " + ex.toString());
         } finally {
@@ -729,5 +772,166 @@ public class IssueTableModel extends AbstractTableModel {
 
     public void setCurrency(Currency currency) {
         this.currency = currency;
+    }
+
+    private void calculateWithLocalExRate(String costFor, String costDate, String userId,
+            String method, String curr) {
+        String strSql = "select tsc.med_id item_id, bal_qty ttl_stock, cost_price.tran_date, cost_price.tran_option, \n"
+                + "         cost_price.ttl_qty, cost_price.smallest_cost, cost_price, item_unit, currency_id,\n"
+                + "         exr.from_curr, exr.to_curr, exr.ex_rate\n"
+                + "    from tmp_stock_costing tsc, \n"
+                + "         (select 'Adjust' tran_option, v_adj.med_id item_id, adj_date tran_date, \n"
+                + "                 sum(adj_smallest_qty) ttl_qty, cost_price,\n"
+                + "                 (cost_price/vm.smallest_qty) smallest_cost, v_adj.item_unit, v_adj.currency_id\n"
+                + "            from v_adj join (select med_id, min(op_date) op_date\n"
+                + "	                       from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                          group by med_id) tsf on v_adj.med_id = tsf.med_id\n"
+                + "		    join v_medicine vm on v_adj.med_id = vm.med_id and v_adj.item_unit = vm.item_unit\n"
+                + "           where deleted = false \n"
+                + "             and date(adj_date) >= op_date and date(adj_date) <= prm_cost_date\n"
+                + "		   group by v_adj.med_id, adj_date, v_adj.currency_id, cost_price, v_adj.item_unit\n"
+                + "		   union all\n"
+                + "          select 'Purchase' tran_option, vpur.med_id item_id, pur_date tran_date, \n"
+                + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, pur_unit_cost cost_price, \n"
+                + "                 (pur_unit_cost/vm.smallest_qty) smallest_cost, vpur.pur_unit item_unit, vpur.currency as currency_id\n"
+                + "            from v_purchase vpur join (select med_id, min(op_date) op_date\n"
+                + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                                    group by med_id) tsf on vpur.med_id = tsf.med_id\n"
+                + "			join v_medicine vm on vpur.med_id = vm.med_id and vpur.pur_unit = vm.item_unit\n"
+                + "           where deleted = false and date(pur_date) >= op_date and date(pur_date) <= prm_cost_date\n"
+                + "           group by vpur.med_id, pur_date, vpur.currency, pur_unit_cost, vpur.pur_unit\n"
+                + "		   union all\n"
+                + "          select 'Return-In' tran_option, vretin.med_id item_id, ret_in_date tran_date, \n"
+                + "                 sum(ret_in_smallest_qty) ttl_qty, ret_in_price cost_price, \n"
+                + "                 (ret_in_price/vm.smallest_qty) smallest_cost, vretin.item_unit, vretin.currency as currency_id\n"
+                + "            from v_return_in vretin join (select med_id, min(op_date) op_date\n"
+                + "	                                    from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                                       group by med_id) tsf on vretin.med_id = tsf.med_id\n"
+                + "            join v_medicine vm on vretin.med_id = vm.med_id and vretin.item_unit = vm.item_unit\n"
+                + "           where deleted = false and date(ret_in_date) >= op_date and date(ret_in_date) <= prm_cost_date\n"
+                + "           group by vretin.med_id, ret_in_date, vretin.currency, ret_in_price, vretin.item_unit\n"
+                + "           union all\n"
+                + "          select 'Opening' tran_option, vso.med_id item_id, vso.op_date tran_date, \n"
+                + "				 sum(vso.op_smallest_qty) ttl_qty, vso.cost_price, \n"
+                + "				 (vso.cost_price/vm.smallest_qty) smallest_cost, vso.item_unit, sp.sys_prop_value as currency_id\n"
+                + "            from v_stock_op vso join tmp_stock_filter tsf on vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
+                + "            join v_medicine vm on vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
+                + "            join (select sys_prop_value from sys_prop where sys_prop_desp = 'system.app.currency') sp\n"
+                + "		   where vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "           group by vso.med_id, vso.op_date, vso.cost_price, vso.item_unit) cost_price, \n"
+                + "           (select * from tmp_ex_rate where user_id = prm_user_id) exr\n"
+                + "   where tsc.med_id = cost_price.item_id and (cost_price.currency_id = exr.from_curr or cost_price.currency_id = exr.to_curr) \n"
+                + "     and tsc.user_id = prm_user_id and tsc.tran_option = prm_cost_for\n"
+                + "   order by item_id, cost_price.tran_date desc, cost_price desc";
+        strSql = strSql.replace("prm_cost_for", "'" + costFor + "'")
+                .replace("prm_cost_date", "'" + costDate + "'")
+                .replace("prm_user_id", "'" + userId + "'")
+                .replace("p_method", "'" + method + "'");
+
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                String prvMedId = "-";
+                int leftStock = 0;
+
+                while (rs.next()) {
+                    StockCostingDetail scd = new StockCostingDetail();
+                    String medId = rs.getString("item_id");
+                    int ttlQty = rs.getInt("ttl_qty");
+                    String currId = rs.getString("currency_id");
+                    String fromCurrId = rs.getString("from_curr");
+                    String toCurrId = rs.getString("to_curr");
+
+                    scd.setItemId(medId);
+                    scd.setTranDate(rs.getDate("tran_date"));
+                    scd.setTranOption(rs.getString("tran_option"));
+                    scd.setTranQty(ttlQty);
+                    scd.setPackingCost(rs.getDouble("cost_price"));
+                    scd.setSmallestCost(rs.getDouble("smallest_cost"));
+                    scd.setUserId(userId);
+                    scd.setCostFor(costFor);
+                    scd.setUnit(rs.getString("item_unit"));
+                    scd.setCurrencyId(rs.getString("currency_id"));
+                    scd.setHomeCurr(curr);
+                    scd.setExrDesp(fromCurrId + "-" + toCurrId);
+                    scd.setExrRate(rs.getDouble("ex_rate"));
+
+                    if (!prvMedId.equals(medId)) {
+                        prvMedId = medId;
+                        leftStock = rs.getInt("ttl_stock");
+                    }
+
+                    if (leftStock > 0) {
+                        if (leftStock >= ttlQty) {
+                            scd.setCostQty(ttlQty);
+                            leftStock = leftStock - ttlQty;
+                        } else {
+                            scd.setCostQty(leftStock);
+                            leftStock = 0;
+                        }
+
+                        if (curr.equals(currId)) {
+                            scd.setExrSmallCost(rs.getDouble("smallest_cost"));
+                            scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                        } else {
+                            if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
+                                double exRate = rs.getDouble("ex_rate");
+                                double ttlStock = scd.getCostQty();
+                                double smlCost = rs.getDouble("smallest_cost");
+                                double amount = ttlStock * smlCost * exRate;
+                                scd.setExrSmallCost(smlCost * exRate);
+                                //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                                scd.setExrTtlCost(amount);
+                            } else {
+                                scd.setExrSmallCost(0.0);
+                                scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                            }
+                        }
+
+                        dao.save(scd);
+                    }
+                }
+
+                if (method.equals("FIFO")) {
+                    strSql = "update tmp_stock_costing tsc, (select item_id, sum(cost_qty*exr_smallest_cost) ttl_cost, user_id\n"
+                            + "	          from tmp_costing_detail\n"
+                            + "		 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "	      group by item_id, user_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                } else if (method.equals("AVG")) {
+                    strSql = "update tmp_costing_detail tcd, (\n"
+                            + "					select user_id, item_id, sum(ttl_qty) ttl_qty, sum(ttl_qty*exr_smallest_cost) ttl_amt, \n"
+                            + "						   (sum(ttl_qty*exr_smallest_cost)/if(sum(ttl_qty)=0,1,sum(ttl_qty))) as avg_cost\n"
+                            + "				      from tmp_costing_detail\n"
+                            + "					 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "					 group by user_id,item_id) avgc\n"
+                            + "		set tcd.exr_smallest_cost = avgc.avg_cost\n"
+                            + "		where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                    strSql = "update tmp_stock_costing tsc, \n"
+                            + "               (select user_id, item_id, sum(cost_qty*exr_smallest_cost) ttl_cost\n"
+                            + "				  from tmp_costing_detail\n"
+                            + "				 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "				 group by user_id,item_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("calculateWithLocalExRate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 }

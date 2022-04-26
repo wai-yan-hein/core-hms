@@ -14,7 +14,8 @@ public class CurrPTBalance {
     private String admNo;
     private String ptName;
     private Double balance;
-
+    private Double checkBalance;
+    
     public CurrPTBalance(){}
     
     public CurrPTBalance(String regNo, String admNo, String ptName, Double balance) {
@@ -54,6 +55,14 @@ public class CurrPTBalance {
 
     public void setBalance(Double balance) {
         this.balance = balance;
+    }
+
+    public Double getCheckBalance() {
+        return checkBalance;
+    }
+
+    public void setCheckBalance(Double checkBalance) {
+        this.checkBalance = checkBalance;
     }
     
 }

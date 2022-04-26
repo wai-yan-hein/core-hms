@@ -34,6 +34,7 @@ import com.cv.app.pharmacy.ui.common.StockCostingDetailTableModel1;
 import com.cv.app.pharmacy.ui.common.StockCostingTableModel;
 import com.cv.app.pharmacy.database.entity.DataLock;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
+import com.cv.app.pharmacy.ui.common.CurrencyEditor;
 import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
 import com.cv.app.ui.common.BestTableCellEditor;
 import java.awt.event.ActionEvent;
@@ -151,6 +152,8 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
         tblCodeFilter.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
 
+        tblERate.getColumnModel().getColumn(0).setCellEditor(
+                new CurrencyEditor());
         tblERate.getColumnModel().getColumn(1).setCellEditor(
                 new BestTableCellEditor(this));
         tblERate.getColumnModel().getColumn(2).setCellEditor(
@@ -364,7 +367,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
                         } else {
                             if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
                                 double exRate = rs.getDouble("ex_rate");
-                                double ttlStock = rs.getDouble("ttl_stock");
+                                double ttlStock = scd.getCostQty();
                                 double smlCost = rs.getDouble("smallest_cost");
                                 double amount = ttlStock * smlCost * exRate;
                                 scd.setExrSmallCost(smlCost * exRate);

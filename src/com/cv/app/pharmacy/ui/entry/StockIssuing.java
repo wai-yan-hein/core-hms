@@ -35,6 +35,11 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
+import com.cv.app.pharmacy.database.tempentity.StockCostingDetail;
+import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
+import com.cv.app.pharmacy.ui.common.CurrencyEditor;
+import com.cv.app.pharmacy.ui.common.CurrencyTotalTableModel;
+import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -46,8 +51,6 @@ import java.util.List;
 import javax.jms.MapMessage;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -69,6 +72,8 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
     private StockIssueHis sih = new StockIssueHis();
     private int mouseClick = 2;
     private boolean isBind = false;
+    private CurrencyTotalTableModel cttlModel = new CurrencyTotalTableModel();
+    private final TmpEXRateTableModel tmpExrTableModel = new TmpEXRateTableModel();
 
     /**
      * Creates new form StockIssuing
@@ -101,6 +106,25 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
 
             Currency appCurr = (Currency) cboCurrency.getSelectedItem();
             issueTableModel.setCurrency(appCurr);
+
+            if (!isBind) {
+                Currency curr = (Currency) cboCurrency.getSelectedItem();
+                if (curr != null) {
+                    tmpExrTableModel.setFromCurr(curr.getCurrencyCode());
+                }
+            }
+            tmpExrTableModel.setParent(tblExRate);
+            tmpExrTableModel.addEmptyRow();
+
+            String strSql = "delete from tmp_ex_rate where user_id = '"
+                    + Global.loginUser.getUserId() + "'";
+            try {
+                dao.deleteSQL(strSql);
+            } catch (Exception ex) {
+                log.error("clear temp data : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         } catch (Exception ex) {
             log.error("StockIssuing : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
@@ -158,6 +182,11 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                 cboCurrency.setSelectedItem(curr);
                 issueTableModel.setListDetail(list);
                 issueTableModel.addEmptyRow();
+                
+                //For exchange rate
+                deleteExRateTmp();
+                insertExRateToTemp(sih.getIssueId());
+                getExRate();
             } catch (Exception ex) {
                 log.error("StockIssueList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -203,6 +232,8 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                 dao.open();
                 dao.beginTran();
                 String vouNo = sih.getIssueId();
+                deleteExRateHis(vouNo);
+                insertExRateHis(vouNo);
                 if (listDetail != null) {
                     for (StockIssueDetailHis sidh : listDetail) {
                         sidh.setIssueId(vouNo);
@@ -249,6 +280,9 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         genVouNo();
         issueTableModel.addEmptyRow();
         issueTableModel.setIssueId(txtIssueId.getText());
+        tmpExrTableModel.clear();
+        tmpExrTableModel.addEmptyRow();
+        deleteExRateTmp();
         System.gc();
     }
 
@@ -355,20 +389,32 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         tblIssue.getColumnModel().getColumn(4).setCellEditor(
                 new TraderCodeCellEditor(dao));
         //tblIssue.getColumnModel().getColumn(6).setCellRenderer(new TableDateFieldRenderer());
-        JComboBox cboLocationCell = new JComboBox();
-        cboLocationCell.setFont(Global.textFont); // NOI18N
-        BindingUtil.BindCombo(cboLocationCell, dao.findAll("Currency"));
-        tblIssue.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboLocationCell));
-        
+        //JComboBox cboLocationCell = new JComboBox();
+        //cboLocationCell.setFont(Global.textFont); // NOI18N
+        //BindingUtil.BindCombo(cboLocationCell, dao.findAll("Currency"));
+        //tblIssue.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboLocationCell));
+        tblIssue.getColumnModel().getColumn(8).setCellEditor(new CurrencyEditor());
+
         issueTableModel.setParent(tblIssue);
 
         tblIssue.getModel().addTableModelListener(new TableModelListener() {
 
             @Override
             public void tableChanged(TableModelEvent e) {
-                txtTotal.setValue(issueTableModel.getTotal());
+                //txtTotal.setValue(issueTableModel.getTotal());
+                cttlModel.setList(issueTableModel.getCurrTotal());
             }
         });
+
+        tblCurrTotal.getColumnModel().getColumn(0).setPreferredWidth(10);  //Option
+        tblCurrTotal.getColumnModel().getColumn(1).setPreferredWidth(50);  //Vou No
+
+        tblExRate.getColumnModel().getColumn(0).setCellEditor(
+                new CurrencyEditor());
+        tblExRate.getColumnModel().getColumn(1).setCellEditor(
+                new BestTableCellEditor(this));
+        tblExRate.getColumnModel().getColumn(2).setCellEditor(
+                new BestTableCellEditor(this));
     }
 
     private boolean isValidEntry() {
@@ -392,12 +438,12 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
             sih.setRemark(txtRemark.getText());
             sih.setIssueDate(DateUtil.toDate(txtIssueDate.getText()));
             sih.setLocation((Location) cboLocation.getSelectedItem());
-            sih.setToLocation((Location)cboToLocation.getSelectedItem());
+            sih.setToLocation((Location) cboToLocation.getSelectedItem());
             sih.setIntgUpdStatus(null);
             //String appCurr = Util1.getPropValue("system.app.currency");
             String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             sih.setCurrencyId(appCurr);
-            sih.setTtlAmt(NumberUtil.NZero(txtTotal.getValue()));
+            //sih.setTtlAmt(NumberUtil.NZero(txtTotal.getValue()));
             if (lblStatus.getText().equals("NEW")) {
                 sih.setDeleted(false);
                 sih.setCreatedBy(Global.loginUser);
@@ -421,6 +467,7 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
 
         return status;
     }
+
     private Action actionItemDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -445,6 +492,16 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         }
     };
 
+    private final Action actionExRateItemDelete = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (tblExRate.getSelectedRow() >= 0) {
+                tmpExrTableModel.delete(tblExRate.getSelectedRow());
+            }
+        }
+    };
+
     private void actionMapping() {
         //F3 event on tblSale
         tblIssue.getInputMap().put(KeyStroke.getKeyStroke("F3"), "F3-Action");
@@ -461,6 +518,9 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         //Enter event on tblService
         tblIssue.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
         tblIssue.getActionMap().put("ENTER-Action", actionTblServiceEnterKey);
+
+        tblExRate.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
+        tblExRate.getActionMap().put("F8-Action", actionExRateItemDelete);
 
         //F8 event on tblExpense
         //tblReceive.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
@@ -738,13 +798,29 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                     DateUtil.toDateStrMYSQL(txtIssueDate.getText()), "Opening",
                     Global.loginUser.getUserId());
 
-            //String strLocation = "0";
-            /*dao.execProc("insert_cost_detail",
-                    "Opening", DateUtil.toDateStrMYSQL(txtDate.getText()),
-                    Global.loginUser.getUserId(), strMethod);*/
-            insertCostDetail("Opening", DateUtil.toDateStrMYSQL(txtIssueDate.getText()),
-                    strMethod);
-            dao.commit();
+            Currency currency = (Currency) cboCurrency.getSelectedItem();
+            String strCurr = "MMK";
+            if (currency != null) {
+                strCurr = currency.getCurrencyCode();
+            }
+
+            List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
+                    + Global.loginUser.getUserId() + "'");
+            boolean localCost = false;
+            if (listEXR != null) {
+                if (!listEXR.isEmpty()) {
+                    localCost = true;
+                }
+            }
+
+            if (localCost) {
+                calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(txtIssueDate.getText()),
+                    Global.loginUser.getUserId(), strMethod, strCurr);
+            } else {
+                insertCostDetail("Opening", DateUtil.toDateStrMYSQL(txtIssueDate.getText()),
+                        strMethod);
+                dao.commit();
+            }
 
         } catch (Exception ex) {
             dao.rollBack();
@@ -952,6 +1028,230 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         return id;
     }
 
+    private void calculateWithLocalExRate(String costFor, String costDate, String userId,
+            String method, String curr) {
+        String strSql = "select tsc.med_id item_id, bal_qty ttl_stock, cost_price.tran_date, cost_price.tran_option, \n"
+                + "         cost_price.ttl_qty, cost_price.smallest_cost, cost_price, item_unit, currency_id,\n"
+                + "         exr.from_curr, exr.to_curr, exr.ex_rate\n"
+                + "    from tmp_stock_costing tsc, \n"
+                + "         (select 'Adjust' tran_option, v_adj.med_id item_id, adj_date tran_date, \n"
+                + "                 sum(adj_smallest_qty) ttl_qty, cost_price,\n"
+                + "                 (cost_price/vm.smallest_qty) smallest_cost, v_adj.item_unit, v_adj.currency_id\n"
+                + "            from v_adj join (select med_id, min(op_date) op_date\n"
+                + "	                       from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                          group by med_id) tsf on v_adj.med_id = tsf.med_id\n"
+                + "		    join v_medicine vm on v_adj.med_id = vm.med_id and v_adj.item_unit = vm.item_unit\n"
+                + "           where deleted = false \n"
+                + "             and date(adj_date) >= op_date and date(adj_date) <= prm_cost_date\n"
+                + "		   group by v_adj.med_id, adj_date, v_adj.currency_id, cost_price, v_adj.item_unit\n"
+                + "		   union all\n"
+                + "          select 'Purchase' tran_option, vpur.med_id item_id, pur_date tran_date, \n"
+                + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, pur_unit_cost cost_price, \n"
+                + "                 (pur_unit_cost/vm.smallest_qty) smallest_cost, vpur.pur_unit item_unit, vpur.currency as currency_id\n"
+                + "            from v_purchase vpur join (select med_id, min(op_date) op_date\n"
+                + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                                    group by med_id) tsf on vpur.med_id = tsf.med_id\n"
+                + "			join v_medicine vm on vpur.med_id = vm.med_id and vpur.pur_unit = vm.item_unit\n"
+                + "           where deleted = false and date(pur_date) >= op_date and date(pur_date) <= prm_cost_date\n"
+                + "           group by vpur.med_id, pur_date, vpur.currency, pur_unit_cost, vpur.pur_unit\n"
+                + "		   union all\n"
+                + "          select 'Return-In' tran_option, vretin.med_id item_id, ret_in_date tran_date, \n"
+                + "                 sum(ret_in_smallest_qty) ttl_qty, ret_in_price cost_price, \n"
+                + "                 (ret_in_price/vm.smallest_qty) smallest_cost, vretin.item_unit, vretin.currency as currency_id\n"
+                + "            from v_return_in vretin join (select med_id, min(op_date) op_date\n"
+                + "	                                    from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                                       group by med_id) tsf on vretin.med_id = tsf.med_id\n"
+                + "            join v_medicine vm on vretin.med_id = vm.med_id and vretin.item_unit = vm.item_unit\n"
+                + "           where deleted = false and date(ret_in_date) >= op_date and date(ret_in_date) <= prm_cost_date\n"
+                + "           group by vretin.med_id, ret_in_date, vretin.currency, ret_in_price, vretin.item_unit\n"
+                + "           union all\n"
+                + "          select 'Opening' tran_option, vso.med_id item_id, vso.op_date tran_date, \n"
+                + "				 sum(vso.op_smallest_qty) ttl_qty, vso.cost_price, \n"
+                + "				 (vso.cost_price/vm.smallest_qty) smallest_cost, vso.item_unit, sp.sys_prop_value as currency_id\n"
+                + "            from v_stock_op vso join tmp_stock_filter tsf on vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
+                + "            join v_medicine vm on vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
+                + "            join (select sys_prop_value from sys_prop where sys_prop_desp = 'system.app.currency') sp\n"
+                + "		   where vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "           group by vso.med_id, vso.op_date, vso.cost_price, vso.item_unit) cost_price, \n"
+                + "           (select * from tmp_ex_rate where user_id = prm_user_id) exr\n"
+                + "   where tsc.med_id = cost_price.item_id and (cost_price.currency_id = exr.from_curr or cost_price.currency_id = exr.to_curr) \n"
+                + "     and tsc.user_id = prm_user_id and tsc.tran_option = prm_cost_for\n"
+                + "   order by item_id, cost_price.tran_date desc, cost_price desc";
+        strSql = strSql.replace("prm_cost_for", "'" + costFor + "'")
+                .replace("prm_cost_date", "'" + costDate + "'")
+                .replace("prm_user_id", "'" + userId + "'")
+                .replace("p_method", "'" + method + "'");
+
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                String prvMedId = "-";
+                int leftStock = 0;
+
+                while (rs.next()) {
+                    StockCostingDetail scd = new StockCostingDetail();
+                    String medId = rs.getString("item_id");
+                    int ttlQty = rs.getInt("ttl_qty");
+                    String currId = rs.getString("currency_id");
+                    String fromCurrId = rs.getString("from_curr");
+                    String toCurrId = rs.getString("to_curr");
+
+                    scd.setItemId(medId);
+                    scd.setTranDate(rs.getDate("tran_date"));
+                    scd.setTranOption(rs.getString("tran_option"));
+                    scd.setTranQty(ttlQty);
+                    scd.setPackingCost(rs.getDouble("cost_price"));
+                    scd.setSmallestCost(rs.getDouble("smallest_cost"));
+                    scd.setUserId(userId);
+                    scd.setCostFor(costFor);
+                    scd.setUnit(rs.getString("item_unit"));
+                    scd.setCurrencyId(rs.getString("currency_id"));
+                    scd.setHomeCurr(curr);
+                    scd.setExrDesp(fromCurrId + "-" + toCurrId);
+                    scd.setExrRate(rs.getDouble("ex_rate"));
+
+                    if (!prvMedId.equals(medId)) {
+                        prvMedId = medId;
+                        leftStock = rs.getInt("ttl_stock");
+                    }
+
+                    if (leftStock > 0) {
+                        if (leftStock >= ttlQty) {
+                            scd.setCostQty(ttlQty);
+                            leftStock = leftStock - ttlQty;
+                        } else {
+                            scd.setCostQty(leftStock);
+                            leftStock = 0;
+                        }
+
+                        if (curr.equals(currId)) {
+                            scd.setExrSmallCost(rs.getDouble("smallest_cost"));
+                            scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                        } else {
+                            if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
+                                double exRate = rs.getDouble("ex_rate");
+                                double ttlStock = rs.getDouble("ttl_stock");
+                                double smlCost = rs.getDouble("smallest_cost");
+                                double amount = ttlStock * smlCost * exRate;
+                                scd.setExrSmallCost(smlCost * exRate);
+                                //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                                scd.setExrTtlCost(amount);
+                            } else {
+                                scd.setExrSmallCost(0.0);
+                                scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                            }
+                        }
+
+                        dao.save(scd);
+                    }
+                }
+
+                if (method.equals("FIFO")) {
+                    strSql = "update tmp_stock_costing tsc, (select item_id, sum(cost_qty*exr_smallest_cost) ttl_cost, user_id\n"
+                            + "	          from tmp_costing_detail\n"
+                            + "		 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "	      group by item_id, user_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                } else if (method.equals("AVG")) {
+                    strSql = "update tmp_costing_detail tcd, (\n"
+                            + "					select user_id, item_id, sum(ttl_qty) ttl_qty, sum(ttl_qty*exr_smallest_cost) ttl_amt, \n"
+                            + "						   (sum(ttl_qty*exr_smallest_cost)/if(sum(ttl_qty)=0,1,sum(ttl_qty))) as avg_cost\n"
+                            + "				      from tmp_costing_detail\n"
+                            + "					 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "					 group by user_id,item_id) avgc\n"
+                            + "		set tcd.exr_smallest_cost = avgc.avg_cost\n"
+                            + "		where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                    strSql = "update tmp_stock_costing tsc, \n"
+                            + "               (select user_id, item_id, sum(cost_qty*exr_smallest_cost) ttl_cost\n"
+                            + "				  from tmp_costing_detail\n"
+                            + "				 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "				 group by user_id,item_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(strSql);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("calculateWithLocalExRate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void deleteExRateTmp(){
+        String strSql = "delete from tmp_ex_rate where user_id = '"
+                + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateTmp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void deleteExRateHis(String vouNo){
+        String strSql = "delete from stock_issue_ex_rate_his where vou_no = '"
+                + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateHis(String vouNo){
+        String strSql = "insert into stock_issue_ex_rate_his(vou_no, from_curr, to_curr, ex_rate) "
+                + "select '" + vouNo + "', from_curr, to_curr, ex_rate from "
+                + "tmp_ex_rate where user_id = '" + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateToTemp(String vouNo){
+        String strSql = "insert into tmp_ex_rate(user_id, from_curr, to_curr, ex_rate) "
+                + "select '" + Global.loginUser.getUserId() + "', from_curr, to_curr, ex_rate "
+                + "from stock_issue_ex_rate_his where vou_no = '" + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateToTemp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void getExRate(){
+        String strSql = "select o from TmpEXRate o where o.key.userId = '" + Global.loginUser.getUserId() + "'";
+        
+        try {
+            List<TmpEXRate> list = dao.findAllHSQL(strSql);
+            tmpExrTableModel.setList(list);
+            tmpExrTableModel.addEmptyRow();
+        } catch (Exception ex) {
+            log.error("getExRate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -974,12 +1274,14 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         jScrollPane1 = new javax.swing.JScrollPane();
         tblIssue = new javax.swing.JTable();
         butBorrow = new javax.swing.JButton();
-        txtTotal = new javax.swing.JFormattedTextField();
-        jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         cboCurrency = new javax.swing.JComboBox<>();
         jLabel7 = new javax.swing.JLabel();
         cboToLocation = new javax.swing.JComboBox<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblExRate = new javax.swing.JTable();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblCurrTotal = new javax.swing.JTable();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Issue Id");
@@ -1037,11 +1339,6 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
             }
         });
 
-        txtTotal.setEditable(false);
-        txtTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-
-        jLabel5.setText("Total : ");
-
         jLabel6.setText("Currency ");
 
         cboCurrency.addActionListener(new java.awt.event.ActionListener() {
@@ -1053,6 +1350,14 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         jLabel7.setText("To Location");
 
         cboToLocation.setFont(Global.textFont);
+
+        tblExRate.setModel(tmpExrTableModel);
+        tblExRate.setRowHeight(23);
+        jScrollPane2.setViewportView(tblExRate);
+
+        tblCurrTotal.setModel(cttlModel);
+        tblCurrTotal.setRowHeight(23);
+        jScrollPane3.setViewportView(tblCurrTotal);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -1092,11 +1397,10 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                         .addComponent(jLabel4)
                         .addGap(18, 18, 18)
                         .addComponent(txtRemark))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 306, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1124,9 +1428,9 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1168,6 +1472,7 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         if (!isBind) {
             Currency appCurr = (Currency) cboCurrency.getSelectedItem();
             issueTableModel.setCurrency(appCurr);
+            tmpExrTableModel.setFromCurr(appCurr.getCurrencyCode());
         }
     }//GEN-LAST:event_cboCurrencyActionPerformed
 
@@ -1181,15 +1486,17 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lblStatus;
+    private javax.swing.JTable tblCurrTotal;
+    private javax.swing.JTable tblExRate;
     private javax.swing.JTable tblIssue;
     private javax.swing.JFormattedTextField txtIssueDate;
     private javax.swing.JFormattedTextField txtIssueId;
     private javax.swing.JTextField txtRemark;
-    private javax.swing.JFormattedTextField txtTotal;
     // End of variables declaration//GEN-END:variables
 }

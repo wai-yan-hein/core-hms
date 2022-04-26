@@ -69,7 +69,7 @@ public class StockAdjTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return !(column == 1 || column == 2 || column == 8);
+        return !(column == 1 || column == 2 || column == 9);
     }
 
     @Override
@@ -212,6 +212,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                     record.setQty(null);
                     record.setExpireDate(null);
                     record.setAdjType(null);
+                    record.setCurrencyId(currency);
                     assignBalance(record);
                     break;
                 case 1: //Medicine Name

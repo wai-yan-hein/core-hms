@@ -46,6 +46,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.ui.common.CurrencyEditor;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.ReportUtil;
 import java.util.Date;
@@ -409,6 +410,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 new SaleTableCodeCellEditor(dao));
         tblAdjDetail.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor(this));
         tblAdjDetail.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor(this));
+        tblAdjDetail.getColumnModel().getColumn(7).setCellEditor(new CurrencyEditor());
         tblAdjDetail.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
         JComboBox cboAdjType = new JComboBox();
         BindingUtil.BindCombo(cboAdjType, dao.findAll("AdjType"));
@@ -943,7 +945,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     .addComponent(jLabel4)
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -993,8 +995,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
     private void cboCurrencyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCurrencyActionPerformed
         if (!isBind) {
-            String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-            adjTableModel.setCurrency(appCurr);
+            Currency curr = (Currency) cboCurrency.getSelectedItem();
+            if (curr == null) {
+                adjTableModel.setCurrency("MMK");
+            } else {
+                adjTableModel.setCurrency(curr.getCurrencyCode());
+            }
         }
     }//GEN-LAST:event_cboCurrencyActionPerformed
 
