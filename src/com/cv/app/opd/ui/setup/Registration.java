@@ -250,7 +250,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     p.put("p_patient", currPatient.getPatientName());
                     p.put("p_dob", DateUtil.toDateStr(currPatient.getDob(), "dd/MM/yyyy"));
                     p.put("p_age", getAge() + "," + currPatient.getSex().getGenderId());
-                    p.put("p_address", currPatient.getAddress());
+                    p.put("p_address", getAddress());
                     p.put("p_phone", currPatient.getContactNo());
                     p.put("p_reg_no", currPatient.getRegNo());
                     if (printMode.equals("View")) {
@@ -286,6 +286,17 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             str += "," + d + "d";
         }
         return str;
+    }
+
+    private String getAddress() {
+        String add = "";
+        if (currPatient.getTownship() != null) {
+            add = currPatient.getTownship().getTownshipName() + ",";
+        }
+        if (currPatient.getCity() != null) {
+            add += currPatient.getCity().getCityName();
+        }
+        return add;
     }
 
     @Override

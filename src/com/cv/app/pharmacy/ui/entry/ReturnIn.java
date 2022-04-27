@@ -926,6 +926,10 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         }
     }
 
+    private void printA4() {
+
+    }
+
     public void setFocus() {
         txtCusId.requestFocusInWindow();
     }
@@ -1577,6 +1581,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         txtVouBalance = new javax.swing.JFormattedTextField();
         jLabel11 = new javax.swing.JLabel();
         lblStatus = new javax.swing.JLabel();
+        chkA4 = new javax.swing.JCheckBox();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Vou No");
@@ -1748,7 +1753,6 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         tblRetIn.setFont(Global.textFont);
         tblRetIn.setModel(retInTableModel);
         tblRetIn.setRowHeight(23);
-        tblRetIn.setShowVerticalLines(false);
         tblRetIn.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 tblRetInFocusLost(evt);
@@ -1767,7 +1771,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
         );
 
         txtVouTotal.setEditable(false);
@@ -1791,6 +1795,8 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         lblStatus.setFont(new java.awt.Font("Velvenda Cooler", 0, 40)); // NOI18N
         lblStatus.setText("DELETED");
 
+        chkA4.setText("A4");
+
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1798,9 +1804,12 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(lblStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 193, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(12, 12, 12)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel8)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .add(chkA4)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(jLabel8))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel9)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel11))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1815,9 +1824,13 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel3Layout.createSequentialGroup()
-                        .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(txtVouTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(jLabel8))
+                        .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(txtVouTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(jLabel8))
+                            .add(jPanel3Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(chkA4)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(txtVouPaid, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1937,6 +1950,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private javax.swing.JComboBox cboCurrency;
     private javax.swing.JComboBox cboLocation;
     private javax.swing.JComboBox cboPayment;
+    private javax.swing.JCheckBox chkA4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
