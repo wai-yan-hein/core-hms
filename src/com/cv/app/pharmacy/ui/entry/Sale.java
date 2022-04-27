@@ -1597,8 +1597,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblSale.getActionMap().put("F8-Action", actionItemDelete);
 
         //Enter event on tblSale
-        tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
-        tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
+        //tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
+        //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
 
         //Enter event on tblExpense
         tblExpense.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
