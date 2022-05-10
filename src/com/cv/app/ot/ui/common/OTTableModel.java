@@ -120,8 +120,20 @@ public class OTTableModel extends AbstractTableModel {
             } else {
                 if (isAlreadyP) {
                     return !isAlreadyP;
+                } else {
+                    if(column == 0){
+                        if(record.getListOTDF() == null){
+                            return true;
+                        }else{
+                            if(record.getListOTDF().isEmpty()){
+                                return true;
+                            }else{
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
                 }
-                return true;
             }
             //}
         }

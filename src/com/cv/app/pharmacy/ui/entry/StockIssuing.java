@@ -229,8 +229,8 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
             sih.setListDetail(listDetail);
 
             try {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 String vouNo = sih.getIssueId();
                 deleteExRateHis(vouNo);
                 insertExRateHis(vouNo);
@@ -240,11 +240,11 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                         if (sidh.getTranId() == null) {
                             sidh.setTranId(vouNo + "-" + sidh.getUniqueId().toString());
                         }
-                        dao.save1(sidh);
+                        dao.save(sidh);
                     }
                 }
-                dao.save1(sih);
-                dao.commit();
+                dao.save(sih);
+                //dao.commit();
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }

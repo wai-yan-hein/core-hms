@@ -216,9 +216,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
                 
                 deleteDetail();
+<<<<<<< HEAD
                 
                 dao.open();
                 dao.beginTran();
+=======
+
+                //dao.open();
+                //dao.beginTran();
+>>>>>>> 3dc4feb0683a516a59fa543f735df6e074ee74c0
                 String vouNo = currVou.getOpdInvId();
                 List<DCDetailHis> listDetail = currVou.getListOPDDetailHis();
                 for (DCDetailHis odh : listDetail) {
@@ -235,6 +241,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                     odf.setUniqueId(maxUniqueId++);
                                 }
                                 odf.setDcDetailId(odh.getOpdDetailId());
+<<<<<<< HEAD
                                 odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                 
                                 dao.save1(odf);
@@ -243,9 +250,20 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     }
                     
                     dao.save1(odh);
+=======
+                                if (odf.getDrFeeId() == null) {
+                                    odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
+                                }
+                                dao.save(odf);
+                            }
+                        }
+                    }
+
+                    dao.save(odh);
+>>>>>>> 3dc4feb0683a516a59fa543f735df6e074ee74c0
                 }
-                dao.save1(currVou);
-                dao.commit();
+                dao.save(currVou);
+                //dao.commit();
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
@@ -637,8 +655,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                             odf.setUniqueId(maxUniqueId++);
                                         }
                                         odf.setDcDetailId(odh.getOpdDetailId());
+<<<<<<< HEAD
                                         odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                         
+=======
+                                        if (odf.getDrFeeId() == null) {
+                                            odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
+                                        }
+>>>>>>> 3dc4feb0683a516a59fa543f735df6e074ee74c0
                                         dao.save1(odf);
                                     }
                                 }
@@ -1369,10 +1393,22 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
         if (txtDoctorNo.getText() != null && !txtDoctorNo.getText().isEmpty()) {
             try {
+<<<<<<< HEAD
                 Doctor dr;
                 
+=======
+                Doctor dr = null;
+
+>>>>>>> 3dc4feb0683a516a59fa543f735df6e074ee74c0
                 dao.open();
-                dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
+                //dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
+                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '"
+                        + txtDoctorNo.getText().trim() + "' and o.active = true");
+                if (listDr != null) {
+                    if (!listDr.isEmpty()) {
+                        dr = listDr.get(0);
+                    }
+                }
                 dao.close();
                 
                 if (dr == null) {

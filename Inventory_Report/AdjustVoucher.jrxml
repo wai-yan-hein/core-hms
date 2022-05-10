@@ -12,7 +12,7 @@
 		<![CDATA[select vaj.adj_id, vaj.adj_date, loc.location_name, vaj.med_id, med.med_name, med.med_rel_str, vaj.adj_qty,
 vaj.item_unit, ajt.adj_type_desp, vaj.cost_price, vaj.amount, vaj.vou_ttl
 from v_adj vaj, medicine med, location loc, adj_type ajt
-where vaj.med_id = med.med_id and vaj.location = loc.location_id and vaj.adj_type = ajt.adj_type_id and adj_id = $P{vou_no}; ]]>
+where vaj.med_id = med.med_id and vaj.location = loc.location_id and vaj.adj_type = ajt.adj_type_id and adj_id = $P{vou_no}]]>
 	</queryString>
 	<field name="adj_id" class="java.lang.String"/>
 	<field name="adj_date" class="java.util.Date"/>
@@ -26,6 +26,9 @@ where vaj.med_id = med.med_id and vaj.location = loc.location_id and vaj.adj_typ
 	<field name="cost_price" class="java.lang.Double"/>
 	<field name="amount" class="java.lang.Double"/>
 	<field name="vou_ttl" class="java.lang.Double"/>
+	<variable name="v_vou_total" class="java.lang.String" calculation="Sum">
+		<variableExpression><![CDATA[$F{amount}]]></variableExpression>
+	</variable>
 	<group name="loc">
 		<groupExpression><![CDATA[$F{adj_id}]]></groupExpression>
 		<groupHeader>
@@ -143,7 +146,7 @@ where vaj.med_id = med.med_id and vaj.location = loc.location_id and vaj.adj_typ
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font fontName="Arial" size="8" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{vou_ttl}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$V{v_vou_total}]]></textFieldExpression>
 				</textField>
 				<line>
 					<reportElement x="0" y="0" width="555" height="1" uuid="c3026b3b-ecbb-41f9-acfd-368f6d0f8ced"/>
