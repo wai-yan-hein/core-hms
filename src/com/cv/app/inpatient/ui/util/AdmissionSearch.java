@@ -118,13 +118,9 @@ public class AdmissionSearch extends javax.swing.JDialog {
         //Define table selection model to single row selection.
         tblPatient.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblPatient.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblPatient.getSelectedRow();
-                    }
-                });
+        tblPatient.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            selectedRow = tblPatient.getSelectedRow();
+        });
         
         List<Ams> listPatient = dao.findAllHSQL("select o from Ams o where o.dcStatus is null");
         tableModel.setListAms(listPatient);
@@ -351,7 +347,6 @@ public class AdmissionSearch extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Admission Search");
-        setPreferredSize(new java.awt.Dimension(1100, 600));
 
         tblPatient.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblPatient.setModel(tableModel);

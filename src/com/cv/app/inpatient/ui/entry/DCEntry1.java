@@ -93,7 +93,7 @@ import org.springframework.beans.BeanUtils;
  */
 public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropagate,
         SelectionObserver, KeyListener {
-
+    
     static Logger log = Logger.getLogger(DCEntry1.class.getName());
     private AbstractDataAccess dao = Global.dao;
     private DCHis currVou = new DCHis();
@@ -111,7 +111,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
      */
     public DCEntry1() {
         initComponents();
-
+        
         try {
             initCombo();
             txtVouNo.setFormatterFactory(new VouFormatFactory());
@@ -143,12 +143,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } finally {
             dao.close();
         }
-
+        
         butAdmit.setEnabled(false);
         butAdmit.setVisible(false);
         butPkgEdit.setEnabled(false);
     }
-
+    
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
             @Override
@@ -177,7 +177,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
+            
             try {
                 Date d = new Date();
                 String strVouTotal = NumberUtil.NZero(currVou.getVouTotal()).toString();
@@ -198,7 +198,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } finally {
                 dao.close();
             }
-
+            
             try {
                 if (currVou.getDcStatus() != null) {
                     String strSql = " update building_structure bs inner join admission a on bs.id = "
@@ -206,7 +206,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             + " where a.ams_no ='" + currVou.getAdmissionNo() + "'";
                     dao.execSql(strSql);
                 }
-
+                
                 if (lblStatus.getText().equals("NEW")) {
                     currVou.setCreatedBy(Global.loginUser);
                     currVou.setCreatedDate(new Date());
@@ -214,9 +214,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     currVou.setUpdatedBy(Global.loginUser);
                     currVou.setUpdatedDate(new Date());
                 }
-
+                
                 deleteDetail();
-
+                
                 dao.open();
                 dao.beginTran();
                 String vouNo = currVou.getOpdInvId();
@@ -236,12 +236,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 }
                                 odf.setDcDetailId(odh.getOpdDetailId());
                                 odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
-
+                                
                                 dao.save1(odf);
                             }
                         }
                     }
-
+                    
                     dao.save1(odh);
                 }
                 dao.save1(currVou);
@@ -249,9 +249,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
-
+                
                 updateVouTotal(currVou.getOpdInvId());
-
+                
                 String desp = "-";
                 if (currVou.getPatient() != null) {
                     desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
@@ -259,13 +259,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), desp);
-
+                
                 if (currVou.getDcStatus() != null) {
                     Patient pt = currVou.getPatient();
                     log.error("DC Trace : " + pt.getRegNo() + ";" + pt.getAdmissionNo());
                     String admissionNo = pt.getAdmissionNo();
                     AdmissionKey key = new AdmissionKey(pt, currVou.getAdmissionNo());
-
+                    
                     Ams ams = (Ams) dao.find(Ams.class, key);
                     if (ams != null) {
                         ams.setDcStatus(currVou.getDcStatus());
@@ -277,18 +277,18 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         if (ar != null) {
                             ams.setAgeRangeId(ar.getId());
                         }
-
+                        
                         ams.setDcDateTime(currVou.getCreatedDate());
                         dao.save(ams);
                     }
-
+                    
                     if (pt.getAdmissionNo() != null) {
                         if (pt.getAdmissionNo().equals(currVou.getAdmissionNo())) {
                             pt.setAdmissionNo(null);
                         }
                     }
                     dao.save(pt);
-
+                    
                     if (admissionNo != null) {
                         if (!admissionNo.isEmpty()) {
                             List listPT = dao.findAllHSQL("select o from Patient o where o.admissionNo = '" + admissionNo + "'");
@@ -314,7 +314,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     @Override
     public void newForm() {
         currVou = new DCHis();
@@ -346,12 +346,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         butCheckBill.setEnabled(false);
         applySecurityPolicy();
     }
-
+    
     @Override
     public void history() {
         DCVouSearchDialog dialog = new DCVouSearchDialog(this, "ENTRY");
     }
-
+    
     @Override
     public void delete() {
         Date vouSaleDate = DateUtil.toDate(txtDate.getText());
@@ -362,7 +362,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         if (lblStatus.getText().equals("EDIT")) {
             if (!Util1.hashPrivilege("DCVoucherDelete")) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "You have no permission to delete voucher.",
@@ -386,7 +386,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } else {
             int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                     "DC voucher delete", JOptionPane.YES_NO_OPTION);
-
+            
             if (yes_no == 0) {
                 try {
                     Date d = new Date();
@@ -408,7 +408,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } finally {
                     dao.close();
                 }
-
+                
                 try {
                     currVou.setDeleted(true);
                     currVou.setIntgUpdStatus(null);
@@ -421,14 +421,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     log.info("admNo : " + admNo);
                     pt.setAdmissionNo(admNo);
                     dao.save(pt);
-
+                    
                     AdmissionKey key = new AdmissionKey();
                     key.setAmsNo(admNo);
                     key.setRegister(pt);
                     Ams ams = (Ams) dao.find(Ams.class, key);
                     ams.setDcStatus(null);
                     dao.save(ams);
-
+                    
                     dao.save(currVou);
                     //dao.commit();
                     uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
@@ -446,7 +446,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     @Override
     public void deleteCopy() {
         Date vouSaleDate = DateUtil.toDate(txtDate.getText());
@@ -457,7 +457,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         if (lblStatus.getText().equals("EDIT")) {
             if (!Util1.hashPrivilege("DCVoucherDelete")) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "You have no permission to delete voucher.",
@@ -475,13 +475,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     "Doctor payment", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+        
         int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete and copy?",
                 "OPD voucher delete", JOptionPane.YES_NO_OPTION);
-
+        
         if (yes_no == 0) {
             currVou.setDeleted(true);
-
+            
             try {
                 Date d = new Date();
                 String strVouTotal = NumberUtil.NZero(currVou.getVouTotal()).toString();
@@ -502,7 +502,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } finally {
                 dao.close();
             }
-
+            
             try {
                 currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
                 dao.save(currVou);
@@ -523,15 +523,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     private void copyVoucher(String invNo) {
         DCHis tmpVou = (DCHis) dao.find(DCHis.class, invNo);
-
+        
         currVou = new DCHis();
         BeanUtils.copyProperties(tmpVou, currVou);
         List<DCDetailHis> listDetail = new ArrayList();
         List<DCDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
-
+        
         for (DCDetailHis detail : listDetailTmp) {
             DCDetailHis tmpDetail = new DCDetailHis();
             BeanUtils.copyProperties(detail, tmpDetail);
@@ -540,7 +540,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
         currVou.setListOPDDetailHis(listDetail);
         currVou.setDeleted(false);
-
+        
         if (tmpVou.getListOPDDetailHis().size() > 0) {
             //tableModel.clear();
             tableModel.setListOPDDetailHis(listDetail);
@@ -553,7 +553,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
         txtRemark.setText(tmpVou.getRemark());
         cboDCStatus.setSelectedItem(tmpVou.getDcStatus());
-
+        
         if (tmpVou.getPatient() != null) {
             txtPatientNo.setText(tmpVou.getPatient().getRegNo());
             txtPatientName.setText(tmpVou.getPatient().getPatientName());
@@ -562,12 +562,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             txtPatientName.setEditable(true);
             txtPatientNo.setEditable(false);
         }
-
+        
         if (tmpVou.getDoctor() != null) {
             txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
             txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
         }
-
+        
         txtVouTotal.setValue(tmpVou.getVouTotal());
         txtDiscP.setValue(tmpVou.getDiscountP());
         txtDiscA.setValue(tmpVou.getDiscountA());
@@ -576,7 +576,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         txtPaid.setValue(tmpVou.getPaid());
         txtVouBalance.setValue(tmpVou.getVouBalance());
     }
-
+    
     @Override
     public void print() {
         if (isValidEntry()) {
@@ -600,7 +600,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } finally {
                 dao.close();
             }
-
+            
             try {
                 if (lblStatus.getText().equals("NEW")) {
                     currVou.setCreatedBy(Global.loginUser);
@@ -609,14 +609,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     currVou.setUpdatedBy(Global.loginUser);
                     currVou.setUpdatedDate(new Date());
                 }
-
+                
                 Date vouSaleDate = DateUtil.toDate(txtDate.getText());
                 Date lockDate = PharmacyUtil.getLockDate(dao);
                 boolean isDataLock = false;
                 if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
                     isDataLock = true;
                 }
-
+                
                 if (canEdit) {
                     if (!isDataLock) {
                         dao.open();
@@ -638,12 +638,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                         }
                                         odf.setDcDetailId(odh.getOpdDetailId());
                                         odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
-
+                                        
                                         dao.save1(odf);
                                     }
                                 }
                             }
-
+                            
                             dao.save1(odh);
                         }
                         dao.save1(currVou);
@@ -651,10 +651,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
                         }
-
+                        
                         deleteDetail();
                         updateVouTotal(currVou.getOpdInvId());
-
+                        
                         String desp = "-";
                         if (currVou.getPatient() != null) {
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
@@ -663,10 +663,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 currVou.getVouBalance(), currVou.getDiscountA(),
                                 currVou.getPaid(), currVou.getTaxA(), desp);
                     }
-
+                    
                 }
                 lblStatus.setText("EDIT");
-
+                
                 if (!isDataLock) {
                     if (currVou.getDcStatus() != null) {
                         Patient pt = currVou.getPatient();
@@ -691,7 +691,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         } finally {
                             dao.close();
                         }
-
+                        
                         try {
                             if (pt.getAdmissionNo() != null) {
                                 if (pt.getAdmissionNo().equals(currVou.getAdmissionNo())) {
@@ -704,7 +704,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         } finally {
                             dao.close();
                         }
-
+                        
                         String strSql = " update building_structure bs inner join admission a on bs.id = "
                                 + " a.building_structure_id set bs.reg_no = null "
                                 + " where a.ams_no ='" + currVou.getAdmissionNo() + "'";
@@ -721,9 +721,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 dao.close();
             }
         }
-
+        
         backupPackage(currVou.getOpdInvId(), "DC-Print", "DC-PRINT");
-
+        
         if (currVou.getDcStatus() != null) {
             if (Util1.getPropValue("system.dc.pt.balancecheck").equals("Y")) {
                 double ptBalance = getPatientBalance(txtPatientNo.getText().trim());
@@ -746,7 +746,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } else if (chkSummary.isSelected()) {
             reportName = "clinic/" + Util1.getPropValue("system.dc.report.summary");
         }
-
+        
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + reportName;
@@ -780,14 +780,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         params.put("user_id", Global.loginUser.getUserId());
         params.put("IMAGE_PATH", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
-
+        
         Diagnosis digs = (Diagnosis) cboDiagnosis.getSelectedItem();
         if (digs == null) {
             params.put("diagnosis", null);
         } else {
             params.put("diagnosis", digs.getIntName());
         }
-
+        
         if (!chkDetails.isSelected() && !chkA5.isSelected() && !chkSummary.isSelected()) {
             params.put("invoiceNo", currVou.getOpdInvId());
             if (currVou.getPatient() != null) {
@@ -833,15 +833,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             params.put("tax", currVou.getTaxA());
             params.put("balance", currVou.getVouBalance());
             params.put("user", Global.loginUser.getUserShortName());
-
+            
             params.put("remark", txtRemark.getText());
-
+            
             if (lblStatus.getText().equals("NEW")) {
                 params.put("vou_status", " ");
             } else {
                 params.put("vou_status", lblStatus.getText());
             }
-
+            
             if (printMode.equals("View")) {
                 //ReportUtil.viewReport(reportPath, params, tableModel.getListOPDDetailHis());
                 ReportUtil.viewReport(reportPath, params, dao.getConnection());
@@ -849,12 +849,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                 ReportUtil.printJasper(jp, printerName);
             }
-
+            
             newForm();
         } else {
             Patient pt = currVou.getPatient();
             params.put("reg_no", pt.getRegNo());
-
+            
             if (pt != null && !txtAdmissionNo.getText().trim().isEmpty()) {
                 Ams ams;
                 AdmissionKey key;
@@ -869,7 +869,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (txtAdmissionNo.getText().isEmpty()) {
                     params.put("adm_no", "-");
                 } else {
@@ -892,21 +892,21 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (toDate == null) {
                     toDate = DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtDate.getText()));
                 }
-                String period = DateUtil.toDateStr(ams.getAmsDate()) + " To "
-                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()));
+                String period = DateUtil.toDateStr(ams.getAmsDate(), "dd/MM/yyyy hh:mm aa") + " To "
+                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()), "dd/MM/yyyy hh:mm aa");
                 params.put("period", period);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (ams.getTownship() != null) {
                     params.put("address", ams.getTownship().getTownshipName());
                 } else {
                     params.put("address", "-");
                 }
-
+                
                 if (currVou.getDcStatus() == null) {
                     params.put("dc_status", "");
                 } else {
@@ -927,24 +927,24 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("age", "Years");
                 }
-
+                
                 if (ams.getSex() == null) {
                     params.put("sex", "");
                 } else {
                     params.put("sex", ams.getSex().getDescription());
                 }
-
+                
                 assignExtraParam(params, txtAdmissionNo.getText(), pt.getRegNo(),
                         DateUtil.toDateStr(ams.getAmsDate(), "yyyy-MM-dd"),
                         DateUtil.toDateStr(txtDate.getText(), "yyyy-MM-dd"));
-
+                
                 dao.close();
                 ReportUtil.viewReport(reportPath, params, dao.getConnection());
                 dao.commit();
             }
         }
     }
-
+    
     private void assignExtraParam(Map<String, Object> params, String admNo,
             String regNo, String admDate, String tranDate) {
         try {
@@ -1050,7 +1050,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             params.put("total_paid", ttlPaid);
             params.put("total_deposite", ttlDeposite);
             params.put("total_refund", ttlRefund);
-
+            
         } catch (SQLException ex) {
             log.error("assignExtraParam : " + ex.getMessage());
         }
@@ -1059,7 +1059,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     //KeyPropagate
     @Override
     public void keyEvent(KeyEvent e) {
-
+        
     }
 
     //SelectionObserver
@@ -1176,13 +1176,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 cboAgeRange.setSelectedItem(currVou.getAgeRange());
                 txtPkgName.setText(currVou.getPkgName());
                 txtPkgPrice.setValue(currVou.getPkgPrice());
-
+                
                 if (currVou.isDeleted()) {
                     lblStatus.setText("DELETED");
                 } else {
                     lblStatus.setText("EDIT");
                 }
-
+                
                 if (currVou.getPatient() != null) {
                     txtPatientNo.setText(currVou.getPatient().getRegNo());
                     txtPatientName.setText(currVou.getPatient().getPatientName());
@@ -1191,12 +1191,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     txtPatientName.setEditable(true);
                     txtPatientNo.setEditable(false);
                 }
-
+                
                 if (currVou.getDoctor() != null) {
                     txtDoctorNo.setText(currVou.getDoctor().getDoctorId());
                     txtDoctorName.setText(currVou.getDoctor().getDoctorName());
                 }
-
+                
                 txtVouTotal.setValue(currVou.getVouTotal());
                 txtDiscP.setValue(currVou.getDiscountP());
                 txtDiscA.setValue(currVou.getDiscountA());
@@ -1217,7 +1217,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     butPkgEdit.setEnabled(true);
                     butCheckBill.setEnabled(true);
                 }
-
+                
             } catch (Exception ex) {
                 log.error("DCVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -1254,15 +1254,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
                 break;
         }
-
+        
         tblService.requestFocusInWindow();
     }
-
+    
     @Override
     public void keyTyped(KeyEvent e) {
-
+        
     }
-
+    
     @Override
     public void keyPressed(KeyEvent e) {
         if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -1296,12 +1296,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     @Override
     public void keyReleased(KeyEvent e) {
-
+        
     }
-
+    
     private void initForFocus() {
         txtPatientNo.addKeyListener(this);
         txtDoctorNo.addKeyListener(this);
@@ -1312,19 +1312,19 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             public void mouseClicked(MouseEvent e) {
                 cboDCStatus.requestFocus();
             }
-
+            
             @Override
             public void mousePressed(MouseEvent e) {
             }
-
+            
             @Override
             public void mouseReleased(MouseEvent e) {
             }
-
+            
             @Override
             public void mouseEntered(MouseEvent e) {
             }
-
+            
             @Override
             public void mouseExited(MouseEvent e) {
             }
@@ -1332,11 +1332,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         tblService.addKeyListener(this);
         txtRemark.addKeyListener(this);
     }
-
+    
     private void genVouNo() {
         String vouNo = vouEngine.getVouNo();
         txtVouNo.setText(vouNo);
-
+        
         List<DCHis> listOPDH = dao.findAllHSQL(
                 "select o from DCHis o where o.opdInvId = '" + vouNo + "'");
         if (listOPDH != null) {
@@ -1360,7 +1360,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     private void getDoctor() {
         if (!canEdit) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
@@ -1370,11 +1370,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         if (txtDoctorNo.getText() != null && !txtDoctorNo.getText().isEmpty()) {
             try {
                 Doctor dr;
-
+                
                 dao.open();
                 dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
                 dao.close();
-
+                
                 if (dr == null) {
                     txtDoctorNo.setText(null);
                     txtDoctorName.setText(null);
@@ -1382,7 +1382,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid doctor code.",
                             "Doctor Code", JOptionPane.ERROR_MESSAGE);
-
+                    
                 } else {
                     selected("DoctorSearch", dr);
                 }
@@ -1395,7 +1395,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             currVou.setDoctor(null);
         }
     }
-
+    
     private void calcBalance() {
         if (cboPaymentType.getSelectedItem() != null) {
             PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
@@ -1414,7 +1414,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             //Payment type is not selected
         }
     }
-
+    
     private void getPatient() {
         if (!canEdit) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
@@ -1424,16 +1424,16 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         if (txtPatientNo.getText() != null && !txtPatientNo.getText().isEmpty()) {
             try {
                 Patient pt;
-
+                
                 dao.open();
                 pt = (Patient) dao.find(Patient.class, txtPatientNo.getText());
                 dao.close();
-
+                
                 if (pt == null) {
                     txtPatientNo.setText(null);
                     txtPatientName.setText(null);
                     currVou.setPatient(null);
-
+                    
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid patient code.",
                             "Patient Code", JOptionPane.ERROR_MESSAGE);
@@ -1451,27 +1451,27 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             txtPatientName.setEditable(true);
         }
     }
-
+    
     private void initCombo() {
         BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
         BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
         BindingUtil.BindCombo(cboDCStatus, dao.findAll("DCStatus"));
         BindingUtil.BindCombo(cboDiagnosis, dao.findAll("Diagnosis"));
         BindingUtil.BindCombo(cboAgeRange, dao.findAll("AgeRange"));
-
+        
         new ComBoBoxAutoComplete(cboPaymentType, this);
         new ComBoBoxAutoComplete(cboCurrency, this);
         new ComBoBoxAutoComplete(cboDCStatus, this);
         new ComBoBoxAutoComplete(cboDiagnosis, this);
         new ComBoBoxAutoComplete(cboAgeRange, this);
-
+        
         cboDCStatus.setSelectedItem(null);
         cboDiagnosis.setSelectedItem(null);
         cboAgeRange.setSelectedItem(null);
-
+        
         cboBindStatus = true;
     }
-
+    
     private void initTable() {
         tblService.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
@@ -1487,13 +1487,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 new DCTableCellEditor(dao));
         tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
-
+        
         JComboBox cboChargeType = new JComboBox();
         BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
         tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
-
+        
         tblService.getModel().addTableModelListener(new TableModelListener() {
-
+            
             @Override
             public void tableChanged(TableModelEvent e) {
                 //txtVouTotal.setValue(tableModel.getTotal());
@@ -1515,19 +1515,19 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
                     double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
                     txtVouTotal.setValue(vTotal);
-
+                    
                     strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                             + "service.serviceId in (" + depositeId + "," + paidId + ")";
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
                     double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
                     txtPaid.setValue(vTotalPaid);
-
+                    
                     strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                             + "service.serviceId in (" + refundId + ")";
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
                     double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
                     txtPaid.setValue(vTotalPaid - vTotalRefund);
-
+                    
                     strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                             + "service.serviceId in (" + discountId + ")";
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
@@ -1542,21 +1542,21 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 calcBalance();
             }
         });
-
+        
         tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblService.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-
+            
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
             }
         });
-
+        
         tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
         tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
     }
-
+    
     private void actionMapping() {
         //F8 event on tblService
         tblService.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
@@ -1565,7 +1565,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         //Enter event on tblService
         tblService.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
         tblService.getActionMap().put("ENTER-Action", actionTblServiceEnterKey);
-
+        
         formActionKeyMapping(txtVouNo);
         formActionKeyMapping(txtRemark);
         formActionKeyMapping(txtVouTotal);
@@ -1581,7 +1581,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         formActionKeyMapping(cboPaymentType);
         formActionKeyMapping(cboDCStatus);
     }
-
+    
     private void formActionKeyMapping(JComponent jc) {
         //Save
         jc.getInputMap().put(KeyStroke.getKeyStroke("F5"), "F5-Action");
@@ -1610,49 +1610,49 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         jc.getActionMap().put("Shift-F8-Action", actionDeleteCopy);
     }
     private Action actionSave = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             save();
         }
     };
     private Action actionPrint = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             print();
         }
     };
     private Action actionHistory = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             history();
         }
     };
     private Action actionNewForm = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             newForm();
         }
     };
     private Action actionDelete = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             delete();
         }
     };
     private Action actionDeleteCopy = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             deleteCopy();
         }
     };
     private Action actionItemDelete = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             if (!canEdit) {
@@ -1668,10 +1668,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
             }
             int row = tblService.getSelectedRow();
-
+            
             if (row >= 0) {
                 DCDetailHis opdh = tableModel.getOPDDetailHis(row);
-
+                
                 if (opdh.getService() != null) {
                     try {
                         if (tblService.getCellEditor() != null) {
@@ -1691,7 +1691,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     };
-
+    
     private void initTextBoxAlign() {
         txtVouTotal.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtPaid.setHorizontalAlignment(JFormattedTextField.RIGHT);
@@ -1701,7 +1701,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         txtTaxA.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtTaxP.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtPkgPrice.setHorizontalAlignment(JFormattedTextField.RIGHT);
-
+        
         txtVouTotal.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtPaid.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtVouBalance.setFormatterFactory(NumberUtil.getDecimalFormat());
@@ -1711,7 +1711,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         txtTaxP.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtPkgPrice.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
-
+    
     private void assignDefaultValue() {
         if (Util1.getPropValue("system.login.default.value").equals("Y")) {
             if (Global.loginDate == null) {
@@ -1739,9 +1739,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         cboDiagnosis.setSelectedItem(null);
         genVouNo();
     }
-
+    
     private Action actionTblServiceEnterKey = new AbstractAction() {
-
+        
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
@@ -1751,10 +1751,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } catch (Exception ex) {
                 log.error(ex.getStackTrace()[0].getLineNumber() + " - " + ex);
             }
-
+            
             int row = tblService.getSelectedRow();
             int col = tblService.getSelectedColumn();
-
+            
             DCDetailHis record = tableModel.getOPDDetailHis(row);
             if (col == 0 && record.getService() != null) {
                 tblService.setColumnSelectionInterval(1, 1); //to Qty
@@ -1770,7 +1770,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     };
-
+    
     private boolean isValidEntry() {
         if (!Util1.hashPrivilege("CanEditDCCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
@@ -1787,7 +1787,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
             }
         }
-
+        
         if (tblService.getCellEditor() != null) {
             tblService.getCellEditor().stopCellEditing();
         }
@@ -1795,7 +1795,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         double modelTotal = tableModel.getTotal();
         txtVouTotal.setValue(modelTotal);
         calcBalance();
-
+        
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("DC date error : " + txtVouNo.getText());
             status = false;
@@ -1831,7 +1831,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             currVou.setPaid(NumberUtil.NZero(txtPaid.getValue()));
             currVou.setVouBalance(NumberUtil.NZero(txtVouBalance.getValue()));
             currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
-
+            
             if (cboAgeRange.getSelectedItem() == null) {
                 currVou.setAgeRange(null);
             } else {
@@ -1848,7 +1848,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             currVou.setAdmissionNo(txtAdmissionNo.getText());
             currVou.setDiagnosis((Diagnosis) cboDiagnosis.getSelectedItem());
             currVou.setIntgUpdStatus(null);
-
+            
             if (lblStatus.getText().equals("EDIT") || lblStatus.getText().equals("DELETED")) {
                 currVou.setUpdatedBy(Global.loginUser);
                 currVou.setUpdatedDate(new Date());
@@ -1863,16 +1863,16 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 currVou.setCreatedDate(new Date());
             }
         }
-
+        
         return status;
     }
-
+    
     public void getPatientBill(String regNo) {
         try {
             List<PatientBillPayment> listPBP = new ArrayList();
             Double totalBalance = 0.0;
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-
+            
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
@@ -1881,7 +1881,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {
                         PatientBillPayment pbp = new PatientBillPayment();
-
+                        
                         pbp.setBillTypeDesp(resultSet.getString("payment_type_name"));
                         pbp.setBillTypeId(resultSet.getInt("bill_type"));
                         pbp.setCreatedBy(Global.loginUser.getUserId());
@@ -1890,13 +1890,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         pbp.setRegNo(resultSet.getString("reg_no"));
                         pbp.setAmount(resultSet.getDouble("balance"));
                         pbp.setBalance(resultSet.getDouble("balance"));
-
+                        
                         totalBalance += pbp.getAmount();
                         listPBP.add(pbp);
                     }
                 }
             }
-
+            
             tblPatientBillTableModel.setListPBP(listPBP);
             txtBillTotal.setValue(totalBalance);
         } catch (Exception ex) {
@@ -1905,7 +1905,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             dao.close();
         }
     }
-
+    
     private boolean isNeedDetail(int serviceId) {
         boolean status = false;
         List<DrDetailId> listDDI = dao.findAllHSQL(
@@ -1917,7 +1917,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
         return status;
     }
-
+    
     private void doctorFeePopup(DCDetailHis record) {
         if (record != null) {
             if (record.getService() != null) {
@@ -1934,7 +1934,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     private void applySecurityPolicy() {
         if (lblStatus.getText().equals("EDIT")) {
             if (!Util1.hashPrivilege("DCVoucherEditChange") || !canEdit) {
@@ -1950,7 +1950,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             enableDisableControl(true);
         }
     }
-
+    
     private void enableDisableControl(boolean status) {
         txtPatientNo.setEnabled(status);
         txtPatientName.setEnabled(status);
@@ -1964,7 +1964,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         //butPkgRemove.setEnabled(status);
         //butCheckBill.setEnabled(status);
     }
-
+    
     private void savePackage(String vouNo, Long pkgId) {
         if (pkgId != null) {
             String strSqlDelete = "delete from clinic_package_detail_his where dc_inv_no = '" + vouNo + "' and pkg_opt = 'DC'";
@@ -1983,7 +1983,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     private void calcPackageExtraFees(DCHis dcHis) {
         try {
             if (dcHis != null) {
@@ -2110,7 +2110,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             log.error("calcPackageExtraFees : " + ex.toString());
         }
     }
-
+    
     private void calcPackageGainLost(String status) {
         try {
             Double opValue = 0.0;
@@ -2126,7 +2126,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String regNo = txtPatientNo.getText().trim();
             String amsNo = txtAdmissionNo.getText().trim();
             String vouNo = txtVouNo.getText().trim();
-
+            
             try (
                     ResultSet resultSet = dao.getPro("get_patient_exp_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
@@ -2140,7 +2140,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     ttlDCDeposite = resultSet.getDouble("v_ttl_dc_deposite");
                 }
                 resultSet.close();
-
+                
                 String strSqlExtraCharges = "select sum(ifnull(amount,0)) ttl_extra_use\n"
                         + "from tmp_clinic_package\n"
                         + "where user_id = '" + Global.loginUser.getUserId() + "' and tran_type ='EXPENSE'";
@@ -2149,13 +2149,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (rsExt.next()) {
                     extraCharges = rsExt.getDouble("ttl_extra_use");
                 }
-
+                
                 Double pkgAmount = NumberUtil.NZero(txtPkgPrice.getValue());
                 ttlExpense = ttlExpense + currVouTotal + currTax;
                 Double pkgUseAmt = getPkgUseAmt();
                 //Double needToPaid = ttlExpense - ttlPaid;
                 Double needToPaid = (pkgAmount + extraCharges) - ttlPaid;
-
+                
                 needToPaid -= (currDiscount + ttlDiscount);
                 Double pkgGainAmt = pkgAmount - pkgUseAmt;
                 if (status.equals("-")) {
@@ -2245,7 +2245,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             dao.close();
         }
     }
-
+    
     private void setEditStatus(String invId) {
         //canEdit
         /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
@@ -2254,13 +2254,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         canEdit = Util1.hashPrivilege("DCVoucherEditChange");
         boolean isAllowEdit = Util1.hashPrivilege("DCCreditVoucherEdit");
         double vouPaid = NumberUtil.NZero(currVou.getPaid());
-
+        
         if (!canEdit) {
             if (!isAllowEdit) {
                 return;
             }
         }
-
+        
         if (!Util1.hashPrivilege("CanEditDCCheckPoint")) {
             if (currVou != null) {
                 if (currVou.getAdmissionNo() != null) {
@@ -2281,11 +2281,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     }
                 }
             }
-
+            
             if (isAllowEdit && vouPaid == 0) {
                 return;
             }
-
+            
             String oneDayEdit = Util1.getPropValue("system.one.day.edit");
             if (oneDayEdit.equals("Y")) {
                 if (canEdit) {
@@ -2306,7 +2306,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             canEdit = true;
         }
     }
-
+    
     private Double getPkgUseAmt() {
         String regNo = txtPatientNo.getText().trim();
         String amsNo = txtAdmissionNo.getText().trim();
@@ -2371,12 +2371,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 + "where os.item_key = vui.item_key \n"
                 + "group by os.reg_no, os.admission_no, vui.item_option, os.item_key, vui.med_name\n"
                 + "having sum(os.ttl_use_qty) > 0";
-
+        
         double billTotal = 0;
         float overUsageTotal = 0f;
         float extraUsageTotal = 0f;
         double packageUsageTotal = 0;
-
+        
         try {
             ResultSet rs = dao.execSQL(strSql);
             if (rs != null) {
@@ -2391,7 +2391,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             rs.getFloat("over_usage"),
                             rs.getString("item_key")
                     );
-
+                    
                     billTotal += item.getTtlAmount();
                     if (item.getStrStatus().equals("Over Use")) {
                         if (item.getTtlUseQty() != 0) {
@@ -2406,7 +2406,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         }
                     }
                 }
-
+                
                 packageUsageTotal = billTotal - (overUsageTotal + extraUsageTotal);
             }
         } catch (SQLException ex) {
@@ -2414,10 +2414,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } finally {
             dao.close();
         }
-
+        
         return packageUsageTotal;
     }
-
+    
     private void backupPackage(String vouNo, String from, String desp) {
         String strSql = "insert into clinic_bk_clinic_package_detail_his (\n"
                 + "  dc_inv_no, pkg_id, item_key, unit_qty, item_unit,\n"
@@ -2440,7 +2440,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             dao.close();
         }
     }
-
+    
     private void uploadToAccount(String vouNo, boolean isDeleted,
             Double balance, Double disc, Double paid, Double tax, String desp) {
         String isIntegration = Util1.getPropValue("system.integration");
@@ -2453,7 +2453,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (Global.mqConnection.isStatus()) {
                     try {
                         AccSetting as = (AccSetting) dao.find(AccSetting.class, "DC");
-
+                        
                         ActiveMQConnection mq = Global.mqConnection;
                         MapMessage msg = mq.getMapMessageTemplate();
                         msg.setString("entity", "DC");
@@ -2464,12 +2464,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         msg.setDouble("PAYMENT", paid);
                         msg.setDouble("TAX", tax);
                         msg.setString("DESCRIPTION", desp);
-
+                        
                         msg.setString("SOURCE-ACC", as.getSourceAcc());
                         msg.setString("DIS-ACC", as.getDiscAcc());
                         msg.setString("PAY-ACC", as.getPayAcc());
                         msg.setString("VOU-ACC", as.getBalanceAcc());
-
+                        
                         mq.sendMessage(Global.queueName, msg);
                     } catch (Exception ex) {
                         log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber()
@@ -2483,10 +2483,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
+    
     private void deleteDetail() {
         String deleteSQL;
-
+        
         try {
             //All detail section need to explicity delete
             //because of save function only delete to join table
@@ -2495,12 +2495,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             if (deleteSQL != null) {
                 dao.execSql(deleteSQL);
             }
-
+            
             deleteSQL = tableModel.getDeleteSql();
             if (deleteSQL != null) {
                 dao.execSql(deleteSQL);
             }
-
+            
             String drFeeIds = tableModel.getDelDrFee();
             if (!drFeeIds.isEmpty()) {
                 dao.execSql("delete from dc_doctor_fee where dc_detail_id in ("
@@ -2513,7 +2513,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
         //delete section end
     }
-
+    
     private void updateVouTotal(String vouNo) {
         String strSql = "update dc_his ph\n"
                 + "join (select vou_no, sum(ifnull(amount,0)) as ttl_amt \n"
@@ -2532,12 +2532,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             dao.close();
         }
     }
-
+    
     public double getPatientBalance(String regNo) {
         double totalBalance = 0.0;
         try {
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-
+            
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
@@ -2555,10 +2555,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } finally {
             dao.close();
         }
-
+        
         return totalBalance;
     }
-
+    
     private void printBillDetailPackage() {
         String reportName = Util1.getPropValue("report.file.dc");
         if (chkDetails.isSelected()) {
@@ -2567,7 +2567,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } else if (chkA5.isSelected()) {
             reportName = "clinic/DCDetailA5";
         }
-
+        
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + reportName;
@@ -2598,11 +2598,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("user_id", Global.loginUser.getUserId());
-
+        
         if (chkDetails.isSelected()) {
             Patient pt = currVou.getPatient();
             params.put("reg_no", pt.getRegNo());
-
+            
             if (pt != null && !txtAdmissionNo.getText().trim().isEmpty()) {
                 Ams ams;
                 AdmissionKey key;
@@ -2617,7 +2617,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (txtAdmissionNo.getText().isEmpty()) {
                     params.put("adm_no", "-");
                 } else {
@@ -2640,21 +2640,21 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (toDate == null) {
                     toDate = DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtDate.getText()));
                 }*/
-                String period = DateUtil.toDateStr(ams.getAmsDate()) + " To "
-                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()));
+                String period = DateUtil.toDateStr(ams.getAmsDate(), "dd/MM/yyyy HH:mm:ss") + " To "
+                        + DateUtil.toDateTime(txtDate.getText());
                 params.put("period", period);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (ams.getTownship() != null) {
                     params.put("address", ams.getTownship().getTownshipName());
                 } else {
                     params.put("address", "-");
                 }
-
+                
                 if (currVou.getDcStatus() == null) {
                     params.put("dc_status", "");
                 } else {
@@ -2673,7 +2673,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("age", "Years");
                 }
-
+                
                 if (ams.getSex() == null) {
                     params.put("sex", "");
                 } else {
@@ -2684,7 +2684,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 dao.commit();
             }
         } else {
-
+            
         }
     }
 
@@ -3436,9 +3436,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     return;
                 }
             }
-
+            
             String strDate = DateUtil.getDateDialogStr();
-
+            
             if (strDate != null) {
                 txtDate.setText(strDate);
                 if (lblStatus.getText().equals("NEW")) {
@@ -3446,7 +3446,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     genVouNo();
                 }
             }
-
+            
         }
     }//GEN-LAST:event_txtDateMouseClicked
 
@@ -3548,7 +3548,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             try {
                 RegNo regNo = new RegNo(dao, "amsNo");
                 Ams ams = new Ams();
-
+                
                 ams.getKey().setRegister(pt);
                 ams.getKey().setAmsNo(regNo.getRegNo());
                 ams.setAmsDate(DateUtil.toDateTime(txtDate.getText()));
@@ -3563,7 +3563,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 ams.setPatientName(pt.getPatientName());
                 ams.setReligion(pt.getReligion());
                 ams.setSex(pt.getSex());
-
+                
                 dao.save(ams);
                 regNo.updateRegNo();
                 txtAdmissionNo.setText(ams.getKey().getAmsNo());
@@ -3583,7 +3583,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private void tblServiceFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tblServiceFocusGained
         focusCtrlName = "tblService";
         int selRow = tblService.getSelectedRow();
-
+        
         if (selRow == -1) {
             //tblService.editCellAt(0, 0);
             tblService.changeSelection(0, 0, false, false);
@@ -3689,7 +3689,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } else if (chkA5.isSelected()) {
             reportName = "clinic/DCDetailA5";
         }
-
+        
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + reportName;
@@ -3721,11 +3721,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("user_id", Global.loginUser.getUserId());
-
+        
         if (chkDetails.isSelected()) {
             Patient pt = currVou.getPatient();
             params.put("reg_no", pt.getRegNo());
-
+            
             if (pt != null && !txtAdmissionNo.getText().trim().isEmpty()) {
                 Ams ams;
                 AdmissionKey key;
@@ -3740,7 +3740,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (txtAdmissionNo.getText().isEmpty()) {
                     params.put("adm_no", "-");
                 } else {
@@ -3771,13 +3771,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("bed_no", "-");
                 }
-
+                
                 if (ams.getTownship() != null) {
                     params.put("address", ams.getTownship().getTownshipName());
                 } else {
                     params.put("address", "-");
                 }
-
+                
                 if (currVou.getDcStatus() == null) {
                     params.put("dc_status", "");
                 } else {
@@ -3796,7 +3796,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     params.put("age", "Years");
                 }
-
+                
                 if (ams.getSex() == null) {
                     params.put("sex", "");
                 } else {
@@ -3807,7 +3807,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 dao.commit();
             }
         } else {
-
+            
         }
     }//GEN-LAST:event_butCheckBillActionPerformed
 

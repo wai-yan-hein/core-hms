@@ -154,7 +154,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         new ComBoBoxAutoComplete(cboCurrencySearch);
         new ComBoBoxAutoComplete(cboPCurrency);
         new ComBoBoxAutoComplete(cboAccount);
-        cboAccount.setSelectedIndex(0);
         bindStatus = true;
     }// </editor-fold>
 

@@ -94,7 +94,7 @@ public class SessionTableModel extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Tran Date
-                    return DateUtil.toDateStr(vSession.getTranDate(), "dd/MM/yyyy hh.mm aa");
+                    return DateUtil.toDateStr(vSession.getTranDate(), "dd/MM/yyyy hh:mm aa");
                 case 1: //Vou No
                     if (vSession.isDeleted()) {
                         return vSession.getKey().getInvId() + "*";
