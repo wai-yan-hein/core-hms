@@ -918,15 +918,15 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 his.setTranDate(new Date());
                 his.setUserId(Global.loginUser.getUserId());
 
-                dao.open();
-                dao.beginTran();
-                dao.save1(admission);
+                //dao.open();
+                //dao.beginTran();
+                dao.save(admission);
                 if (fromRoom != null) {
-                    dao.save1(fromRoom);
+                    dao.save(fromRoom);
                 }
-                dao.save1(toRoom);
-                dao.save1(his);
-                dao.commit();
+                dao.save(toRoom);
+                dao.save(his);
+                //dao.commit();
 
                 clear();
             } catch (Exception ex) {

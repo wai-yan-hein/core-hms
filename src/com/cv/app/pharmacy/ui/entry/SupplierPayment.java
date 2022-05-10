@@ -57,7 +57,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                 dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
         new ComBoBoxAutoComplete(cboAccount);
         tblPaymentEntry.setCboPayment(cboAccount);
-        cboAccount.setSelectedIndex(0);
+        //cboAccount.setSelectedIndex(0);
         // tblPaymentEntry.setObserver(this);
         swrf = new StartWithRowFilter(txtFilter);
         sorter = new TableRowSorter(tblVouList.getModel());

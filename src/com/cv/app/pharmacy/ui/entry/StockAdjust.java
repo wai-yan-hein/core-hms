@@ -46,7 +46,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
 import com.cv.app.pharmacy.ui.common.CurrencyEditor;
+import com.cv.app.pharmacy.ui.common.CurrencyTotalTableModel;
+import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.ReportUtil;
 import java.util.Date;
@@ -75,6 +78,8 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     private AdjHis currAdjust = new AdjHis();
     private boolean isBind = false;
     private int mouseClick = 2;
+    private CurrencyTotalTableModel cttlModel = new CurrencyTotalTableModel();
+    private final TmpEXRateTableModel tmpExrTableModel = new TmpEXRateTableModel();
 
     /**
      * Creates new form StockAdjust
@@ -122,6 +127,25 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
         String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
         adjTableModel.setCurrency(appCurr);
+
+        if (!isBind) {
+            Currency curr = (Currency) cboCurrency.getSelectedItem();
+            if (curr != null) {
+                tmpExrTableModel.setFromCurr(curr.getCurrencyCode());
+            }
+        }
+        tmpExrTableModel.setParent(tblExRate);
+        tmpExrTableModel.addEmptyRow();
+
+        String strSql = "delete from tmp_ex_rate where user_id = '"
+                + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("clear temp data : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void genVouNo() {
@@ -160,6 +184,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         genVouNo();
         setFocus();
 
+        tmpExrTableModel.clear();
+        tmpExrTableModel.addEmptyRow();
+        deleteExRateTmp();
+        
         System.gc();
     }
 
@@ -324,7 +352,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 txtAdjDate.setText(DateUtil.toDateStr(currAdjust.getAdjDate()));
                 txtRemark.setText(currAdjust.getRemark());
                 cboLocation.setSelectedItem(currAdjust.getLocation());
-                txtTotalAmount.setValue(currAdjust.getAmount());
+                //txtTotalAmount.setValue(currAdjust.getAmount());
                 Currency curr = (Currency) dao.find(Currency.class, currAdjust.getCurrencyId());
                 cboCurrency.setSelectedItem(curr);
                 listDetail = dao.findAllHSQL(
@@ -339,8 +367,13 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     medUp.add(adh.getMedicineId());
                 }
                 adjTableModel.setListDetail(listDetail);
-                //String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-                //adjTableModel.setCurrency(appCurr);
+                String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
+                adjTableModel.setCurrency(appCurr);
+                //For exchange rate
+                cttlModel.setList(adjTableModel.getCurrTotal());
+                deleteExRateTmp();
+                insertExRateToTemp(currAdjust.getAdjVouId());
+                getExRate();
                 dao.close();
             } catch (Exception ex) {
                 log.error("adjVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -426,9 +459,20 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         tblAdjDetail.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                txtTotalAmount.setValue(adjTableModel.getTotalAmount());
+                //txtTotalAmount.setValue(adjTableModel.getTotalAmount());
+                cttlModel.setList(adjTableModel.getCurrTotal());
             }
         });
+
+        tblCurrTotal.getColumnModel().getColumn(0).setPreferredWidth(10);  //Option
+        tblCurrTotal.getColumnModel().getColumn(1).setPreferredWidth(50);  //Vou No
+
+        tblExRate.getColumnModel().getColumn(0).setCellEditor(
+                new CurrencyEditor());
+        tblExRate.getColumnModel().getColumn(1).setCellEditor(
+                new BestTableCellEditor(this));
+        tblExRate.getColumnModel().getColumn(2).setCellEditor(
+                new BestTableCellEditor(this));
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="FormAction Implementation">
@@ -444,10 +488,13 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         if (isValidEntry() && adjTableModel.isValidEntry()) {
             //removeEmptyRow();
             try {
+                String vouNo = currAdjust.getAdjVouId();
+                deleteExRateHis(vouNo);
+                insertExRateHis(vouNo);
+                List<AdjDetailHis> listTmp = adjTableModel.getListDetail();
+                
                 dao.open();
                 dao.beginTran();
-                List<AdjDetailHis> listTmp = adjTableModel.getListDetail();
-                String vouNo = currAdjust.getAdjVouId();
                 for (AdjDetailHis adh : listTmp) {
                     adh.setVouNo(vouNo);
                     if (adh.getAdjDetailId() == null) {
@@ -598,7 +645,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             currAdjust.setAdjDate(DateUtil.toDate(txtAdjDate.getText()));
             currAdjust.setLocation((Location) cboLocation.getSelectedItem());
             currAdjust.setRemark(txtRemark.getText());
-            currAdjust.setAmount(NumberUtil.NZero(txtTotalAmount.getText()));
+            //currAdjust.setAmount(NumberUtil.NZero(txtTotalAmount.getText()));
             currAdjust.setDeleted(Util1.getNullTo(currAdjust.isDeleted()));
             //String appCurr = Util1.getPropValue("system.app.currency");
             String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
@@ -802,6 +849,69 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         return id;
     }
 
+    private void deleteExRateTmp(){
+        String strSql = "delete from tmp_ex_rate where user_id = '"
+                + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateTmp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void deleteExRateHis(String vouNo){
+        String strSql = "delete from stock_adjust_ex_rate_his where vou_no = '"
+                + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateHis(String vouNo){
+        String strSql = "insert into stock_adjust_ex_rate_his(vou_no, from_curr, to_curr, ex_rate) "
+                + "select '" + vouNo + "', from_curr, to_curr, ex_rate from "
+                + "tmp_ex_rate where user_id = '" + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateToTemp(String vouNo){
+        String strSql = "insert into tmp_ex_rate(user_id, from_curr, to_curr, ex_rate) "
+                + "select '" + Global.loginUser.getUserId() + "', from_curr, to_curr, ex_rate "
+                + "from stock_adjust_ex_rate_his where vou_no = '" + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateToTemp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void getExRate(){
+        String strSql = "select o from TmpEXRate o where o.key.userId = '" + Global.loginUser.getUserId() + "'";
+        
+        try {
+            List<TmpEXRate> list = dao.findAllHSQL(strSql);
+            tmpExrTableModel.setList(list);
+            tmpExrTableModel.addEmptyRow();
+        } catch (Exception ex) {
+            log.error("getExRate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -822,10 +932,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         jScrollPane1 = new javax.swing.JScrollPane();
         tblAdjDetail = new javax.swing.JTable(adjTableModel);
         lblStatus = new javax.swing.JLabel();
-        txtTotalAmount = new javax.swing.JFormattedTextField();
-        jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         cboCurrency = new javax.swing.JComboBox<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblExRate = new javax.swing.JTable();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblCurrTotal = new javax.swing.JTable();
 
         setPreferredSize(new java.awt.Dimension(674, 613));
 
@@ -875,15 +987,8 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         });
         jScrollPane1.setViewportView(tblAdjDetail);
 
-        lblStatus.setFont(new java.awt.Font("Tahoma", 0, 40)); // NOI18N
+        lblStatus.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         lblStatus.setText("jLabel5");
-
-        txtTotalAmount.setEditable(false);
-        txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txtTotalAmount.setFont(Global.textFont);
-
-        jLabel5.setFont(Global.lableFont);
-        jLabel5.setText("Total Amount :");
 
         jLabel6.setText("Currency ");
 
@@ -892,6 +997,14 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 cboCurrencyActionPerformed(evt);
             }
         });
+
+        tblExRate.setModel(tmpExrTableModel);
+        tblExRate.setRowHeight(23);
+        jScrollPane2.setViewportView(tblExRate);
+
+        tblCurrTotal.setModel(cttlModel);
+        tblCurrTotal.setRowHeight(23);
+        jScrollPane3.setViewportView(tblCurrTotal);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -923,10 +1036,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                         .addComponent(txtRemark))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 294, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -945,13 +1058,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     .addComponent(jLabel4)
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel5)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lblStatus)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1011,14 +1123,16 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblAdjDetail;
+    private javax.swing.JTable tblCurrTotal;
+    private javax.swing.JTable tblExRate;
     private javax.swing.JFormattedTextField txtAdjDate;
     private javax.swing.JTextField txtRemark;
-    private javax.swing.JFormattedTextField txtTotalAmount;
     private javax.swing.JFormattedTextField txtVouNo;
     // End of variables declaration//GEN-END:variables
 }

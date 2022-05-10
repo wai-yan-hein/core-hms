@@ -1628,10 +1628,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
         if (txtDoctorNo.getText() != null && !txtDoctorNo.getText().isEmpty()) {
             try {
-                Doctor dr;
+                Doctor dr = null;
 
                 dao.open();
-                dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
+                //dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
+                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '" 
+                        + txtDoctorNo.getText().trim() + "'  and o.active = true");
+                if(listDr != null){
+                    if(!listDr.isEmpty()){
+                        dr = listDr.get(0);
+                    }
+                }
                 dao.close();
 
                 if (dr == null) {

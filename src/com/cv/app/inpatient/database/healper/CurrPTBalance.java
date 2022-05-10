@@ -5,6 +5,8 @@
  */
 package com.cv.app.inpatient.database.healper;
 
+import java.util.Objects;
+
 /**
  *
  * @author ACER
@@ -65,4 +67,11 @@ public class CurrPTBalance {
         this.checkBalance = checkBalance;
     }
     
+    public boolean isError(){
+        if(!Objects.equals(balance, checkBalance)){
+            return true;
+        }else{
+            return false;
+        }
+    }
 }

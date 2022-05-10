@@ -619,7 +619,7 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{tran_type}]]></textFieldExpression>
 			</textField>
-			<textField pattern="dd-MMM-yyyy" isBlankWhenNull="true">
+			<textField pattern="dd-MM-yyyy" isBlankWhenNull="true">
 				<reportElement x="107" y="1" width="53" height="17" uuid="3848726e-0bf8-4a96-933d-e297ef76de0c"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>

@@ -12,6 +12,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,7 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                     + "where tbp.user_id = '" + userId
                     + "' and tbp.reg_no = dc.patient_id and tbp.admission_no is null";
             dao.execSql(strSQLs);
-            strSQLs = "select a.reg_no, a.currency, sum(amt) balance,bs.description,a.patient_name, a.admission_no ams_no, tbp.dc_date\n"
+            strSQLs = "select a.reg_no, a.currency, round(sum(amt),0) balance,a.patient_name, a.admission_no ams_no, tbp.dc_date\n"
                     + "    from (\n"
                     + "	  select po.reg_no, po1.patient_name, po1.admission_no, po.currency, sum(ifnull(op_amount,0)) amt,\n"
                     + "	         po1.dc_date\n"
@@ -130,17 +131,16 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                     + "                 and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}\n"
                     + "	     where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})\n"
                     + "	     group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date) a\n"
-                    + "    join admission adm on a.admission_no = adm.ams_no and adm.dc_status is null\n"
-                    + "    left join building_structure bs on adm.building_structure_id = bs.id\n"
                     + "    join (select * from tmp_bill_payment where (currency = $P{currency} or '-' = $P{currency})) tbp on a.reg_no = tbp.reg_no and tbp.user_id = $P{user_id}\n"
                     + "   where (a.reg_no = $P{reg_no} or '-' = $P{reg_no})\n"
-                    + "   group by a.reg_no, a.currency, bs.description,a.patient_name, tbp.dc_date\n"
-                    + "   having sum(a.amt) <> 0\n"
+                    + "   group by a.reg_no, a.currency, a.patient_name, tbp.dc_date\n"
+                    + "   having round(sum(a.amt)) <> 0\n"
                     + "order by a.patient_name";
             strSQLs = strSQLs.replace("$P{to_date}", "'" + strDate + "'")
                     .replace("$P{currency}", "'" + currency + "'")
                     .replace("$P{reg_no}", "'" + regNo + "'")
                     .replace("$P{user_id}", "'" + userId + "'");
+            log.info("SQL : " + strSQLs);
             ResultSet rs = dao.execSQL(strSQLs);
             if (rs != null) {
                 listBal = new ArrayList();
@@ -156,9 +156,12 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                     listBal.add(cpb);
                 }
                 rs.close();
+                pbcModel.setList(listBal);
+                txtTtlBalance.setValue(total);
+            }else{
+                txtTtlBalance.setValue(0);
             }
-            
-            
+            txtDiffAmt.setValue(0);
         } catch (Exception ex) {
             log.error("getData : " + ex.toString());
         } finally {
@@ -187,10 +190,20 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
         tblBalance.getColumnModel().getColumn(0).setPreferredWidth(30);//Reg No.
         tblBalance.getColumnModel().getColumn(1).setPreferredWidth(30);//Adm No
         tblBalance.getColumnModel().getColumn(2).setPreferredWidth(150);//Patient
-        tblBalance.getColumnModel().getColumn(3).setPreferredWidth(50);//Balance
-        tblBalance.getColumnModel().getColumn(4).setPreferredWidth(50);//C-Balance
+        tblBalance.getColumnModel().getColumn(3).setPreferredWidth(10);//S
+        tblBalance.getColumnModel().getColumn(4).setPreferredWidth(50);//Balance
+        tblBalance.getColumnModel().getColumn(5).setPreferredWidth(50);//C-Balance
     }
     
+    private String getCurrency(){
+        Object obj = cboCurrency.getSelectedItem();
+        if(obj instanceof Currency){
+            Currency curr = (Currency)obj;
+            return curr.getCurrencyCode();
+        }else{
+            return "MMK";
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -207,10 +220,10 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
         cboCurrency = new javax.swing.JComboBox<>();
         jPanel1 = new javax.swing.JPanel();
         txtChkTotal = new javax.swing.JFormattedTextField();
-        jLabel1 = new javax.swing.JLabel();
         txtFilter = new javax.swing.JTextField();
         butCheck = new javax.swing.JButton();
         txtTtlBalance = new javax.swing.JFormattedTextField();
+        txtDiffAmt = new javax.swing.JFormattedTextField();
 
         txtDate.setBorder(javax.swing.BorderFactory.createTitledBorder("Date"));
 
@@ -222,9 +235,17 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
         });
 
         tblBalance.setModel(pbcModel);
+        tblBalance.setRowHeight(23);
         jScrollPane1.setViewportView(tblBalance);
 
         cboCurrency.setBorder(javax.swing.BorderFactory.createTitledBorder("Currency"));
+        cboCurrency.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboCurrencyActionPerformed(evt);
+            }
+        });
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -234,12 +255,11 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 305, Short.MAX_VALUE)
         );
 
         txtChkTotal.setEditable(false);
-
-        jLabel1.setText("Total : ");
+        txtChkTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         txtFilter.setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
 
@@ -250,25 +270,28 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
             }
         });
 
+        txtTtlBalance.setEditable(false);
+        txtTtlBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        txtDiffAmt.setEditable(false);
+        txtDiffAmt.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 585, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 585, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(txtDiffAmt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTtlBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtChkTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(txtFilter, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 585, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtChkTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -277,13 +300,12 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butGetBalance)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butCheck)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(butCheck))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtChkTotal, txtTtlBalance});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtChkTotal, txtDiffAmt, txtTtlBalance});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -296,16 +318,16 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                     .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butCheck))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtChkTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel1)
-                            .addComponent(txtTtlBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(txtTtlBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtDiffAmt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {cboCurrency, txtDate});
@@ -317,20 +339,31 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
     }//GEN-LAST:event_butGetBalanceActionPerformed
 
     private void butCheckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCheckActionPerformed
+        pbcModel.setTranDate(txtDate.getText());
+        pbcModel.setCurrency(getCurrency());
         pbcModel.checkBalance();
+        double chkTotal = pbcModel.getCheckTotal();
+        txtChkTotal.setValue(chkTotal);
+        double ttlBalance = NumberUtil.NZero(txtTtlBalance.getValue());
+        double diffAmt = ttlBalance - chkTotal;
+        txtDiffAmt.setValue(diffAmt);
     }//GEN-LAST:event_butCheckActionPerformed
+
+    private void cboCurrencyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCurrencyActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboCurrencyActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butCheck;
     private javax.swing.JButton butGetBalance;
     private javax.swing.JComboBox<String> cboCurrency;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblBalance;
     private javax.swing.JFormattedTextField txtChkTotal;
     private javax.swing.JFormattedTextField txtDate;
+    private javax.swing.JFormattedTextField txtDiffAmt;
     private javax.swing.JTextField txtFilter;
     private javax.swing.JFormattedTextField txtTtlBalance;
     // End of variables declaration//GEN-END:variables

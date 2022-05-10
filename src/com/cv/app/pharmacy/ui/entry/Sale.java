@@ -3773,10 +3773,17 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
         if (txtDrCode.getText() != null && !txtDrCode.getText().isEmpty()) {
             try {
-                Doctor dr;
+                Doctor dr = null;
 
                 dao.open();
-                dr = (Doctor) dao.find(Doctor.class, txtDrCode.getText());
+                //dr = (Doctor) dao.find(Doctor.class, txtDrCode.getText());
+                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '" 
+                        + txtDrCode.getText().trim() + "' and o.active = true");
+                if(listDr != null){
+                    if(!listDr.isEmpty()){
+                        dr = listDr.get(0);
+                    }
+                }
                 dao.close();
 
                 if (dr == null) {
@@ -4389,7 +4396,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(18, 18, 18)
                 .add(jLabel5)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(txtRemark, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 335, Short.MAX_VALUE))
+                .add(txtRemark))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -4505,14 +4512,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         .add(txtDrCode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(txtCusName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE)
+                    .add(txtCusName)
                     .add(txtDrName))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel7Layout.createSequentialGroup()
                         .add(lblRemark1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(txtRemark1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE))
+                        .add(txtRemark1))
                     .add(txtCusAddress))
                 .add(0, 0, 0))
         );
@@ -4792,7 +4799,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
+            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE)
         );
 
         jScrollPane2.setPreferredSize(new java.awt.Dimension(454, 150));
@@ -4816,9 +4823,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         panelExpense.setLayout(panelExpenseLayout);
         panelExpenseLayout.setHorizontalGroup(
             panelExpenseLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
             .add(panelExpenseLayout.createSequentialGroup()
-                .add(lblExpTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(29, 29, 29)
+                .add(lblExpTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 91, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(txtTtlExpIn)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -4925,7 +4933,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+            .add(jScrollPane6)
             .add(jPanel4Layout.createSequentialGroup()
                 .add(jLabel12)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -4946,7 +4954,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(lblBrandName)
                     .add(jLabel13)
                     .add(lblRemark))
-                .add(0, 13, Short.MAX_VALUE))
+                .add(0, 0, Short.MAX_VALUE))
         );
 
         org.jdesktop.layout.GroupLayout jPanel10Layout = new org.jdesktop.layout.GroupLayout(jPanel10);
@@ -5248,7 +5256,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtVouBalance)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel9Layout.createSequentialGroup()
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(txtTaxP)
+                            .add(txtTaxP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
                             .add(txtDiscP))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
@@ -5318,7 +5326,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(jPanel12, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -5349,7 +5357,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 209, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
