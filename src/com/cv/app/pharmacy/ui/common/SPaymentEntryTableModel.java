@@ -239,15 +239,6 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 vp.setIsFullPaid(false);
                 return;
             }
-<<<<<<< HEAD
-=======
-            /*if (cboPayment.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Please select payment type.",
-                        "Invalid Payment Type.", JOptionPane.ERROR_MESSAGE);
-                vp.setIsFullPaid(false);
-                return;
-            }*/
->>>>>>> 3dc4feb0683a516a59fa543f735df6e074ee74c0
             Date vouTranDate = vp.getPayDate();
             Date lockDate = PharmacyUtil.getLockDate(dao);
             if (vouTranDate.before(lockDate) || vouTranDate.equals(lockDate)) {
