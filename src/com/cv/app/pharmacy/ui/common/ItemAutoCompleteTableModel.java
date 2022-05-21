@@ -18,7 +18,7 @@ public class ItemAutoCompleteTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(ItemAutoCompleteTableModel.class.getName());
     private List<VMedicine1> listItem;
-    private final String[] columnNames = {"Code", "Description", "Relation-Str", "Barcode", "Category"};
+    private final String[] columnNames = {"Code", "Description", "Relation-Str", "Barcode", "Category", "Brand"};
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
 
     public ItemAutoCompleteTableModel(List<VMedicine1> listItem) {
@@ -73,13 +73,14 @@ public class ItemAutoCompleteTableModel extends AbstractTableModel {
                     } else {
                         return null;
                     }
+                case 5:
+                    return med.getBrandName();
                 default:
                     return null;
             }
         } catch (Exception ex) {
             log.error("getValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }
-
         return null;
     }
 

@@ -5,10 +5,10 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.pharmacy.database.entity.PaymentVou;
+import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
@@ -50,7 +50,7 @@ public class PayVouListTableModel extends AbstractTableModel {
     public Class getColumnClass(int column) {
         switch (column) {
             case 0: //Vou Date
-                return Date.class;
+                return String.class;
             case 1: //Vou No
             case 2: //Ref-No
             case 3: //Vou-Type
@@ -70,7 +70,7 @@ public class PayVouListTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Vou Date
-                return record.getVouDate();
+                return DateUtil.toDateStr(record.getVouDate(), "dd/MM/yyyy");
             case 1: //Vou No
                 return record.getVouNo();
             case 2: //Ref-No
@@ -266,7 +266,7 @@ public class PayVouListTableModel extends AbstractTableModel {
                 String pamount = Util1.getPropValue("system.payment.amount.type");
                 if (pamount.toUpperCase().equals("Y")) {
                     status = true;
-                }else if (ttlPaid != ttlAmt) {
+                } else if (ttlPaid != ttlAmt) {
                     status = false;
                 }
             }

@@ -8,10 +8,13 @@ package com.cv.app.pharmacy.database.helper;
  *
  * @author WSwe
  */
-public class SessionTtl extends CurrencyTtl{
+public class SessionTtl extends CurrencyTtl {
+
     private String desc;
+
     
-    public SessionTtl(String desc, String strCurrency, Double total){
+
+    public SessionTtl(String desc, String strCurrency, Double total) {
         super(strCurrency, total);
         this.desc = desc;
     }

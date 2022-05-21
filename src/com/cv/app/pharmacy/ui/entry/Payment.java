@@ -358,10 +358,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             JOptionPane.showMessageDialog(Util1.getParent(), "You must fill total pay amount in voucher.",
                     "Invalid Vou Paid Amount.", JOptionPane.ERROR_MESSAGE);
             status = false;
-        } else if (cboAccount.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Select Payment Type.",
-                    "Invalid Vou Type.", JOptionPane.ERROR_MESSAGE);
-            status = false;
         } else {
             traderPayHis.setPayDate(DateUtil.toDateTime(txtPayDate.getText()));
             traderPayHis.setLocation((Location) cboLocation1.getSelectedItem());
@@ -829,10 +825,12 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                  "", opBalance));
                  }*/
                 //if (paymentTrader.getPayMethod().getMethodId() == 1) {
-                resultSet = dao.getPro("GET_UNPAID_VOU", paymentTrader.getTraderId(),
+                String traderCode = paymentTrader.getTraderId();
+                String payDate = DateUtil.toDateStrMYSQL(txtPayDate.getText());
+                resultSet = dao.getPro("GET_UNPAID_VOU", traderCode,
                         strTrdOpt, strOpDate,
                         //DateUtil.getTodayDateStrMYSQL(),
-                        DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtPayDate.getText())),
+                        payDate,
                         appCurr, "1900-01-01", "1900-01-01");
                 if (resultSet != null) {
                     while (resultSet.next()) {
@@ -852,14 +850,14 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
                 calculateAmount();
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("paymentInfo : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
                 }
-            } catch (Exception ex1) {
+            } catch (SQLException ex1) {
 
             }
             dao.closeStatment();

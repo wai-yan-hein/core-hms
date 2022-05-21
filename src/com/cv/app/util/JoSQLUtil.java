@@ -7,6 +7,7 @@ package com.cv.app.util;
 import java.util.ArrayList;
 import java.util.List;
 import org.josql.Query;
+import org.josql.QueryExecutionException;
 import org.josql.QueryParseException;
 import org.josql.QueryResults;
 
@@ -27,7 +28,7 @@ public class JoSQLUtil {
               list = qr.getResults();
           }catch(QueryParseException qpe){
               System.out.println("JoSQLUtil.getResult qpe: " + qpe.toString());
-          }catch(Exception ex){
+          }catch(QueryExecutionException ex){
               System.out.println("JoSQLUtil.getResult : " + ex.toString());
           }
         }

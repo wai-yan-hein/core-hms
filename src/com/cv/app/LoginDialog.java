@@ -22,6 +22,7 @@ import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.ResultSet;
 import java.util.Date;
@@ -73,7 +74,7 @@ public class LoginDialog extends javax.swing.JDialog {
         try {
             Global.sock = new ServerSocket(10005);//Pharmacy
             //Global.sock = new ServerSocket(10001);//Clinic
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             JOptionPane.showMessageDialog(parent, "You cannot run two program at the same time in the same machine.",
                     "Duplicate Program running.", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
@@ -90,11 +91,9 @@ public class LoginDialog extends javax.swing.JDialog {
             List<Session> listSession = dao.findAll("Session");
             BindingUtil.BindCombo(cboSession, listSession);
 
-            for (int i = 0; i < listSession.size() - 1; i++) {
-                Session sess = listSession.get(i);
+            for (Session sess : listSession) {
                 if (DateUtil.isValidSession(sess.getStartTime(), sess.getEndTime())) {
                     cboSession.setSelectedItem(sess);
-                    i = listSession.size();
                 }
             }
             dao.close();
