@@ -46,6 +46,8 @@ public class VReOrderLevel implements java.io.Serializable {
     private Integer catId;
     private Integer brandId;
     private Boolean itemActive;
+    private String unitList;
+    private String qtyList;
     
     @EmbeddedId
     public ReOrderLevelKey getKey() {
@@ -282,5 +284,23 @@ public class VReOrderLevel implements java.io.Serializable {
 
     public void setItemActive(Boolean itemActive) {
         this.itemActive = itemActive;
+    }
+
+    @Column(name="unit_list")
+    public String getUnitList() {
+        return unitList;
+    }
+
+    public void setUnitList(String unitList) {
+        this.unitList = unitList;
+    }
+
+    @Column(name="qty_list")
+    public String getQtyList() {
+        return qtyList;
+    }
+
+    public void setQtyList(String qtyList) {
+        this.qtyList = qtyList;
     }
 }

@@ -150,4 +150,8 @@ public class PayVouFixedModel extends AbstractTableModel {
         list = new ArrayList();
         fireTableDataChanged();
     }
+    
+    public void dataChange(){
+        fireTableDataChanged();
+    }
 }

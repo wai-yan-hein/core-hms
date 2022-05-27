@@ -182,6 +182,8 @@ public class TraderFilterTableModel extends AbstractTableModel {
                 dao.close();
 
                 if (trader != null) {
+                    TraderFilter tmp = listTraderFilter.get(row);
+                    dao.delete(tmp);
                     TraderFilter tf = new TraderFilter(
                             new TraderFilterKey(trader, userId));
                     dao.save(tf);

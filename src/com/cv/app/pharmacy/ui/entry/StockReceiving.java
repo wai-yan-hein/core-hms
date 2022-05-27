@@ -28,6 +28,7 @@ import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import com.cv.app.pharmacy.ui.common.TraderCodeCellEditor;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.ui.common.BestTableCellEditor;
 import java.awt.event.ActionEvent;
@@ -56,7 +57,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
     private StockReceiveHis srHis = new StockReceiveHis();
     private int mouseClick = 2;
     private boolean isBind = false;
-    
+
     /**
      * Creates new form StockReceiving
      */
@@ -83,7 +84,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                     }
                 }
             }
-            
+
             Currency appCurr = (Currency) cboCurrency.getSelectedItem();
             recTblModel.setCurrency(appCurr);
         } catch (Exception ex) {
@@ -105,31 +106,31 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                 break;
             case "StockReceiveList":
                 try {
-                    VoucherSearch vs = (VoucherSearch)selectObj;
-                    dao.open();
-                    srHis = (StockReceiveHis) dao.find(StockReceiveHis.class, vs.getInvNo());
-                    List<StockReceiveDetailHis> list = dao.findAllHSQL(
-                        "select o from StockReceiveDetailHis o where o.vouNo = '" 
-                            + vs.getInvNo() + "' order by o.uniqueId");
-                    //srHis.setListDetail(list);
-                    System.out.println(list.size());
+                VoucherSearch vs = (VoucherSearch) selectObj;
+                dao.open();
+                srHis = (StockReceiveHis) dao.find(StockReceiveHis.class, vs.getInvNo());
+                List<StockReceiveDetailHis> list = dao.findAllHSQL(
+                        "select o from StockReceiveDetailHis o where o.vouNo = '"
+                        + vs.getInvNo() + "' order by o.uniqueId");
+                //srHis.setListDetail(list);
+                System.out.println(list.size());
 
-                    if (srHis.isDeleted()) {
-                        lblStatus.setText("DELETED");
-                    } else {
-                        lblStatus.setText("EDIT");
-                    }
-
-                    txtRevId.setText(srHis.getReceivedId());
-                    txtReceiveDate.setText(DateUtil.toDateStr(srHis.getReceiveDate()));
-                    txtRemark.setText(srHis.getRemark());
-                    cboLocation.setSelectedItem(srHis.getLocation());
-                    recTblModel.setListDetail(list);
-                    recTblModel.addEmptyRow();
-                    dao.close();
-                } catch (Exception ex) {
-                    log.error("selected : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                if (srHis.isDeleted()) {
+                    lblStatus.setText("DELETED");
+                } else {
+                    lblStatus.setText("EDIT");
                 }
+
+                txtRevId.setText(srHis.getReceivedId());
+                txtReceiveDate.setText(DateUtil.toDateStr(srHis.getReceiveDate()));
+                txtRemark.setText(srHis.getRemark());
+                cboLocation.setSelectedItem(srHis.getLocation());
+                recTblModel.setListDetail(list);
+                recTblModel.addEmptyRow();
+                dao.close();
+            } catch (Exception ex) {
+                log.error("selected : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
         }
     }
 
@@ -141,7 +142,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                 dao.beginTran();
                 String vouNo = srHis.getReceivedId();
                 List<StockReceiveDetailHis> list = recTblModel.getListDetail();
-                for(StockReceiveDetailHis srdh : list){
+                for (StockReceiveDetailHis srdh : list) {
                     srdh.setVouNo(vouNo);
                     srdh.setTranId(vouNo + "-" + srdh.getUniqueId().toString());
                     /*if(srdh.getTraderId() == null){
@@ -178,6 +179,8 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
         genVouNo();
         recTblModel.setReceiveId(txtRevId.getText());
         recTblModel.addEmptyRow();
+        Currency appCurr = (Currency) cboCurrency.getSelectedItem();
+        recTblModel.setCurrency(appCurr);
         System.gc();
     }
 
@@ -209,8 +212,14 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
 
     private void initCombo() {
         BindingUtil.BindCombo(cboLocation, getLocationFilter());
+        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
         new ComBoBoxAutoComplete(cboLocation, this);
+        new ComBoBoxAutoComplete(cboCurrency, this);
+        Object tmpObj = Util1.getDefaultValue("Currency");
+        if (tmpObj != null) {
+            cboCurrency.setSelectedItem(tmpObj);
+        }
     }
 
     private List getLocationFilter() {
@@ -231,34 +240,37 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
         }
         tblReceive.getTableHeader().setFont(Global.lableFont);
         tblReceive.getColumnModel().getColumn(0).setPreferredWidth(10); //Option
-        tblReceive.getColumnModel().getColumn(1).setPreferredWidth(90); //Vou No
-        tblReceive.getColumnModel().getColumn(2).setPreferredWidth(200);//Order Medicine
+        tblReceive.getColumnModel().getColumn(1).setPreferredWidth(50); //Vou No
+        tblReceive.getColumnModel().getColumn(2).setPreferredWidth(110);//Order Medicine
         tblReceive.getColumnModel().getColumn(3).setPreferredWidth(30);//Med Code
-        tblReceive.getColumnModel().getColumn(4).setPreferredWidth(200); //Rec-Medicine
-        tblReceive.getColumnModel().getColumn(5).setPreferredWidth(30); //Outstanding
-        tblReceive.getColumnModel().getColumn(6).setPreferredWidth(30); //Exp-Date
-        tblReceive.getColumnModel().getColumn(7).setPreferredWidth(10); //Qty
-        tblReceive.getColumnModel().getColumn(8).setPreferredWidth(2); //Unit
-        tblReceive.getColumnModel().getColumn(9).setPreferredWidth(10); //Balance
-        tblReceive.getColumnModel().getColumn(10).setPreferredWidth(5); //Currency
-        tblReceive.getColumnModel().getColumn(11).setPreferredWidth(10); //Cost Price
-        
+        tblReceive.getColumnModel().getColumn(4).setPreferredWidth(110); //Rec-Medicine
+        tblReceive.getColumnModel().getColumn(5).setPreferredWidth(110); //Trader
+        tblReceive.getColumnModel().getColumn(6).setPreferredWidth(30); //Outstanding
+        tblReceive.getColumnModel().getColumn(7).setPreferredWidth(30); //Exp-Date
+        tblReceive.getColumnModel().getColumn(8).setPreferredWidth(10); //Qty
+        tblReceive.getColumnModel().getColumn(9).setPreferredWidth(2); //Unit
+        tblReceive.getColumnModel().getColumn(10).setPreferredWidth(10); //Balance
+        tblReceive.getColumnModel().getColumn(11).setPreferredWidth(5); //Currency
+        tblReceive.getColumnModel().getColumn(12).setPreferredWidth(10); //Cost Price
+
         tblReceive.getColumnModel().getColumn(3).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
         recTblModel.setParent(tblReceive);
         recTblModel.setReceiveId(txtRevId.getText());
         recTblModel.addEmptyRow();
-        tblReceive.getColumnModel().getColumn(11).setCellEditor(new BestTableCellEditor(this));
+        tblReceive.getColumnModel().getColumn(12).setCellEditor(new BestTableCellEditor(this));
         //tblReceive.getColumnModel().getColumn(6).setCellRenderer(new TableDateFieldRenderer());
+        tblReceive.getColumnModel().getColumn(5).setCellEditor(
+                new TraderCodeCellEditor(dao));
     }
 
     private boolean isValidEntry() {
         Date vouSaleDate = DateUtil.toDate(txtReceiveDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         boolean status = true;
@@ -289,7 +301,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
             } catch (Exception ex) {
 
             }
-            
+
             if (NumberUtil.NZeroL(srHis.getExrId()) == 0) {
                 Long exrId = getExchangeId(txtReceiveDate.getText(), srHis.getCurrencyId());
                 srHis.setExrId(exrId);
@@ -310,7 +322,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                             "Are you sure to delete?",
                             "Receiving item delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblReceive.getCellEditor() != null){
+                    if (tblReceive.getCellEditor() != null) {
                         tblReceive.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -434,7 +446,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
         }
         //delete section end
     }
-    
+
     @Override
     public void getMedInfo(String medCode) {
         Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
@@ -447,7 +459,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                     "Invalid.", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private Long getExchangeId(String strDate, String curr) {
         long id = 0;
         if (Util1.getPropValue("system.multicurrency").equals("Y")) {
@@ -466,6 +478,17 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
             }
         }
         return id;
+    }
+
+    private void borrow() {
+        System.out.println("Borrow");
+        Currency appCurr = (Currency) cboCurrency.getSelectedItem();
+        StockReceiveDetailHis srdh = new StockReceiveDetailHis();
+
+        srdh.setRecOption("Borrow");
+        srdh.setRefVou(txtRevId.getText().trim());
+        srdh.setCurrency(appCurr);
+        recTblModel.addBorrow(srdh);
     }
     
     /**
@@ -491,6 +514,7 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
         lblStatus = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         cboCurrency = new javax.swing.JComboBox<>();
+        butBorrow = new javax.swing.JButton();
 
         setPreferredSize(new java.awt.Dimension(500, 306));
 
@@ -551,6 +575,13 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
             }
         });
 
+        butBorrow.setText("Borrow");
+        butBorrow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butBorrowActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -575,9 +606,11 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                         .add(jLabel1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(cboCurrency, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 115, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(lblStatus)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(butBorrow)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(butOutstanding))
                     .add(layout.createSequentialGroup()
                         .add(jLabel5)
@@ -599,13 +632,14 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                     .add(cboLocation, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(lblStatus)
                     .add(jLabel1)
-                    .add(cboCurrency, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(cboCurrency, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(butBorrow))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel5)
                     .add(txtRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 69, Short.MAX_VALUE)
+                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -646,7 +680,12 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
         }
     }//GEN-LAST:event_cboCurrencyActionPerformed
 
+    private void butBorrowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBorrowActionPerformed
+        borrow();
+    }//GEN-LAST:event_butBorrowActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton butBorrow;
     private javax.swing.JButton butOutstanding;
     private javax.swing.JComboBox<String> cboCurrency;
     private javax.swing.JComboBox cboLocation;

@@ -17,10 +17,15 @@ import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
+import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
+import com.cv.app.pharmacy.ui.common.CurrencyEditor;
+import com.cv.app.pharmacy.ui.common.CurrencyTotalTableModel;
 import com.cv.app.pharmacy.ui.common.DamageTableModel;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
+import static com.cv.app.pharmacy.ui.entry.StockIssuing.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -70,7 +75,9 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
     private int mouseClick = 2;
     private boolean canEdit = true;
     private boolean isBind = false;
-    
+    private CurrencyTotalTableModel cttlModel = new CurrencyTotalTableModel();
+    private final TmpEXRateTableModel tmpExrTableModel = new TmpEXRateTableModel();
+
     /**
      * Creates new form Damage
      */
@@ -111,9 +118,28 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                 }
             }
         }
-        
+
         String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
         dmgTableModel.setCurrency(appCurr);
+
+        if (!isBind) {
+            Currency curr = (Currency) cboCurrency.getSelectedItem();
+            if (curr != null) {
+                tmpExrTableModel.setFromCurr(curr.getCurrencyCode());
+            }
+        }
+        tmpExrTableModel.setParent(tblExRate);
+        tmpExrTableModel.addEmptyRow();
+
+        String strSql = "delete from tmp_ex_rate where user_id = '"
+                + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("clear temp data : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     //Get latest Damage voucher serial number
@@ -153,6 +179,10 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         genVouNo();
         setFocus();
 
+        tmpExrTableModel.clear();
+        tmpExrTableModel.addEmptyRow();
+        deleteExRateTmp();
+        
         System.gc();
     }
 
@@ -164,7 +194,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         isBind = true;
         BindingUtil.BindCombo(cboLocation, getLocationFilter());
         BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        
+
         new ComBoBoxAutoComplete(cboLocation, this);
         new ComBoBoxAutoComplete(cboCurrency, this);
         isBind = false;
@@ -225,7 +255,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblDamage.getCellEditor() != null){
+                if (tblDamage.getCellEditor() != null) {
                     tblDamage.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -258,7 +288,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                     try {
                         yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                                 "Damage item delete", JOptionPane.YES_NO_OPTION);
-                        if(tblDamage.getCellEditor() != null){
+                        if (tblDamage.getCellEditor() != null) {
                             tblDamage.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -339,7 +369,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             dao.open();
             switch (source.toString()) {
                 case "DamageList":
-                    VoucherSearch vs = (VoucherSearch)selectObj;
+                    VoucherSearch vs = (VoucherSearch) selectObj;
                     currDamage = (DamageHis) dao.find(DamageHis.class, vs.getInvNo());
 
                     if (Util1.getNullTo(currDamage.isDeleted())) {
@@ -352,10 +382,10 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                     txtDmgDate.setText(DateUtil.toDateStr(currDamage.getDmgDate()));
                     txtRemark.setText(currDamage.getRemark());
                     cboLocation.setSelectedItem(currDamage.getLocation());
-                    txtTotalAmount.setValue(NumberUtil.NZero(currDamage.getTotalAmount()));
+                    //txtTotalAmount.setValue(NumberUtil.NZero(currDamage.getTotalAmount()));
 
                     listDetail = dao.findAllHSQL(
-                            "select o from DamageDetailHis o where o.vouNo = '" 
+                            "select o from DamageDetailHis o where o.vouNo = '"
                             + currDamage.getDmgVouId() + "' order by o.uniqueId");
                     currDamage.setListDetail(listDetail);
                     /*if (currDamage.getListDetail().size() > 0) {
@@ -367,8 +397,14 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                     }
                     dmgTableModel.setListDetail(listDetail);
                     tblDamage.requestFocusInWindow();
-                    Currency curr = (Currency)dao.find(Currency.class, currDamage.getCurrencyId());
+                    Currency curr = (Currency) dao.find(Currency.class, currDamage.getCurrencyId());
                     cboCurrency.setSelectedItem(curr);
+
+                    //For exchange rate
+                    deleteExRateTmp();
+                    insertExRateToTemp(currDamage.getDmgVouId());
+                    getExRate();
+
                     break;
                 case "MedicineList":
                     Medicine med = (Medicine) dao.find(Medicine.class,
@@ -411,24 +447,33 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         tblDamage.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
         tblDamage.getColumnModel().getColumn(4).setPreferredWidth(40);//Qty
         tblDamage.getColumnModel().getColumn(5).setPreferredWidth(30);//Unit
-        tblDamage.getColumnModel().getColumn(6).setPreferredWidth(40);//Cost Price
-        tblDamage.getColumnModel().getColumn(7).setPreferredWidth(50);//Amount
+        tblDamage.getColumnModel().getColumn(6).setPreferredWidth(40);//Currency
+        tblDamage.getColumnModel().getColumn(7).setPreferredWidth(50);//Cost Price
+        tblDamage.getColumnModel().getColumn(8).setPreferredWidth(50);//Amount
 
         tblDamage.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
         tblDamage.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor(this));
-        tblDamage.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor(this));
+        tblDamage.getColumnModel().getColumn(6).setCellEditor(new CurrencyEditor());
+        tblDamage.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
 
         tblDamage.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                txtTotalAmount.setValue(dmgTableModel.getTotalAmount());
+                //txtTotalAmount.setValue(dmgTableModel.getTotalAmount());
+                cttlModel.setList(dmgTableModel.getCurrTotal());
             }
         });
-        /*
-         JComboBox cboAdjType = new JComboBox();
-         BindingUtil.BindCombo(cboAdjType, dao.findAll("AdjType"));
-         tblDamage.getColumnModel().getColumn(6).setCellEditor(new DefaultCellEditor(cboAdjType));*/
+
+        tblCurrTotal.getColumnModel().getColumn(0).setPreferredWidth(10);  //Option
+        tblCurrTotal.getColumnModel().getColumn(1).setPreferredWidth(50);  //Vou No
+
+        tblExRate.getColumnModel().getColumn(0).setCellEditor(
+                new CurrencyEditor());
+        tblExRate.getColumnModel().getColumn(1).setCellEditor(
+                new BestTableCellEditor(this));
+        tblExRate.getColumnModel().getColumn(2).setCellEditor(
+                new BestTableCellEditor(this));
     }// </editor-fold>
 
     /*
@@ -451,23 +496,25 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         }
         if (isValidEntry() && dmgTableModel.isValidEntry()) {
             //removeEmptyRow();
-            
+
             try {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 List<DamageDetailHis> listTmp = dmgTableModel.getListDetail();
                 String vouNo = currDamage.getDmgVouId();
-                for(DamageDetailHis ddh : listTmp){
+                deleteExRateHis(vouNo);
+                insertExRateHis(vouNo);
+                for (DamageDetailHis ddh : listTmp) {
                     ddh.setVouNo(vouNo);
-                    if(ddh.getDmgDetailId() == null){
+                    if (ddh.getDmgDetailId() == null) {
                         ddh.setDmgDetailId(vouNo + "-" + ddh.getUniqueId().toString());
                     }
-                    dao.save1(ddh);
+                    dao.save(ddh);
                 }
                 currDamage.setListDetail(listTmp);
-                dao.save1(currDamage);
-                dao.commit();
-                
+                dao.save(currDamage);
+                //dao.commit();
+
                 //For upload to account
                 //uploadToAccount(currDamage);
                 if (lblStatus.getText().equals("NEW")) {
@@ -478,7 +525,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             } catch (Exception ex) {
                 dao.rollBack();
                 log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            }finally{
+            } finally {
                 dao.close();
             }
         }
@@ -502,10 +549,10 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
     public void delete() {
         Date vouSaleDate = DateUtil.toDate(txtDmgDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (Util1.getNullTo(currDamage.isDeleted())) {
@@ -533,20 +580,22 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         if (isValidEntry() && dmgTableModel.isValidEntry()) {
             try {
                 //removeEmptyRow();
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 List<DamageDetailHis> listTmp = dmgTableModel.getListDetail();
                 String vouNo = currDamage.getDmgVouId();
-                for(DamageDetailHis ddh : listTmp){
+                deleteExRateHis(vouNo);
+                insertExRateHis(vouNo);
+                for (DamageDetailHis ddh : listTmp) {
                     ddh.setVouNo(vouNo);
-                    if(ddh.getDmgDetailId() == null){
+                    if (ddh.getDmgDetailId() == null) {
                         ddh.setDmgDetailId(vouNo + "-" + ddh.getUniqueId().toString());
                     }
-                    dao.save1(ddh);
+                    dao.save(ddh);
                 }
                 currDamage.setListDetail(listTmp);
-                dao.save1(currDamage);
-                dao.commit();
+                dao.save(currDamage);
+                //dao.commit();
                 //String vouNo = currDamage.getDmgVouId();
                 //For upload to account
                 //uploadToAccount(currDamage);
@@ -554,7 +603,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                     vouEngine.updateVouNo();
                 }
                 newForm();
-                
+
                 String reportPath = Util1.getAppWorkFolder()
                         + Util1.getPropValue("report.folder.path")
                         + "DamageVoucher";
@@ -617,13 +666,13 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
     private boolean isValidEntry() {
         Date vouSaleDate = DateUtil.toDate(txtDmgDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
         boolean status = true;
 
         if (cboLocation.getSelectedItem() == null) {
@@ -636,11 +685,11 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             currDamage.setDmgDate(DateUtil.toDate(txtDmgDate.getText()));
             currDamage.setLocation((Location) cboLocation.getSelectedItem());
             currDamage.setRemark(txtRemark.getText());
-            currDamage.setTotalAmount(NumberUtil.NZero(txtTotalAmount.getText()));
+            //currDamage.setTotalAmount(NumberUtil.NZero(txtTotalAmount.getText()));
             currDamage.setDeleted(Util1.getNullTo(currDamage.isDeleted()));
             currDamage.setIntgUpdStatus(null);
             //String appCurr = Util1.getPropValue("system.app.currency");
-            String appCurr = ((Currency)cboCurrency.getSelectedItem()).getCurrencyCode();
+            String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             currDamage.setCurrencyId(appCurr);
             if (lblStatus.getText().equals("NEW")) {
                 currDamage.setDeleted(false);
@@ -662,7 +711,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             } catch (Exception ex) {
 
             }
-            
+
             if (NumberUtil.NZeroL(currDamage.getExrId()) == 0) {
                 Long exrId = getExchangeId(txtDmgDate.getText(), currDamage.getCurrencyId());
                 currDamage.setExrId(exrId);
@@ -689,7 +738,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblDamage.getCellEditor() != null){
+                if (tblDamage.getCellEditor() != null) {
                     tblDamage.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -840,7 +889,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         }
         //delete section end
     }
-    
+
     private void setEditStatus(String invId) {
         //canEdit
         /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
@@ -858,7 +907,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             canEdit = true;
         }
     }
-    
+
     private Long getExchangeId(String strDate, String curr) {
         long id = 0;
         if (Util1.getPropValue("system.multicurrency").equals("Y")) {
@@ -878,7 +927,70 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         }
         return id;
     }
+
+    private void deleteExRateTmp(){
+        String strSql = "delete from tmp_ex_rate where user_id = '"
+                + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateTmp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
     
+    private void deleteExRateHis(String vouNo){
+        String strSql = "delete from dmg_ex_rate_his where vou_no = '"
+                + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("deleteExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateHis(String vouNo){
+        String strSql = "insert into dmg_ex_rate_his(vou_no, from_curr, to_curr, ex_rate) "
+                + "select '" + vouNo + "', from_curr, to_curr, ex_rate from "
+                + "tmp_ex_rate where user_id = '" + Global.loginUser.getUserId() + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateHis : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void insertExRateToTemp(String vouNo){
+        String strSql = "insert into tmp_ex_rate(user_id, from_curr, to_curr, ex_rate) "
+                + "select '" + Global.loginUser.getUserId() + "', from_curr, to_curr, ex_rate "
+                + "from dmg_ex_rate_his where vou_no = '" + vouNo + "'";
+        try {
+            dao.deleteSQL(strSql);
+        } catch (Exception ex) {
+            log.error("insertExRateToTemp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void getExRate(){
+        String strSql = "select o from TmpEXRate o where o.key.userId = '" + Global.loginUser.getUserId() + "'";
+        
+        try {
+            List<TmpEXRate> list = dao.findAllHSQL(strSql);
+            tmpExrTableModel.setList(list);
+            tmpExrTableModel.addEmptyRow();
+        } catch (Exception ex) {
+            log.error("getExRate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -899,10 +1011,12 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         jScrollPane1 = new javax.swing.JScrollPane();
         tblDamage = new javax.swing.JTable(dmgTableModel);
         lblStatus = new javax.swing.JLabel();
-        txtTotalAmount = new javax.swing.JFormattedTextField();
-        jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         cboCurrency = new javax.swing.JComboBox<>();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblExRate = new javax.swing.JTable();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblCurrTotal = new javax.swing.JTable();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Vou No");
@@ -943,13 +1057,6 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         lblStatus.setFont(new java.awt.Font("Tahoma", 0, 40)); // NOI18N
         lblStatus.setText("Edit");
 
-        txtTotalAmount.setEditable(false);
-        txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txtTotalAmount.setFont(Global.textFont);
-
-        jLabel5.setFont(Global.lableFont);
-        jLabel5.setText("Total Amount :");
-
         jLabel6.setText("Currency ");
 
         cboCurrency.addActionListener(new java.awt.event.ActionListener() {
@@ -958,6 +1065,14 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             }
         });
 
+        tblExRate.setModel(tmpExrTableModel);
+        tblExRate.setRowHeight(23);
+        jScrollPane2.setViewportView(tblExRate);
+
+        tblCurrTotal.setModel(cttlModel);
+        tblCurrTotal.setRowHeight(23);
+        jScrollPane3.setViewportView(tblCurrTotal);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -965,6 +1080,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(19, 19, 19)
@@ -985,14 +1101,13 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                         .addComponent(jLabel4)
                         .addGap(18, 18, 18)
                         .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 5, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 55, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 274, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(237, 237, 237)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 223, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1011,13 +1126,12 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 58, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel5)))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1060,14 +1174,16 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lblStatus;
+    private javax.swing.JTable tblCurrTotal;
     private javax.swing.JTable tblDamage;
+    private javax.swing.JTable tblExRate;
     private javax.swing.JFormattedTextField txtDmgDate;
     private javax.swing.JTextField txtRemark;
-    private javax.swing.JFormattedTextField txtTotalAmount;
     private javax.swing.JFormattedTextField txtVouNo;
     // End of variables declaration//GEN-END:variables
 }

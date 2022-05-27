@@ -26,7 +26,7 @@ where vaj.med_id = med.med_id and vaj.location = loc.location_id and vaj.adj_typ
 	<field name="cost_price" class="java.lang.Double"/>
 	<field name="amount" class="java.lang.Double"/>
 	<field name="vou_ttl" class="java.lang.Double"/>
-	<variable name="v_vou_total" class="java.lang.String" calculation="Sum">
+	<variable name="v_vou_total" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{amount}]]></variableExpression>
 	</variable>
 	<group name="loc">

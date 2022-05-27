@@ -174,7 +174,7 @@ public class OTServiceTableModel extends AbstractTableModel {
         }
         if (Util1.getPropValue("system.ot.setup.autocalculate").equals("Y")) {
             record.setSrvFees(NumberUtil.NZero(record.getSrvFees1()) + NumberUtil.NZero(record.getSrvFees2())
-                    + NumberUtil.NZero(record.getSrvFees3()) + NumberUtil.NZero(record.getSrvFees3()));
+                    + NumberUtil.NZero(record.getSrvFees3()) + NumberUtil.NZero(record.getSrvFees4()));
         }
         saveRecord(record);
         try {
