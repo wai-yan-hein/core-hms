@@ -81,6 +81,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -3118,7 +3119,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
