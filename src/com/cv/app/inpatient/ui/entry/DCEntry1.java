@@ -426,7 +426,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     AdmissionKey key = new AdmissionKey();
                     key.setAmsNo(admNo);
                     key.setRegister(pt);
-                    Ams ams = (Ams) dao.find(Ams.class, key);
+                    Ams ams = (Ams) dao.find(Ams.class,
+                            key);
                     ams.setDcStatus(null);
                     dao.save(ams);
 
@@ -526,7 +527,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     }
 
     private void copyVoucher(String invNo) {
-        DCHis tmpVou = (DCHis) dao.find(DCHis.class, invNo);
+        DCHis tmpVou = (DCHis) dao.find(DCHis.class,
+                invNo);
 
         currVou = new DCHis();
         BeanUtils.copyProperties(tmpVou, currVou);
@@ -638,6 +640,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                             odf.setUniqueId(maxUniqueId++);
                                         }
                                         odf.setDcDetailId(odh.getOpdDetailId());
+                                        odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
+
                                         if (odf.getDrFeeId() == null) {
                                             odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                         }
@@ -674,7 +678,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         Patient pt = currVou.getPatient();
                         AdmissionKey key = new AdmissionKey(pt, pt.getAdmissionNo());
                         try {
-                            Ams ams = (Ams) dao.find(Ams.class, key);
+                            Ams ams = (Ams) dao.find(Ams.class,
+                                    key);
                             if (ams != null) {
                                 ams.setDcStatus(currVou.getDcStatus());
                                 Diagnosis dg = (Diagnosis) cboDiagnosis.getSelectedItem();
@@ -809,7 +814,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     key = new AdmissionKey(currVou.getPatient(), txtAdmissionNo.getText().trim());
                 }
-                ams = (Ams) dao.find(Ams.class, key);
+                ams = (Ams) dao.find(Ams.class,
+                        key);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {
@@ -865,7 +871,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     key = new AdmissionKey(pt, pt.getAdmissionNo());
                 }
-                ams = (Ams) dao.find(Ams.class, key);
+                ams = (Ams) dao.find(Ams.class,
+                        key);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {
@@ -894,8 +901,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (toDate == null) {
                     toDate = DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtDate.getText()));
                 }
-                String period = DateUtil.toDateStr(ams.getAmsDate()) + " To "
-                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()));
+                String period = DateUtil.toDateStr(ams.getAmsDate(), "dd/MM/yyyy hh:mm aa") + " To "
+                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()), "dd/MM/yyyy hh:mm aa");
                 params.put("period", period);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
@@ -1070,7 +1077,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         switch (source.toString()) {
             case "DoctorSearch":
                 Doctor doctor = (Doctor) selectObj;
-                doctor = (Doctor) dao.find(Doctor.class, doctor.getDoctorId());
+                doctor = (Doctor) dao.find(Doctor.class,
+                        doctor.getDoctorId());
 
                 /*if (doctor.getListFees().size() > 0) {
                  List<DoctorFeesMapping> listFees = doctor.getListFees();
@@ -1114,7 +1122,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     AdmissionKey key = new AdmissionKey();
                     key.setRegister(patient);
                     key.setAmsNo(patient.getAdmissionNo());
-                    Ams ams = (Ams) dao.find(Ams.class, key);
+                    Ams ams = (Ams) dao.find(Ams.class,
+                            key);
                     if (ams != null) {
                         lblAdmissionDate.setText(DateUtil.toDateTimeStr(ams.getAmsDate(),
                                 "dd/MM/yyyy HH:mm:ss"));
@@ -1141,7 +1150,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 VoucherSearch vs = (VoucherSearch) selectObj;
                 String vouId = vs.getInvNo();
                 try {
-                    currVou = (DCHis) dao.find(DCHis.class, vouId);
+                    currVou = (DCHis) dao.find(DCHis.class,
+                            vouId);
                     List<DCDetailHis> listDetail = dao.findAllHSQL(
                             "select o from DCDetailHis o where o.vouNo = '" + vouId + "' order by o.uniqueId");
                     currVou.setListOPDDetailHis(listDetail);
@@ -1165,7 +1175,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         AdmissionKey key = new AdmissionKey();
                         key.setRegister(currVou.getPatient());
                         key.setAmsNo(txtAdmissionNo.getText().trim());
-                        Ams ams = (Ams) dao.find(Ams.class, key);
+                        Ams ams = (Ams) dao.find(Ams.class,
+                                key);
                         if (ams != null) {
                             lblAdmissionDate.setText(DateUtil.toDateTimeStr(ams.getAmsDate(),
                                     "dd/MM/yyyy HH:mm:ss"));
@@ -1371,8 +1382,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
         if (txtDoctorNo.getText() != null && !txtDoctorNo.getText().isEmpty()) {
             try {
-                Doctor dr = null;
 
+                Doctor dr = null;
                 dao.open();
                 //dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
                 List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '"
@@ -1435,7 +1446,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 Patient pt;
 
                 dao.open();
-                pt = (Patient) dao.find(Patient.class, txtPatientNo.getText());
+                pt = (Patient) dao.find(Patient.class,
+                        txtPatientNo.getText());
                 dao.close();
 
                 if (pt == null) {
@@ -2278,7 +2290,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         key.setRegister(currVou.getPatient());
                         key.setAmsNo(currVou.getAdmissionNo());
                         try {
-                            Ams admPt = (Ams) dao.find(Ams.class, key);
+                            Ams admPt = (Ams) dao.find(Ams.class,
+                                    key);
                             if (admPt != null) {
                                 canEdit = admPt.getDcStatus() == null;
                             }
@@ -2461,7 +2474,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             if (Global.mqConnection != null) {
                 if (Global.mqConnection.isStatus()) {
                     try {
-                        AccSetting as = (AccSetting) dao.find(AccSetting.class, "DC");
+                        AccSetting as = (AccSetting) dao.find(AccSetting.class,
+                                "DC");
 
                         ActiveMQConnection mq = Global.mqConnection;
                         MapMessage msg = mq.getMapMessageTemplate();
@@ -2620,7 +2634,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     key = new AdmissionKey(pt, pt.getAdmissionNo());
                 }
-                ams = (Ams) dao.find(Ams.class, key);
+                ams = (Ams) dao.find(Ams.class,
+                        key);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {
@@ -2649,8 +2664,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (toDate == null) {
                     toDate = DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtDate.getText()));
                 }*/
-                String period = DateUtil.toDateStr(ams.getAmsDate()) + " To "
-                        + DateUtil.toDateStr(DateUtil.toDateTime(txtDate.getText()));
+                String period = DateUtil.toDateStr(ams.getAmsDate(), "dd/MM/yyyy HH:mm:ss") + " To "
+                        + DateUtil.toDateTime(txtDate.getText());
                 params.put("period", period);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
@@ -3743,7 +3758,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 } else {
                     key = new AdmissionKey(pt, pt.getAdmissionNo());
                 }
-                ams = (Ams) dao.find(Ams.class, key);
+                ams = (Ams) dao.find(Ams.class,
+                        key);
                 if (ams.getBuildingStructure() != null) {
                     params.put("bed_no", ams.getBuildingStructure().getDescription());
                 } else {

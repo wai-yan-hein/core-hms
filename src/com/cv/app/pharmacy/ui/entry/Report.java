@@ -532,7 +532,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 + "where op_date <= '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' group by trader_id, currency) b\n"
                 + "where a.trader_id = b.trader_id and a.currency = b.currency and a.op_date = b.op_date) trop on t.trader_id = trop.trader_id \n"
                 + " and t.cur_code = trop.currency ";
-        
+
         String strFilter = "";
 
         if (disc.equals("C") || disc.equals("S") || disc.equals("P")) {
@@ -897,6 +897,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + Util1.getPropValue("report.folder.path")
                     + report.getMenuUrl();
             Map<String, Object> params = getParameter(report.getMenuClass());
+            params.put("p_report_name", report.getMenuName());
             switch (report.getMenuClass()) {
                 case "SalePurSummaryMonthlyC":
                 case "SaleAnalystUnit":
@@ -1392,22 +1393,24 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         params.put("prm_vou_type", getVouStatus());
         params.put("reg_no", Util1.getString(txtRegNo.getText(), "-"));
         params.put("prm_location_group", getLocationGroup());
-        
+
         String toLocationName = "All";
         int toLocationId = 0;
-        if(cboToLocation.getSelectedItem() instanceof Location){
-            Location toLocation = (Location)cboToLocation.getSelectedItem();
+        if (cboToLocation.getSelectedItem() instanceof Location) {
+            Location toLocation = (Location) cboToLocation.getSelectedItem();
             toLocationName = toLocation.getLocationName();
             toLocationId = toLocation.getLocationId();
         }
         params.put("prm_to_location_name", toLocationName);
         params.put("prm_tlocation", toLocationId);
-        
+
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             ItemType it = (ItemType) cboItemType.getSelectedItem();
             params.put("item_type", it.getItemTypeName());
+            params.put("p_item_type", it.getItemTypeCode());
         } else {
             params.put("item_type", "All");
+            params.put("p_item_type", "-");
         }
 
         if (cboSession.getSelectedItem() instanceof Session) {
@@ -2119,7 +2122,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 + "from v_sale vs join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vs.med_id = tsf.med_id where deleted = false and "
                 + "tsf.user_id = '" + userId + "' and date(vs.sale_date) between '"
                 + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
-                + " and (vs.location_id = " + location + " or " + location + " = 0) \n" 
+                + " and (vs.location_id = " + location + " or " + location + " = 0) \n"
                 + "group by concat(month(sale_date),'-',year(sale_date)), med_id,tsf.user_id) b\n"
                 + "on a.med_id = b.med_id and a.y_m = b.y_m and a.user_id = b.user_id\n"
                 + "left join\n"

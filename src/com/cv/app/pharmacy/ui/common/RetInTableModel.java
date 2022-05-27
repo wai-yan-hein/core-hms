@@ -209,7 +209,7 @@ public class RetInTableModel extends AbstractTableModel {
                     
                     try {
                         String key = medId + "-" + record.getUnit().getItemUnitCode();
-                        calculateMed(medId);
+                        //calculateMed(medId);
                         double smallestCost = getSmallestCost(medId);
                         float smallestQty = medUp.getQtyInSmallest(key);
                         double unitCost = smallestCost * smallestQty;

@@ -72,7 +72,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private final AbstractDataAccess dao = Global.dao;
     private GenVouNoImpl vouEngine = null;
     private List<RetInDetailHis> listDetail
-            = ObservableCollections.observableList(new ArrayList<RetInDetailHis>());
+            = ObservableCollections.observableList(new ArrayList<>());
     private MedicineUP medUp = new MedicineUP(dao);
     private BestAppFocusTraversalPolicy focusPolicy;
     private RetInHis currRetIn = new RetInHis();
