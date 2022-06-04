@@ -13,11 +13,13 @@ import com.cv.app.pharmacy.database.entity.ItemBrand;
 import com.cv.app.pharmacy.database.entity.ItemGroup;
 import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.ReOrderLevel;
 import com.cv.app.pharmacy.database.view.VReOrderLevel;
 import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.ReOrderLevelTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.util.TransferDialog;
+import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -29,6 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +41,6 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
@@ -64,8 +66,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     public ReOrderLevelEntry() {
         initComponents();
         initCombo();
+        log.info("Start : " + new Date());
         getReOrderLevel();
+        log.info("End : " + new Date());
+        log.info("Filter Start : " + new Date());
         applyFilter();
+        log.info("Filter End : " + new Date());
         initTable();
         actionMapping();
 
@@ -252,6 +258,28 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
          };
          thread.start();*/
         List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
+        final List<ReOrderLevel> listROL = new ArrayList();
+
+        listReOrderLevel.forEach(vrol -> {
+            String strQty = MedicineUtil.getQtyInStr(vrol.getQtyList(),
+                    vrol.getUnitList(), NumberUtil.FloatZero(vrol.getBalance()));
+            ReOrderLevel rol = (ReOrderLevel) dao.find(ReOrderLevel.class, vrol.getKey());
+            if (rol != null) {
+                rol.setStrBalance(strQty);
+                vrol.setStrBalance(strQty);
+                log.info("med_id : " + vrol.getKey().getMed());
+                listROL.add(rol);
+            }
+        });
+        
+        try {
+            dao.saveBatch(listROL);
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+        }finally{
+            dao.close();
+        }
+        
         tblReOrderModel.setListReOrderLevel(listReOrderLevel);
         System.gc();
     }
@@ -486,17 +514,17 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             itemType = ((ItemType) cboItemType.getSelectedItem()).getItemTypeCode();
         }
-        
+
         Integer catId = 0;
         if (cboCategory.getSelectedItem() instanceof Category) {
             catId = ((Category) cboCategory.getSelectedItem()).getCatId();
         }
-        
+
         Integer brandId = 0;
         if (cboBrand.getSelectedItem() instanceof ItemBrand) {
             brandId = ((ItemBrand) cboBrand.getSelectedItem()).getBrandId();
         }
-        
+
         Integer balFilter = 0;
         if (cboBalFilter.getSelectedItem() != null) {
             String strBalFilter = cboBalFilter.getSelectedItem().toString();
@@ -510,12 +538,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                     break;
             }
         }
-        
+
         Integer groupId = 0;
         if (cboGroup.getSelectedItem() instanceof ItemGroup) {
             groupId = ((ItemGroup) cboGroup.getSelectedItem()).getGroupId();
         }
-        
+
         strSql = strSql.replace("$P{p_loc}", location.toString())
                 .replace("$P{p_item_type}", "'" + itemType + "'")
                 .replace("$P{p_cat_id}", catId.toString())
@@ -523,8 +551,8 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                 .replace("$P{p_bal_filter}", balFilter.toString())
                 .replace("$P{p_group}", groupId.toString())
                 .replace("$P{p_active}", "'" + cboActive.getSelectedItem().toString() + "'");
-                
-        try{
+
+        try {
             List<String> listHeader = new ArrayList();
             listHeader.add("Code");
             listHeader.add("Item Name");
@@ -533,7 +561,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             listHeader.add("Balance");
             listHeader.add("Bal < Min");
             listHeader.add("Supplier");
-            
+
             List<String> listField = new ArrayList();
             listField.add("item_id");
             listField.add("med_name");
@@ -542,7 +570,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             listField.add("balance_str");
             listField.add("bal_min_str");
             listField.add("brand_name");
-            
+
             HashMap<String, POIUtil.FormatType> hmType = new HashMap();
             hmType.put("item_id", POIUtil.FormatType.TEXT);
             hmType.put("med_name", POIUtil.FormatType.TEXT);
@@ -551,12 +579,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             hmType.put("balance_str", POIUtil.FormatType.TEXT);
             hmType.put("bal_min_str", POIUtil.FormatType.TEXT);
             hmType.put("brand_name", POIUtil.FormatType.TEXT);
-            
+
             ResultSet rs = dao.execSQL(strSql);
             POIUtil.genExcelFile(listHeader, listField, hmType, rs, "ReOrder.xls", "-", "-", "-");
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("genExcel : " + ex.toString());
-        }finally{
+        } finally {
             dao.close();
         }
     }

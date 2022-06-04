@@ -34,7 +34,7 @@ public class StockReceiveDetailHis implements java.io.Serializable {
     private Float smallestQty;
     private boolean fullReceive;
     private Integer uniqueId;
-    private String traderId;
+    private Trader traderId;
     private String strOutstanding;
     private Float outsBalance; //Outstanding balance
     private String balance;
@@ -146,12 +146,13 @@ public class StockReceiveDetailHis implements java.io.Serializable {
         this.uniqueId = uniqueId;
     }
 
-    @Column(name = "cus_id")
-    public String getTraderId() {
+    @ManyToOne
+    @JoinColumn(name = "cus_id")
+    public Trader getTraderId() {
         return traderId;
     }
 
-    public void setTraderId(String traderId) {
+    public void setTraderId(Trader traderId) {
         this.traderId = traderId;
     }
 

@@ -50,7 +50,7 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
     private int selectedRow = -1;
     private boolean bindStatus = false;
     private int mouseClick = 2;
-    
+    private String selTraderId = "-";
     /**
      * Creates new form TraderPayVouFixed
      */
@@ -92,9 +92,10 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
 
                     try {
                         TraderBalanceFixList tbfl = tblTraderModel.getTrader(selectedRow);
+                        selTraderId = tbfl.getTraderId();
                         List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
                                 "select o from TmpVouAmtFix o where o.key.cusId = '"
-                                + tbfl.getTraderId() + "' and o.key.userId = '"
+                                + selTraderId + "' and o.key.userId = '"
                                 + Global.loginUser.getUserId() + "'");
                         tblUnPaidVouModel.setList(listTBFL);
                     } catch (Exception ex) {
@@ -344,11 +345,13 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         List<TraderBalanceFixList> list = tblTraderModel.getListTrader();
         if (list != null) {
             try {
-                for (TraderBalanceFixList tbfl : list) {
-                    List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
+                TraderBalanceFixList tbfl = list.get(selectedRow);
+                //for (TraderBalanceFixList tbfl : list) {
+                    /*List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
                             "select o from TmpVouAmtFix o where o.key.cusId = '"
-                            + tbfl.getTraderId() + "' and o.key.userId = '"
-                            + Global.loginUser.getUserId() + "'");
+                            + selTraderId + "' and o.key.userId = '"
+                            + Global.loginUser.getUserId() + "'");*/
+                    List<TmpVouAmtFix> listTBFL = tblUnPaidVouModel.getList();
                     if (listTBFL != null) {
                         if (!listTBFL.isEmpty()) {
                             Double difference = tbfl.getDifference();
@@ -358,6 +361,7 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
                                     if (leftAmt > 0) {
                                         if (tvaf.getBalance() >= leftAmt) {
                                             tvaf.setPaidAmount(leftAmt);
+                                            tvaf.setBalance(tvaf.getBalance()-leftAmt);
                                             leftAmt = 0.0;
                                         } else {
                                             tvaf.setPaidAmount(tvaf.getBalance());
@@ -368,10 +372,11 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
                                         dao.save(tvaf);
                                     }
                                 }
+                                tblUnPaidVouModel.dataChange();
                             }
                         }
                     }
-                }
+                //}
             } catch (Exception ex) {
                 log.error("fixError : " + ex.toString());
             } finally {
@@ -384,16 +389,16 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         List<TraderBalanceFixList> list = tblTraderModel.getListTrader();
         if (list != null) {
             try {
-                for (TraderBalanceFixList tbfl : list) {
+                //for (TraderBalanceFixList tbfl : list) {
                     List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
                             "select o from TmpVouAmtFix o where o.key.cusId = '"
-                            + tbfl.getTraderId() + "' and o.key.userId = '"
+                            + selTraderId + "' and o.key.userId = '"
                             + Global.loginUser.getUserId() + "' and ifnull(o.paidAmount,0) <> 0");
                     if (listTBFL != null) {
                         if (!listTBFL.isEmpty()) {
                             TraderPayHis tph = new TraderPayHis();
                             tph.setPayDate(DateUtil.toDate(txtFixDate.getText()));
-                            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + tbfl.getTraderId() + "'");
+                            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + selTraderId + "'");
                             if (!cus.isEmpty()) {
                                 tph.setTrader(cus.get(0));
                             }
@@ -437,7 +442,7 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
                             }
                         }
                     }
-                }
+                //}
             } catch (Exception ex) {
                 log.error("save : " + ex.toString());
             } finally {

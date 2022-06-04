@@ -912,7 +912,8 @@ public class SaleTableModel extends AbstractTableModel {
         SaleDetailHis sdh = listDetail.get(row);
         String key = "";
         double discount = NumberUtil.NZero(sdh.getDiscount());
-        float saleQty = NumberUtil.NZeroFloat(sdh.getQuantity());
+        double saleQty = NumberUtil.NZero(sdh.getQuantity());
+        float saleQty1 = NumberUtil.NZeroFloat(sdh.getQuantity());
         double price = NumberUtil.NZero(sdh.getPrice());
         if (sdh.getMedId() == null) {
             return;
@@ -920,7 +921,7 @@ public class SaleTableModel extends AbstractTableModel {
         if (sdh.getUnitId() != null) {
             key = sdh.getMedId().getMedId() + "-" + sdh.getUnitId().getItemUnitCode();
         }
-        sdh.setSaleSmallestQty(saleQty * medUp.getQtyInSmallest(key));
+        sdh.setSaleSmallestQty(saleQty1 * medUp.getQtyInSmallest(key));
         key = "";
 
         if (sdh.getFocUnit() != null) {
@@ -941,7 +942,7 @@ public class SaleTableModel extends AbstractTableModel {
                 break;
         }
 
-        double amount = (saleQty * price) - discount;
+        double amount = NumberUtil.roundDouble((saleQty * price) - discount,4);
         sdh.setAmount(amount);
     }
 

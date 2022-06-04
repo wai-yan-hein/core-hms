@@ -260,6 +260,8 @@ public class IssueTableModel extends AbstractTableModel {
                             parent.setRowSelectionInterval(row, row);
                             parent.setColumnSelectionInterval(8, 8);
                         }
+                        
+                        getOutstandingBalance(sidh);
                     }
                     break;
                 case 3: //Medicine
@@ -267,6 +269,7 @@ public class IssueTableModel extends AbstractTableModel {
                 case 4: //T-Code                    
                     if (value != null) {
                         sidh.setTrader((Trader) value);
+                        getOutstandingBalance(sidh);
                     }
                     break;
                 case 5: //Trader Name
@@ -388,6 +391,7 @@ public class IssueTableModel extends AbstractTableModel {
         if (column != 0) {
             try {
                 fireTableCellUpdated(row, column);
+                fireTableCellUpdated(row, 6);
                 fireTableCellUpdated(row, 8);
                 fireTableCellUpdated(row, 12);
                 fireTableCellUpdated(row, 13);
@@ -706,7 +710,7 @@ public class IssueTableModel extends AbstractTableModel {
                         Global.loginUser.getUserId(), strMethod);
                 dao.commit();
             }
-            
+
         } catch (Exception ex) {
             log.error("calculate : " + ex.toString());
         } finally {
@@ -932,6 +936,53 @@ public class IssueTableModel extends AbstractTableModel {
             log.error("calculateWithLocalExRate : " + ex.getMessage());
         } finally {
             dao.close();
+        }
+    }
+
+    private void getOutstandingBalance(StockIssueDetailHis sidh) {
+        String medId = "";
+        String cusId = "";
+        String option = "";
+        
+        if (sidh.getIssueMed() != null) {
+            medId = sidh.getIssueMed().getMedId();
+        }
+
+        if (sidh.getTrader() != null) {
+            cusId = sidh.getTrader().getTraderId();
+        }
+
+        if(sidh.getIssueOpt() != null){
+            option = sidh.getIssueOpt();
+        }
+        
+        if (!medId.isEmpty() && !cusId.isEmpty() && option.equals("Borrow")) {
+            String strSql = "select sum(a.ttl) as balance\n"
+                    + "from (\n"
+                    + "select sum(ifnull(smallest_qty,0))*-1 as ttl\n"
+                    + "from v_stock_issue\n"
+                    + "where issue_opt = 'Borrow' and deleted = false\n"
+                    + "and med_id = '" + medId + "' and cus_id = '" + cusId + "'\n"
+                    + "union all\n"
+                    + "select sum(ifnull(smallest_qty,0)) as ttl\n"
+                    + "from v_stock_receive\n"
+                    + "where rec_option = 'Borrow' and deleted = false\n"
+                    + "and rec_med_id = '" + medId + "' and cus_id = '" + cusId + "') a";
+            try{
+                ResultSet rs = dao.execSQL(strSql);
+                if(rs != null){
+                    if(rs.next()){
+                        float balance = rs.getFloat("balance");
+                        String strBalance = MedicineUtil.getQtyInStr(sidh.getIssueMed(), balance);
+                        sidh.setStrOutstanding(strBalance);
+                        sidh.setOutsBalance(balance);
+                    }
+                }
+            }catch(Exception ex){
+                log.error("getOutstandingBalance : " + ex.getMessage());
+            }finally{
+                dao.close();
+            }
         }
     }
 }

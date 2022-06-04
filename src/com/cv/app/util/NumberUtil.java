@@ -207,7 +207,7 @@ public class NumberUtil {
         hm.put("၈", "8");
         hm.put("၉", "9");
         hm.put(".", ".");
-
+        
         for (int i = 0; i < length; i++) {
             String tmpNum = inValue.substring(i, i + 1);
 
@@ -219,5 +219,25 @@ public class NumberUtil {
         }
 
         return outValue;
+    }
+    
+    public static double roundDouble(double value, int place){
+        if(place < 0){
+            return 0;
+        }else{
+            BigDecimal bd = new BigDecimal(Double.toString(value));
+            bd = bd.setScale(place, RoundingMode.HALF_UP);
+            return bd.doubleValue();
+        }
+    }
+    
+    public static float roundFloat(double value, int place){
+        if(place < 0){
+            return 0;
+        }else{
+            BigDecimal bd = new BigDecimal(Double.toString(value));
+            bd = bd.setScale(place, RoundingMode.HALF_UP);
+            return bd.floatValue();
+        }
     }
 }

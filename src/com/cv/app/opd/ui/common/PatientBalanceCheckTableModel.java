@@ -23,7 +23,7 @@ public class PatientBalanceCheckTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(PatientBalanceCheckTableModel.class.getName());
     private List<CurrPTBalance> list;
     private final String[] columnNames = {"Reg No.", "Adm No", "Patient",
-        "S","Balance", "C-Balance"};
+        "S", "Balance", "C-Balance"};
     private final AbstractDataAccess dao = Global.dao;
     private String tranDate;
     private String currId;
@@ -124,11 +124,16 @@ public class PatientBalanceCheckTableModel extends AbstractTableModel {
             if (strOPDate != null) {
                 Double opAmt = getOpAmt(regNo, currId, strOPDate);
                 String strSql = "select round(sum(a.balance),0) as balance from (\n"
-                        + "select sum(a.vou_total-a.discount+a.sale_exp_total-a.paid_amount) as balance\n"
+                        + "select sum(a.vou_total-a.discount+a.sale_exp_total-a.paid_amount-a.item_discount) as balance\n"
                         + "from (\n"
-                        + "select sh.sale_inv_id, sh.discount, sh.sale_exp_total, sh.paid_amount, sum(ifnull(sdh.sale_qty,0)*ifnull(sdh.sale_price,0)) as vou_total\n"
+                        + "select sh.sale_inv_id, sh.discount, sh.sale_exp_total, sh.paid_amount, \n"
+                        + "sum(ifnull(sdh.sale_qty,0)*ifnull(sdh.sale_price,0)) as vou_total,\n"
+                        + "sum(if(a.sys_prop_value='Percent',\n"
+                        + "  ifnull(sdh.sale_qty,0)*ifnull(sdh.sale_price,0)*(ifnull(sdh.item_discount,0)/100),\n"
+                        + "  if(a.sys_prop_value='Each',ifnull(sdh.item_discount,0)*ifnull(sdh.sale_qty,0),ifnull(sdh.item_discount,0)))) as item_discount \n"
                         + "from sale_his sh\n"
                         + "join sale_detail_his sdh on sh.sale_inv_id = sdh.vou_no\n"
+                        + "join (select sys_prop_value from sys_prop where sys_prop_desp = 'system.app.sale.discount.calculation') a \n"
                         + "where sh.deleted = false and sh.reg_no = '" + regNo
                         + "' and date(sh.sale_date) between '" + strOPDate
                         + "' and '" + DateUtil.toDateStrMYSQL(tranDate) + "'\n"

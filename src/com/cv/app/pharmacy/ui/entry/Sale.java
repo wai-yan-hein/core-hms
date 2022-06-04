@@ -2712,8 +2712,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             if (canEdit) {
                                 String vouNo = currSaleVou.getSaleInvId();
                                 List<SaleDetailHis> tmpListSDH = saleTableModel.getListDetail();
-                                dao.open();
-                                dao.beginTran();
+                                //dao.open();
+                                //dao.beginTran();
                                 int ttlItem = 0;
                                 int fttlItem = NumberUtil.NZeroInt(txtTotalItem.getText());
                                 if (tmpListSDH != null) {
@@ -2722,7 +2722,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         if (sdh.getSaleDetailId() == null) {
                                             sdh.setSaleDetailId(vouNo + "-" + sdh.getUniqueId().toString());
                                         }
-                                        dao.save1(sdh);
+                                        dao.save(sdh);
                                         ttlItem++;
                                     }
                                 }
@@ -2738,7 +2738,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         if (se.getExpType() != null) {
                                             se.setVouNo(vouNo);
                                             se.setSaleExpenseId(vouNo + "-" + se.getUniqueId().toString());
-                                            dao.save1(se);
+                                            dao.save(se);
                                         }
                                     }
                                 }
@@ -2749,7 +2749,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                     for (SaleOutstand so : listOuts) {
                                         so.setVouNo(vouNo);
                                         so.setOutsId(vouNo + "-" + so.getItemId().getMedId());
-                                        dao.save1(so);
+                                        dao.save(so);
                                     }
                                 }
                                 //currSaleVou.setListOuts(listOuts);
@@ -2762,8 +2762,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                     }
                                 }
 
-                                dao.save1(currSaleVou);
-                                dao.commit();
+                                dao.save(currSaleVou);
+                                //dao.commit();
                                 //dao.save(currSaleVou);
                                 if (lblStatus.getText().equals("NEW")) {
                                     vouEngine.updateVouNo();

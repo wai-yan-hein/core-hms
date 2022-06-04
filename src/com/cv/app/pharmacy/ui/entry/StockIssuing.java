@@ -540,6 +540,7 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         outs.setTranOption("Borrow");
         outs.setInvId(txtIssueId.getText());
         outs.setTranDate(DateUtil.toDate(txtIssueDate.getText()));
+        
         issueTableModel.add(outs);
     }
 
