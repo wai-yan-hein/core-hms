@@ -17,6 +17,7 @@ import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
@@ -199,10 +200,10 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
         VGenExpense ge = listGenExpense.get(row);
         Date vouSaleDate = ge.getExpnDate();
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (ge.getDeleted()) {
@@ -259,7 +260,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                     //dao.execSql(strSql);
                     listGenExpense.remove(row);
                     fireTableRowsDeleted(0, listGenExpense.size() - 1);
-                    uploadToAccount(ge.getVouNo());
+                    uploadToAccount(ge.getExpId());
                 } catch (Exception ex) {
                     log.error("deleteGenExpense : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                     dao.rollBack();
@@ -275,7 +276,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
         }
     }
 
-    private void uploadToAccount(String vouNo) {
+    private void uploadToAccount(long vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -288,9 +289,9 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                         ActiveMQConnection mq = Global.mqConnection;
                         MapMessage msg = mq.getMapMessageTemplate();
                         msg.setString("entity", "EXPENSE");
-                        msg.setString("VOUCHER-NO", "OPD-" + vouNo);
+                        msg.setLong("VOUCHER-NO", vouNo);
                         mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
+                    } catch (JMSException ex) {
                         log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + vouNo + " - " + ex);
                     }
                 } else {
@@ -301,7 +302,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
             }
         }
     }
-    
+
     private void updateOption(VGenExpense ge) {
         ExpenseType et = ge.getExpType();
         String vouNo = ge.getVouNo();

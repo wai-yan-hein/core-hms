@@ -552,11 +552,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboDoctor.setSelectedItem(currPatient.getDoctor());
             cboTownship.setSelectedItem(currPatient.getTownship());
             cboType.setSelectedItem(currPatient.getPtType());
-            if (currPatient.getBuildingStructure() != null) {
-                cboRoom.setSelectedItem(currPatient.getBuildingStructure());
-            } else {
-                cboRoom.setSelectedItem(null);
-            }
+            cboRoom.setSelectedItem(currPatient.getBuildingStructure());
             cboRoom.setEnabled(false);
             dao.close();
         }
@@ -984,17 +980,17 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 AdmissionKey key = new AdmissionKey();
                 key.setRegister(pt);
                 key.setAmsNo(admNo);
-                Ams ams = (Ams)dao.find(Ams.class, key);
-                if(ams == null){
+                Ams ams = (Ams) dao.find(Ams.class, key);
+                if (ams == null) {
                     JOptionPane.showMessageDialog(Util1.getParent(),
-                        "Invalid admission no.", "Admission No.",
-                        JOptionPane.ERROR_MESSAGE);
-                }else{
+                            "Invalid admission no.", "Admission No.",
+                            JOptionPane.ERROR_MESSAGE);
+                } else {
                     pt.setAdmissionNo(admNo);
                     ams.setDcStatus(null);
                     dao.save(pt);
                     dao.save(ams);
-                    
+
                     ReCoverAdmissionDeleteLog rcad = new ReCoverAdmissionDeleteLog();
                     rcad.setAmsNo(admNo);
                     rcad.setLogDate(new Date());
@@ -1002,10 +998,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     rcad.setRegNo(pt.getRegNo());
                     rcad.setUserId(Global.loginUser.getUserId());
                     dao.save(rcad);
-                    
+
                     JOptionPane.showMessageDialog(Util1.getParent(),
-                        "Recover Success.", "Admission Recover",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Recover Success.", "Admission Recover",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         } catch (Exception ex) {
