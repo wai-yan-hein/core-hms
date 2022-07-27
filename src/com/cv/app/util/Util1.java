@@ -89,7 +89,7 @@ public class Util1 {
         boolean status = false;
 
         if (Global.hashPrivilege.containsKey(key)) {
-            status = (Boolean) Global.hashPrivilege.get(key);
+            status = Global.hashPrivilege.get(key);
         } else {
             log.info("hashPrivilege : Invalid key : " + key);
         }
@@ -195,6 +195,11 @@ public class Util1 {
             return value;
         }
     }
+
+    public static boolean isNullOrEmpty(Object obj) {
+        return obj == null || obj.toString().isEmpty();
+    }
+
 
     /*public static String execHttpPost(String url, List<BasicNameValuePair> parms) {
         CloseableHttpClient httpclient = HttpClients.createDefault();

@@ -9,6 +9,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.common.Global;
+import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -25,7 +26,7 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
     private List<InpCategory> listInpCategory = new ArrayList();
     private final String[] columnNames = {"Description", "Accound Code", "Dept Code",
         "Nurse", "Tech", "MO", "Payable Acc Code",
-        "Payable Acc Opt"
+        "Payable Acc Opt", "Expense"
     };
     private final AbstractDataAccess dao;
 
@@ -45,6 +46,9 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
 
     @Override
     public Class getColumnClass(int column) {
+        if (column == 8) {
+            return Boolean.class;
+        }
         return String.class;
     }
 
@@ -78,6 +82,8 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
                     return record.getPayableAccId();
                 case 7:
                     return record.getPayableAccOpt();
+                case 8:
+                    return record.isExpense();
                 default:
                     return null;
             }
@@ -161,12 +167,16 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
                         record.setPayableAccOpt(null);
                     }
                     break;
+                case 8:
+                    Boolean ex = (Boolean) value;
+                    record.setExpense(ex);
+                    break;
             }
 
             save(record);
 
             fireTableCellUpdated(row, column);
-        } catch (Exception ex) {
+        } catch (HeadlessException ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
     }
@@ -180,7 +190,7 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
                         + "  payable_acc_opt, bk_user, bk_dt, bk_machine)\n"
                         + "select cat_id, cat_name, sort_order, mig_id, account_id, dep_code,\n"
                         + "  srvf1_acc_id, srvf2_acc_id, srvf3_acc_id, srvf4_acc_id, srvf5_acc_id, payable_acc_id,\n"
-                        + "  payable_acc_opt, '" + Global.loginUser.getUserId() + "',  SYSDATE(), " 
+                        + "  payable_acc_opt, '" + Global.loginUser.getUserId() + "',  SYSDATE(), "
                         + Global.machineId + " \n"
                         + "from inp_category where cat_id = " + catId;
                 dao.execSql(strSql);

@@ -24,7 +24,7 @@ public class OTGroupTableModel1 extends AbstractTableModel {
     static Logger log = Logger.getLogger(OTGroupTableModel1.class.getName());
     private List<OTProcedureGroup> listOTG = new ArrayList();
     private final String[] columnNames = {"Description", "OPD Acc Code", "IPD Acc Code",
-        "Dep Code", "Staff", "Nurse", "MO", "Payable Acc Code", "Payable Acc Opt"};
+        "Dep Code", "Staff", "Nurse", "MO", "Payable Acc Code", "Payable Acc Opt", "Expense"};
     private final AbstractDataAccess dao;
 
     public OTGroupTableModel1(AbstractDataAccess dao) {
@@ -43,6 +43,9 @@ public class OTGroupTableModel1 extends AbstractTableModel {
 
     @Override
     public Class getColumnClass(int column) {
+        if (column == 9) {
+            return Boolean.class;
+        }
         return String.class;
     }
 
@@ -69,6 +72,8 @@ public class OTGroupTableModel1 extends AbstractTableModel {
                 return record.getPayableAccId();
             case 8:
                 return record.getPayableAccOpt();
+            case 9:
+                return record.isExpense();
             default:
                 return null;
         }
@@ -144,6 +149,10 @@ public class OTGroupTableModel1 extends AbstractTableModel {
                 } else {
                     record.setPayableAccOpt(null);
                 }
+                break;
+            case 9:
+                Boolean ex = (Boolean) value;
+                record.setExpense(ex);
                 break;
         }
 

@@ -35,7 +35,8 @@ public class OTProcedureGroup implements java.io.Serializable {
     private String payableAccId;
     private String payableAccOpt;
     private String userCode;
-    
+    private boolean expense;
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "group_id", unique = true, nullable = false)
@@ -150,8 +151,8 @@ public class OTProcedureGroup implements java.io.Serializable {
     public void setSrvF5AccId(String srvF5AccId) {
         this.srvF5AccId = srvF5AccId;
     }
-    
-    @Column(name="payable_acc_id", length=25)
+
+    @Column(name = "payable_acc_id", length = 25)
     public String getPayableAccId() {
         return payableAccId;
     }
@@ -159,8 +160,8 @@ public class OTProcedureGroup implements java.io.Serializable {
     public void setPayableAccId(String payableAccId) {
         this.payableAccId = payableAccId;
     }
-    
-    @Column(name="payable_acc_opt", length=20)
+
+    @Column(name = "payable_acc_opt", length = 20)
     public String getPayableAccOpt() {
         return payableAccOpt;
     }
@@ -169,7 +170,7 @@ public class OTProcedureGroup implements java.io.Serializable {
         this.payableAccOpt = payableAccOpt;
     }
 
-    @Column(name="user_code", length=15)
+    @Column(name = "user_code", length = 15)
     public String getUserCode() {
         return userCode;
     }
@@ -177,4 +178,14 @@ public class OTProcedureGroup implements java.io.Serializable {
     public void setUserCode(String userCode) {
         this.userCode = userCode;
     }
+
+    @Column(name = "expense")
+    public boolean isExpense() {
+        return expense;
+    }
+
+    public void setExpense(boolean expense) {
+        this.expense = expense;
+    }
+
 }

@@ -1066,9 +1066,12 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
 
     private void print() {
         //Properties prop = ReportUtil.loadReportPathProperties();
+        String rpName = Util1.getPropValue("system.clinic.session.check.print.report");
+        rpName = Util1.isNullOrEmpty(rpName) ? "ClinicSessionCheckSummary" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + Util1.getPropValue("system.clinic.session.check.print.report");
+                + "Clinic/"
+                + rpName;
         Map<String, Object> params = new HashMap();
         String sessionName;
         String sessionId;
@@ -1087,7 +1090,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             sessionId = ((Session) cboSession.getSelectedItem()).getSessionId().toString();
         } else {
             sessionName = "All";
-            sessionId = "-1";
+            sessionId = "-";
         }
 
         if (cboPayment.getSelectedItem() instanceof PaymentType) {
@@ -1097,13 +1100,11 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             sessionPaymentName = "All";
             sessionPaymentId = "-1";
         }
-
+        String userId;
         if (cboUser.getSelectedItem() instanceof Appuser) {
-            sessionUser = ((Appuser) cboUser.getSelectedItem()).getUserName();
-            sessionUserId = ((Appuser) cboUser.getSelectedItem()).getUserId();
+            userId = ((Appuser) cboUser.getSelectedItem()).getUserId();
         } else {
-            sessionUser = "All";
-            sessionUserId = "All";
+            userId = "-";
         }
 
         if (cboCurrency.getSelectedItem() instanceof Currency) {
@@ -1152,13 +1153,18 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         params.put("dr_id", sessionDrId);
         params.put("tran_option", cboTranType.getSelectedItem().toString());
         params.put("deleted", sessionDelete);
-        params.put("session_user", sessionUser);
-        params.put("session_user_id", sessionUserId);
         params.put("session_date", sessionDate);
         params.put("comp_name", Util1.getPropValue("report.company.name"));
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
-
+        params.put("data_date", "Between " + txtFrom.getText()
+                + " and " + txtTo.getText());
+        params.put("prm_from", DateUtil.toDateStrMYSQL(txtFrom.getText()));
+        params.put("prm_to", DateUtil.toDateStrMYSQL(txtTo.getText()));
+        params.put("p_user_id", userId);
+        params.put("p_user_name", cboUser.getSelectedItem().toString());
+        params.put("p_session_name", cboSession.getSelectedItem().toString());
+        params.put("sess_id", sessionId);
         ReportUtil.viewReport(reportPath, params, dao.getConnection());
     }
 
@@ -1179,11 +1185,11 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             sessionPaymentId = -1;
         }
 
-        String sessionUser;
+        String userId;
         if (cboUser.getSelectedItem() instanceof Appuser) {
-            sessionUser = ((Appuser) cboUser.getSelectedItem()).getUserName();
+            userId = ((Appuser) cboUser.getSelectedItem()).getUserId();
         } else {
-            sessionUser = "-";
+            userId = "-";
         }
 
         boolean sessionDelete = false;
@@ -1196,18 +1202,19 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + "Clinic/"
-                + "ClinicSessionCheck";
+                + "ClinicSessionCheckDetail";
         Map<String, Object> params = new HashMap();
         params.put("data_date", "Between " + txtFrom.getText()
                 + " and " + txtTo.getText());
         params.put("comp_name", Util1.getPropValue("report.company.name"));
         params.put("prm_from", DateUtil.toDateStrMYSQL(txtFrom.getText()));
         params.put("prm_to", DateUtil.toDateStrMYSQL(txtTo.getText()));
-
         params.put("session_currency", sessionCurrency);
         params.put("session_paymentid", sessionPaymentId);
-        params.put("session_user", sessionUser);
+        params.put("p_user_id", userId);
         params.put("deleted", sessionDelete);
+        params.put("p_user_name", cboUser.getSelectedItem().toString());
+        params.put("p_session_name", cboSession.getSelectedItem().toString());
 
         if (cboSession.getSelectedItem() instanceof Session) {
             String sessionId = ((Session) cboSession.getSelectedItem()).getSessionId().toString();

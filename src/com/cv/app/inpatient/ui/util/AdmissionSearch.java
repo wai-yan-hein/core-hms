@@ -22,7 +22,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -347,6 +346,7 @@ public class AdmissionSearch extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Admission Search");
+        setSize(new java.awt.Dimension(600, 400));
 
         tblPatient.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblPatient.setModel(tableModel);

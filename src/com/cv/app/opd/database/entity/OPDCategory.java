@@ -37,7 +37,8 @@ public class OPDCategory implements java.io.Serializable {
     private String srvF3RefDr;
     private String ipdDeptCode;
     private String userCode;
-    
+    private boolean expense;
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "cat_id", unique = true, nullable = false)
@@ -152,8 +153,8 @@ public class OPDCategory implements java.io.Serializable {
     public void setIpdAccCode(String ipdAccCode) {
         this.ipdAccCode = ipdAccCode;
     }
-    
-    @Column(name="payable_acc_id", length=25)
+
+    @Column(name = "payable_acc_id", length = 25)
     public String getPayableAccId() {
         return payableAccId;
     }
@@ -162,7 +163,7 @@ public class OPDCategory implements java.io.Serializable {
         this.payableAccId = payableAccId;
     }
 
-    @Column(name="payable_acc_opt", length=20)
+    @Column(name = "payable_acc_opt", length = 20)
     public String getPayableAccOpt() {
         return payableAccOpt;
     }
@@ -171,7 +172,7 @@ public class OPDCategory implements java.io.Serializable {
         this.payableAccOpt = payableAccOpt;
     }
 
-    @Column(name="crvf2_ref_dr", length=20)
+    @Column(name = "crvf2_ref_dr", length = 20)
     public String getSrvF2RefDr() {
         return srvF2RefDr;
     }
@@ -180,7 +181,7 @@ public class OPDCategory implements java.io.Serializable {
         this.srvF2RefDr = srvF2RefDr;
     }
 
-    @Column(name="crvf3_ref_dr", length=20)
+    @Column(name = "crvf3_ref_dr", length = 20)
     public String getSrvF3RefDr() {
         return srvF3RefDr;
     }
@@ -189,7 +190,7 @@ public class OPDCategory implements java.io.Serializable {
         this.srvF3RefDr = srvF3RefDr;
     }
 
-    @Column(name="ipd_dept_code", length=15)
+    @Column(name = "ipd_dept_code", length = 15)
     public String getIpdDeptCode() {
         return ipdDeptCode;
     }
@@ -198,7 +199,7 @@ public class OPDCategory implements java.io.Serializable {
         this.ipdDeptCode = ipdDeptCode;
     }
 
-    @Column(name="user_code", length=15)
+    @Column(name = "user_code", length = 15)
     public String getUserCode() {
         return userCode;
     }
@@ -206,4 +207,14 @@ public class OPDCategory implements java.io.Serializable {
     public void setUserCode(String userCode) {
         this.userCode = userCode;
     }
+
+    @Column(name = "expense")
+    public boolean isExpense() {
+        return expense;
+    }
+
+    public void setExpense(boolean expense) {
+        this.expense = expense;
+    }
+
 }

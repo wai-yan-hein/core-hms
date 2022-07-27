@@ -16,8 +16,9 @@ import javax.persistence.Table;
  * @author WSwe
  */
 @Entity
-@Table(name="inp_category")
-public class InpCategory implements java.io.Serializable{
+@Table(name = "inp_category")
+public class InpCategory implements java.io.Serializable {
+
     private Integer catId;
     private String catName;
     private Integer sortOrder;
@@ -32,9 +33,11 @@ public class InpCategory implements java.io.Serializable{
     private String payableAccId;
     private String payableAccOpt;
     private String userCode;
-    
-    @Id @GeneratedValue(strategy=IDENTITY)
-    @Column(name="cat_id", unique=true, nullable=false)
+    private boolean expense;
+
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    @Column(name = "cat_id", unique = true, nullable = false)
     public Integer getCatId() {
         return catId;
     }
@@ -43,7 +46,7 @@ public class InpCategory implements java.io.Serializable{
         this.catId = catId;
     }
 
-    @Column(name="cat_name", unique=true, length=50)
+    @Column(name = "cat_name", unique = true, length = 50)
     public String getCatName() {
         return catName;
     }
@@ -52,7 +55,7 @@ public class InpCategory implements java.io.Serializable{
         this.catName = catName;
     }
 
-    @Column(name="sort_order")
+    @Column(name = "sort_order")
     public Integer getSortOrder() {
         return sortOrder;
     }
@@ -60,13 +63,13 @@ public class InpCategory implements java.io.Serializable{
     public void setSortOrder(Integer sortOrder) {
         this.sortOrder = sortOrder;
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         return catName;
     }
 
-    @Column(name="mig_id")
+    @Column(name = "mig_id")
     public Integer getImgId() {
         return imgId;
     }
@@ -75,7 +78,7 @@ public class InpCategory implements java.io.Serializable{
         this.imgId = imgId;
     }
 
-    @Column(name="account_id", length=15)
+    @Column(name = "account_id", length = 15)
     public String getAccountId() {
         return accountId;
     }
@@ -84,7 +87,7 @@ public class InpCategory implements java.io.Serializable{
         this.accountId = accountId;
     }
 
-    @Column(name="dep_code", length=15)
+    @Column(name = "dep_code", length = 15)
     public String getDeptId() {
         return deptId;
     }
@@ -93,7 +96,7 @@ public class InpCategory implements java.io.Serializable{
         this.deptId = deptId;
     }
 
-    @Column(name="srvf1_acc_id", length=15)
+    @Column(name = "srvf1_acc_id", length = 15)
     public String getSrvF1AccId() {
         return srvF1AccId;
     }
@@ -102,7 +105,7 @@ public class InpCategory implements java.io.Serializable{
         this.srvF1AccId = srvF1AccId;
     }
 
-    @Column(name="srvf2_acc_id", length=15)
+    @Column(name = "srvf2_acc_id", length = 15)
     public String getSrvF2AccId() {
         return srvF2AccId;
     }
@@ -111,7 +114,7 @@ public class InpCategory implements java.io.Serializable{
         this.srvF2AccId = srvF2AccId;
     }
 
-    @Column(name="srvf3_acc_id", length=15)
+    @Column(name = "srvf3_acc_id", length = 15)
     public String getSrvF3AccId() {
         return srvF3AccId;
     }
@@ -120,7 +123,7 @@ public class InpCategory implements java.io.Serializable{
         this.srvF3AccId = srvF3AccId;
     }
 
-    @Column(name="srvf4_acc_id", length=15)
+    @Column(name = "srvf4_acc_id", length = 15)
     public String getSrvF4AccId() {
         return srvF4AccId;
     }
@@ -129,7 +132,7 @@ public class InpCategory implements java.io.Serializable{
         this.srvF4AccId = srvF4AccId;
     }
 
-    @Column(name="srvf5_acc_id", length=15)
+    @Column(name = "srvf5_acc_id", length = 15)
     public String getSrvF5AccId() {
         return srvF5AccId;
     }
@@ -138,7 +141,7 @@ public class InpCategory implements java.io.Serializable{
         this.srvF5AccId = srvF5AccId;
     }
 
-    @Column(name="payable_acc_id", length=25)
+    @Column(name = "payable_acc_id", length = 25)
     public String getPayableAccId() {
         return payableAccId;
     }
@@ -146,8 +149,8 @@ public class InpCategory implements java.io.Serializable{
     public void setPayableAccId(String payableAccId) {
         this.payableAccId = payableAccId;
     }
-    
-    @Column(name="payable_acc_opt", length=20)
+
+    @Column(name = "payable_acc_opt", length = 20)
     public String getPayableAccOpt() {
         return payableAccOpt;
     }
@@ -156,7 +159,7 @@ public class InpCategory implements java.io.Serializable{
         this.payableAccOpt = payableAccOpt;
     }
 
-    @Column(name="user_code", length=15)
+    @Column(name = "user_code", length = 15)
     public String getUserCode() {
         return userCode;
     }
@@ -164,4 +167,14 @@ public class InpCategory implements java.io.Serializable{
     public void setUserCode(String userCode) {
         this.userCode = userCode;
     }
+
+    @Column(name = "expense")
+    public boolean isExpense() {
+        return expense;
+    }
+
+    public void setExpense(boolean expense) {
+        this.expense = expense;
+    }
+
 }

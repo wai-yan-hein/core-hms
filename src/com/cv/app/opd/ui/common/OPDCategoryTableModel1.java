@@ -26,7 +26,7 @@ public class OPDCategoryTableModel1 extends AbstractTableModel {
     private List<OPDCategory> listOPDCategory = new ArrayList();
     private final String[] columnNames = {"Description", "OPD Acc Code", "IPD Acc Code",
         "Dep Code", "Mo Fee Acc", "Staff Fee", "Tech Fee", "Refer Fee", "Read Fee",
-        "Payable Acc Code", "Payable Acc Opt", "MO Ref Dr", "Staff Ref Dr", "IPD Dept Code"};
+        "Payable Acc Code", "Payable Acc Opt", "MO Ref Dr", "Staff Ref Dr", "IPD Dept Code", "Expense"};
     private final AbstractDataAccess dao;
     private int groupId;
 
@@ -46,6 +46,9 @@ public class OPDCategoryTableModel1 extends AbstractTableModel {
 
     @Override
     public Class getColumnClass(int column) {
+        if (column == 14) {
+            return Boolean.class;
+        }
         return String.class;
     }
 
@@ -82,6 +85,8 @@ public class OPDCategoryTableModel1 extends AbstractTableModel {
                 return record.getSrvF3RefDr();
             case 13:
                 return record.getIpdDeptCode();
+            case 14:
+                return record.isExpense();
             default:
                 return null;
         }
@@ -192,6 +197,10 @@ public class OPDCategoryTableModel1 extends AbstractTableModel {
                 } else {
                     record.setIpdDeptCode(null);
                 }
+                break;
+            case 14:
+                Boolean ex = (Boolean) value;
+                record.setExpense(ex);
                 break;
         }
 
