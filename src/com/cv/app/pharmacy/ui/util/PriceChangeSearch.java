@@ -48,7 +48,7 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
 
         this.parent = parent;
         this.observer = observer;
-    //this.dao = dao;
+        //this.dao = dao;
 
         //Search history
         getPrvFilter();
@@ -68,10 +68,16 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
     }
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'PCSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'PCSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -98,7 +104,7 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
         tblMedicine.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblMedicine.getActionMap().put("F8-Action", actionMedDelete);
 
-    //Enter event on tblSale
+        //Enter event on tblSale
         //tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
         //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
     }// </editor-fold>
@@ -108,13 +114,13 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
                 getMedList("");
             } catch (Exception ex) {
                 //No entering medCode, only press F3
-                
+
             }
         }
     };// </editor-fold>
@@ -135,11 +141,11 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
         tblVoucher.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
 
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblVoucher.getSelectedRow();
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedRow = tblVoucher.getSelectedRow();
+            }
+        });
     }
 
     private String getHSQL() {
@@ -198,15 +204,21 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -244,22 +256,28 @@ public class PriceChangeSearch extends javax.swing.JPanel implements SelectionOb
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PriceChangeSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PriceChangeSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("PriceChangeSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("PriceChangeSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
-            txtVouNo.setText(vouFilter.getVouNo());
-            txtDesp.setText(vouFilter.getRemark());
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtVouNo.setText(vouFilter.getVouNo());
+                txtDesp.setText(vouFilter.getRemark());
+            }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

@@ -35,7 +35,7 @@ public class OPDTableModel extends AbstractTableModel {
     private final String[] columnNames = {"Code", "Description", "Qty", "Price",
         "Charge Type", "Refer Dr", "Read Dr", "Technician", "Amount"};
     private final AbstractDataAccess dao;
-    private final ChargeType defaultChargeType;
+    private ChargeType defaultChargeType = null;
     private String deletedList;
     private HashMap<Integer, Double> doctFees;
     private JTable parent;
@@ -51,7 +51,13 @@ public class OPDTableModel extends AbstractTableModel {
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
         this.observer = observer;
-        defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        try {
+            defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        } catch (Exception ex) {
+            log.error("OPDTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable table) {
@@ -76,21 +82,8 @@ public class OPDTableModel extends AbstractTableModel {
             if (column == 3) {
                 if (record.getService() == null) {
                     return false;
-                } else {
-                    if (vouStatus.equals("EDIT")) {
-                        if (Util1.hashPrivilege("OPDVoucherEditChange")) {
-                            if (!record.getPkgItem()) {
-                                if (isAlreadyP) {
-                                    return !isAlreadyP;
-                                }
-                                return record.getService().isCfs();
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-                    } else {
+                } else if (vouStatus.equals("EDIT")) {
+                    if (Util1.hashPrivilege("OPDVoucherEditChange")) {
                         if (!record.getPkgItem()) {
                             if (isAlreadyP) {
                                 return !isAlreadyP;
@@ -99,40 +92,43 @@ public class OPDTableModel extends AbstractTableModel {
                         } else {
                             return false;
                         }
+                    } else {
+                        return false;
                     }
+                } else if (!record.getPkgItem()) {
+                    if (isAlreadyP) {
+                        return !isAlreadyP;
+                    }
+                    return record.getService().isCfs();
+                } else {
+                    return false;
                 }
             } else {
                 return false;
             }
-        } else {
-            /*if (record.getService() == null) {
+        } else /*if (record.getService() == null) {
              return true;
-             } else {*/
-            if (vouStatus.equals("EDIT")) {
-                if (!record.getPkgItem()) {
-                    if (isAlreadyP) {
-                        return !isAlreadyP;
-                    }
-                    if (canEdit) {
-                        return canEdit;
-                    } else {
-                        return Util1.hashPrivilege("OPDVoucherEditChange");
-                    }
+             } else {*/ if (vouStatus.equals("EDIT")) {
+            if (!record.getPkgItem()) {
+                if (isAlreadyP) {
+                    return !isAlreadyP;
+                }
+                if (canEdit) {
+                    return canEdit;
                 } else {
-                    return false;
+                    return Util1.hashPrivilege("OPDVoucherEditChange");
                 }
             } else {
-                if (!record.getPkgItem()) {
-                    if (isAlreadyP) {
-                        return !isAlreadyP;
-                    }
-                    return true;
-                } else {
-                    return false;
-                }
+                return false;
             }
-            //}
-        }
+        } else if (!record.getPkgItem()) {
+            if (isAlreadyP) {
+                return !isAlreadyP;
+            }
+            return true;
+        } else {
+            return false;
+        } //}
     }
 
     @Override
@@ -203,62 +199,67 @@ public class OPDTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Code
-                if (value != null) {
-                    if (value instanceof Service) {
-                        Service service = (Service) value;
-                        record.setService(service);
-                        record.setQuantity(1);
-                        record.setFees1(service.getFees1());
-                        record.setFees2(service.getFees2());
-                        record.setFees3(service.getFees3());
-                        record.setFees4(service.getFees4());
-                        record.setFees5(service.getFees5());
-                        record.setFees6(service.getFees6());
-                        record.setPercent(service.isPercent());
-                        record.setReferDr(referDoctor);
-                        record.setLabRemark(service.getLabRemark());
-                        record.setFees(service.getFees());
+                try {
+                    if (value != null) {
+                        if (value instanceof Service) {
+                            Service service = (Service) value;
+                            record.setService(service);
+                            record.setQuantity(1);
+                            record.setFees1(service.getFees1());
+                            record.setFees2(service.getFees2());
+                            record.setFees3(service.getFees3());
+                            record.setFees4(service.getFees4());
+                            record.setFees5(service.getFees5());
+                            record.setFees6(service.getFees6());
+                            record.setPercent(service.isPercent());
+                            record.setReferDr(referDoctor);
+                            record.setLabRemark(service.getLabRemark());
+                            record.setFees(service.getFees());
 
-                        if (doctFees != null) {
-                            if (doctFees.containsKey(service.getServiceId())) {
-                                record.setPrice(doctFees.get(service.getServiceId()));
+                            if (doctFees != null) {
+                                if (doctFees.containsKey(service.getServiceId())) {
+                                    record.setPrice(doctFees.get(service.getServiceId()));
+                                } else {
+                                    record.setPrice(service.getFees());
+                                }
                             } else {
                                 record.setPrice(service.getFees());
                             }
-                        } else {
-                            record.setPrice(service.getFees());
-                        }
 
-                        record.setFeesVersionId(service.getPriceVersionId());
-                        record.setChargeType(defaultChargeType);
-                        updateAllFees();
-                        if (service.getDoctor() != null) {
-                            observer.selected("DoctorSearch", service.getDoctor());
-                        }
+                            record.setFeesVersionId(service.getPriceVersionId());
+                            record.setChargeType(defaultChargeType);
+                            updateAllFees();
+                            if (service.getDoctor() != null) {
+                                observer.selected("DoctorSearch", service.getDoctor());
+                            }
 
-                        if (!Util1.getPropValue("system.opd.idforauto").equals("-")
-                                && getRowCount() == 1) {
-                            if (Util1.getPropValue("system.opd.idforauto").equals(record.getService().getServiceId().toString())) {
-                                if (!Util1.getPropValue("system.opd.autoid").equals("-")
-                                        && getRowCount() == 1) {
-                                    int id = NumberUtil.NZeroInt(Util1.getPropValue("system.opd.autoid"));
-                                    Service tmpService = (Service) dao.find(Service.class, id);
-                                    if (tmpService != null) {
-                                        addAutoService(tmpService);
+                            if (!Util1.getPropValue("system.opd.idforauto").equals("-")
+                                    && getRowCount() == 1) {
+                                if (Util1.getPropValue("system.opd.idforauto").equals(record.getService().getServiceId().toString())) {
+                                    if (!Util1.getPropValue("system.opd.autoid").equals("-")
+                                            && getRowCount() == 1) {
+                                        int id = NumberUtil.NZeroInt(Util1.getPropValue("system.opd.autoid"));
+                                        Service tmpService = (Service) dao.find(Service.class, id);
+                                        if (tmpService != null) {
+                                            addAutoService(tmpService);
+                                        }
+                                    } else {
+                                        addAutoService(service.getServiceId());
                                     }
                                 } else {
                                     addAutoService(service.getServiceId());
                                 }
-                            } else {
-                                addAutoService(service.getServiceId());
                             }
+                            // else{
+                            //addAutoService(service.getServiceId());
+                            // }
                         }
-                        // else{
-                        //addAutoService(service.getServiceId());
-                        // }
                     }
+                } catch (Exception ex) {
+                    log.error("setValueAt code : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
-
                 addNewRow();
                 break;
             case 1: //Description
@@ -298,10 +299,16 @@ public class OPDTableModel extends AbstractTableModel {
                 }
                 break;
             case 4: //Charge Type
-                record.setChargeType((ChargeType) value);
-                if (record.getService() != null) {
-                    Service tmpService = (Service) dao.find(Service.class, record.getService().getServiceId());
-                    record.setPrice(tmpService.getFees());
+                try {
+                    record.setChargeType((ChargeType) value);
+                    if (record.getService() != null) {
+                        Service tmpService = (Service) dao.find(Service.class, record.getService().getServiceId());
+                        record.setPrice(tmpService.getFees());
+                    }
+                } catch (Exception ex) {
+                    log.error("setValueAt Charge Type : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
                 break;
             case 5: //Rrefer Dr
@@ -529,20 +536,17 @@ public class OPDTableModel extends AbstractTableModel {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Invalid amount.",
                             "Amount", JOptionPane.ERROR_MESSAGE);
                     status = false;
-                } else {
-                    if (opdh.getService() != null) {
-                        entryRow++;
-                        if (NumberUtil.NZeroInt(opdh.getUniqueId()) == 0) {
-                            row += 1;
-                            opdh.setUniqueId(row);
-                        }
-                        opdh.setReaderStatus(false);
-                        if (opdh.getDr() != null && readerDoctor.equals("-")) {
-                            readerDoctor = opdh.getDr().getDoctorName();
-                        }
+                } else if (opdh.getService() != null) {
+                    entryRow++;
+                    if (NumberUtil.NZeroInt(opdh.getUniqueId()) == 0) {
+                        row += 1;
+                        opdh.setUniqueId(row);
                     }
-                    //}
-                }
+                    opdh.setReaderStatus(false);
+                    if (opdh.getDr() != null && readerDoctor.equals("-")) {
+                        readerDoctor = opdh.getDr().getDoctorName();
+                    }
+                } //}
             }
         }
 

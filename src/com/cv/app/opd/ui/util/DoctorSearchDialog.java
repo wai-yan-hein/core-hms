@@ -28,13 +28,14 @@ import org.apache.log4j.Logger;
  * @author wswe
  */
 public class DoctorSearchDialog extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(DoctorSearchDialog.class.getName());
     private AvailableDoctorTableModel tableModel = new AvailableDoctorTableModel();
     private AbstractDataAccess dao;
     private SelectionObserver observer;
     private int selectedRow = -1;
     private TableRowSorter<TableModel> sorter;
-    
+
     /**
      * Creates new form DoctorSearchDialog
      */
@@ -48,8 +49,8 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
         search();
         sorter = new TableRowSorter(tblDoctor.getModel());
         tblDoctor.setRowSorter(sorter);
-        
-        if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")){
+
+        if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
             this.setTitle("Sale Men");
             lblName.setText("Name");
             lblSpeciality.setVisible(false);
@@ -59,7 +60,7 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
             cboGender.setVisible(false);
             cboInitial.setVisible(false);
         }
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -69,18 +70,24 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
-        BindingUtil.BindComboFilter(cboInitial, dao.findAll("Initial"));
-        BindingUtil.BindComboFilter(cboSpeciality, dao.findAll("Speciality"));
-        
-        new ComBoBoxAutoComplete(cboGender);
-        new ComBoBoxAutoComplete(cboInitial);
-        new ComBoBoxAutoComplete(cboSpeciality);
-        
-        cboGender.setSelectedIndex(0);
-        cboInitial.setSelectedIndex(0);
+        try {
+            BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
+            BindingUtil.BindComboFilter(cboInitial, dao.findAll("Initial"));
+            BindingUtil.BindComboFilter(cboSpeciality, dao.findAll("Speciality"));
+
+            new ComBoBoxAutoComplete(cboGender);
+            new ComBoBoxAutoComplete(cboInitial);
+            new ComBoBoxAutoComplete(cboSpeciality);
+
+            cboGender.setSelectedIndex(0);
+            cboInitial.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void initTable() {
         tblDoctor.getColumnModel().getColumn(0).setPreferredWidth(15);
         tblDoctor.getColumnModel().getColumn(1).setPreferredWidth(150);
@@ -97,7 +104,7 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
             }
         });
     }
-    
+
     private void select() {
         if (selectedRow >= 0) {
             observer.selected("DoctorSearch",
@@ -108,7 +115,7 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
                     "No Selection", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private String getHSQL() {
         String strSql = "select distinct d from Doctor d ";
         String strFilter = "active = true";
@@ -142,8 +149,8 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
         }
 
         if (cboSpeciality.getSelectedItem() instanceof Speciality) {
-          Speciality spec = (Speciality)cboSpeciality.getSelectedItem();
-          
+            Speciality spec = (Speciality) cboSpeciality.getSelectedItem();
+
             if (strFilter == null) {
                 strFilter = "speciality.specId =" + spec.getSpecId();
             } else {
@@ -174,7 +181,7 @@ public class DoctorSearchDialog extends javax.swing.JDialog {
 
         lblTotalRec.setText("Total Records : " + tableModel.getRowCount());
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

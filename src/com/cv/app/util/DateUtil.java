@@ -10,6 +10,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -156,7 +157,7 @@ public class DateUtil {
 
         try {
             date = formatter.parse(strDate.toString());
-        } catch (Exception ex) {
+        } catch (ParseException ex) {
             //System.out.println("toDateStr : " + ex.getMessage());
         }
 
@@ -392,37 +393,18 @@ public class DateUtil {
         return dateFormat.format(date);
     }
 
-    public static boolean isValidSession(String strStartTime,
-            String strEndTime) {
-        boolean status = false;
-        String strTodayDate = getTodayDateStr("yyyy-MM-dd");
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static boolean isValidSession(String stTime,
+            String endTime) {
+        int stHr = Integer.parseInt(stTime);
+        int enHr = Integer.parseInt(endTime);
+        int curHr = getHour();
+        return curHr >= stHr && curHr < enHr;
+    }
 
-        try {
-            Date dtStart = formatter.parse(strTodayDate + " " + strStartTime);
-            Date dtEnd = formatter.parse(strTodayDate + " " + strEndTime);
-
-            if (dtStart.after(dtEnd)) {
-                Calendar calendar = Calendar.getInstance();
-
-                calendar.set(dtEnd.getYear(), dtEnd.getMonth(), dtEnd.getDate(),
-                        dtEnd.getHours(), dtEnd.getMinutes(), dtEnd.getSeconds());
-                calendar.add(Calendar.DATE, 1);
-                dtEnd = calendar.getTime();
-            }
-
-            Date currDateTime = getTodayDateTime();
-
-            //System.out.println(currDateTime.after(dtStart));
-            //System.out.println(currDateTime.before(dtEnd));
-            if (currDateTime.after(dtStart) && currDateTime.before(dtEnd)) {
-                status = true;
-            }
-        } catch (Exception ex) {
-            //System.out.println("DateUtil.isValidSession : " + ex.toString());
-        }
-
-        return status;
+    public static int getHour() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH");
+        LocalDateTime now = LocalDateTime.now();
+        return Integer.parseInt(dtf.format(now));
     }
 
     public static String addTodayDateTo(int day) {

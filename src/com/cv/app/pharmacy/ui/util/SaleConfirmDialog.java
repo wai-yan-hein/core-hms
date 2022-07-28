@@ -16,6 +16,7 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
 import javax.swing.JFormattedTextField;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -23,6 +24,7 @@ import javax.swing.JFormattedTextField;
  */
 public class SaleConfirmDialog extends javax.swing.JDialog {
 
+    static Logger log = Logger.getLogger(SaleConfirmDialog.class.getName());
     private SaleHis currSaleVou;
     private boolean confStatus = false;
     private AbstractDataAccess dao;
@@ -199,18 +201,24 @@ public class SaleConfirmDialog extends javax.swing.JDialog {
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboPaidCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboPaidCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboPaidCurrency);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboPaidCurrency);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initPaidCurrency() {
         Currency cur = null;
-        
+
         if (cboPaidCurrency.getSelectedItem() != null) {
-            cur = (Currency)cboPaidCurrency.getSelectedItem();
+            cur = (Currency) cboPaidCurrency.getSelectedItem();
         }
 
         if (cur != null) {
@@ -755,13 +763,13 @@ public class SaleConfirmDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtTaxPActionPerformed
 
     private void txtTaxPFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtTaxPFocusLost
-      if(NumberUtil.NZero(txtTaxP.getText())>0){
-        txtTaxAmt.setEnabled(false);
-      }else{
-        txtTaxAmt.setEnabled(true);
-      }
-      
-      calTaxPercent("Percent");
+        if (NumberUtil.NZero(txtTaxP.getText()) > 0) {
+            txtTaxAmt.setEnabled(false);
+        } else {
+            txtTaxAmt.setEnabled(true);
+        }
+
+        calTaxPercent("Percent");
     }//GEN-LAST:event_txtTaxPFocusLost
 
     private void txtTaxAmtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTaxAmtActionPerformed
@@ -769,8 +777,8 @@ public class SaleConfirmDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtTaxAmtActionPerformed
 
     private void txtTaxAmtFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtTaxAmtFocusLost
-        
-      calTaxPercent("Amt");
+
+        calTaxPercent("Amt");
     }//GEN-LAST:event_txtTaxAmtFocusLost
 
     private void txtPaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPaidActionPerformed
@@ -787,7 +795,7 @@ public class SaleConfirmDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtExRateActionPerformed
 
     private void cboPaidCurrencyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaidCurrencyActionPerformed
-        if(cboPaidCurrency.getSelectedItem() instanceof Currency){
+        if (cboPaidCurrency.getSelectedItem() instanceof Currency) {
             initPaidCurrency();
         }
     }//GEN-LAST:event_cboPaidCurrencyActionPerformed
@@ -798,7 +806,7 @@ public class SaleConfirmDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_txtPaidAmtCActionPerformed
 
     private void cboPaymentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentActionPerformed
-        if(cboPaidCurrency.getSelectedItem() instanceof Currency){
+        if (cboPaidCurrency.getSelectedItem() instanceof Currency) {
             initPaidCurrency();
         }
     }//GEN-LAST:event_cboPaymentActionPerformed

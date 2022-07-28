@@ -50,7 +50,8 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
     private int selectedRow = -1;
     private boolean bindStatus = false;
     private int mouseClick = 2;
-    
+    private String selTraderId = "-";
+
     /**
      * Creates new form TraderPayVouFixed
      */
@@ -60,13 +61,13 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         initTblTrader();
         tblTraderSorter = new TableRowSorter(tblTrader.getModel());
         tblTrader.setRowSorter(tblTraderSorter);
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -92,10 +93,11 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
 
                     try {
                         TraderBalanceFixList tbfl = tblTraderModel.getTrader(selectedRow);
+                        selTraderId = tbfl.getTraderId();
                         List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
                                 "select o from TmpVouAmtFix o where o.key.cusId = '"
-                                + tbfl.getTraderId() + "' and o.key.userId = '"
-                                + Global.loginUser.getUserId() + "'");
+                                + selTraderId + "' and o.key.userId = '"
+                                + Global.machineId + "'");
                         tblUnPaidVouModel.setList(listTBFL);
                     } catch (Exception ex) {
                         log.error("valueChange : " + ex.toString());
@@ -141,6 +143,8 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
             }
         } catch (SQLException ex) {
             log.error("getUnPaidVou : " + ex.toString());
+        } catch (Exception ex) {
+            log.error("getUnPaidVou : " + ex.getMessage());
         } finally {
             dao.close();
         }
@@ -148,30 +152,36 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
 
     private void initCombo() {
         bindStatus = true;
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
-                "select o from CustomerGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboPriceType, dao.findAllHSQL(
-                "select o from TraderType o"));
-        BindingUtil.BindComboFilter(cboTownship, dao.findAllHSQL(
-                "select o from Township o order by o.townshipName"));
-        BindingUtil.BindComboFilter(cboBusinessType, dao.findAllHSQL(
-                "select o from BusinessType o order by o.description"));
-        String strBaseGroup = Util1.getPropValue("system.cus.base.group");
-        if (strBaseGroup.isEmpty()) {
-            strBaseGroup = "-";
+        try {
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
+                    "select o from CustomerGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboPriceType, dao.findAllHSQL(
+                    "select o from TraderType o"));
+            BindingUtil.BindComboFilter(cboTownship, dao.findAllHSQL(
+                    "select o from Township o order by o.townshipName"));
+            BindingUtil.BindComboFilter(cboBusinessType, dao.findAllHSQL(
+                    "select o from BusinessType o order by o.description"));
+            String strBaseGroup = Util1.getPropValue("system.cus.base.group");
+            if (strBaseGroup.isEmpty()) {
+                strBaseGroup = "-";
+            }
+            BindingUtil.BindComboFilter(cboParent, dao.findAllHSQL(
+                    "select o from Customer o where o.traderGroup.groupId = '"
+                    + strBaseGroup + "' order by o.traderName"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        BindingUtil.BindComboFilter(cboParent, dao.findAllHSQL(
-                "select o from Customer o where o.traderGroup.groupId = '"
-                + strBaseGroup + "' order by o.traderName"));
         bindStatus = false;
     }
 
     private void insertFilter() {
         String strSQLDelete = "delete from tmp_trader_bal_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_trader_bal_filter(trader_id,currency,op_date,user_id, amount) "
                 + "select t.trader_id, t.cur_code, "
-                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.machineId
                 + "', ifnull(trop.op_amount,0)"
                 + " from v_trader_cur t left join "
                 + "(select trader_id, currency, max(op_date) op_date, op_amount from trader_op "
@@ -262,17 +272,17 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         try {
             dao.execProc("trader_balance_date_chk",
                     DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
-                    Global.loginUser.getUserId());
+                    Global.machineId);
         } catch (Exception ex) {
             log.error("checkError trader_balance_date : " + ex.toString());
         } finally {
             dao.close();
         }
 
-        String strSqlDelete = "delete from tmp_vou_amt_fix where user_id = '" + Global.loginUser.getUserId() + "'";
+        String strSqlDelete = "delete from tmp_vou_amt_fix where user_id = '" + Global.machineId + "'";
         String strSqlOP = "insert into tmp_vou_amt_fix(sale_date, vou_no, cus_id, vou_type, due_date, ref_no, vou_total, balance, user_id)\n"
                 + "select date(balv.sale_date), balv.vou_no, balv.cus_id, balv.vou_type, date(balv.due_date), balv.ref_no, balv.vou_total, \n"
-                + "balv.bal,'" + Global.loginUser.getUserId() + "'\n"
+                + "balv.bal,'" + Global.machineId + "'\n"
                 + "from (\n"
                 + "select a.*, if(a.ttl_overdue<0,0,a.ttl_overdue) as ttl_overdue1 from (\n"
                 + "select vob.tran_date sale_date, vob.vou_no, vob.trader_id cus_id, \n"
@@ -284,11 +294,11 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
                 + "	  from v_opening_balance vob\n"
                 + "	  join trader t on vob.trader_id = t.trader_id\n"
                 + "	  left join customer_group cg on t.group_id = cg.group_id\n"
-                + "	 where bal > 0 and vob.trader_id in (select  distinct trader_id from tmp_trader_bal_filter where user_id = '" + Global.loginUser.getUserId() + "')) a\n"
+                + "	 where bal > 0 and vob.trader_id in (select  distinct trader_id from tmp_trader_bal_filter where user_id = '" + Global.machineId + "')) a\n"
                 + "where a.bal > 0 order by a.ttl_overdue desc, a.sale_date, a.vou_no) balv";
         String strSale = "insert into tmp_vou_amt_fix(sale_date, vou_no, cus_id, vou_type, due_date, ref_no, vou_total, balance, user_id)\n"
                 + "select date(balv.sale_date), balv.vou_no, balv.cus_id, balv.vou_type, date(balv.due_date), balv.ref_no, balv.vou_total, \n"
-                + "balv.bal,'" + Global.loginUser.getUserId() + "'\n"
+                + "balv.bal,'" + Global.machineId + "'\n"
                 + "from (\n"
                 + "select a.*, if(a.ttl_overdue<0,0,a.ttl_overdue) as ttl_overdue1 from (\n"
                 + "select sh.sale_date, sale_inv_id vou_no, sh.cus_id, t.trader_name, 'SALE' vou_type,\n"
@@ -303,19 +313,19 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
                 + "				and ph.deleted = false\n"
                 + "				and pv.vou_type = 'SALE'\n"
                 + "			  group by pv.vou_no, pv.vou_type) pah on sh.sale_inv_id = pah.vou_no\n"
-                + "where sh.deleted = false and sh.cus_id in (select  distinct trader_id from tmp_trader_bal_filter where user_id = '" + Global.loginUser.getUserId() + "')\n"
+                + "where sh.deleted = false and sh.cus_id in (select  distinct trader_id from tmp_trader_bal_filter where user_id = '" + Global.machineId + "')\n"
                 + "group by sh.sale_inv_id, sh.sale_date,sh.vou_total, sh.paid_amount, sh.discount, sh.balance) a\n"
                 + "where a.bal > 0 order by a.ttl_overdue desc, a.sale_date, a.vou_no) balv";
         String strUpdate = "update tmp_trader_bal_date bd, (\n"
                 + "select cus_id, sum(balance) balance\n"
                 + "from tmp_vou_amt_fix\n"
-                + "where user_id = '" + Global.loginUser.getUserId() + "'\n"
+                + "where user_id = '" + Global.machineId + "'\n"
                 + "group by cus_id) vb\n"
                 + "set vou_ttl_amt = vb.balance\n"
-                + "where bd.user_id = '" + Global.loginUser.getUserId() + "' and bd.trader_id = vb.cus_id;";
+                + "where bd.user_id = '" + Global.machineId + "' and bd.trader_id = vb.cus_id;";
         String strSqlData = "select bd.trader_id, t.trader_name, round(bd.amount,0) amount, round(bd.vou_ttl_amt,0) vou_ttl_amt\n"
                 + "from tmp_trader_bal_date bd, trader t\n"
-                + "where bd.trader_id = t.trader_id and user_id = '" + Global.loginUser.getUserId() + "'\n"
+                + "where bd.trader_id = t.trader_id and user_id = '" + Global.machineId + "'\n"
                 + "and round(bd.amount,0)<>round(bd.vou_ttl_amt,0)";
         try {
             dao.execSql(strSqlDelete, strSqlOP, strSale, strUpdate);
@@ -344,34 +354,38 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         List<TraderBalanceFixList> list = tblTraderModel.getListTrader();
         if (list != null) {
             try {
-                for (TraderBalanceFixList tbfl : list) {
-                    List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
+                TraderBalanceFixList tbfl = list.get(selectedRow);
+                //for (TraderBalanceFixList tbfl : list) {
+                /*List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
                             "select o from TmpVouAmtFix o where o.key.cusId = '"
-                            + tbfl.getTraderId() + "' and o.key.userId = '"
-                            + Global.loginUser.getUserId() + "'");
-                    if (listTBFL != null) {
-                        if (!listTBFL.isEmpty()) {
-                            Double difference = tbfl.getDifference();
-                            if (difference > 0) {
-                                Double leftAmt = difference;
-                                for (TmpVouAmtFix tvaf : listTBFL) {
-                                    if (leftAmt > 0) {
-                                        if (tvaf.getBalance() >= leftAmt) {
-                                            tvaf.setPaidAmount(leftAmt);
-                                            leftAmt = 0.0;
-                                        } else {
-                                            tvaf.setPaidAmount(tvaf.getBalance());
-                                            leftAmt = leftAmt - tvaf.getBalance();
-                                            tvaf.setBalance(0.0);
-                                        }
-
-                                        dao.save(tvaf);
+                            + selTraderId + "' and o.key.userId = '"
+                            + Global.loginUser.getUserId() + "'");*/
+                List<TmpVouAmtFix> listTBFL = tblUnPaidVouModel.getList();
+                if (listTBFL != null) {
+                    if (!listTBFL.isEmpty()) {
+                        Double difference = tbfl.getDifference();
+                        if (difference > 0) {
+                            Double leftAmt = difference;
+                            for (TmpVouAmtFix tvaf : listTBFL) {
+                                if (leftAmt > 0) {
+                                    if (tvaf.getBalance() >= leftAmt) {
+                                        tvaf.setPaidAmount(leftAmt);
+                                        tvaf.setBalance(tvaf.getBalance() - leftAmt);
+                                        leftAmt = 0.0;
+                                    } else {
+                                        tvaf.setPaidAmount(tvaf.getBalance());
+                                        leftAmt = leftAmt - tvaf.getBalance();
+                                        tvaf.setBalance(0.0);
                                     }
+
+                                    dao.save(tvaf);
                                 }
                             }
+                            tblUnPaidVouModel.dataChange();
                         }
                     }
                 }
+                //}
             } catch (Exception ex) {
                 log.error("fixError : " + ex.toString());
             } finally {
@@ -384,60 +398,60 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
         List<TraderBalanceFixList> list = tblTraderModel.getListTrader();
         if (list != null) {
             try {
-                for (TraderBalanceFixList tbfl : list) {
-                    List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
-                            "select o from TmpVouAmtFix o where o.key.cusId = '"
-                            + tbfl.getTraderId() + "' and o.key.userId = '"
-                            + Global.loginUser.getUserId() + "' and ifnull(o.paidAmount,0) <> 0");
-                    if (listTBFL != null) {
-                        if (!listTBFL.isEmpty()) {
-                            TraderPayHis tph = new TraderPayHis();
-                            tph.setPayDate(DateUtil.toDate(txtFixDate.getText()));
-                            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + tbfl.getTraderId() + "'");
-                            if (!cus.isEmpty()) {
-                                tph.setTrader(cus.get(0));
-                            }
-                            tph.setRemark("Voucher Balance Fixed");
-                            tph.setPaidAmtC(0.0);
-                            tph.setDiscount(0.0);
-                            String appCurr = Util1.getPropValue("system.app.currency");
-                            List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='" 
-                                    + appCurr + "'");
-                            tph.setCurrency(curr.get(0));
-                            //tph.setCurrency(curr.getCurrencyCode());
-                            tph.setExRate(1.0);
-                            tph.setPaidAmtP(0.0);
-                            // Object user = dao.find(Appuser.class, vp.getUserId());
-                            //List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + Global.loginUser + "'");
-                            tph.setCreatedBy(Global.loginUser);
-                            tph.setPayOption("Cash");
-                            tph.setParentCurr(tph.getCurrency());
+                //for (TraderBalanceFixList tbfl : list) {
+                List<TmpVouAmtFix> listTBFL = dao.findAllHSQL(
+                        "select o from TmpVouAmtFix o where o.key.cusId = '"
+                        + selTraderId + "' and o.key.userId = '"
+                        + Global.machineId + "' and ifnull(o.paidAmount,0) <> 0");
+                if (listTBFL != null) {
+                    if (!listTBFL.isEmpty()) {
+                        TraderPayHis tph = new TraderPayHis();
+                        tph.setPayDate(DateUtil.toDate(txtFixDate.getText()));
+                        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + selTraderId + "'");
+                        if (!cus.isEmpty()) {
+                            tph.setTrader(cus.get(0));
+                        }
+                        tph.setRemark("Voucher Balance Fixed");
+                        tph.setPaidAmtC(0.0);
+                        tph.setDiscount(0.0);
+                        String appCurr = Util1.getPropValue("system.app.currency");
+                        List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='"
+                                + appCurr + "'");
+                        tph.setCurrency(curr.get(0));
+                        //tph.setCurrency(curr.getCurrencyCode());
+                        tph.setExRate(1.0);
+                        tph.setPaidAmtP(0.0);
+                        // Object user = dao.find(Appuser.class, vp.getUserId());
+                        //List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + Global.loginUser + "'");
+                        tph.setCreatedBy(Global.loginUser);
+                        tph.setPayOption("Cash");
+                        tph.setParentCurr(tph.getCurrency());
 
-                            List<PaymentVou> listPV = new ArrayList();
-                            for (TmpVouAmtFix tvaf : listTBFL) {
-                                PaymentVou pv = new PaymentVou();
-                                pv.setBalance(tvaf.getBalance());
-                                pv.setVouNo(tvaf.getKey().getVouNo());
-                                pv.setVouPaid(tvaf.getPaidAmount());
-                                pv.setVouDate(tvaf.getKey().getSaleDate());
-                                pv.setDiscount(0.0);
-                                pv.setVouType(tvaf.getVouType());
+                        List<PaymentVou> listPV = new ArrayList();
+                        for (TmpVouAmtFix tvaf : listTBFL) {
+                            PaymentVou pv = new PaymentVou();
+                            pv.setBalance(tvaf.getBalance());
+                            pv.setVouNo(tvaf.getKey().getVouNo());
+                            pv.setVouPaid(tvaf.getPaidAmount());
+                            pv.setVouDate(tvaf.getKey().getSaleDate());
+                            pv.setDiscount(0.0);
+                            pv.setVouType(tvaf.getVouType());
 
-                                listPV.add(pv);
-                            }
+                            listPV.add(pv);
+                        }
 
-                            tph.setListDetail(listPV);
+                        tph.setListDetail(listPV);
 
-                            //Location location = getLocation(tph.getTrader().getTraderId());
-                            //tph.setLocation(location);
-                            try {
-                                dao.save(tph);
-                            } catch (Exception e) {
-                                log.error("saveTraderpayHis : " + e.getMessage());
-                            }
+                        //Location location = getLocation(tph.getTrader().getTraderId());
+                        //tph.setLocation(location);
+                        try {
+                            dao.save(tph);
+                        } catch (Exception e) {
+                            log.error("saveTraderpayHis : " + e.getMessage());
                         }
                     }
                 }
+                //}
             } catch (Exception ex) {
                 log.error("save : " + ex.toString());
             } finally {
@@ -445,13 +459,13 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
             }
         }
     }
-    
-    private void clear(){
+
+    private void clear() {
         tblTraderModel.clear();
         tblUnPaidVouModel.clear();
         txtFixDate.setText(null);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -670,12 +684,12 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
             clear();
         } else {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid fix date.",
-                            "Date", JOptionPane.ERROR_MESSAGE);
+                    "Date", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_butSaveActionPerformed
 
     private void txtFixDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtFixDateActionPerformed
-        
+
     }//GEN-LAST:event_txtFixDateActionPerformed
 
     private void txtFixDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFixDateMouseClicked

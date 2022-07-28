@@ -47,6 +47,8 @@ public class VSession implements java.io.Serializable {
     private String groupId;
     private String admissionNo;
     private String accountId;
+    private String stuNo;
+    private String doctorId;
     
     @Column(name = "balance")
     public Double getBalance() {
@@ -335,5 +337,23 @@ public class VSession implements java.io.Serializable {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    @Column(name="stu_no")
+    public String getStuNo() {
+        return stuNo;
+    }
+
+    public void setStuNo(String stuNo) {
+        this.stuNo = stuNo;
+    }
+
+    @Column(name="doctor_id")
+    public String getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(String doctorId) {
+        this.doctorId = doctorId;
     }
 }

@@ -77,24 +77,29 @@ public class MedListDialog1 extends javax.swing.JDialog {
     private void initTable() {
         String strBrandFilter = Util1.getPropValue("system.pharmacy.bran.filter");
         String strShowAllGroup = Util1.getPropValue("system.pharmacy.no.filter.group");
-
-        if (cusGroup != null && strBrandFilter.equals("Y")) {
-            if (cusGroup.equals(strShowAllGroup)) {
-                String strSql = "select o from VMedicine1 o where o.medId in (select a.key.itemId from VLocationItemMapping a"
-                        + " where a.mapStatus = true and a.key.locationId = " + locationId + ")";
-                listMedicine = dao.findAllHSQL(strSql);
+        try {
+            if (cusGroup != null && strBrandFilter.equals("Y")) {
+                if (cusGroup.equals(strShowAllGroup)) {
+                    String strSql = "select o from VMedicine1 o where o.medId in (select a.key.itemId from VLocationItemMapping a"
+                            + " where a.mapStatus = true and a.key.locationId = " + locationId + ")";
+                    listMedicine = dao.findAllHSQL(strSql);
+                } else {
+                    String strSql = "select o from VMedicine1 o where o.cusGroup = '"
+                            + cusGroup + "' and o.medId in (select a.key.itemId from VLocationItemMapping a"
+                            + " where a.mapStatus = true and a.key.locationId = " + locationId + ")";
+                    listMedicine = dao.findAllHSQL(strSql);
+                }
             } else {
-                String strSql = "select o from VMedicine1 o where o.cusGroup = '"
-                        + cusGroup + "' and o.medId in (select a.key.itemId from VLocationItemMapping a"
-                        + " where a.mapStatus = true and a.key.locationId = " + locationId + ")";
-                listMedicine = dao.findAllHSQL(strSql);
+                listMedicine = Global.listItem;
             }
-        } else {
-            listMedicine = Global.listItem;
-        }
 
-        //listMedicine = dao.findAll("VMedicine1", "active = true");
-        tableModel.setListMedicine(listMedicine);
+            //listMedicine = dao.findAll("VMedicine1", "active = true");
+            tableModel.setListMedicine(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
 
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(10);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -149,14 +154,14 @@ public class MedListDialog1 extends javax.swing.JDialog {
             String tmp4 = entry.getStringValue(3).toUpperCase();//Brand
             String tmp5 = entry.getStringValue(4).toUpperCase();//Category
             String tmp6 = entry.getStringValue(5).toUpperCase();//System
-            
+
             String text1 = txtFilter.getText().toUpperCase();
             String text2 = txtItemName.getText().toUpperCase();
             String text3 = txtItemType.getText().toUpperCase();
             String text4 = txtItemBrand.getText().toUpperCase();
             String text5 = txtCategory.getText().toUpperCase();
             String text6 = txtSystem.getText().toUpperCase();
-            
+
             boolean status = true;
 
             if (text1.trim().length() > 0 && status) {
@@ -188,13 +193,13 @@ public class MedListDialog1 extends javax.swing.JDialog {
                     status = false;
                 }
             }
-            
+
             if (text6.trim().length() > 0 && status) {
                 if (!tmp6.startsWith(text6)) {
                     status = false;
                 }
             }
-            
+
             return status;
         }
     };

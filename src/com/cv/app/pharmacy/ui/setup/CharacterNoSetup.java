@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * CharacterNoSetup.java
  *
  * Created on May 10, 2012, 3:31:50 PM
@@ -36,6 +36,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class CharacterNoSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(CharacterNoSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private CharNoTableModel charNoTableModel = new CharNoTableModel();
@@ -124,12 +125,12 @@ public class CharacterNoSetup extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "No cannot be blank or null.",
                     "No null error.", JOptionPane.ERROR_MESSAGE);
             txtNo.requestFocusInWindow();
-        } else if(txtCharacter.getText().length() > 2){
+        } else if (txtCharacter.getText().length() > 2) {
             status = false;
             JOptionPane.showMessageDialog(this, "Character length at most 2.",
                     "Character length", JOptionPane.ERROR_MESSAGE);
             txtCharacter.requestFocusInWindow();
-        } else if(txtNo.getText().length() > 3){
+        } else if (txtNo.getText().length() > 3) {
             status = false;
             JOptionPane.showMessageDialog(this, "Character length at most 3.",
                     "Character length", JOptionPane.ERROR_MESSAGE);
@@ -319,40 +320,30 @@ public class CharacterNoSetup extends javax.swing.JPanel {
 
     //Inatilize tblCharacterNo
     private void initTable() {
-        //Get item type from database
-        charNoTableModel.setListCharacterNo(dao.findAll("CharacterNo"));
+        try {
+            //Get item type from database
+            charNoTableModel.setListCharacterNo(dao.findAll("CharacterNo"));
 
-        //Binding tblItemType with listItemType using beansbinding library.
-        /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
-         listCharacterNo, tblCharacterNo);
-         ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${ch}"));
-
-         columnBinding.setColumnName("Char");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-
-         columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${strNumber}"));
-         columnBinding.setColumnName("No");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-
-         jTableBinding.bind();*/
-
-        //Define table selection model to single row selection.
-        tblCharacterNo.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblCharacterNo.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblCharacterNo.getSelectedRow() >= 0) {
-                            selectedRow = tblCharacterNo.convertRowIndexToModel(
-                                    tblCharacterNo.getSelectedRow());
-                        }
-                        if (selectedRow >= 0) {
-                            setCurrCharacterNo(charNoTableModel.getCharNo(selectedRow));
-                        }
+            //Define table selection model to single row selection.
+            tblCharacterNo.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblCharacterNo.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblCharacterNo.getSelectedRow() >= 0) {
+                        selectedRow = tblCharacterNo.convertRowIndexToModel(
+                                tblCharacterNo.getSelectedRow());
                     }
-                });
+                    if (selectedRow >= 0) {
+                        setCurrCharacterNo(charNoTableModel.getCharNo(selectedRow));
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;

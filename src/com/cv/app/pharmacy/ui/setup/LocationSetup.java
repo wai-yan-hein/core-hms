@@ -136,7 +136,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         txtAdjDeptCode.setText(null);
         txtIssueAccCode.setText(null);
         txtIssueDeptCode.setText(null);
-        
+
         txtSaleDiscAcc.setText(null);
         txtSalePaidAcc.setText(null);
         txtSaleTaxAcc.setText(null);
@@ -156,7 +156,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         txtRetOutPaidAcc.setText(null);
         txtRetOutBalAcc.setText(null);
-        
+
         cboParent.setSelectedItem(null);
         cboLocationType.setSelectedItem(null);
         setFocus();
@@ -169,17 +169,19 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             if (currLocation.getLocationId() != null) {
                 currLocationId = currLocation.getLocationId();
             }
+
+            BindingUtil.BindCombo(cboParent, dao.findAllHSQL("from Location as loc where loc.locationId <> "
+                    + currLocationId));
+            BindingUtil.BindCombo(cboLocationType, dao.findAllHSQL("from LocationType o order by o.description"));
+
+            new ComBoBoxAutoComplete(cboParent);
+            new ComBoBoxAutoComplete(cboLocationType);
+            cboParent.setSelectedItem(null);
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } finally {
+            dao.close();
         }
-
-        BindingUtil.BindCombo(cboParent, dao.findAllHSQL("from Location as loc where loc.locationId <> "
-                + currLocationId));
-        BindingUtil.BindCombo(cboLocationType, dao.findAllHSQL("from LocationType o order by o.description"));
-
-        new ComBoBoxAutoComplete(cboParent);
-        new ComBoBoxAutoComplete(cboLocationType);
-        cboParent.setSelectedItem(null);
     }
 
     private void initTree() {
@@ -197,12 +199,18 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
     }
 
     private void createTreeNode(int parentLocID, DefaultMutableTreeNode treeRoot) {
-        List<Location> listLocation = dao.findAllHSQL("from Location as loc where loc.parent =" + parentLocID);
+        try {
+            List<Location> listLocation = dao.findAllHSQL("from Location as loc where loc.parent =" + parentLocID);
 
-        for (Location location : listLocation) {
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(location);
-            treeRoot.add(child);
-            createTreeNode(location.getLocationId(), child);
+            for (Location location : listLocation) {
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(location);
+                treeRoot.add(child);
+                createTreeNode(location.getLocationId(), child);
+            }
+        } catch (Exception ex) {
+            log.error("createTreeNode : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -213,7 +221,13 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         if ((selectedNode.isLeaf() && !selectedNode.isRoot())) {
             Location selLocation = (Location) selectedNode.getUserObject();
-            setCurrLocation((Location) dao.find(Location.class, selLocation.getLocationId()));
+            try {
+                setCurrLocation((Location) dao.find(Location.class, selLocation.getLocationId()));
+            } catch (Exception ex) {
+                log.error("valueChanged : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 

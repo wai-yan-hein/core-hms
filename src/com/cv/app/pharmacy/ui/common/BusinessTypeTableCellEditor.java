@@ -16,38 +16,46 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class BusinessTypeTableCellEditor extends AbstractCellEditor implements TableCellEditor{
+public class BusinessTypeTableCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+    static Logger log = Logger.getLogger(BusinessTypeTableCellEditor.class.getName());
     private JComponent component = null;
     private final AbstractDataAccess dao;
     private BusinessTypeAutoCompleter completer;
-    
-    public BusinessTypeTableCellEditor(AbstractDataAccess dao){
+
+    public BusinessTypeTableCellEditor(AbstractDataAccess dao) {
         this.dao = dao;
     }
-    
+
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int rowIndex, int vColIndex) {
+            boolean isSelected, int rowIndex, int vColIndex) {
         JTextField jtf = new JTextField();
-        List<BusinessType> list = dao.findAllHSQL("select o from BusinessType o order by o.description");
-        
         component = jtf;
-        completer = new BusinessTypeAutoCompleter(jtf, list, this);
-        
+        try {
+            List<BusinessType> list = dao.findAllHSQL("select o from BusinessType o order by o.description");
+            completer = new BusinessTypeAutoCompleter(jtf, list, this);
+        } catch (Exception ex) {
+            log.error("getTableCellEditorComponent : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
         return component;
     }
-    
+
     @Override
     public Object getCellEditorValue() {
         Object obj = completer.getSelBusinessType();
         return obj;
     }
-    
+
     @Override
     public boolean isCellEditable(EventObject anEvent) {
         return !(anEvent instanceof MouseEvent);

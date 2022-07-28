@@ -51,7 +51,7 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form TransferVouSearch
      */
@@ -83,7 +83,7 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
         actionMapping();
         initTableVoucher();
         addSelectionListenerVoucher();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -105,29 +105,41 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboFromLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboToLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboFromLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboToLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboFromLocation);
-        new ComBoBoxAutoComplete(cboToLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboFromLocation);
+            new ComBoBoxAutoComplete(cboToLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboFromLocation.setSelectedIndex(0);
-        cboToLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboFromLocation.setSelectedIndex(0);
+            cboToLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'TransferSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
-        tblMedicineModel.addEmptyRow();
-        tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
-        tblMedicine.getColumnModel().getColumn(0).setCellEditor(
-                new SaleTableCodeCellEditor(dao));
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'TransferSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+            tblMedicineModel.addEmptyRow();
+            tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
+            tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
+            tblMedicine.getColumnModel().getColumn(0).setCellEditor(
+                    new SaleTableCodeCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableVoucher() {
@@ -159,7 +171,7 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -171,23 +183,29 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="getMedList">
     private void getMedList(String filter) {
         int locationId = -1;
-        if(cboFromLocation.getSelectedItem() instanceof Location){
-            locationId = ((Location)cboFromLocation.getSelectedItem()).getLocationId();
+        if (cboFromLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboFromLocation.getSelectedItem()).getLocationId();
         }
         String cusGroup = "-";
         /*if(currSaleVou.getCustomerId() != null){
@@ -339,7 +357,7 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
 
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListTransferHis(getSearchVoucher());
         lblTotalRec.setText("Total Records : " + vouTableModel.getRowCount());
@@ -360,35 +378,41 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'TranVouSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'TranVouSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("TranVouSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("TranVouSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboFromLocation.setSelectedItem(vouFilter.getLocation());
+                if (vouFilter.getLocation() != null) {
+                    cboFromLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
+
+                if (vouFilter.getToLocation() != null) {
+                    cboToLocation.setSelectedItem(vouFilter.getToLocation());
+                }
+
+                txtVouNo.setText(vouFilter.getVouNo());
+                txtDesp.setText(vouFilter.getRemark());
             }
-
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
-
-            if (vouFilter.getToLocation() != null) {
-                cboToLocation.setSelectedItem(vouFilter.getToLocation());
-            }
-
-            txtVouNo.setText(vouFilter.getVouNo());
-            txtDesp.setText(vouFilter.getRemark());
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

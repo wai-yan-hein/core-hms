@@ -33,7 +33,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
     private int mouseClick = 2;
     private boolean bindStatus = false;
     private final UnPaidPayableTableModel tblModel = new UnPaidPayableTableModel();
-    
+
     /**
      * Creates new form UnPaidPayable
      */
@@ -44,7 +44,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
         initCombo();
         initTable();
         getData();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -60,13 +60,18 @@ public class UnPaidPayable extends javax.swing.JPanel {
 
     private void initCombo() {
         bindStatus = true;
-        BindingUtil.BindComboFilter(cboExpType,
-                dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
-        List listDr = dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName");
-        listDr.add(0, "All");
-        listDr.add(1, "-");
-        BindingUtil.BindCombo(cboDoctor, listDr);
-
+        try {
+            BindingUtil.BindComboFilter(cboExpType,
+                    dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
+            List listDr = dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName");
+            listDr.add(0, "All");
+            listDr.add(1, "-");
+            BindingUtil.BindCombo(cboDoctor, listDr);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         bindStatus = false;
     }
 
@@ -85,7 +90,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
         tblExpense.getColumnModel().getColumn(5).setPreferredWidth(50);//Ttl Pay
         tblExpense.getColumnModel().getColumn(6).setPreferredWidth(50);//Ttl Balance
         tblExpense.getColumnModel().getColumn(7).setPreferredWidth(5);//Un Paid
-        
+
         tblExpense.getColumnModel().getColumn(1).setCellRenderer(new TableDateFieldRenderer());
     }
 
@@ -162,9 +167,9 @@ public class UnPaidPayable extends javax.swing.JPanel {
             }
         } catch (SQLException ex) {
             log.error("getData : " + ex.toString());
-        } catch(Exception ex){
+        } catch (Exception ex) {
             log.error("getData : " + ex.toString());
-        }finally {
+        } finally {
             dao.close();
         }
     }
@@ -176,7 +181,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
         txtTtlBal.setValue(0);
         tblModel.clear();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

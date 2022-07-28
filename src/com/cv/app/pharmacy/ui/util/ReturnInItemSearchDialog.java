@@ -27,6 +27,7 @@ import javax.swing.KeyStroke;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -34,6 +35,7 @@ import javax.swing.table.TableRowSorter;
  */
 public class ReturnInItemSearchDialog extends javax.swing.JDialog implements SelectionObserver {
 
+    static Logger log = Logger.getLogger(ReturnInItemSearchDialog.class.getName());
     private AbstractDataAccess dao = Global.dao;
     private CodeTableModel tblMedicineModel = new CodeTableModel(Global.dao, true, "RetInItemSearch");
     private RetInItemSearchTableModel tblRetInItemList = new RetInItemSearchTableModel();
@@ -67,7 +69,7 @@ public class ReturnInItemSearchDialog extends javax.swing.JDialog implements Sel
 
         setLocation(x, y);
         setVisible(true);
-        
+
         search();
     }
 
@@ -90,13 +92,20 @@ public class ReturnInItemSearchDialog extends javax.swing.JDialog implements Sel
     }
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'RetInItemSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        if(listMedicine == null){
-            listMedicine = new ArrayList();
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'RetInItemSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            if (listMedicine == null) {
+                listMedicine = new ArrayList();
+            }
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        tblMedicineModel.setListCodeFilter(listMedicine);
+
         tblMedicineModel.addEmptyRow();
         tblCodeFilter.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblCodeFilter.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -121,8 +130,14 @@ public class ReturnInItemSearchDialog extends javax.swing.JDialog implements Sel
     }
 
     private void search() {
-        List<ReturnInItemList> listRInItems = dao.findAllHSQL(getHSQL());
-        tblRetInItemList.setListRetInItems(listRInItems);
+        try {
+            List<ReturnInItemList> listRInItems = dao.findAllHSQL(getHSQL());
+            tblRetInItemList.setListRetInItems(listRInItems);
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void select() {
@@ -140,16 +155,16 @@ public class ReturnInItemSearchDialog extends javax.swing.JDialog implements Sel
     private String getHSQL() {
         String strHSQL = "select i from ReturnInItemList i where deleted = false ";
 
-        if(!txtTrcode.getText().isEmpty()){
-            if(Util1.getPropValue("system.app.usage.type").equals("Hospital")){
+        if (!txtTrcode.getText().isEmpty()) {
+            if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                 strHSQL = strHSQL + " and i.regNo = '"
-                    + txtTrcode.getText() + "'";
-            }else{
+                        + txtTrcode.getText() + "'";
+            } else {
                 strHSQL = strHSQL + " and i.traderId = '"
-                    + txtTrcode.getText() + "'";
+                        + txtTrcode.getText() + "'";
             }
         }
-        
+
         if (DateUtil.isValidDate(txtFrom.getText()) && DateUtil.isValidDate(txtTo.getText())) {
             strHSQL = strHSQL + " and i.saleDate between '" + DateUtil.toDateTimeStrMYSQL(txtFrom.getText())
                     + "' and '" + DateUtil.toDateStrMYSQLEnd(txtTo.getText()) + "' ";
@@ -191,7 +206,7 @@ public class ReturnInItemSearchDialog extends javax.swing.JDialog implements Sel
 
     private void getCustomerList() {
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Customer List", dao);
+                "Customer List", dao, -1);
     }
 
     /**

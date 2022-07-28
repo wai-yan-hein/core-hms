@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * MenuTypeSetup.java
  *
  * Created on Apr 22, 2012, 9:53:11 PM
@@ -32,20 +32,24 @@ import org.jdesktop.swingbinding.SwingBindings;
  * @author winswe
  */
 public class MenuTypeSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(MenuTypeSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private List<MenuType> listMenuType = ObservableCollections.
             observableList(new ArrayList<MenuType>());
-    /** Creates new form MenuTypeSetup */
+
+    /**
+     * Creates new form MenuTypeSetup
+     */
     public MenuTypeSetup() {
         initComponents();
         clear();
-        
-        try{
+
+        try {
             dao.open();
             initTable();
             dao.close();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
         }
     }
@@ -68,7 +72,7 @@ public class MenuTypeSetup extends javax.swing.JPanel {
      */
     public void setCurrMenuType(MenuType currMenuType) {
         this.currMenuType = currMenuType;
-        
+
         propertyChangeSupport.firePropertyChange("currMenuType", 0, 1);
     }
     private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -93,58 +97,65 @@ public class MenuTypeSetup extends javax.swing.JPanel {
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
-    private void clear(){
+    private void clear() {
         setCurrMenuType(new MenuType());
     }
-    
+
     /*
      * Initialize tblCategory
      */
-    private void initTable(){
-        //Get MenuType from database.
-        listMenuType = ObservableCollections.observableList(dao.findAll("MenuType"));
-        
-        //Binding table with listCategory using beansbinding library.
-        JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE, 
-                listMenuType, tblMenuType);
-        JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.
-                jdesktop.beansbinding.ELProperty.create("${typeDesp}"));
-        columnBinding.setColumnName("Type Name");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        jTableBinding.bind();
-        
-        //Define table selection model to single row selection.
-        tblMenuType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblMenuType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener(){
+    private void initTable() {
+        try {
+            //Get MenuType from database.
+            listMenuType = ObservableCollections.observableList(dao.findAll("MenuType"));
+
+            //Binding table with listCategory using beansbinding library.
+            JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
+                    listMenuType, tblMenuType);
+            JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${typeDesp}"));
+            columnBinding.setColumnName("Type Name");
+            columnBinding.setColumnClass(String.class);
+            columnBinding.setEditable(false);
+            jTableBinding.bind();
+
+            //Define table selection model to single row selection.
+            tblMenuType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblMenuType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     int row = tblMenuType.getSelectedRow();
-                    
-                    if(row != -1)
+
+                    if (row != -1) {
                         setCurrMenuType(listMenuType.get(tblMenuType.convertRowIndexToModel(row)));
+                    }
                 }
             }
-         );
+            );
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    private boolean isValidEntry(){
+
+    private boolean isValidEntry() {
         boolean status = true;
-        
-        if(Util1.nullToBlankStr(currMenuType.getTypeDesp()).equals(""))
+
+        if (Util1.nullToBlankStr(currMenuType.getTypeDesp()).equals("")) {
             status = false;
-        else
+        } else {
             currMenuType.setTypeDesp(currMenuType.getTypeDesp().trim());
-        
+        }
+
         return status;
     }
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -240,15 +251,15 @@ public class MenuTypeSetup extends javax.swing.JPanel {
     }//GEN-LAST:event_butClearActionPerformed
 
     private void butSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveActionPerformed
-        try{
-            if(isValidEntry()){
+        try {
+            if (isValidEntry()) {
                 dao.save(currMenuType);
                 clear();
                 dao.open();
                 initTable();
                 dao.close();
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
         }
     }//GEN-LAST:event_butSaveActionPerformed

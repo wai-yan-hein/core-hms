@@ -104,9 +104,14 @@ public class CustomerGroupSetup extends javax.swing.JPanel {
         tblCustomerGroup.getColumnModel().getColumn(0).setPreferredWidth(5);//Code
         tblCustomerGroup.getColumnModel().getColumn(1).setPreferredWidth(200);
         //Get Category from database.
-        tableModel.setListCustomerGroup(dao.findAllHSQL(
-                "select o from CustomerGroup o order by o.groupName"));
-
+        try {
+            tableModel.setListCustomerGroup(dao.findAllHSQL(
+                    "select o from CustomerGroup o order by o.groupName"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Define table selection model to single row selection.
         tblCustomerGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.

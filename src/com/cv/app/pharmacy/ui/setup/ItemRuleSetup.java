@@ -69,7 +69,7 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
                             if (Util1.nullToBlankStr(rg.getDescription()).toString() != "") {
                                 if (Util1.nullToBlankStr(rg.getChekcQtyPrice().toString()).toString() != "") {
                                     if (NumberUtil.NZeroFloat(rg.getChekcQtyPrice().toString()) == 1.0) {
-                                        if (NumberUtil.NZeroFloat(rg.getStartQty())> 0) {
+                                        if (NumberUtil.NZeroFloat(rg.getStartQty()) > 0) {
                                             if (NumberUtil.NZeroFloat(rg.getEndQty()) > 0) {
                                                 if (NumberUtil.NZeroFloat(rg.getPrice()) > 0) {
                                                     dao.save(rg);
@@ -90,15 +90,13 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
                                         if (NumberUtil.NZeroFloat(rg.getQty()) > 0) {
                                             if (NumberUtil.NZeroFloat(rg.getProQty()) > 0) {
                                                 dao.save(rg);
-                                            }
-                                            else{
+                                            } else {
                                                 JOptionPane.showMessageDialog(Util1.getParent(), "Fill Pro Qty",
-                                                "Check Price/Qty", JOptionPane.ERROR_MESSAGE);
+                                                        "Check Price/Qty", JOptionPane.ERROR_MESSAGE);
                                             }
-                                        }
-                                        else{
+                                        } else {
                                             JOptionPane.showMessageDialog(Util1.getParent(), "Fill Qty",
-                                            "Check Price/Qty", JOptionPane.ERROR_MESSAGE);
+                                                    "Check Price/Qty", JOptionPane.ERROR_MESSAGE);
                                         }
                                     } else {
                                         JOptionPane.showMessageDialog(Util1.getParent(), "Fill 1 or 2 at Price/Qty",
@@ -145,7 +143,7 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
                 dao.open();
                 dao.deleteSQL(sql);
                 dao.close();
-                
+
                 itemRuleTableModel.delete(iRuleSelRow);
                 iRuleSelRow = -1;
             } catch (Exception ex) {
@@ -193,7 +191,7 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
                 System.out.println("Table Selection-1 : " + selectRow);
                 if (selectRow >= 0) {
                     try {
-                        if(tblItemRule.getCellEditor() != null){
+                        if (tblItemRule.getCellEditor() != null) {
                             tblItemRule.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -215,7 +213,7 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
                 System.out.println("Table Item Rule : " + iRuleSelRow);
                 if (iRuleSelRow >= 0) {
                     ItemRule ir = itemRuleTableModel.getItemRule(iRuleSelRow);
-                    if (ir !=null) {
+                    if (ir != null) {
                         selected("ItemRule", ir);
                     }
                 }
@@ -285,17 +283,23 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
     }
 
     private void initTableItem() {
-        itemTableModel.setListMedicine(dao.findAllHSQL("select o from VMedicine1 o order by o.medName"));
-        
-        //Adjust table column width
-        TableColumn column = tblItem.getColumnModel().getColumn(0);
-        column.setPreferredWidth(50);
+        try {
+            itemTableModel.setListMedicine(dao.findAllHSQL("select o from VMedicine1 o order by o.medName"));
 
-        column = tblItem.getColumnModel().getColumn(1);
-        column.setPreferredWidth(300);
+            //Adjust table column width
+            TableColumn column = tblItem.getColumnModel().getColumn(0);
+            column.setPreferredWidth(50);
 
-        column = tblItem.getColumnModel().getColumn(2);
-        column.setPreferredWidth(10);
+            column = tblItem.getColumnModel().getColumn(1);
+            column.setPreferredWidth(300);
+
+            column = tblItem.getColumnModel().getColumn(2);
+            column.setPreferredWidth(10);
+        } catch (Exception ex) {
+            log.error("initTableItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableRule() {
@@ -321,40 +325,40 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
         //Adjust table column width
         TableColumn column = tblItemRule.getColumnModel().getColumn(0);
         column.setPreferredWidth(150);
-        
+
         column = tblItemRule.getColumnModel().getColumn(1);
         column.setPreferredWidth(80);
-        
+
         column = tblItemRule.getColumnModel().getColumn(2);
         column.setPreferredWidth(80);
-        
+
         column = tblItemRule.getColumnModel().getColumn(3);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(4);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(5);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(6);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(7);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(8);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(9);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(10);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(11);
         column.setPreferredWidth(50);
-        
+
         column = tblItemRule.getColumnModel().getColumn(11);
         column.setPreferredWidth(50);
     }
@@ -369,7 +373,7 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
         }
         return status;
     }
-    
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

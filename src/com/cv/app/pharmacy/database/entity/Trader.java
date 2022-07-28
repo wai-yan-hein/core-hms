@@ -42,6 +42,8 @@ public class Trader implements java.io.Serializable {
     private Integer migId;
     private BusinessType businessType;
     private Float expensePercent;
+    private String stuCode;
+    private String discrimator;
     
     public Trader() {
     }
@@ -243,5 +245,23 @@ public class Trader implements java.io.Serializable {
 
     public void setExpensePercent(Float expensePercent) {
         this.expensePercent = expensePercent;
+    }
+
+    @Column(name="stu_no", length=25)
+    public String getStuCode() {
+        return stuCode;
+    }
+
+    public void setStuCode(String stuCode) {
+        this.stuCode = stuCode;
+    }
+
+    @Column(name="discriminator", insertable=false, updatable=false)
+    public String getDiscrimator() {
+        return discrimator;
+    }
+
+    public void setDiscrimator(String discrimator) {
+        this.discrimator = discrimator;
     }
 }

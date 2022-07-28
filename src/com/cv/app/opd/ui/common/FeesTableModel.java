@@ -147,43 +147,49 @@ public class FeesTableModel extends AbstractTableModel {
     }
 
     private void getServiceFees() {
-        listServiceFees = dao.findAll("ServiceFees", "serviceId = " + srvId);
-        List<FeesTemplate> listFeesTemplate = dao.findAll("FeesTemplate",
-                "groupId = " + groupId);
+        try {
+            listServiceFees = dao.findAll("ServiceFees", "serviceId = " + srvId);
+            List<FeesTemplate> listFeesTemplate = dao.findAll("FeesTemplate",
+                    "groupId = " + groupId);
 
-        if (listServiceFees.isEmpty() && srvId != -1) {
-            for (FeesTemplate ft : listFeesTemplate) {
-                ServiceFees sf = new ServiceFees();
-                sf.setFeesDesp(ft.getTemplateName());
-                sf.setServiceId(srvId);
-                listServiceFees.add(sf);
-            }
-        }
-
-        if (listServiceFees.size() != listFeesTemplate.size() && srvId != -1) {
-            String strFilter = null;
-
-            for (ServiceFees sf : listServiceFees) {
-                if (strFilter == null) {
-                    strFilter = "'" + sf.getFeesDesp() + "'";
-                } else {
-                    strFilter = strFilter + ",'" + sf.getFeesDesp() + "'";
+            if (listServiceFees.isEmpty() && srvId != -1) {
+                for (FeesTemplate ft : listFeesTemplate) {
+                    ServiceFees sf = new ServiceFees();
+                    sf.setFeesDesp(ft.getTemplateName());
+                    sf.setServiceId(srvId);
+                    listServiceFees.add(sf);
                 }
             }
 
-            String strSQL = "SELECT * FROM com.cv.app.opd.database.entity.FeesTemplate"
-                    + " WHERE templateName NOT IN (" + strFilter + ")";
-            List<FeesTemplate> list = JoSQLUtil.getResult(strSQL, listFeesTemplate);
+            if (listServiceFees.size() != listFeesTemplate.size() && srvId != -1) {
+                String strFilter = null;
 
-            for (FeesTemplate ft : list) {
-                ServiceFees sf = new ServiceFees();
-                sf.setFeesDesp(ft.getTemplateName());
-                sf.setServiceId(srvId);
-                listServiceFees.add(sf);
+                for (ServiceFees sf : listServiceFees) {
+                    if (strFilter == null) {
+                        strFilter = "'" + sf.getFeesDesp() + "'";
+                    } else {
+                        strFilter = strFilter + ",'" + sf.getFeesDesp() + "'";
+                    }
+                }
+
+                String strSQL = "SELECT * FROM com.cv.app.opd.database.entity.FeesTemplate"
+                        + " WHERE templateName NOT IN (" + strFilter + ")";
+                List<FeesTemplate> list = JoSQLUtil.getResult(strSQL, listFeesTemplate);
+
+                for (FeesTemplate ft : list) {
+                    ServiceFees sf = new ServiceFees();
+                    sf.setFeesDesp(ft.getTemplateName());
+                    sf.setServiceId(srvId);
+                    listServiceFees.add(sf);
+                }
             }
-        }
 
-        fireTableDataChanged();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getServiceFees : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void saveRecord(ServiceFees record) {

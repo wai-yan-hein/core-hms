@@ -16,18 +16,20 @@ import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author winswe
  */
 public class MarchantSearch extends javax.swing.JDialog {
-    
+
+    static Logger log = Logger.getLogger(MarchantSearch.class.getName());
     private final SelectionObserver observer;
     private int selectedRow = -1;
     private final MarchantSearchTableModel tableModel = new MarchantSearchTableModel();
     private final AbstractDataAccess dao;
-    
+
     /**
      * Creates new form StudentSearch
      */
@@ -37,7 +39,7 @@ public class MarchantSearch extends javax.swing.JDialog {
         initTable();
         this.observer = observer;
         this.dao = dao;
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -46,7 +48,7 @@ public class MarchantSearch extends javax.swing.JDialog {
         setVisible(true);
     }
 
-    private void select(){
+    private void select() {
         if (selectedRow >= 0) {
             observer.selected("VMarchantSearch",
                     tableModel.getSelectVM(tblStudentList.convertRowIndexToModel(selectedRow)));
@@ -56,40 +58,45 @@ public class MarchantSearch extends javax.swing.JDialog {
                     "No Selection", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
-    private void search(){
+
+    private void search() {
         String stuNo = Util1.getNullTo(txtStuNo.getText(), "-");
         String stuName = Util1.getNullTo(txtStuName.getText(), "-");
         String strFilter = "";
-        
-        if(!stuNo.equals("-")){
-            if(strFilter.isEmpty()){
+
+        if (!stuNo.equals("-")) {
+            if (strFilter.isEmpty()) {
                 strFilter = "o.personNumber like '%" + stuNo + "%'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.personNumber like '%" + stuNo + "%'";
             }
         }
-        
-        if(!stuName.equals("-")){
-            if(strFilter.isEmpty()){
+
+        if (!stuName.equals("-")) {
+            if (strFilter.isEmpty()) {
                 strFilter = "o.personName like '%" + stuName + "%'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.personName like '%" + stuName + "%'";
             }
         }
-        
-        if(strFilter.isEmpty()){
+
+        if (strFilter.isEmpty()) {
             strFilter = "select o from VMarchant o";
-        }else{
+        } else {
             strFilter = "select o from VMarchant o where " + strFilter;
         }
-        
-        List<VMarchant> listVM = dao.findAllHSQL(strFilter);
-        tableModel.setListVM(listVM);
+
+        try {
+            List<VMarchant> listVM = dao.findAllHSQL(strFilter);
+            tableModel.setListVM(listVM);
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    
-    private void initTable(){
+
+    private void initTable() {
         tblStudentList.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblStudentList.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblStudentList.getColumnModel().getColumn(2).setPreferredWidth(30);
@@ -105,6 +112,7 @@ public class MarchantSearch extends javax.swing.JDialog {
             }
         });
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

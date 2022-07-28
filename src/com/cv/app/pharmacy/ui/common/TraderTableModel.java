@@ -56,7 +56,7 @@ public class TraderTableModel extends AbstractTableModel {
             switch (column) {
                 case 0: //Code
                     if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                        return trader.getTraderId().replace("CUS", "").replace("SUP", "");
+                        return trader.getStuCode();
                     } else {
                         return trader.getTraderId();
                     }
@@ -110,6 +110,14 @@ public class TraderTableModel extends AbstractTableModel {
     }
 
     public Trader getTrader(int row) {
+        if(listTrader == null){
+            return null;
+        }else if(listTrader.isEmpty()){
+            return null;
+        }else if(row > listTrader.size()){
+            return null;
+        }
+        
         return listTrader.get(row);
     }
 

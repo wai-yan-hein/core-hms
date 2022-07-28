@@ -41,7 +41,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
     static Logger log = Logger.getLogger(SystemMigrationSQL.class.getName());
     private Connection con;
     private HashMap<Integer, Integer> hmIngZgy;
-    
+
     /**
      * Creates new form SystemMigration
      */
@@ -226,7 +226,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                 Integer ttlRecords = 0;
                 Integer ttlSuccRecords = 0;
                 Integer ttlErrRecords = 0;
-                
+
                 while (rs.next()) {
                     try {
                         Supplier sup = new Supplier();
@@ -239,7 +239,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                         sup.setTraderName(getZawgyiText(rs.getString("SUPPLIER_NAME")));
                         sup.setAddress(rs.getString("SUP_ADDRESS"));
                         sup.setPhone(rs.getString("SUP_PHONE"));
-                        
+
                         dao.save(sup);
                         ttlSuccRecords++;
                         lblSuccessTtl.setText(ttlSuccRecords.toString());
@@ -250,11 +250,11 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                         lblErrorDataTtl.setText(ttlErrRecords.toString());
                         txaErrorData.append(rs.getString("SUPPLIER_ID") + "@" + rs.getString("SUPPLIER_NAME") + "\n");
                     }
-                    
+
                     ttlRecords++;
                     lblProcessTtl.setText(ttlRecords.toString());
                 }
-                
+
             }
         } catch (SQLException ex1) {
             lblStatus.setText("processSupplierData : " + ex1.getMessage());
@@ -268,7 +268,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                 Integer ttlRecords = 0;
                 Integer ttlSuccRecords = 0;
                 Integer ttlErrRecords = 0;
-                
+
                 while (rs.next()) {
                     try {
                         Customer cus = new Customer();
@@ -283,7 +283,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                                 ts = listTS.get(0);
                             }
                         }
-                        
+
                         cus.setTownship(ts);
                         cus.setTraderId("CUS" + rs.getString("CUS_CODE"));
                         cus.setTraderName(getZawgyiText(rs.getString("CUS_NAME")));
@@ -294,7 +294,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                         cus.setCreatedBy(Global.loginUser.getUserId());
                         cus.setCreatedDate(DateUtil.getTodayDateTime());
                         dao.save(cus);
-                        
+
                         ttlSuccRecords++;
                         lblSuccessTtl.setText(ttlSuccRecords.toString());
                         txaSuccessData.append(rs.getString("CUS_CODE") + "@" + rs.getString("CUS_NAME") + "\n");
@@ -305,11 +305,11 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                         lblErrorDataTtl.setText(ttlErrRecords.toString());
                         txaErrorData.append(rs.getString("CUS_CODE") + "@" + rs.getString("CUS_NAME") + "\n");
                     }
-                    
+
                     ttlRecords++;
                     lblProcessTtl.setText(ttlRecords.toString());
                 }
-                
+
             }
         } catch (SQLException ex1) {
             lblStatus.setText("processCustomerData : " + ex1.getMessage());
@@ -321,15 +321,15 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
         String strSql = "SELECT DRUG_TYPE_ID, DRUG_TYPE_NAME FROM DRUG_TYPE ORDER BY DRUG_TYPE_ID";
         try {
             try (Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(strSql)) {
-                
+
                 while (rs.next()) {
                     ItemType it = new ItemType();
                     it.setItemTypeCode(rs.getString("DRUG_TYPE_ID"));
                     it.setItemTypeName(rs.getString("DRUG_TYPE_NAME"));
-                    
+
                     dao.save(it);
                 }
-                
+
             }
         } catch (Exception ex) {
             log.error("processItemTypeData : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
@@ -341,7 +341,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
     private void processItemSetupData1() {
         try {
             try (Statement stmt = con.createStatement(); ResultSet rs = stmt.executeQuery(txaQuery.getText())) {
-                
+
                 while (rs.next()) {
                     Medicine mc = new Medicine();
                     mc.setMedId(rs.getString("SHORT_CODE"));
@@ -353,10 +353,13 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                     mc.setMedName(medDesp);
                     mc.setActive(rs.getBoolean("ACTIVE"));
                     mc.setRelStr(getZawgyiText(rs.getString("RELATION_STR")));
-                    
-                    ItemType it = (ItemType) dao.find(ItemType.class, rs.getString("DRUG_TYPE_ID"));
-                    mc.setMedTypeId(it);
-                    
+
+                    try {
+                        ItemType it = (ItemType) dao.find(ItemType.class, rs.getString("DRUG_TYPE_ID"));
+                        mc.setMedTypeId(it);
+                    } catch (Exception ex) {
+                        log.error("processItemSetupData1 : " + ex.getMessage());
+                    }
                     List<ItemBrand> listIB = dao.findAllHSQL(
                             "select o from ItemBrand o where o.migId = " + rs.getInt("MANUFACTURER_ID"));
                     if (listIB != null) {
@@ -364,7 +367,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                             mc.setBrand(listIB.get(0));
                         }
                     }
-                    
+
                     List<Category> listCAT = dao.findAllHSQL(
                             "select o from Category o where o.migId = " + rs.getInt("CHEMICAL_ID"));
                     if (listCAT != null) {
@@ -372,7 +375,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                             mc.setCatId(listCAT.get(0));
                         }
                     }
-                    
+
                     List<RelationGroup> listRG;
                     try (Statement sDetail = con.createStatement(); ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
                             + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
@@ -394,14 +397,20 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                                 rg.setUnitQty(prvQty / rg.getSmallestQty());
                             }
                             prvQty = rg.getSmallestQty();
-                            
-                            ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, rs1.getString("UNIT_SHORT"));
-                            rg.setUnitId(iu);
-                            listRG.add(rg);
-                            
+
+                            try {
+                                ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, rs1.getString("UNIT_SHORT"));
+                                rg.setUnitId(iu);
+                                listRG.add(rg);
+                            } catch (Exception ex) {
+                                log.error("processItemSetupData11 : " + ex.getMessage());
+                            } finally {
+                                dao.close();
+                            }
                             uniqueId++;
-                        }                      }
-                    
+                        }
+                    }
+
                     mc.setRelationGroupId(listRG);
                     mc.setActive(true);
                     try {
@@ -413,11 +422,15 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
                         dao.close();
                     }
                 }
-                
+
             }
         } catch (NumberFormatException | SQLException ex) {
             lblStatus.setText("processItemSetupData1 : " + ex.getMessage());
             log.error("processItemSetupData1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+        } catch (Exception ex) {
+            log.error("processItemSetupData2 : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -489,16 +502,21 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
     }
 
     private Trader getSupplier(int migId) {
-        String strSql = "select o from Trader o where o.migId = " + migId;
-        List<Trader> listSUP = dao.findAllHSQL(strSql);
         Trader trader = null;
+        try {
+            String strSql = "select o from Trader o where o.migId = " + migId;
+            List<Trader> listSUP = dao.findAllHSQL(strSql);
 
-        if (listSUP != null) {
-            if (!listSUP.isEmpty()) {
-                trader = listSUP.get(0);
+            if (listSUP != null) {
+                if (!listSUP.isEmpty()) {
+                    trader = listSUP.get(0);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getSupplier : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         return trader;
     }
 
@@ -705,7 +723,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
 
     private void butConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butConnectActionPerformed
         try {
-            String strUrl = "jdbc:sqlserver:" + txtServerName.getText() + ";databaseName=" 
+            String strUrl = "jdbc:sqlserver:" + txtServerName.getText() + ";databaseName="
                     + txtDbSid.getText();
             con = DriverManager.getConnection(strUrl, txtUser.getText(), txtPassword.getText());
             lblStatus.setText("Connection success.");

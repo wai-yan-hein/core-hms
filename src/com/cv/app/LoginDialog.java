@@ -22,6 +22,7 @@ import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.ResultSet;
 import java.util.Date;
@@ -73,7 +74,7 @@ public class LoginDialog extends javax.swing.JDialog {
         try {
             Global.sock = new ServerSocket(10005);//Pharmacy
             //Global.sock = new ServerSocket(10001);//Clinic
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             JOptionPane.showMessageDialog(parent, "You cannot run two program at the same time in the same machine.",
                     "Duplicate Program running.", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
@@ -90,13 +91,11 @@ public class LoginDialog extends javax.swing.JDialog {
             List<Session> listSession = dao.findAll("Session");
             BindingUtil.BindCombo(cboSession, listSession);
 
-            for (int i = 0; i < listSession.size() - 1; i++) {
-                Session sess = listSession.get(i);
+            /*for (Session sess : listSession) {
                 if (DateUtil.isValidSession(sess.getStartTime(), sess.getEndTime())) {
                     cboSession.setSelectedItem(sess);
-                    i = listSession.size();
                 }
-            }
+            }*/
             dao.close();
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -397,8 +396,8 @@ public class LoginDialog extends javax.swing.JDialog {
                 initPrivilege(Global.loginUser.getUserRole().getRoleId());
                 initDefaultValue(Global.loginUser.getUserRole());
                 Global.defaultValue.put("Location", Global.loginUser.getDefLocation());
-                Global.lableFont = new java.awt.Font("Zawgyi-One", 1, 12);
-                Global.textFont = new java.awt.Font("Zawgyi-One", 0, 12);
+                Global.lableFont = new java.awt.Font("Zawgyi-One", 1, 13);
+                Global.textFont = new java.awt.Font("Zawgyi-One", 0, 13);
                 Global.dateFormat = "dd/MM/yyyy";
                 initExchangeRate();
                 this.dispose();

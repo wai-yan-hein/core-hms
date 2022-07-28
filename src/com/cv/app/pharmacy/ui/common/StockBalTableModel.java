@@ -137,7 +137,8 @@ public class StockBalTableModel extends AbstractTableModel {
                         String qtyStr = (String) value + record.getUnit().getItemUnitCode();
                         
                         record.setQtyStrDeman(qtyStr);
-                        record.setUnitQty(new Float(value.toString()));
+                        
+                        record.setUnitQty(NumberUtil.FloatZero(value));
                     } else {
                         record.setQtyStrDeman(null);
                         record.setUnit(null);
@@ -158,7 +159,7 @@ public class StockBalTableModel extends AbstractTableModel {
                             record.setFocUnit(unitPopup.getSelUnit());
                             String qtyStr = (String) value + unitPopup.getSelUnit().getItemUnitCode();
                             record.setFocQtyStr(qtyStr);
-                            record.setFocUnitQty(new Float(value.toString()));
+                            record.setFocUnitQty(NumberUtil.FloatZero(value));
                         }
                     } else {
                         record.setFocQtyStr(null);

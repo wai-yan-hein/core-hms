@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * SessionSetup.java
  *
  * Created on May 29, 2012, 10:04:54 PM
@@ -39,6 +39,7 @@ import org.jdesktop.swingbinding.SwingBindings;
  * @author winswe
  */
 public class SessionSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(SessionSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private List<Session> listSession = ObservableCollections.
@@ -82,31 +83,37 @@ public class SessionSetup extends javax.swing.JPanel {
     }
 
     private void initTable() {
-        //Get Session from database.
-        listSession = ObservableCollections.observableList(dao.findAll("Session"));
+        try {
+            //Get Session from database.
+            listSession = ObservableCollections.observableList(dao.findAll("Session"));
 
-        //Binding table with listCategory using beansbinding library.
-        JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
-                listSession, tblSession);
-        ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${sessionName}"));
-        columnBinding.setColumnName("Session Name");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        jTableBinding.bind();
+            //Binding table with listCategory using beansbinding library.
+            JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
+                    listSession, tblSession);
+            ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${sessionName}"));
+            columnBinding.setColumnName("Session Name");
+            columnBinding.setColumnClass(String.class);
+            columnBinding.setEditable(false);
+            jTableBinding.bind();
 
-        //Define table selection model to single row selection.
-        tblSession.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblSession.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    public void valueChanged(ListSelectionEvent e) {
-                        int row = tblSession.getSelectedRow();
+            //Define table selection model to single row selection.
+            tblSession.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblSession.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                public void valueChanged(ListSelectionEvent e) {
+                    int row = tblSession.getSelectedRow();
 
-                        if (row != -1) {
-                            setCurrSession(listSession.get(tblSession.convertRowIndexToModel(row)));
-                        }
+                    if (row != -1) {
+                        setCurrSession(listSession.get(tblSession.convertRowIndexToModel(row)));
                     }
-                });
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {

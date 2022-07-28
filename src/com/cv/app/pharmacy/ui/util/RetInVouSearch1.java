@@ -117,7 +117,12 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Customer List", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -125,17 +130,23 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboPayment.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableVoucher() {
@@ -165,15 +176,21 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -243,30 +260,30 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
             vouFilter.setPaymentType(null);
         }
 
-        if(txtCode.getText() != null){
-            if(!txtCode.getText().trim().isEmpty()){
+        if (txtCode.getText() != null) {
+            if (!txtCode.getText().trim().isEmpty()) {
                 String itemCode = txtCode.getText().trim().toUpperCase();
                 vouFilter.setItemCode(itemCode);
                 strSql = strSql + " and upper(h.medId.medId) like '" + itemCode + "%'";
-            }else{
+            } else {
                 vouFilter.setItemCode(null);
             }
-        }else{
+        } else {
             vouFilter.setItemCode(null);
         }
-        
-        if(txtDesp.getText() != null){
-            if(!txtDesp.getText().trim().isEmpty()){
+
+        if (txtDesp.getText() != null) {
+            if (!txtDesp.getText().trim().isEmpty()) {
                 String itemDesp = txtDesp.getText().trim().toUpperCase();
                 vouFilter.setItemDesp(itemDesp);
                 strSql = strSql + " and upper(h.medId.medName) like '" + itemDesp + "%'";
-            }else{
+            } else {
                 vouFilter.setItemDesp(null);
             }
-        }else{
+        } else {
             vouFilter.setItemDesp(null);
         }
-        
+
         //Filter history save
         try {
             if (chkSave.isSelected()) {
@@ -320,7 +337,7 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
                         + " and key.userId = '" + Global.machineId + "'");
             } else {
                 tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetInVouSearch'"
-                        + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+                        + " and key.userId = '" + Global.machineId + "'");
             }
 
             if (tmpFilter == null) {
@@ -330,7 +347,7 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
                 if (propValue.equals("M")) {
                     vouFilter.getKey().setUserId(Global.machineId);
                 } else {
-                    vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+                    vouFilter.getKey().setUserId(Global.machineId);
                 }
 
                 txtFromDate.setText(DateUtil.getTodayDateStr());
@@ -400,7 +417,7 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
                             + "from LocationTraderMapping a where a.key.locationId in ("
                             + "select a.key.locationId from UserLocationMapping a "
                             + "where a.key.userId = '" + Global.loginUser.getUserId()
-                            + "' and a.isAllowSessCheck = true)) and o.traderId = '"
+                            + "' and a.isAllowRetIn = true)) and o.traderId = '"
                             + traderId.toUpperCase() + "' order by o.traderName";
                 }
                 List<Trader> listTrader = dao.findAllHSQL(strSql);

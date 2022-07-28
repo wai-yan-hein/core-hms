@@ -16,15 +16,18 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
+import org.apache.log4j.Logger;
+
 /**
  *
  * @author ACER
  */
 public class DCDrDetailIdDialog extends javax.swing.JDialog {
 
+    static Logger log = Logger.getLogger(DCDrDetailIdDialog.class.getName());
     private DCDrDetailSetupModel tableModel = new DCDrDetailSetupModel();
     private final AbstractDataAccess dao = Global.dao;
-    
+
     /**
      * Creates new form DCDrDetailIdDialog
      */
@@ -55,13 +58,20 @@ public class DCDrDetailIdDialog extends javax.swing.JDialog {
             }
         }
     };
-    
-    private void initTable(){
-        List<VDCDrDetailId> list = dao.findAll("VDCDrDetailId");
-        tableModel.setList(list);
-        tblDrId.getColumnModel().getColumn(0).setCellEditor(
-                new DCTableCellEditor(dao));
+
+    private void initTable() {
+        try {
+            List<VDCDrDetailId> list = dao.findAll("VDCDrDetailId");
+            tableModel.setList(list);
+            tblDrId.getColumnModel().getColumn(0).setCellEditor(
+                    new DCTableCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

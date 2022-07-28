@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,6 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
@@ -64,8 +64,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     public ReOrderLevelEntry() {
         initComponents();
         initCombo();
+        log.info("Start : " + new Date());
         getReOrderLevel();
+        log.info("End : " + new Date());
+        log.info("Filter Start : " + new Date());
         applyFilter();
+        log.info("Filter End : " + new Date());
         initTable();
         actionMapping();
 
@@ -83,32 +87,45 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
-        BindingUtil.BindComboFilter(cboTrLocation, getLocationFilter());
-        BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
-        BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
-        BindingUtil.BindComboFilter(cboGroup, dao.findAllHSQL(
-                "select o from ItemGroup o order by o.groupName"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            BindingUtil.BindComboFilter(cboTrLocation, getLocationFilter());
+            BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
+            BindingUtil.BindComboFilter(cboGroup, dao.findAllHSQL(
+                    "select o from ItemGroup o order by o.groupName"));
 
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrand, this);
-        cboTrLocation.setSelectedItem(null);
-        bindStatus = true;
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrand, this);
+            cboTrLocation.setSelectedItem(null);
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowReOrder = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowReOrder = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        return null;
     }
 
     @Override
@@ -133,7 +150,9 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             /*Integer locationId = ((Location) cboLocation.getSelectedItem())
              .getLocationId();*/
             tblReOrderModel.setLocationId(location);
+            log.info("gen start");
             dao.execProc("gen_re_order_level", location.toString());
+            log.info("gen end");
             /*dao.execProc("update_re_order_balance", Global.loginUser.getUserId(),
              locationId.toString());*/
  /*String strSql = "update re_order_level rol left join (select user_id, location_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
@@ -154,7 +173,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                     + "	 where (rol.location_id = " + location.toString() + " or 0 = " + location.toString() + ")";*/
             String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
                     + "	from tmp_stock_balance_exp\n"
-                    + "	where user_id = '" + Global.loginUser.getUserId() + "' \n"
+                    + "	where user_id = '" + Global.machineId + "' \n"
                     + "           and ifnull(bal_qty,0) <> 0\n"
                     + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
                     + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
@@ -242,17 +261,15 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
         } catch (Exception ex) {
 
         }
-        /*Thread thread = new Thread() {
-         @Override
-         public void run() {
-         List<ReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
-         tblReOrderModel.setListReOrderLevel(listReOrderLevel);
-         System.gc();
-         };
-         };
-         thread.start();*/
-        List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
-        tblReOrderModel.setListReOrderLevel(listReOrderLevel);
+
+        try {
+            List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
+            tblReOrderModel.setListReOrderLevel(listReOrderLevel);
+        } catch (Exception ex) {
+            log.error("applyFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         System.gc();
     }
 
@@ -290,20 +307,20 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
 
     private void execStockBalanceExp(Integer location) {
         dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                + Global.loginUser.getUserId() + "'");
+                + Global.machineId + "'");
 
         dao.execProc("stock_balance_exp", "Opening",
                 DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
                 location.toString(),
-                Global.loginUser.getUserId());
+                Global.machineId);
     }
 
     private void insertStockFilterCode(int locationId) {
         //int locationId = 0;
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()) + "'";
@@ -369,7 +386,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
         Integer sourceLoc = ((Location) cboLocation.getSelectedItem()).getLocationId();
         String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
                 + "	from tmp_stock_balance_exp\n"
-                + "	where user_id = '" + Global.loginUser.getUserId() + "' and ifnull(bal_qty,0) <> 0\n"
+                + "	where user_id = '" + Global.machineId + "' and ifnull(bal_qty,0) <> 0\n"
                 + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
                 + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
                 + "	   set rol.main_bal = tsbe.ttl_qty, \n"
@@ -486,17 +503,17 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             itemType = ((ItemType) cboItemType.getSelectedItem()).getItemTypeCode();
         }
-        
+
         Integer catId = 0;
         if (cboCategory.getSelectedItem() instanceof Category) {
             catId = ((Category) cboCategory.getSelectedItem()).getCatId();
         }
-        
+
         Integer brandId = 0;
         if (cboBrand.getSelectedItem() instanceof ItemBrand) {
             brandId = ((ItemBrand) cboBrand.getSelectedItem()).getBrandId();
         }
-        
+
         Integer balFilter = 0;
         if (cboBalFilter.getSelectedItem() != null) {
             String strBalFilter = cboBalFilter.getSelectedItem().toString();
@@ -510,12 +527,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                     break;
             }
         }
-        
+
         Integer groupId = 0;
         if (cboGroup.getSelectedItem() instanceof ItemGroup) {
             groupId = ((ItemGroup) cboGroup.getSelectedItem()).getGroupId();
         }
-        
+
         strSql = strSql.replace("$P{p_loc}", location.toString())
                 .replace("$P{p_item_type}", "'" + itemType + "'")
                 .replace("$P{p_cat_id}", catId.toString())
@@ -523,8 +540,8 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                 .replace("$P{p_bal_filter}", balFilter.toString())
                 .replace("$P{p_group}", groupId.toString())
                 .replace("$P{p_active}", "'" + cboActive.getSelectedItem().toString() + "'");
-                
-        try{
+
+        try {
             List<String> listHeader = new ArrayList();
             listHeader.add("Code");
             listHeader.add("Item Name");
@@ -533,7 +550,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             listHeader.add("Balance");
             listHeader.add("Bal < Min");
             listHeader.add("Supplier");
-            
+
             List<String> listField = new ArrayList();
             listField.add("item_id");
             listField.add("med_name");
@@ -542,7 +559,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             listField.add("balance_str");
             listField.add("bal_min_str");
             listField.add("brand_name");
-            
+
             HashMap<String, POIUtil.FormatType> hmType = new HashMap();
             hmType.put("item_id", POIUtil.FormatType.TEXT);
             hmType.put("med_name", POIUtil.FormatType.TEXT);
@@ -551,12 +568,12 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             hmType.put("balance_str", POIUtil.FormatType.TEXT);
             hmType.put("bal_min_str", POIUtil.FormatType.TEXT);
             hmType.put("brand_name", POIUtil.FormatType.TEXT);
-            
+
             ResultSet rs = dao.execSQL(strSql);
             POIUtil.genExcelFile(listHeader, listField, hmType, rs, "ReOrder.xls", "-", "-", "-");
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("genExcel : " + ex.toString());
-        }finally{
+        } finally {
             dao.close();
         }
     }

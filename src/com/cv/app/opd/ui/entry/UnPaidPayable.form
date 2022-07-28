@@ -31,11 +31,11 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="cboDoctor" pref="47" max="32767" attributes="0"/>
+                      <Component id="cboDoctor" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="cboExpType" pref="46" max="32767" attributes="0"/>
+                      <Component id="cboExpType" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="butRefresh" min="-2" max="-2" attributes="0"/>
                   </Group>

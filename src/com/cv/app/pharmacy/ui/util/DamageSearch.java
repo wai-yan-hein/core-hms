@@ -17,7 +17,6 @@ import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
 import com.cv.app.pharmacy.ui.common.DamageSearchTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
-import static com.cv.app.pharmacy.ui.util.AdjSearch.log;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -50,7 +49,7 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form DamageSearch
      */
@@ -79,13 +78,13 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
         sorter = new TableRowSorter(tblVoucher.getModel());
         tblVoucher.setRowSorter(sorter);
         addSelectionListenerVoucher();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -101,26 +100,38 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'DmgSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
-        tblMedicineModel.addEmptyRow();
-        tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
-        tblMedicine.getColumnModel().getColumn(0).setCellEditor(
-                new SaleTableCodeCellEditor(dao));
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'DmgSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+            tblMedicineModel.addEmptyRow();
+            tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
+            tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
+            tblMedicine.getColumnModel().getColumn(0).setCellEditor(
+                    new SaleTableCodeCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableVoucher() {
@@ -177,18 +188,18 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
         tblVoucher.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
 
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblVoucher.getSelectedRow();
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedRow = tblVoucher.getSelectedRow();
+            }
+        });
     }
     private Action actionMedList = new AbstractAction() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -200,23 +211,29 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="getMedList">
     private void getMedList(String filter) {
         int locationId = -1;
-        if(cboLocation.getSelectedItem() instanceof Location){
-            locationId = ((Location)cboLocation.getSelectedItem()).getLocationId();
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
         }
         String cusGroup = "-";
         /*if(currSaleVou.getCustomerId() != null){
@@ -233,7 +250,7 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
 
     // <editor-fold defaultstate="collapsed" desc="actionMapping">
     private void actionMapping() {
-    //F3 event on tblSale
+        //F3 event on tblSale
         //tblMedicine.getInputMap().put(KeyStroke.getKeyStroke("F3"), "F3-Action");
         //tblMedicine.getActionMap().put("F3-Action", actionMedList);
 
@@ -241,7 +258,7 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
         tblMedicine.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblMedicine.getActionMap().put("F8-Action", actionMedDelete);
 
-    //Enter event on tblSale
+        //Enter event on tblSale
         //tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
         //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
     }// </editor-fold>
@@ -356,7 +373,7 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
 
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListDamageHis(getSearchVoucher());
         lblTotalRec.setText("Total Records : " + vouTableModel.getRowCount());
@@ -377,30 +394,36 @@ public class DamageSearch extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'DmgVouSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'DmgVouSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("DmgVouSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("DmgVouSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
+
+                txtVouNo.setText(vouFilter.getVouNo());
             }
-
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
-
-            txtVouNo.setText(vouFilter.getVouNo());
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

@@ -50,7 +50,7 @@ public class FillVouPaymentDialog extends javax.swing.JDialog implements Selecti
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao, -1);
     }
 
     @Override

@@ -113,15 +113,21 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindCombo(cboExpenseType,
-                dao.findAllHSQL("select o from ExpenseType o where o.expenseOption = 'OPD' order by o.expenseName"));
+        try {
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindCombo(cboExpenseType,
+                    dao.findAllHSQL("select o from ExpenseType o where o.expenseOption = 'OPD' order by o.expenseName"));
 
-        //cboService.setSelectedItem(null);
-        cboExpenseType.setSelectedItem(null);
+            //cboService.setSelectedItem(null);
+            cboExpenseType.setSelectedItem(null);
 
-        AutoCompleteDecorator.decorate(cboExpenseType);
-        AutoCompleteDecorator.decorate(cboSession);
+            AutoCompleteDecorator.decorate(cboExpenseType);
+            AutoCompleteDecorator.decorate(cboSession);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -419,26 +425,24 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                     + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
                                     + " and ifnull(fee1_id,'')='' ";
                         }
+                    } else if (et.getNeedDr()) {
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
+                                + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + "and doctor_id = '" + selectedDrId + "' and ifnull(fee1_id,'')='' ";
                     } else {
-                        if (et.getNeedDr()) {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
-                                    + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt = veac.use_for\n"
-                                    + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + "and doctor_id = '" + selectedDrId + "' and ifnull(fee1_id,'')='' ";
-                        } else {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
-                                    + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt = veac.use_for\n"
-                                    + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + " and ifnull(fee1_id,'')='' ";
-                        }
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
+                                + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + " and ifnull(fee1_id,'')='' ";
                     }
                     break;
                 case "OPDREFER": //Refer Fee Payment
@@ -611,29 +615,27 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                     + " and ifnull(srv_fees4,0) <> 0 \n"
                                     + "group by source_acc_id, acc_id, dept_code, use_for";
                         }
+                    } else if (et.getNeedDr()) {
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(if(tech_id='"
+                                + selectedDrId + "', srv_fees4,0),0)) as amount, veac.exp_acc_id \n"
+                                + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + "and tech_id = '" + selectedDrId + "' and ifnull(fee4_id,'')='' \n"
+                                + " and ifnull(if(tech_id='" + selectedDrId + "',srv_fees4,0),0) <> 0 \n";
                     } else {
-                        if (et.getNeedDr()) {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(if(tech_id='"
-                                    + selectedDrId + "', srv_fees4,0),0)) as amount, veac.exp_acc_id \n"
-                                    + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt = veac.use_for\n"
-                                    + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + "and tech_id = '" + selectedDrId + "' and ifnull(fee4_id,'')='' \n"
-                                    + " and ifnull(if(tech_id='" + selectedDrId + "',srv_fees4,0),0) <> 0 \n";
-                        } else {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees4,0)) as amount, veac.exp_acc_id \n"
-                                    + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt = veac.use_for\n"
-                                    + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + "and ifnull(fee4_id,'')='' \n"
-                                    + " and ifnull(srv_fees4,0) <> 0 \n";
-                        }
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees4,0)) as amount, veac.exp_acc_id \n"
+                                + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + "and ifnull(fee4_id,'')='' \n"
+                                + " and ifnull(srv_fees4,0) <> 0 \n";
                     }
                     break;
                 case "OPDSTAFF": //Staff Fee Payment
@@ -794,7 +796,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
             String compName = Util1.getPropValue("report.company.name");
             String phoneNo = Util1.getPropValue("report.phone");
             String address = Util1.getPropValue("report.address");
-            params.put("p_user_id", Global.loginUser.getUserId());
+            params.put("p_user_id", Global.machineId);
             params.put("compName", compName);
             params.put("phoneNo", phoneNo);
             params.put("comAddress", address);

@@ -25,7 +25,7 @@ public class AccountSetup extends javax.swing.JPanel {
     private final AbstractDataAccess dao = Global.dao;
     private int selectedRow = -1;
     private final AccountSetupTableModel tableModel = new AccountSetupTableModel();
-    
+
     /**
      * Creates new form AccountSetup
      */
@@ -34,8 +34,14 @@ public class AccountSetup extends javax.swing.JPanel {
         initTable();
     }
 
-    private void initTable(){
-        tableModel.setListAS(dao.findAllHSQL("select o from AccSetting o order by o.accType"));
+    private void initTable() {
+        try {
+            tableModel.setListAS(dao.findAllHSQL("select o from AccSetting o order by o.accType"));
+        } catch (Exception ex) {
+            LOG.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Define table selection model to single row selection.
         tblAccList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
@@ -44,14 +50,14 @@ public class AccountSetup extends javax.swing.JPanel {
                 selectedRow = tblAccList.convertRowIndexToModel(
                         tblAccList.getSelectedRow());
             }
-            
+
             if (selectedRow >= 0) {
                 setSetting(tableModel.getSelected(selectedRow));
             }
         });
     }
-    
-    private void clear(){
+
+    private void clear() {
         currAccSetting = new AccSetting();
         selectedRow = -1;
         txtBalanceAcc.setText("");
@@ -66,19 +72,19 @@ public class AccountSetup extends javax.swing.JPanel {
         txtType.setEditable(true);
         txtType.requestFocusInWindow();
     }
-    
-    private boolean isValidEntry(){
+
+    private boolean isValidEntry() {
         boolean status = true;
-        
-        if(txtType.getText() == null){
+
+        if (txtType.getText() == null) {
             status = false;
             JOptionPane.showMessageDialog(this, "Type cannot be blank or null.",
                     "Type null error.", JOptionPane.ERROR_MESSAGE);
-        }else if(txtType.getText().trim().isEmpty()){
+        } else if (txtType.getText().trim().isEmpty()) {
             status = false;
             JOptionPane.showMessageDialog(this, "Type cannot be blank or null.",
                     "Type null error.", JOptionPane.ERROR_MESSAGE);
-        }else{
+        } else {
             currAccSetting.setAccType(txtType.getText().trim());
             currAccSetting.setBalanceAcc(txtBalanceAcc.getText().trim());
             currAccSetting.setDeptCode(txtDept.getText().trim());
@@ -89,11 +95,11 @@ public class AccountSetup extends javax.swing.JPanel {
             currAccSetting.setSourceAccIPD(txtSrcAccIPD.getText().trim());
             currAccSetting.setDeptCodeIPD(txtDeptIPD.getText().trim());
         }
-        
+
         return status;
     }
-    
-    private void setSetting(AccSetting accSetting){
+
+    private void setSetting(AccSetting accSetting) {
         this.currAccSetting = accSetting;
         txtBalanceAcc.setText(accSetting.getBalanceAcc());
         txtDept.setText(accSetting.getDeptCode());
@@ -106,20 +112,21 @@ public class AccountSetup extends javax.swing.JPanel {
         txtDeptIPD.setText(accSetting.getDeptCodeIPD());
         txtType.setEditable(false);
     }
-    
-    private void save(){
-        try{
-            if(isValidEntry()){
+
+    private void save() {
+        try {
+            if (isValidEntry()) {
                 dao.save(currAccSetting);
                 clear();
                 tableModel.setListAS(dao.findAllHSQL("select o from AccSetting o order by o.accType"));
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             LOG.error("save : " + ex.toString());
-        }finally{
+        } finally {
             dao.close();
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -118,7 +118,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
 
         }
     };
-    
+
     /**
      * Creates new form OPDVouSearchDialog
      */
@@ -127,7 +127,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         initComponents();
         this.observer = observer;
         this.option = option;
-        
+
         initCombo();
         getPrvFilter(); //Search history
         initTable();
@@ -137,14 +137,14 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         actionMapping();
         initFocus();
         timerFocus();
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
         setLocation(x, y);
         setVisible(true);
     }
-    
+
     private void initFocus() {
         txtPtNo.addKeyListener(keyListener);
         txtDocNo.addKeyListener(keyListener);
@@ -224,7 +224,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
 
         tblVou.addKeyListener(keyListener);
     }
-    
+
     private void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
             @Override
@@ -239,113 +239,132 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         timer.setRepeats(false);
         timer.start();
     }
-    
+
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboMachine, 
-            dao.findAllHSQL("select o from MachineInfo o order by o.machineName"));
-        BindingUtil.BindComboFilter(cboUser, 
-            dao.findAllHSQL("select o from Appuser o order by o.userName"));
-        
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboMachine);
-        new ComBoBoxAutoComplete(cboUser);
-        
-        cboPayment.setSelectedIndex(0);
-        cboCurrency.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboMachine,
+                    dao.findAllHSQL("select o from MachineInfo o order by o.machineName"));
+            BindingUtil.BindComboFilter(cboUser,
+                    dao.findAllHSQL("select o from Appuser o order by o.userName"));
+
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboMachine);
+            new ComBoBoxAutoComplete(cboUser);
+
+            cboPayment.setSelectedIndex(0);
+            cboCurrency.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getPrvFilter() {
         String tranOption = "OPDVouSearch";
-        if(option.equals("RESULT")){
+        if (option.equals("RESULT")) {
             tranOption = "ResultSearch";
         }
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = '" + tranOption + "'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption(tranOption);
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = '" + tranOption + "'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-            txtFrom.setText(DateUtil.getTodayDateStr());
-            txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption(tranOption);
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            if (vouFilter.getTrader() != null) {
-                txtPtNo.setText(vouFilter.getTrader().getTraderId());
-                txtPtName.setText(vouFilter.getTrader().getTraderName());
-            }
+                txtFrom.setText(DateUtil.getTodayDateStr());
+                txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
+                if (vouFilter.getTrader() != null) {
+                    txtPtNo.setText(vouFilter.getTrader().getTraderId());
+                    txtPtName.setText(vouFilter.getTrader().getTraderName());
+                }
 
-            if (vouFilter.getPaymentType() != null) {
-                cboPayment.setSelectedItem(vouFilter.getPaymentType());
-            }
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
 
-            if (vouFilter.getCurrency() != null) {
-                cboCurrency.setSelectedItem(vouFilter.getCurrency());
-            }
+                if (vouFilter.getPaymentType() != null) {
+                    cboPayment.setSelectedItem(vouFilter.getPaymentType());
+                }
 
-            if (vouFilter.getRemark() != null) {
-                txtRemark.setText(vouFilter.getRemark());
-            }
-            
-            if(vouFilter.getMachine() != null){
-                cboMachine.setSelectedItem(vouFilter.getMachine());
-            }
-            
-            if(vouFilter.getAppUser() != null){
-                cboUser.setSelectedItem(vouFilter.getAppUser());
-            }
-            
-            if(vouFilter.getPatient() != null){
-                txtPtName.setText(vouFilter.getPatient().getPatientName());
-                txtPtNo.setText(vouFilter.getPatient().getRegNo());
-            }else if(vouFilter.getPtName() != null){
-                if(!vouFilter.getPtName().isEmpty()){
-                    txtPtName.setText(vouFilter.getPtName());
+                if (vouFilter.getCurrency() != null) {
+                    cboCurrency.setSelectedItem(vouFilter.getCurrency());
+                }
+
+                if (vouFilter.getRemark() != null) {
+                    txtRemark.setText(vouFilter.getRemark());
+                }
+
+                if (vouFilter.getMachine() != null) {
+                    cboMachine.setSelectedItem(vouFilter.getMachine());
+                }
+
+                if (vouFilter.getAppUser() != null) {
+                    cboUser.setSelectedItem(vouFilter.getAppUser());
+                }
+
+                if (vouFilter.getPatient() != null) {
+                    txtPtName.setText(vouFilter.getPatient().getPatientName());
+                    txtPtNo.setText(vouFilter.getPatient().getRegNo());
+                } else if (vouFilter.getPtName() != null) {
+                    if (!vouFilter.getPtName().isEmpty()) {
+                        txtPtName.setText(vouFilter.getPtName());
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initTable() {
-        List<VouSrvFilter> listVouSrvFilter = dao.findAll("VouSrvFilter",
-                "key.tranOption = 'OPDVoucherSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        srvFilterTableModel.setListVouSrvFilter(listVouSrvFilter);
-        srvFilterTableModel.addEmptyRow();
-        tblService.getColumnModel().getColumn(0).setCellEditor(
-                new OPDTableCellEditor(dao));
+        try {
+            List<VouSrvFilter> listVouSrvFilter = dao.findAll("VouSrvFilter",
+                    "key.tranOption = 'OPDVoucherSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            srvFilterTableModel.setListVouSrvFilter(listVouSrvFilter);
+            srvFilterTableModel.addEmptyRow();
+            tblService.getColumnModel().getColumn(0).setCellEditor(
+                    new OPDTableCellEditor(dao));
 
-        tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
-        tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
-        tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
-        tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
-        tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
+            tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
+            tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
+            tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
+            tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
+            tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
 
-        //Define table selection model to single row selection.
-        tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblVou.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+            //Define table selection model to single row selection.
+            tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblVou.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblVou.getSelectedRow();
-                    }
-                });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    selectedRow = tblVou.getSelectedRow();
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String getHSQL() {
@@ -368,17 +387,17 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         if (!txtRemark.getText().isEmpty()) {
             strSql = strSql + " and sh.remark = '" + txtRemark.getText() + "'";
             vouFilter.setRemark(txtRemark.getText());
-        }else{
+        } else {
             vouFilter.setRemark(null);
         }
 
         if (!txtPtNo.getText().trim().isEmpty()) {
             strSql = strSql + " and sh.patient_id = '" + txtPtNo.getText().trim() + "'";
-        }else if(!txtPtName.getText().trim().isEmpty()){
-            strSql = strSql + " and upper(sh.patient_name) like '%" 
+        } else if (!txtPtName.getText().trim().isEmpty()) {
+            strSql = strSql + " and upper(sh.patient_name) like '%"
                     + txtPtName.getText().trim().toUpperCase() + "%'";
             vouFilter.setPtName(txtPtName.getText().trim());
-        }else{
+        } else {
             vouFilter.setPtName(null);
         }
 
@@ -391,7 +410,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             strSql = strSql + " and sh.currency_id = '" + curr.getCurrencyCode()
                     + "'";
             vouFilter.setCurrency(curr);
-        }else{
+        } else {
             vouFilter.setCurrency(null);
         }
 
@@ -399,7 +418,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             PaymentType pType = (PaymentType) cboPayment.getSelectedItem();
             strSql = strSql + " and sh.payment_id = " + pType.getPaymentTypeId();
             vouFilter.setPaymentType(pType);
-        }else{
+        } else {
             vouFilter.setPaymentType(null);
         }
 
@@ -407,14 +426,14 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             Session sess = (Session) cboSession.getSelectedItem();
             strSql = strSql + " and sh.session_id = " + sess.getSessionId();
             vouFilter.setSession(sess);
-        }else{
+        } else {
             vouFilter.setSession(null);
         }
 
         if (cboMachine.getSelectedItem() instanceof MachineInfo) {
             MachineInfo machine = (MachineInfo) cboMachine.getSelectedItem();
             String machineId = machine.getMachineId().toString();
-            if(machineId.length() == 1){
+            if (machineId.length() == 1) {
                 machineId = "0" + machineId;
             }
             strSql = strSql + " and sh.opd_inv_id like '" + machineId + "%'";
@@ -422,7 +441,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         } else {
             vouFilter.setMachine(null);
         }
-        
+
         if (cboUser.getSelectedItem() instanceof Appuser) {
             Appuser user = (Appuser) cboUser.getSelectedItem();
             strSql = strSql + " and sh.created_by = '" + user.getUserId() + "'";
@@ -430,31 +449,36 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         } else {
             vouFilter.setAppUser(null);
         }
-        
+
         if (srvFilterTableModel.getFilterCodeStr() != null) {
             strSql = strSql + " and sdh.service_id in (" + srvFilterTableModel.getFilterCodeStr()
                     + ")";
         }
-        
-        if(option.equals("RESULT")){
-            List<VService> listS = dao.findAllHSQL("select o from VService o where o.groupId = 1");
+
+        if (option.equals("RESULT")) {
             String filterId = "";
-            
-            for(VService vs : listS){
-                if(filterId.isEmpty()){
-                    filterId = vs.getServiceId().toString();
-                }else{
-                    filterId = filterId + "," + vs.getServiceId().toString();
+            try {
+                List<VService> listS = dao.findAllHSQL("select o from VService o where o.groupId = 1");
+                for (VService vs : listS) {
+                    if (filterId.isEmpty()) {
+                        filterId = vs.getServiceId().toString();
+                    } else {
+                        filterId = filterId + "," + vs.getServiceId().toString();
+                    }
                 }
+            } catch (Exception ex) {
+                log.error("getHSQL1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            } finally {
+                dao.close();
             }
-            
-            if(!filterId.isEmpty()){
+
+            if (!filterId.isEmpty()) {
                 strSql = strSql + " and sdh.service_id in (" + filterId + ")";
             }
         }
-        
+
         strSql = strSql + " order by date(sh.opd_date) desc, sh.opd_inv_id desc";
-        
+
         //Filter history save
         try {
             dao.save(vouFilter);
@@ -496,7 +520,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
 
         return listVS;
     }
-    
+
     @Override
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
@@ -554,7 +578,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         public void actionPerformed(ActionEvent e) {
             if (tblService.getSelectedRow() >= 0) {
                 try {
-                    if(tblService.getCellEditor() != null){
+                    if (tblService.getCellEditor() != null) {
                         tblService.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -970,32 +994,30 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
   }//GEN-LAST:event_txtToMouseClicked
 
   private void txtPtNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPtNoActionPerformed
-       if (txtPtNo.getText().isEmpty()) {
+      if (txtPtNo.getText().isEmpty()) {
           selected("PatientSearch", null);
-      } else {
-          if (txtPtNo.getText() != null && !txtPtNo.getText().isEmpty()) {
-            try {
-                Patient pt;
+      } else if (txtPtNo.getText() != null && !txtPtNo.getText().isEmpty()) {
+          try {
+              Patient pt;
 
-                dao.open();
-                pt = (Patient) dao.find(Patient.class, txtPtNo.getText());
-                dao.close();
+              dao.open();
+              pt = (Patient) dao.find(Patient.class, txtPtNo.getText());
+              dao.close();
 
-                if (pt == null) {
-                    txtPtNo.setText(null);
-                    txtPtName.setText(null);
-                    
-                    JOptionPane.showMessageDialog(Util1.getParent(),
-                            "Invalid patient code.",
-                            "Patient Code", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    selected("PatientSearch", pt);
-                    tblService.requestFocusInWindow();
-                }
-            } catch (Exception ex) {
-                log.error("getPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            }
-        }
+              if (pt == null) {
+                  txtPtNo.setText(null);
+                  txtPtName.setText(null);
+
+                  JOptionPane.showMessageDialog(Util1.getParent(),
+                          "Invalid patient code.",
+                          "Patient Code", JOptionPane.ERROR_MESSAGE);
+              } else {
+                  selected("PatientSearch", pt);
+                  tblService.requestFocusInWindow();
+              }
+          } catch (Exception ex) {
+              log.error("getPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+          }
       }
   }//GEN-LAST:event_txtPtNoActionPerformed
 
@@ -1032,7 +1054,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
 
     private void txtDocNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDocNoActionPerformed
         // TODO add your handling code here:
-         if (txtDocNo.getText() != null && !txtDocNo.getText().isEmpty()) {
+        if (txtDocNo.getText() != null && !txtDocNo.getText().isEmpty()) {
             try {
                 Doctor dr;
 

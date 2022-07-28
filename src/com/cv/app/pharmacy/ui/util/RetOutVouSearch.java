@@ -24,6 +24,7 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
+    private final String prifxStatus = Util1.getPropValue("system.sale.emitted.prifix");
 
     /**
      * Creates new form RetOutVouSearch
@@ -114,29 +116,49 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Customer List", dao, locationId);
+        dialog.setPreferredSize(new Dimension(1200, 600));
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboPayment.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'RetOutSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'RetOutSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -210,7 +232,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -222,15 +244,21 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -281,9 +309,14 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         /*String strSql = "select distinct v from RetOutHis v join v.listDetail h where v.retOutDate between '"
                 + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";*/
+        String strFieldName = "sh.cus_id";
+        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+            strFieldName = "tr.stu_no";
+        }
         String strSql = "select distinct date(sh.ret_out_date) ret_out_date, sh.ret_out_id, sh.remark, \n"
                 + "sh.cus_id, tr.trader_name cus_name, "
-                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted\n"
+                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted,\n"
+                + "tr.stu_no \n"
                 + "from ret_out_his sh\n"
                 + "join ret_out_detail_his sdh on sh.ret_out_id = sdh.vou_no\n"
                 + "join medicine med on sdh.med_id = med.med_id\n"
@@ -292,12 +325,12 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
                 + "left join trader tr on sh.cus_id = tr.trader_id "
                 + "where sh.ret_out_date between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
 
         if (txtCusCode.getText() != null && !txtCusCode.getText().isEmpty()) {
-            strSql = strSql + " and sh.cus_id = '" + txtCusCode.getText() + "'";
+            strSql = strSql + " and " + strFieldName + " = '" + txtCusCode.getText() + "'";
         } else {
             vouFilter.setTrader(null);
         }
@@ -371,7 +404,12 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
                 while (rs.next()) {
                     VoucherSearch vs = new VoucherSearch();
                     vs.setCusName(rs.getString("cus_name"));
-                    vs.setCusNo(rs.getString("cus_id"));
+                    if (prifxStatus.equals("Y")) {
+                        log.info("stu_no : " + rs.getString("stu_no"));
+                        vs.setCusNo(rs.getString("stu_no"));
+                    } else {
+                        vs.setCusNo(rs.getString("cus_id"));
+                    }
                     vs.setInvNo(rs.getString("sh.ret_out_id"));
                     vs.setIsDeleted(rs.getBoolean("deleted"));
                     vs.setLocation(rs.getString("location_name"));
@@ -392,7 +430,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
 
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListRetOutHis(getSearchVoucher());
         lblTotalRec.setText("Total Records : " + vouTableModel.getRowCount());
@@ -415,49 +453,111 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
     private void getPrvFilter() {
         VouFilter tmpFilter;
         String propValue = Util1.getPropValue("system.search.filter.history");
-        if (propValue.equals("M")) {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetOutVouSearch'"
-                    + " and key.userId = '" + Global.machineId + "'");
-        } else {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetOutVouSearch'"
-                    + " and key.userId = '" + Global.loginUser.getUserId() + "'");
-        }
-
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("RetOutVouSearch");
+        try {
             if (propValue.equals("M")) {
-                vouFilter.getKey().setUserId(Global.machineId);
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetOutVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             } else {
-                vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetOutVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             }
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("RetOutVouSearch");
+                if (propValue.equals("M")) {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                } else {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                }
 
-            if (vouFilter.getTrader() != null) {
-                txtCusCode.setText(vouFilter.getTrader().getTraderId());
-                txtCusName.setText(vouFilter.getTrader().getTraderName());
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+
+                if (vouFilter.getTrader() != null) {
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode.setText(vouFilter.getTrader().getStuCode());
+                    } else {
+                        txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    }
+                    txtCusName.setText(vouFilter.getTrader().getTraderName());
+                }
+
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
+
+                if (vouFilter.getPaymentType() != null) {
+                    cboPayment.setSelectedItem(vouFilter.getPaymentType());
+                }
+
+                txtVouNo.setText(vouFilter.getVouNo());
             }
-
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
-            }
-
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
-
-            if (vouFilter.getPaymentType() != null) {
-                cboPayment.setSelectedItem(vouFilter.getPaymentType());
-            }
-
-            txtVouNo.setText(vouFilter.getVouNo());
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+    }
+
+    private Trader getTrader(String traderId) {
+        Trader cus = null;
+        try {
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
+            }
+
+            if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                int locationId;
+                String strSql;
+                if (cboLocation.getSelectedItem() instanceof Location) {
+                    locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+                    strSql = "select o from Trader o where "
+                            + "o.active = true and o.traderId in (select a.key.traderId "
+                            + "from LocationTraderMapping a where a.key.locationId = "
+                            + locationId + ") and " + strFieldName + " = '" + traderId.toUpperCase() + "' order by o.traderName";
+                } else {
+                    strSql = "select o from Trader o where "
+                            + "o.active = true and o.traderId in (select a.key.traderId "
+                            + "from LocationTraderMapping a where a.key.locationId in ("
+                            + "select a.key.locationId from UserLocationMapping a "
+                            + "where a.key.userId = '" + Global.loginUser.getUserId()
+                            + "' and a.isAllowRetOut = true)) and " + strFieldName + " = '"
+                            + traderId.toUpperCase() + "' order by o.traderName";
+                }
+                List<Trader> listTrader = dao.findAllHSQL(strSql);
+                log.info("strSql : " + strSql);
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
+            } else {
+                String strSql = "select o from Trader where " + strFieldName + " = '" + traderId + "'";
+                log.info("strSql 1: " + strSql);
+                List<Trader> listTrader = dao.findAllHSQL(strSql);
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("getTrader : " + ex.toString());
+        } finally {
+            dao.close();
+        }
+
+        return cus;
     }
 
     /**
@@ -731,12 +831,42 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
     private void txtCusCodeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusCodeMouseClicked
         if (evt.getClickCount() == 2) {
             getCustomerList();
+        } else {
+            Trader trader = getTrader(txtCusCode.getText().trim());
+            if (trader != null) {
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    txtCusCode.setText(trader.getStuCode());
+                } else {
+                    txtCusCode.setText(trader.getTraderId());
+                }
+                txtCusName.setText(trader.getTraderName());
+                vouFilter.setTrader(trader);
+            } else {
+                vouFilter.setTrader(null);
+                txtCusCode.setText(null);
+                txtCusName.setText(null);
+            }
         }
     }//GEN-LAST:event_txtCusCodeMouseClicked
 
     private void txtCusCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusCodeActionPerformed
         if (txtCusCode.getText() == null || txtCusCode.getText().isEmpty()) {
             txtCusName.setText(null);
+        } else {
+            Trader trader = getTrader(txtCusCode.getText().trim());
+            if (trader != null) {
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    txtCusCode.setText(trader.getStuCode());
+                } else {
+                    txtCusCode.setText(trader.getTraderId());
+                }
+                txtCusName.setText(trader.getTraderName());
+                vouFilter.setTrader(trader);
+            } else {
+                vouFilter.setTrader(null);
+                txtCusCode.setText(null);
+                txtCusName.setText(null);
+            }
         }
     }//GEN-LAST:event_txtCusCodeActionPerformed
 

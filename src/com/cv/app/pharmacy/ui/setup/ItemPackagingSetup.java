@@ -60,7 +60,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
     static Logger log = Logger.getLogger(ItemPackagingSetup.class.getName());
     protected Medicine currMedicine = new Medicine();
     private final List<ItemUnit> listItemUnit = new ArrayList();
-    
+
     /**
      * Creates new form ItemPackagingSetup
      */
@@ -70,15 +70,21 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
         initCombo();
         initPackingItemTable();
         initTableRelationGroup();
-        
+
         rpTableMode.setRelStrControl(txtRelationString);
     }
 
     private void assignPackingTable() {
-        String strSql = "select o from Medicine o where o.typeOption = 'PACKING' "
-                + " order by o.medId";
-        List<VMedicine1> listMedicine = dao.findAllHSQL(strSql);
-        itemTableModel.setListMedicine(listMedicine);
+        try {
+            String strSql = "select o from Medicine o where o.typeOption = 'PACKING' "
+                    + " order by o.medId";
+            List<VMedicine1> listMedicine = dao.findAllHSQL(strSql);
+            itemTableModel.setListMedicine(listMedicine);
+        } catch (Exception ex) {
+            log.error("assignPackingTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initPackingTable() {
@@ -97,91 +103,90 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
         tblPackingList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblPackingList.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblPackingList.getSelectedRow() >= 0) {
-                            selectRow = tblPackingList.convertRowIndexToModel(tblPackingList.getSelectedRow());
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblPackingList.getSelectedRow() >= 0) {
+                    selectRow = tblPackingList.convertRowIndexToModel(tblPackingList.getSelectedRow());
+                }
+                //System.out.println("Table Selection : " + selectRow);
+                if (selectRow >= 0) {
+                    try {
+                        if (tblPackingList.getCellEditor() != null) {
+                            tblPackingList.getCellEditor().stopCellEditing();
                         }
-                        //System.out.println("Table Selection : " + selectRow);
-                        if (selectRow >= 0) {
-                            try {
-                                if(tblPackingList.getCellEditor() != null){
-                                    tblPackingList.getCellEditor().stopCellEditing();
-                                }
-                            } catch (Exception ex) {
+                    } catch (Exception ex) {
 
-                            }
-
-                            VMedicine1 med = itemTableModel.getMedicine(selectRow);
-                            assignMed(med);
-                        }
                     }
-                });
+
+                    VMedicine1 med = itemTableModel.getMedicine(selectRow);
+                    assignMed(med);
+                }
+            }
+        });
     }
 
     private void assignMed(VMedicine1 med) {
-        currMedicine = (Medicine) dao.find(Medicine.class, med.getMedId());
-        List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
+        try {
+            currMedicine = (Medicine) dao.find(Medicine.class, med.getMedId());
+            List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
 
-        if (listRelationGroup.size() > 0) {
-            currMedicine.setRelationGroupId(listRelationGroup);
+            if (listRelationGroup.size() > 0) {
+                currMedicine.setRelationGroupId(listRelationGroup);
+            }
+
+            txtItemCode.setText(currMedicine.getMedId());
+            cboItemType.setSelectedItem(currMedicine.getMedTypeId());
+            txtItemName.setText(currMedicine.getMedName());
+            cboCategory.setSelectedItem(currMedicine.getCatId());
+            cboBrandName.setSelectedItem(currMedicine.getBrand());
+            txtRemark.setText(currMedicine.getChemicalName());
+            txtBarcode.setText(currMedicine.getBarcode());
+            txtShortName.setText(currMedicine.getShortName());
+            chkActive.setSelected(currMedicine.getActive());
+            txtRelationString.setText(currMedicine.getRelStr());
+            rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
+            rpTableMode.setListDetail(currMedicine.getRelationGroupId());
+
+            List<PackingItem> listPI = getPackingItem(med.getMedId());
+            packingTableModel.setListPI(listPI);
+            packingTableModel.addEmptyRow();
+            packingTableModel.setSelectedMed(med.getMedId());
+
+            lblStatus.setText("EDIT");
+        } catch (Exception ex) {
+            log.error("assignMed : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        txtItemCode.setText(currMedicine.getMedId());
-        cboItemType.setSelectedItem(currMedicine.getMedTypeId());
-        txtItemName.setText(currMedicine.getMedName());
-        cboCategory.setSelectedItem(currMedicine.getCatId());
-        cboBrandName.setSelectedItem(currMedicine.getBrand());
-        txtRemark.setText(currMedicine.getChemicalName());
-        txtBarcode.setText(currMedicine.getBarcode());
-        txtShortName.setText(currMedicine.getShortName());
-        chkActive.setSelected(currMedicine.getActive());
-        txtRelationString.setText(currMedicine.getRelStr());
-        rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
-        rpTableMode.setListDetail(currMedicine.getRelationGroupId());
-
-        List<PackingItem> listPI = getPackingItem(med.getMedId());
-        packingTableModel.setListPI(listPI);
-        packingTableModel.addEmptyRow();
-        packingTableModel.setSelectedMed(med.getMedId());
-
-        lblStatus.setText("EDIT");
     }
 
     private void initTableRelationGroup() {
-        tblRelation.getColumnModel().getColumn(0).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(2).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(3).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(4).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(5).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(6).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelation.getColumnModel().getColumn(1).setCellEditor(
-                new TableUnitCellEditor(dao.findAll("ItemUnit")));
+        try {
+            tblRelation.getColumnModel().getColumn(0).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(2).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(3).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(4).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(5).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(6).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelation.getColumnModel().getColumn(1).setCellEditor(
+                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
 
-        //Adjust table column width
-        TableColumn column = tblRelation.getColumnModel().getColumn(0);
-        column.setPreferredWidth(30);
-
-        /*tblRelation.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                List<RelationGroup> listRG = rpTableMode.getRelationGroup();
-
-                listItemUnit.removeAll(listItemUnit);
-                for (RelationGroup rg : listRG) {
-                    listItemUnit.add(rg.getUnitId());
-                }
-                BindingUtil.BindCombo(cboPurUnit, listItemUnit);
-            }
-        });*/
+            //Adjust table column width
+            TableColumn column = tblRelation.getColumnModel().getColumn(0);
+            column.setPreferredWidth(30);
+        } catch (Exception ex) {
+            log.error("initTableRelationGroup : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void initPackingItemTable() {
         //Adjust table column width
         TableColumn column = tblPackingItem.getColumnModel().getColumn(0);
@@ -201,7 +206,6 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
 
         /*tblPackingItem.getColumnModel().getColumn(3).setCellEditor(
          new TableUnitCellEditor(dao.findAll("ItemUnit")));*/
-        
         //F8 event on tblSale
         tblPackingItem.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblPackingItem.getActionMap().put("F8-Action", actionItemDelete);
@@ -245,7 +249,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
                 for (int i = 0; i < listPI.size() - 1; i++) {
                     dao.save(listPI.get(i));
                 }
-                
+
                 deletePackingItem(packingTableModel.getDeleteId());
                 newForm();
                 assignPackingTable();
@@ -363,17 +367,23 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindCombo(cboCategory, dao.findAll("Category"));
-        BindingUtil.BindCombo(cboBrandName, dao.findAll("ItemBrand"));
+        try {
+            BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindCombo(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindCombo(cboBrandName, dao.findAll("ItemBrand"));
 
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrandName, this);
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrandName, this);
 
-        cboItemType.setSelectedItem(null);
-        cboCategory.setSelectedItem(null);
-        cboBrandName.setSelectedItem(null);
+            cboItemType.setSelectedItem(null);
+            cboCategory.setSelectedItem(null);
+            cboBrandName.setSelectedItem(null);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private boolean isValidEntry() {
@@ -407,7 +417,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
             currMedicine.setShortName(txtShortName.getText());
             currMedicine.setTypeOption("PACKING");
             currMedicine.setRelStr(txtRelationString.getText());
-            
+
             if (lblStatus.getText().equals("NEW")) {
                 currMedicine.setCreatedBy(Global.loginUser);
             } else {
@@ -420,10 +430,18 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
     }
 
     private List<PackingItem> getPackingItem(String medId) {
-        List<PackingItem> listPI = dao.findAllHSQL(
-                "select o from PackingItem o where o.key.packingItemCode = '"
-                + medId + "' order by o.uniqueId");
-        return listPI;
+        try {
+            List<PackingItem> listPI = dao.findAllHSQL(
+                    "select o from PackingItem o where o.key.packingItemCode = '"
+                    + medId + "' order by o.uniqueId");
+            return listPI;
+        } catch (Exception ex) {
+            log.error("getPackingItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
+        return null;
     }
 
     private Action actionItemDelete = new AbstractAction() {
@@ -435,7 +453,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
             if (tblPackingItem.getSelectedRow() >= 0) {
                 int row = tblPackingItem.convertRowIndexToModel(tblPackingItem.getSelectedRow());
                 List<PackingItem> listPI = packingTableModel.getListPI();
-                
+
                 pi = listPI.get(row);
 
                 if (pi.getKey().getItem().getMedId() != null) {
@@ -444,7 +462,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
                                 "Are you sure to delete?",
                                 "Item delete", JOptionPane.YES_NO_OPTION);
 
-                        if(tblPackingItem.getCellEditor() != null){
+                        if (tblPackingItem.getCellEditor() != null) {
                             tblPackingItem.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -457,15 +475,21 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
             }
         }
     };
-    
-    private void deletePackingItem(String ids){
-        if(!ids.isEmpty()){
-            String sql = "delete from packing_item where packing_item_code = '" +
-                    txtItemCode.getText() + "' and med_id in (" + ids + ")";
-            dao.execSql(sql);
+
+    private void deletePackingItem(String ids) {
+        try {
+            if (!ids.isEmpty()) {
+                String sql = "delete from packing_item where packing_item_code = '"
+                        + txtItemCode.getText() + "' and med_id in (" + ids + ")";
+                dao.execSql(sql);
+            }
+        } catch (Exception ex) {
+            log.error("deletePackingItem : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -27,6 +27,7 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
     private final AbstractDataAccess dao = Global.dao;
     static Logger log = Logger.getLogger(PatientBalanceCheck.class.getName());
     private final PatientBalanceCheckTableModel pbcModel = new PatientBalanceCheckTableModel();
+
     /**
      * Creates new form PatientBalanceCheck
      */
@@ -40,7 +41,7 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
     private void getData() {
         String regNo = "-";
         String strDate = DateUtil.getTodayDateStrMYSQL();
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         String currency = getCurrencyId();
         List<CurrPTBalance> listBal;
         Double total = 0.0;
@@ -158,7 +159,7 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                 rs.close();
                 pbcModel.setList(listBal);
                 txtTtlBalance.setValue(total);
-            }else{
+            } else {
                 txtTtlBalance.setValue(0);
             }
             txtDiffAmt.setValue(0);
@@ -183,10 +184,16 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+        } catch (Exception ex) {
+            log.error("initCombo");
+        } finally {
+            dao.close();
+        }
     }
 
-    private void initTable(){
+    private void initTable() {
         tblBalance.getColumnModel().getColumn(0).setPreferredWidth(30);//Reg No.
         tblBalance.getColumnModel().getColumn(1).setPreferredWidth(30);//Adm No
         tblBalance.getColumnModel().getColumn(2).setPreferredWidth(150);//Patient
@@ -194,16 +201,17 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
         tblBalance.getColumnModel().getColumn(4).setPreferredWidth(50);//Balance
         tblBalance.getColumnModel().getColumn(5).setPreferredWidth(50);//C-Balance
     }
-    
-    private String getCurrency(){
+
+    private String getCurrency() {
         Object obj = cboCurrency.getSelectedItem();
-        if(obj instanceof Currency){
-            Currency curr = (Currency)obj;
+        if (obj instanceof Currency) {
+            Currency curr = (Currency) obj;
             return curr.getCurrencyCode();
-        }else{
+        } else {
             return "MMK";
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

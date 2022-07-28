@@ -21,17 +21,16 @@ public class PharmacyUtil {
 
     public static Double getSeq(String option, AbstractDataAccess dao) {
         double seq = 0;
-        Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
-
-        if (objSeq == null) {
-            objSeq = new Sequence(option, new Double(2));
-            seq = 1;
-        } else {
-            seq = objSeq.getSeq();
-            objSeq.setSeq(objSeq.getSeq() + 1);
-        }
-
         try {
+            Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
+
+            if (objSeq == null) {
+                objSeq = new Sequence(option, 2d);
+                seq = 1;
+            } else {
+                seq = objSeq.getSeq();
+                objSeq.setSeq(objSeq.getSeq() + 1);
+            }
             dao.save(objSeq);
         } catch (Exception ex) {
             log.error(ex.toString());
@@ -42,6 +41,7 @@ public class PharmacyUtil {
 
     public static Double getSeqR(String option, AbstractDataAccess dao) {
         double seq;
+        try{
         Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
 
         if (objSeq == null) {
@@ -49,20 +49,24 @@ public class PharmacyUtil {
         } else {
             seq = objSeq.getSeq();
         }
-
+        }catch(Exception ex){
+            seq = 0;
+            log.error("getSeqR : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
         return seq;
     }
 
     public static void updateSeq(String option, AbstractDataAccess dao) {
-        Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
+        try {
+            Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
 
         if (objSeq == null) {
-            objSeq = new Sequence(option, 1.0);
+            objSeq = new Sequence(option, 0.0);
         }
 
         objSeq.setSeq(objSeq.getSeq() + 1);
-
-        try {
             dao.save(objSeq);
         } catch (Exception ex) {
             dao.rollBack();

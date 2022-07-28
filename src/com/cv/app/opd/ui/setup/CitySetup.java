@@ -33,6 +33,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class CitySetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(CitySetup.class.getName());
     private final CityTableModel tableModel = new CityTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
@@ -40,7 +41,7 @@ public class CitySetup extends javax.swing.JDialog {
     private City currCity = new City();
     private BestAppFocusTraversalPolicy focusPolicy;
     private TableRowSorter<TableModel> sorter;
-    
+
     /**
      * Creates new form CitySetup
      */
@@ -54,7 +55,7 @@ public class CitySetup extends javax.swing.JDialog {
         sorter = new TableRowSorter(tblCity.getModel());
         tblCity.setRowSorter(sorter);
         lblStatus.setText("NEW");
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -64,21 +65,27 @@ public class CitySetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListCity(dao.findAll("City"));
-        tblCity.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblCity.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblCity.getSelectedRow() >= 0) {
-                    selectRow = tblCity.convertRowIndexToModel(tblCity.getSelectedRow());
-                }
+        try {
+            tableModel.setListCity(dao.findAll("City"));
+            tblCity.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblCity.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblCity.getSelectedRow() >= 0) {
+                        selectRow = tblCity.convertRowIndexToModel(tblCity.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getCity(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getCity(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setRecord(City city) {
@@ -139,9 +146,9 @@ public class CitySetup extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currCity);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addCity(currCity);
-                }else{
+                } else {
                     tableModel.setCity(selectRow, currCity);
                 }
                 clear();
@@ -158,7 +165,7 @@ public class CitySetup extends javax.swing.JDialog {
         }
     }
 
-    private void delete(){
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -183,6 +190,7 @@ public class CitySetup extends javax.swing.JDialog {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -314,7 +322,7 @@ public class CitySetup extends javax.swing.JDialog {
     }//GEN-LAST:event_butSaveActionPerformed
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
-    if (txtFilter.getText().length() == 0) {
+      if (txtFilter.getText().length() == 0) {
           sorter.setRowFilter(null);
       } else {
           sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));

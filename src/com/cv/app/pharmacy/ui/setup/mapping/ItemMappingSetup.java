@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * ItemSetup.java
  *
  * Created on Apr 29, 2012, 12:13:58 PM
@@ -77,22 +77,22 @@ public class ItemMappingSetup extends javax.swing.JPanel implements SelectionObs
         tblItem.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblItem.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblItem.getSelectedRow() >= 0) {
-                            selectRow = tblItem.convertRowIndexToModel(tblItem.getSelectedRow());
-                        }
-                        System.out.println("Table Selection : " + selectRow);
-                        if (selectRow >= 0) {
-                            try {
-                                //tblRelationPrice.getCellEditor().stopCellEditing();
-                            } catch (Exception ex) {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblItem.getSelectedRow() >= 0) {
+                    selectRow = tblItem.convertRowIndexToModel(tblItem.getSelectedRow());
+                }
+                System.out.println("Table Selection : " + selectRow);
+                if (selectRow >= 0) {
+                    try {
+                        //tblRelationPrice.getCellEditor().stopCellEditing();
+                    } catch (Exception ex) {
 
-                            }
-                            selected("Medicine", itemTableModel.getMedicine(selectRow));
-                        }
                     }
-                });
+                    selected("Medicine", itemTableModel.getMedicine(selectRow));
+                }
+            }
+        });
 
         applyFocusPolicy();
         AddFocusMoveKey();
@@ -156,7 +156,13 @@ public class ItemMappingSetup extends javax.swing.JPanel implements SelectionObs
     }
 
     private void filterItem(String strFilter) {
-        itemTableModel.setListMedicine(dao.findAll("Medicine", strFilter));
+        try {
+            itemTableModel.setListMedicine(dao.findAll("Medicine", strFilter));
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {
@@ -176,7 +182,7 @@ public class ItemMappingSetup extends javax.swing.JPanel implements SelectionObs
              }
              */
 
-            /*
+ /*
              * for (int i = 0; i < entry.getValueCount(); i++) { String tmp =
              * entry.getStringValue(i); if
              * (entry.getStringValue(i).toUpperCase().startsWith(
@@ -190,10 +196,16 @@ public class ItemMappingSetup extends javax.swing.JPanel implements SelectionObs
     private void autoAssignTemplate() {
         if (Util1.getPropValue("system.app.ItemSetup.AutoTemplate").equals("Y")) {
             int id = NumberUtil.NZeroInt(Util1.getPropValue("system.app.ItemSetup.AutoTemplateId"));
-            PackingTemplate pt = (PackingTemplate) dao.find(PackingTemplate.class, id);
+            try {
+                PackingTemplate pt = (PackingTemplate) dao.find(PackingTemplate.class, id);
 
-            if (pt != null) {
-                selected("PackingTemplate", pt);
+                if (pt != null) {
+                    selected("PackingTemplate", pt);
+                }
+            } catch (Exception ex) {
+                log.error("autoAssignTemplate : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
     }
@@ -343,22 +355,27 @@ public class ItemMappingSetup extends javax.swing.JPanel implements SelectionObs
         rpTableMode.setListDetail(new ArrayList<RelationGroup>());
     }
 
-
     private void initTableItem() {
-        itemTableModel.setListMedicine(dao.findAll("VMedicine1"));
+        try {
+            itemTableModel.setListMedicine(dao.findAll("VMedicine1"));
 
-        //Adjust table column width
-        TableColumn column = tblItem.getColumnModel().getColumn(0);
-        column.setPreferredWidth(30);
+            //Adjust table column width
+            TableColumn column = tblItem.getColumnModel().getColumn(0);
+            column.setPreferredWidth(30);
 
-        column = tblItem.getColumnModel().getColumn(1);
-        column.setPreferredWidth(200);
+            column = tblItem.getColumnModel().getColumn(1);
+            column.setPreferredWidth(200);
 
-        column = tblItem.getColumnModel().getColumn(2);
-        column.setPreferredWidth(5);
+            column = tblItem.getColumnModel().getColumn(2);
+            column.setPreferredWidth(5);
 
-        column = tblItem.getColumnModel().getColumn(3);
-        column.setPreferredWidth(30);
+            column = tblItem.getColumnModel().getColumn(3);
+            column.setPreferredWidth(30);
+        } catch (Exception ex) {
+            log.error("initTableItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override

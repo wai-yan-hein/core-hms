@@ -106,14 +106,20 @@ public class StockOPSearch extends javax.swing.JPanel implements SelectionObserv
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableMedicine() {
@@ -152,28 +158,34 @@ public class StockOPSearch extends javax.swing.JPanel implements SelectionObserv
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
                 //No entering medCode, only press F3
                 getMedList("");
             } catch (Exception ex) {
-                
+
             }
         }
     };// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -232,7 +244,7 @@ public class StockOPSearch extends javax.swing.JPanel implements SelectionObserv
                 + "where soh.op_date between '"
                 + DateUtil.toDateStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQL(txtToDate.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
 
@@ -313,7 +325,7 @@ public class StockOPSearch extends javax.swing.JPanel implements SelectionObserv
 
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListStockOpeningHis(getSearchVoucher());
         lblTotalRec.setText("Total Records : " + vouTableModel.getRowCount());
@@ -334,30 +346,36 @@ public class StockOPSearch extends javax.swing.JPanel implements SelectionObserv
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockOpSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockOpSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("StockOpSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("StockOpSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
+                txtVouNo.setText(vouFilter.getVouNo());
+
             }
-
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
-            txtVouNo.setText(vouFilter.getVouNo());
-
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

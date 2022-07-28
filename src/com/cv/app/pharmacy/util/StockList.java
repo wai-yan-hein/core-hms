@@ -69,7 +69,7 @@ public class StockList {
                     strLocation = Integer.toString(location.getLocationId());
                 }
                 ResultSet resultSet = dao.getPro("get_stock_balance_code",
-                        strLocation, med.getMedId(), Global.loginUser.getUserId());
+                        strLocation, med.getMedId(), Global.machineId);
                 if (resultSet != null) {
                     HashMap<Integer, List<Stock>> minusHM = new HashMap();
                     List<Stock> listStock = new ArrayList();

@@ -4,14 +4,11 @@
  */
 package com.cv.app.opd.ui.setup;
 
-import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.Global;
-import com.cv.app.opd.database.entity.City;
 import com.cv.app.opd.database.entity.OPDLabGroup;
 import com.cv.app.opd.ui.common.OPDLabGroupTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
@@ -33,13 +30,14 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class LabGroupSetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(LabGroupSetup.class.getName());
     private final OPDLabGroupTableModel tableModel = new OPDLabGroupTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
     private int selectRow = -1;
     private OPDLabGroup currOPDLabGroup = new OPDLabGroup();
     private final TableRowSorter<TableModel> sorter;
-    
+
     /**
      * Creates new form CitySetup
      */
@@ -53,7 +51,7 @@ public class LabGroupSetup extends javax.swing.JDialog {
         sorter = new TableRowSorter(tblOPDLabGroup.getModel());
         tblOPDLabGroup.setRowSorter(sorter);
         lblStatus.setText("NEW");
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -63,7 +61,13 @@ public class LabGroupSetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListOPDLabGroup(dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
+        try {
+            tableModel.setListOPDLabGroup(dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblOPDLabGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblOPDLabGroup.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -130,9 +134,9 @@ public class LabGroupSetup extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currOPDLabGroup);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addOPDLabGroup(currOPDLabGroup);
-                }else{
+                } else {
                     tableModel.setOPDLabGroup(selectRow, currOPDLabGroup);
                 }
                 clear();
@@ -149,7 +153,7 @@ public class LabGroupSetup extends javax.swing.JDialog {
         }
     }
 
-    private void delete(){
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -174,6 +178,7 @@ public class LabGroupSetup extends javax.swing.JDialog {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -305,7 +310,7 @@ public class LabGroupSetup extends javax.swing.JDialog {
     }//GEN-LAST:event_butSaveActionPerformed
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
-    if (txtFilter.getText().length() == 0) {
+      if (txtFilter.getText().length() == 0) {
           sorter.setRowFilter(null);
       } else {
           sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));

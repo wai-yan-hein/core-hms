@@ -424,9 +424,9 @@ public class StockOpTableModelNew extends AbstractTableModel {
     private void calculate(String vouNo) {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String strMethod = "AVG";
 
             dao.execSql(deleteTmpData1, deleteTmpData2);
@@ -435,10 +435,10 @@ public class StockOpTableModelNew extends AbstractTableModel {
             insertStockFilterCode(vouNo);
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(strOpDate), "Opening",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
             dao.execProc("insert_cost_detail",
                     "Opening", DateUtil.toDateStrMYSQL(strOpDate),
-                    Global.loginUser.getUserId(), strMethod);
+                    Global.machineId, strMethod);
             dao.commit();
         } catch (Exception ex) {
             log.error("calculate : " + ex.toString());
@@ -449,9 +449,9 @@ public class StockOpTableModelNew extends AbstractTableModel {
 
     private void insertStockFilterCode(String vouNo) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(strOpDate) + "'";
@@ -481,7 +481,7 @@ public class StockOpTableModelNew extends AbstractTableModel {
         try {
             listStockCosting = dao.findAllHSQL(
                     "select o from StockCosting o where o.key.medicine.medId = '" + medId
-                    + "' and o.key.userId = '" + Global.loginUser.getUserId() + "' "
+                    + "' and o.key.userId = '" + Global.machineId + "' "
                     + "and o.key.tranOption = 'Opening'"
             );
         } catch (Exception ex) {

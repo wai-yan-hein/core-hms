@@ -159,7 +159,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         //tblGround.setRowSorter(sorter);
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
         } catch (Exception ex) {
             log.error("StockOpening : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
@@ -201,7 +201,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
         } catch (Exception ex) {
             log.info("clear : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
@@ -505,7 +505,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     @Override
     public void history() {
         UtilDialog tmpDialog = new UtilDialog(Util1.getParent(), true, this,
-                "Stock Opening Search", dao);
+                "Stock Opening Search", dao, -1);
         tmpDialog.setPreferredSize(new Dimension(1200, 600));
         tmpDialog.setLocationRelativeTo(null);
         tmpDialog.setVisible(true);
@@ -740,9 +740,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private void insertFilterCode() {
         int locationId = ((Location) cboStockLocation.getSelectedItem()).getLocationId();
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select " + locationId + ", m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from medicine m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where location_id = " + locationId + " and op_date <= '"
@@ -857,13 +857,13 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private void generateStockBalance() {
         try {
             dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
             dao.execProc("stock_balance_exp", "Opening",
                     DateUtil.toDateStrMYSQL(txtStockDate.getText()),
                     ((Location) cboStockLocation.getSelectedItem()).getLocationId().toString(),
-                    Global.loginUser.getUserId());
+                    Global.machineId);
             listBalance = dao.findAll("StockBalance",
-                    "key.userId = '" + Global.loginUser.getUserId() + "'");
+                    "key.userId = '" + Global.machineId + "'");
             dao.commit();
             applyStockBalanceFilter();
         } catch (Exception ex) {
@@ -874,13 +874,13 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private void fixMinusBalance() {
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
         } catch (Exception ex) {
 
         }
         try {
             //fixedMinus(Global.loginUser.getUserId());
-            fixedMinus1(Global.loginUser.getUserId());
+            fixedMinus1(Global.machineId);
             //dao.commit();
             /*dao.execProc("insert_cost", DateUtil.toDateStrMYSQL(txtStockDate.getText()),
                     Global.loginUser.getUserId());
@@ -1123,7 +1123,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private void getFixedResult() {
         try {
             String strSQL = "select v from TmpMinusFixed v where v.key.userId = '"
-                    + Global.loginUser.getUserId() + "' and balance <> 0 order by v.key.itemId, v.key.expDate desc";
+                    + Global.machineId + "' and balance <> 0 order by v.key.itemId, v.key.expDate desc";
             List<TmpMinusFixed> listTMF = dao.findAllHSQL(strSQL);
 
             if (listTMF != null) {
@@ -1193,71 +1193,77 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
     private void insertTmpStockDetails(String medId, Date expDate,
             int ttlQty, double smallestCost) {
-        String strSql = "select v from VMedRel v where v.key.medId = '"
-                + medId + "' order by v.key.uniqueId";
-        List<VMedRel> listVMR = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select v from VMedRel v where v.key.medId = '"
+                    + medId + "' order by v.key.uniqueId";
+            List<VMedRel> listVMR = dao.findAllHSQL(strSql);
 
-        if (ttlQty == 0) {
-            TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-
-            tsodh.setMedId(medId);
-            tsodh.setExpDate(expDate);
-            tsodh.setQty(ttlQty);
-            tsodh.setCostPrice(listVMR.get(0).getSmallestQty() * smallestCost);
-            tsodh.setUnit(listVMR.get(0).getUnitId());
-            tsodh.setUserId(Global.loginUser.getUserId());
-            tsodh.setSmallestQty(0);
-
-            try {
-                dao.save(tsodh);
-            } catch (Exception ex) {
-                log.error("insertTmpStockDetails : 1 : " + ex.toString());
-            }
-        } else {
-            List<TmpStockOpeningDetailHisInsert> listTSODH = new ArrayList();
-            int leftQty;
-            boolean isMinus = false;
-
-            if (ttlQty < 0) {
-                isMinus = true;
-                leftQty = -1 * ttlQty;
-            } else {
-                leftQty = ttlQty;
-            }
-
-            for (int i = 0; i < listVMR.size(); i++) {
+            if (ttlQty == 0) {
                 TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-                int unitQty = leftQty / listVMR.get(i).getSmallestQty();
 
                 tsodh.setMedId(medId);
                 tsodh.setExpDate(expDate);
-                tsodh.setCostPrice(listVMR.get(i).getSmallestQty() * smallestCost);
-                tsodh.setUnit(listVMR.get(i).getUnitId());
-                tsodh.setUserId(Global.loginUser.getUserId());
+                tsodh.setQty(ttlQty);
+                tsodh.setCostPrice(listVMR.get(0).getSmallestQty() * smallestCost);
+                tsodh.setUnit(listVMR.get(0).getUnitId());
+                tsodh.setUserId(Global.machineId);
+                tsodh.setSmallestQty(0);
 
-                int ttlSmallestQty = listVMR.get(i).getSmallestQty() * unitQty;
+                try {
+                    dao.save(tsodh);
+                } catch (Exception ex) {
+                    log.error("insertTmpStockDetails : 1 : " + ex.toString());
+                }
+            } else {
+                List<TmpStockOpeningDetailHisInsert> listTSODH = new ArrayList();
+                int leftQty;
+                boolean isMinus = false;
 
-                if (isMinus) { //Minus qty
-                    tsodh.setQty(unitQty * -1);
-                    tsodh.setSmallestQty(ttlSmallestQty * -1);
+                if (ttlQty < 0) {
+                    isMinus = true;
+                    leftQty = -1 * ttlQty;
                 } else {
-                    tsodh.setQty(unitQty);
-                    tsodh.setSmallestQty(ttlSmallestQty);
+                    leftQty = ttlQty;
                 }
 
-                listTSODH.add(tsodh);
-                leftQty = leftQty - ttlSmallestQty;
+                for (int i = 0; i < listVMR.size(); i++) {
+                    TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
+                    int unitQty = leftQty / listVMR.get(i).getSmallestQty();
 
-                if (leftQty == 0) {
-                    i = listVMR.size();
+                    tsodh.setMedId(medId);
+                    tsodh.setExpDate(expDate);
+                    tsodh.setCostPrice(listVMR.get(i).getSmallestQty() * smallestCost);
+                    tsodh.setUnit(listVMR.get(i).getUnitId());
+                    tsodh.setUserId(Global.machineId);
+
+                    int ttlSmallestQty = listVMR.get(i).getSmallestQty() * unitQty;
+
+                    if (isMinus) { //Minus qty
+                        tsodh.setQty(unitQty * -1);
+                        tsodh.setSmallestQty(ttlSmallestQty * -1);
+                    } else {
+                        tsodh.setQty(unitQty);
+                        tsodh.setSmallestQty(ttlSmallestQty);
+                    }
+
+                    listTSODH.add(tsodh);
+                    leftQty = leftQty - ttlSmallestQty;
+
+                    if (leftQty == 0) {
+                        i = listVMR.size();
+                    }
+                }
+
+                try {
+                    dao.saveBatch(listTSODH);
+                } catch (Exception ex) {
+                    log.error("insertTmpStockDetails : 2 : " + ex.toString());
                 }
             }
-
-            try {
-                dao.saveBatch(listTSODH);
-            } catch (Exception ex) {
-                log.error("insertTmpStockDetails : 2 : " + ex.toString());
-            }
+        } catch (Exception ex) {
+            log.error("insertTmpStockDetails : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1637,6 +1643,8 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     log.info("processCSV End: " + ttlRec);
                 }
             } catch (IOException | NumberFormatException ex) {
+                log.error("processCSV : " + ex.getMessage());
+            } catch (Exception ex) {
                 log.error("processCSV : " + ex.getMessage());
             } finally {
                 dao.close();
@@ -2311,32 +2319,38 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
     private void btnToAccActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnToAccActionPerformed
         String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            List<VStockOpToAcc> listStockOp = dao.findAllHSQL("select o from VStockOpToAcc o");
-            if (listStockOp.size() > 0) {
-                for (int i = 0; i < listStockOp.size(); i++) {
-                    if (Global.mqConnection != null) {
-                        if (Global.mqConnection.isStatus()) {
-                            try {
-                                ActiveMQConnection mq = Global.mqConnection;
-                                MapMessage msg = mq.getMapMessageTemplate();
-                                msg.setString("program", Global.programId);
-                                msg.setString("entity", "OPENING-STOCK");
-                                msg.setString("sourceAccId", listStockOp.get(i).getAccountId());
-                                msg.setBoolean("deleted", false);
-                                msg.setDouble("opAmount", listStockOp.get(i).getAmount());
+        try {
+            if (isIntegration.toUpperCase().equals("Y")) {
+                List<VStockOpToAcc> listStockOp = dao.findAllHSQL("select o from VStockOpToAcc o");
+                if (listStockOp.size() > 0) {
+                    for (int i = 0; i < listStockOp.size(); i++) {
+                        if (Global.mqConnection != null) {
+                            if (Global.mqConnection.isStatus()) {
+                                try {
+                                    ActiveMQConnection mq = Global.mqConnection;
+                                    MapMessage msg = mq.getMapMessageTemplate();
+                                    msg.setString("program", Global.programId);
+                                    msg.setString("entity", "OPENING-STOCK");
+                                    msg.setString("sourceAccId", listStockOp.get(i).getAccountId());
+                                    msg.setBoolean("deleted", false);
+                                    msg.setDouble("opAmount", listStockOp.get(i).getAmount());
 
-                                msg.setString("queueName", "INVENTORY");
+                                    msg.setString("queueName", "INVENTORY");
 
-                                mq.sendMessage(Global.queueName, msg);
-                            } catch (Exception ex) {
-                                log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listStockOp + " - " + ex);
+                                    mq.sendMessage(Global.queueName, msg);
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listStockOp + " - " + ex);
+                                }
                             }
                         }
-                    }
 
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("btnToAccActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }//GEN-LAST:event_btnToAccActionPerformed
 

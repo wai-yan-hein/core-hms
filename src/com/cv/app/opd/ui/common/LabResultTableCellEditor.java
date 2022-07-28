@@ -18,26 +18,28 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class LabResultTableCellEditor extends AbstractCellEditor implements TableCellEditor{
+public class LabResultTableCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+    static Logger log = Logger.getLogger(LabResultTableCellEditor.class.getName());
     private JComponent component = null;
     private AbstractDataAccess dao;
     private LabResultAutoCompleter completer;
     JTextField jtf;
-    
-    public LabResultTableCellEditor(AbstractDataAccess dao){
+
+    public LabResultTableCellEditor(AbstractDataAccess dao) {
         this.dao = dao;
     }
-    
+
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int rowIndex, int vColIndex) {
-        List<LabResultAutoText> listText = dao.findAllHSQL(
-            "select o from LabResultAutoText o order by o.autoText");
+            boolean isSelected, int rowIndex, int vColIndex) {
+
         jtf = new JTextField();
         KeyListener keyListener = new KeyListener() {
             @Override
@@ -66,25 +68,33 @@ public class LabResultTableCellEditor extends AbstractCellEditor implements Tabl
 
         jtf.addKeyListener(keyListener);
         component = jtf;
-        if(value != null){
+        if (value != null) {
             jtf.setText(value.toString());
             jtf.selectAll();
         }
-        completer = new LabResultAutoCompleter(jtf, listText, this);
-        
+
+        try {
+            List<LabResultAutoText> listText = dao.findAllHSQL(
+                    "select o from LabResultAutoText o order by o.autoText");
+            completer = new LabResultAutoCompleter(jtf, listText, this);
+        } catch (Exception ex) {
+            log.error("getTableCellEditorComponent : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         return component;
     }
-    
+
     @Override
     public Object getCellEditorValue() {
         LabResultAutoText srv = completer.getSelService();
-        if(srv == null){
+        if (srv == null) {
             return jtf.getText();
-        }else{
+        } else {
             return srv;
         }
     }
-    
+
     @Override
     public boolean isCellEditable(EventObject anEvent) {
         if (anEvent instanceof MouseEvent) {

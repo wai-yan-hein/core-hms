@@ -29,13 +29,14 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author wswe
  */
 public class InitialSetupDialog extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(InitialSetupDialog.class.getName());
     private AbstractDataAccess dao;
     private InitialTableModel tableModel = new InitialTableModel();
     private int selectRow = -1;
     private Initial currInitial = new Initial();
     private BestAppFocusTraversalPolicy focusPolicy;
-    
+
     /**
      * Creates new form InitialSetupDialog
      */
@@ -51,29 +52,35 @@ public class InitialSetupDialog extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListInitial(dao.findAll("Initial"));
-        tblInitial.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblInitial.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblInitial.getSelectedRow() >= 0) {
-                    selectRow = tblInitial.convertRowIndexToModel(tblInitial.getSelectedRow());
-                }
+        try {
+            tableModel.setListInitial(dao.findAll("Initial"));
+            tblInitial.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblInitial.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblInitial.getSelectedRow() >= 0) {
+                        selectRow = tblInitial.convertRowIndexToModel(tblInitial.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getInitial(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getInitial(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable");
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void setRecord(Initial initial) {
         currInitial = initial;
         txtInitial.setText(initial.getInitialName());
         lblStatus.setText("EDIT");
     }
-    
+
     private void applyFocusPolicy() {
         @SuppressWarnings("UseOfObsoleteCollectionType")
         Vector<Component> focusOrder = new Vector();
@@ -81,7 +88,7 @@ public class InitialSetupDialog extends javax.swing.JDialog {
         focusOrder.add(txtInitial);
         focusOrder.add(butSave);
         focusOrder.add(butClear);
-        
+
         focusPolicy = new BestAppFocusTraversalPolicy(focusOrder);
     }
 
@@ -129,9 +136,9 @@ public class InitialSetupDialog extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currInitial);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addInitial(currInitial);
-                }else{
+                } else {
                     tableModel.setInitial(selectRow, currInitial);
                 }
                 clear();
@@ -147,7 +154,7 @@ public class InitialSetupDialog extends javax.swing.JDialog {
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

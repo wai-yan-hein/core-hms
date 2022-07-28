@@ -234,12 +234,10 @@ public class SaleTableModel extends AbstractTableModel {
                     } else {
                         return record.getMedId().getShortName();
                     }
+                } else if (record.getMedId() == null) {
+                    return null;
                 } else {
-                    if (record.getMedId() == null) {
-                        return null;
-                    } else {
-                        return record.getMedId().getMedId();
-                    }
+                    return record.getMedId().getMedId();
                 }
             case 1: //Medicine Name
                 if (record.getMedId() == null) {
@@ -272,6 +270,7 @@ public class SaleTableModel extends AbstractTableModel {
             case 11: //Location
                 return record.getLocation();
             case 12: //Balance
+                log.info("row : " + row + " balance : " + record.getBalQtyInString());
                 return record.getBalQtyInString();
             default:
                 return new Object();
@@ -338,7 +337,7 @@ public class SaleTableModel extends AbstractTableModel {
                     String tmpQtyStr = NumberUtil.getEngNumber(value.toString());
                     float qty = NumberUtil.NZeroFloat(tmpQtyStr);
                     record.setQuantity(qty);
-                    parent.setColumnSelectionInterval(5, 5);
+                    //parent.setColumnSelectionInterval(5, 5);
                     //record.setChargeId(defaultChargeType);
                     //For unit popup
                     if (listDetail.get(parent.getSelectedRow()).getMedId() != null) {
@@ -696,7 +695,7 @@ public class SaleTableModel extends AbstractTableModel {
 
             record.setUnitId(iu);
             record.setPrice(medUp.getPrice(key, getCusType(), NumberUtil.NZeroInt(record.getQuantity())));
-            record.setQuantity(new Float(1));
+            record.setQuantity(1f);
             record.setAmount(NumberUtil.NZero(record.getPrice()) * record.getQuantity());
             record.setSaleSmallestQty(record.getQuantity() * medUp.getQtyInSmallest(key));
         } else {
@@ -759,7 +758,7 @@ public class SaleTableModel extends AbstractTableModel {
                                                     + stock.getFocUnit().getItemUnitCode();
                                             sdh.setFocSmallestQty(stock.getFocUnitQty() * medUp.getQtyInSmallest(key));
                                         } else {
-                                            sdh.setFocSmallestQty(new Float(0));
+                                            sdh.setFocSmallestQty(0f);
                                         }
                                         calculateAmount(index);
 
@@ -787,7 +786,7 @@ public class SaleTableModel extends AbstractTableModel {
                                                 + stock.getFocUnit().getItemUnitCode();
                                         sdh.setFocSmallestQty(stock.getFocUnitQty() * medUp.getQtyInSmallest(key));
                                     } else {
-                                        sdh.setFocSmallestQty(new Float(0));
+                                        sdh.setFocSmallestQty(0f);
                                     }
                                     /*key = sdh.getMedId().getMedId() + "-"
                                      + stock.getFocUnit().getItemUnitCode();
@@ -912,7 +911,8 @@ public class SaleTableModel extends AbstractTableModel {
         SaleDetailHis sdh = listDetail.get(row);
         String key = "";
         double discount = NumberUtil.NZero(sdh.getDiscount());
-        float saleQty = NumberUtil.NZeroFloat(sdh.getQuantity());
+        double saleQty = NumberUtil.NZero(sdh.getQuantity());
+        float saleQty1 = NumberUtil.NZeroFloat(sdh.getQuantity());
         double price = NumberUtil.NZero(sdh.getPrice());
         if (sdh.getMedId() == null) {
             return;
@@ -920,7 +920,7 @@ public class SaleTableModel extends AbstractTableModel {
         if (sdh.getUnitId() != null) {
             key = sdh.getMedId().getMedId() + "-" + sdh.getUnitId().getItemUnitCode();
         }
-        sdh.setSaleSmallestQty(saleQty * medUp.getQtyInSmallest(key));
+        sdh.setSaleSmallestQty(saleQty1 * medUp.getQtyInSmallest(key));
         key = "";
 
         if (sdh.getFocUnit() != null) {
@@ -941,7 +941,7 @@ public class SaleTableModel extends AbstractTableModel {
                 break;
         }
 
-        double amount = (saleQty * price) - discount;
+        double amount = NumberUtil.roundDouble((saleQty * price) - discount, 4);
         sdh.setAmount(amount);
     }
 
@@ -970,11 +970,9 @@ public class SaleTableModel extends AbstractTableModel {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Price must be positive value.",
                             "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
                     status = false;
-                } else {
-                    if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                        record.setUniqueId(row + 1);
-                        row++;
-                    }
+                } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                    record.setUniqueId(row + 1);
+                    row++;
                 }
             }
         }
@@ -986,6 +984,7 @@ public class SaleTableModel extends AbstractTableModel {
         }
 
         parent.setRowSelectionInterval(0, 0);
+        maxUniqueId = row;
 
         return status;
     }
@@ -1151,16 +1150,22 @@ public class SaleTableModel extends AbstractTableModel {
         String itemId = "";
 
         if (purImeiNo.getKey() != null) {
-            itemId = purImeiNo.getKey().getItemId();
-            medicine = (Medicine) dao.find("Medicine", "med_id = '"
-                    + itemId + "'");
-            medUp.add(medicine);
+            try {
+                itemId = purImeiNo.getKey().getItemId();
+                medicine = (Medicine) dao.find("Medicine", "med_id = '"
+                        + itemId + "'");
+                medUp.add(medicine);
 
-            record.getMedId().setMedId(itemId);
-            record.getMedId().setMedName(medicine.getMedName());
-            record.setImei1(purImeiNo.getKey().getImei1());
-            record.setImei2(purImeiNo.getImei2());
-            record.setSdNo(purImeiNo.getSdNo());
+                record.getMedId().setMedId(itemId);
+                record.getMedId().setMedName(medicine.getMedName());
+                record.setImei1(purImeiNo.getKey().getImei1());
+                record.setImei2(purImeiNo.getImei2());
+                record.setSdNo(purImeiNo.getSdNo());
+            } catch (Exception ex) {
+                log.error("setPurIMEINo : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
         if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
             record.setLocation(location);
@@ -1173,7 +1178,7 @@ public class SaleTableModel extends AbstractTableModel {
 
         record.setUnitId(iu);
         record.setPrice(medUp.getPrice(key, getCusType(), NumberUtil.NZeroInt(record.getQuantity())));
-        record.setQuantity(new Float(1));
+        record.setQuantity(0f);
         record.setAmount(NumberUtil.NZero(record.getPrice()) * record.getQuantity());
         record.setSaleSmallestQty(record.getQuantity() * medUp.getQtyInSmallest(key));
 
@@ -1202,7 +1207,7 @@ public class SaleTableModel extends AbstractTableModel {
         String medId = record.getMedId().getMedId();
         try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
-                    location.getLocationId().toString(), medId, Global.loginUser.getUserId());
+                    location.getLocationId().toString(), medId, Global.machineId);
             if (resultSet != null) {
                 float balance = 0f;
                 while (resultSet.next()) {
@@ -1216,6 +1221,10 @@ public class SaleTableModel extends AbstractTableModel {
             }
         } catch (SQLException ex) {
             log.error("assignBalance : " + ex.getMessage());
+        } catch (Exception ex) {
+            log.error("assignBalance : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1322,7 +1331,6 @@ public class SaleTableModel extends AbstractTableModel {
                 }
                 float focQty = NumberUtil.NZeroFloat(sdh.getFocQty());
                 sdh.setFocSmallestQty(focQty * medUp.getQtyInSmallest(key));*/
-
                 String discType = Util1.getPropValue("system.app.sale.discount.calculation");
                 switch (discType) {
                     case "Percent":

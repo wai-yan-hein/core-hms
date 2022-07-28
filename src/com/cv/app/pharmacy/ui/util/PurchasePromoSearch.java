@@ -9,7 +9,6 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
@@ -52,7 +51,7 @@ public class PurchasePromoSearch extends javax.swing.JPanel implements Selection
         this.parent = parent;
         this.observer = observer;
         this.dao = dao;
-                
+
         getPrvFilter();
         initTableMedicine();
         search();
@@ -82,14 +81,21 @@ public class PurchasePromoSearch extends javax.swing.JPanel implements Selection
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Customer List", dao, -1);
     }
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'PurSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'PurSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -131,7 +137,7 @@ public class PurchasePromoSearch extends javax.swing.JPanel implements Selection
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -144,15 +150,21 @@ public class PurchasePromoSearch extends javax.swing.JPanel implements Selection
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -273,25 +285,31 @@ public class PurchasePromoSearch extends javax.swing.JPanel implements Selection
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("PurVouSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("PurVouSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getTrader() != null) {
-                txtCusCode.setText(vouFilter.getTrader().getTraderId());
-                txtCusName.setText(vouFilter.getTrader().getTraderName());
+                if (vouFilter.getTrader() != null) {
+                    txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    txtCusName.setText(vouFilter.getTrader().getTraderName());
+                }
             }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

@@ -10,6 +10,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.LocationTraderMapping;
 import com.cv.app.pharmacy.database.entity.LocationTraderMappingKey;
 import com.cv.app.pharmacy.database.view.VLocationTraderMapping;
+import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -25,7 +26,8 @@ public class LocationTraderMappingTableModel extends AbstractTableModel {
     private List<VLocationTraderMapping> listVILM = new ArrayList();
     private final String[] columnNames = {"Group Id", "Group Name", "Code", "Name", "Township", "Active"};
     private final AbstractDataAccess dao = Global.dao;
-
+    private String prefix = Util1.getPropValue("system.sale.emitted.prifix");
+    
     @Override
     public int getRowCount() {
         if (listVILM == null) {
@@ -75,7 +77,11 @@ public class LocationTraderMappingTableModel extends AbstractTableModel {
                 case 1: //Group Name
                     return record.getGroupName();
                 case 2: //Code
-                    return record.getKey().getTraderId();
+                    if (prefix.equals("Y")) {
+                        return record.getStuNo();
+                    } else {
+                        return record.getKey().getTraderId();
+                    }
                 case 3: //Name
                     return record.getTraderName();
                 case 4: //Township

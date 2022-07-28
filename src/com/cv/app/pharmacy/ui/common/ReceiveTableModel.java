@@ -8,6 +8,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.StockReceiveDetailHis;
+import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.StockOutstanding;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
@@ -32,7 +33,7 @@ public class ReceiveTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(ReceiveTableModel.class.getName());
     private List<StockReceiveDetailHis> listDetail = new ArrayList();
     private final String[] columnNames = {"Option", "Vou No", "Order Item", "Item Code", "Rcv-Item",
-        "Outstanding", "Exp-Date", "Qty", "Unit", "Balance", "Currency", "Cost Price"};
+        "Trader", "Outstanding", "Exp-Date", "Qty", "Unit", "Balance", "Currency", "Cost Price"};
     private final AbstractDataAccess dao;
     private MedicineUP medUp;
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
@@ -54,7 +55,7 @@ public class ReceiveTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return !(column == 1 || column == 2 || column == 5);
+        return !(column == 1 || column == 2 || column == 4 || column == 6);
     }
 
     @Override
@@ -70,19 +71,21 @@ public class ReceiveTableModel extends AbstractTableModel {
                 return String.class;
             case 4: //Rec-Medicine
                 return String.class;
-            case 5: //Outstanding
+            case 5: //Trader
                 return String.class;
-            case 6: //Exp-Date
+            case 6: //Outstanding
                 return String.class;
-            case 7: //Qty
+            case 7: //Exp-Date
+                return String.class;
+            case 8: //Qty
                 return Float.class;
-            case 8: //Unit
+            case 9: //Unit
                 return String.class;
-            case 9: //Balance
+            case 10: //Balance
                 return String.class;
-            case 10: //Currency
+            case 11: //Currency
                 return String.class;
-            case 11: //Cost Price
+            case 12: //Cost Price
                 return Double.class;
             default:
                 return Object.class;
@@ -120,46 +123,56 @@ public class ReceiveTableModel extends AbstractTableModel {
                         } else {
                             return null;
                         }
+                    } else if (srdh.getRecMed() != null) {
+                        return srdh.getRecMed().getMedId();
                     } else {
-                        if (srdh.getRecMed() != null) {
-                            return srdh.getRecMed().getMedId();
-                        } else {
-                            return null;
-                        }
+                        return null;
                     }
                 case 4: //Rec-Medicine
-                    return srdh.getRecMed().getMedName();
-                case 5: //Outstanding
+                    if (srdh.getRecMed() != null) {
+                        return srdh.getRecMed().getMedName();
+                    } else {
+                        return null;
+                    }
+                case 5: //Trader
+                    Trader trader = srdh.getTraderId();
+                    if (trader != null) {
+                        return trader.getTraderName() + " (" + trader.getTraderId() + ")";
+                    } else {
+                        return null;
+                    }
+                case 6: //Outstanding
                     if (srdh.getRecMed() != null) {
                         return srdh.getStrOutstanding();
                     } else {
                         return null;
                     }
-                case 6: //Exp-Date
+                case 7: //Exp-Date
                     return DateUtil.toDateStr(srdh.getExpDate());
-                case 7: //Qty
+                case 8: //Qty
                     return srdh.getUnitQty();
-                case 8: //Unit
+                case 9: //Unit
                     if (srdh.getUnit() != null) {
                         return srdh.getUnit().getItemUnitName();
                     } else {
                         return null;
                     }
-                case 9: //Balance
+                case 10: //Balance
                     return srdh.getBalance();
-                case 10: //Currency
+                case 11: //Currency
                     if (srdh.getCurrency() == null) {
                         return null;
                     } else {
                         return srdh.getCurrency();
                     }
-                case 11://Cost Price
+                case 12://Cost Price
                     return srdh.getCostPrice();
                 default:
                     return null;
             }
         } catch (Exception ex) {
-            log.error("getValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+            log.error("getValueAt : " + column + " - " + ex.getStackTrace()[0].getLineNumber()
+                    + " - " + ex.getMessage());
         }
 
         return null;
@@ -210,14 +223,22 @@ public class ReceiveTableModel extends AbstractTableModel {
                     break;
                 case 4: //Rec-Medicine
                     break;
-                case 5: //Outstanding
+                case 5: //Trader
+                    if (value == null) {
+                        srdh.setTraderId(null);
+                    } else {
+                        Trader trader = (Trader) value;
+                        srdh.setTraderId(trader);
+                    }
                     break;
-                case 6: //Exp-Date
+                case 6: //Outstanding
+                    break;
+                case 7: //Exp-Date
                     if (DateUtil.isValidDate(value)) {
                         srdh.setExpDate(DateUtil.toDate(value));
                     }
                     break;
-                case 7: //Qty
+                case 8: //Qty
                     srdh.setUnitQty((Float) value);
 
                     String medId = srdh.getRecMed().getMedId();
@@ -247,18 +268,18 @@ public class ReceiveTableModel extends AbstractTableModel {
                     parent.setRowSelectionInterval(row, row);
                     parent.setColumnSelectionInterval(10, 10);
                     break;
-                case 8: //Unit
+                case 9: //Unit
                     break;
-                case 9: //Balance
+                case 10: //Balance
                     break;
-                case 10: //Currency
-                    if(value == null){
+                case 11: //Currency
+                    if (value == null) {
                         srdh.setCurrency(null);
-                    }else{
-                        srdh.setCurrency((Currency)value);
+                    } else {
+                        srdh.setCurrency((Currency) value);
                     }
                     break;
-                case 11: //Cost Price
+                case 12: //Cost Price
                     srdh.setCostPrice(NumberUtil.NZero(value));
                     break;
                 default:
@@ -313,20 +334,28 @@ public class ReceiveTableModel extends AbstractTableModel {
             return;
         }
 
-        StockReceiveDetailHis srdh = new StockReceiveDetailHis();
-
-        srdh.setBalance(outs.getQtyStr());
-        srdh.setOutsBalance(outs.getBalanceQty());
-        srdh.setRecMed(outs.getMed());
-        srdh.setRecOption(outs.getTranOption());
-        srdh.setRefVou(outs.getInvId());
-        srdh.setTraderId(outs.getCusId());
-        srdh.setOrderMed(outs.getMed());
-        srdh.setStrOutstanding(outs.getQtyStr());
-
-        listDetail.add(srdh);
-
         try {
+            StockReceiveDetailHis srdh = new StockReceiveDetailHis();
+
+            srdh.setBalance(outs.getQtyStr());
+            srdh.setOutsBalance(outs.getBalanceQty());
+            srdh.setRecMed(outs.getMed());
+            srdh.setRecOption(outs.getTranOption());
+            srdh.setRefVou(outs.getInvId());
+            Trader trader = (Trader) dao.find(Trader.class, outs.getCusId());
+            srdh.setTraderId(trader);
+            srdh.setOrderMed(outs.getMed());
+            srdh.setStrOutstanding(outs.getQtyStr());
+
+            int index = listDetail.size() - 1;
+            StockReceiveDetailHis tmpSrdh = listDetail.get(index);
+            if (tmpSrdh.getRecOption() == null) {
+                listDetail.set(index, srdh);
+            } else {
+                listDetail.add(srdh);
+            }
+
+            addEmptyRow();
             dao.open();
             medUp.add(outs.getMed());
             dao.close();
@@ -358,11 +387,9 @@ public class ReceiveTableModel extends AbstractTableModel {
                         status = false;
                         JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
                                 "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        if (NumberUtil.NZeroInt(his.getUniqueId()) == 0) {
-                            his.setUniqueId(row + 1);
-                            row++;
-                        }
+                    } else if (NumberUtil.NZeroInt(his.getUniqueId()) == 0) {
+                        his.setUniqueId(row + 1);
+                        row++;
                     }
                 }
             }
@@ -475,5 +502,14 @@ public class ReceiveTableModel extends AbstractTableModel {
 
     public void setCurrency(Currency currency) {
         this.currency = currency;
+    }
+
+    public void addBorrow(StockReceiveDetailHis srdh) {
+        if (listDetail != null) {
+            int index = listDetail.size() - 1;
+            listDetail.add(index, srdh);
+            fireTableRowsInserted(listDetail.size() - 1, listDetail.size() - 1);
+            addEmptyRow();
+        }
     }
 }

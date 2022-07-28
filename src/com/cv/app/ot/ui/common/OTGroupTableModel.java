@@ -64,9 +64,9 @@ public class OTGroupTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Code
-                if(value != null){
+                if (value != null) {
                     record.setUserCode(value.toString());
-                }else{
+                } else {
                     record.setUserCode(null);
                 }
                 break;
@@ -138,12 +138,18 @@ public class OTGroupTableModel extends AbstractTableModel {
     }
 
     public void getOTGroup() {
-        listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.userCode");
-        if (listOTG == null) {
-            listOTG = new ArrayList();
+        try {
+            listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.userCode");
+            if (listOTG == null) {
+                listOTG = new ArrayList();
+            }
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getOTGroup : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        addNewRow();
-        fireTableDataChanged();
     }
 
     private void addNewRow() {

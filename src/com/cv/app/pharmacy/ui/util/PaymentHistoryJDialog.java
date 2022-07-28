@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
  *
  * @author winswe
  */
-public class PaymentHistoryJDialog extends javax.swing.JDialog implements SelectionObserver{
+public class PaymentHistoryJDialog extends javax.swing.JDialog implements SelectionObserver {
 
     static Logger log = Logger.getLogger(PaymentHistoryJDialog.class.getName());
     private final AbstractDataAccess dao = Global.dao;
@@ -44,52 +44,65 @@ public class PaymentHistoryJDialog extends javax.swing.JDialog implements Select
     }
 
     private void initCombo() {
-        Object tmpObj;
-        if (Util1.getPropValue("system.login.default.value").equals("Y")) {
-            tmpObj = Global.loginLocation;
-        } else {
-            tmpObj = Util1.getDefaultValue("Location");
-        }
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            BindingUtil.BindCombo(cboLocation, getLocationFilter());
-            cboLocation.setSelectedItem(tmpObj);
-            int index = cboLocation.getSelectedIndex();
-            if (index == -1) {
-                if (cboLocation.getItemCount() > 0) {
-                    cboLocation.setSelectedIndex(0);
-                }
+        try {
+            Object tmpObj;
+            if (Util1.getPropValue("system.login.default.value").equals("Y")) {
+                tmpObj = Global.loginLocation;
+            } else {
+                tmpObj = Util1.getDefaultValue("Location");
             }
-        } else {
-            BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
-                    new Location(0, "All")));
-            cboLocation.setSelectedIndex(0);
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                BindingUtil.BindCombo(cboLocation, getLocationFilter());
+                cboLocation.setSelectedItem(tmpObj);
+                int index = cboLocation.getSelectedIndex();
+                if (index == -1) {
+                    if (cboLocation.getItemCount() > 0) {
+                        cboLocation.setSelectedIndex(0);
+                    }
+                }
+            } else {
+                BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
+                        new Location(0, "All")));
+                cboLocation.setSelectedIndex(0);
+            }
+            BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
+                    new Appuser("000", "All")));
+
+            cboUser.setSelectedIndex(0);
+
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboUser);
+
+            cboPayOption.removeAllItems();
+            cboPayOption.addItem("All");
+            cboPayOption.addItem("Cash");
+            cboPayOption.addItem("Credit Card");
+
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
-                new Appuser("000", "All")));
-
-        cboUser.setSelectedIndex(0);
-
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboUser);
-
-        cboPayOption.removeAllItems();
-        cboPayOption.addItem("All");
-        cboPayOption.addItem("Cash");
-        cboPayOption.addItem("Credit Card");
-
-        bindStatus = true;
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowCusPayVou = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowCusPayVou = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        return null;
     }
 
     private void search() {
@@ -165,7 +178,7 @@ public class PaymentHistoryJDialog extends javax.swing.JDialog implements Select
     }
 
     @Override
-    public void selected(Object source, Object selectObj){
+    public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "CustomerList":
                 model.removeAll();
@@ -175,7 +188,7 @@ public class PaymentHistoryJDialog extends javax.swing.JDialog implements Select
                 break;
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

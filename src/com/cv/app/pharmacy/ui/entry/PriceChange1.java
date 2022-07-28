@@ -52,7 +52,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -252,19 +251,16 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if (tblMedicine.getCellEditor() != null) {
-                    tblMedicine.getCellEditor().stopCellEditing();
-                }
+                tblMedicine.getCellEditor().stopCellEditing();
+            } catch (Exception ex) {
+                //No entering medCode, only press F3
                 try {
                     dao.open();
                     getMedList("");
                     dao.close();
                 } catch (Exception ex1) {
-                    log.error("eactionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
+                    log.error("eactionMedList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
                 }
-            } catch (Exception ex) {
-                //No entering medCode, only press F3
-
             }
         }
     };// </editor-fold>
@@ -286,9 +282,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     try {
                         yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                                 "Adjust item delete", JOptionPane.YES_NO_OPTION);
-                        if (tblMedicine.getCellEditor() != null) {
-                            tblMedicine.getCellEditor().stopCellEditing();
-                        }
+                        tblMedicine.getCellEditor().stopCellEditing();
                     } catch (Exception ex) {
                         log.error("actionItemDelete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                     }
@@ -310,15 +304,21 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
      */
     @Override
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -359,7 +359,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             switch (strSource) {
                 case "MedicineList":
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    if (!selectedMed.getRelationGroupId().isEmpty()) {
+                    if (selectedMed.getRelationGroupId().size() > 0) {
                         selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
                     }
                     medUp.add(selectedMed);
@@ -375,7 +375,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     txtVouNo.setText(currPriceChange.getPriceChangeVouId());
                     txtDate.setText(DateUtil.toDateStr(currPriceChange.getPriceChangeDate()));
                     txtRemark.setText(currPriceChange.getRemark());
-                    if (!currPriceChange.getListDetail().isEmpty()) {
+                    if (currPriceChange.getListDetail().size() > 0) {
                         listDetail = currPriceChange.getListDetail();
                         medTableModel.setListDetail(listDetail);
 
@@ -453,63 +453,72 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         //Define table selection model to single row selection.
         tblMedicine.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblMedicine.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
-            int selectedRow = tblMedicine.getSelectedRow();
-            List<PriceChangeUnitHis1> listPcuh;
-            Medicine selectedMed;
+        tblMedicine.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                int selectedRow = tblMedicine.getSelectedRow();
+                List<PriceChangeUnitHis1> listPcuh;
+                Medicine selectedMed;
 
-            try {
-                listDetailUnit.removeAll(listDetailUnit);
-                unitTableModel.dataChange();
-                lblInfo.setText("");
-                if (selectedRow >= 0) {
-                    listPcuh = listDetail.get(selectedRow).getListUnit();
-                    PriceChangeMedHis1 pcmh = listDetail.get(selectedRow);
-                    selectedMed = pcmh.getMed();
-                    unitTableModel.setCurrMed(selectedMed);
+                try {
+                    listDetailUnit.removeAll(listDetailUnit);
+                    unitTableModel.dataChange();
+                    lblInfo.setText("");
+                    if (selectedRow >= 0) {
+                        listPcuh = listDetail.get(selectedRow).getListUnit();
+                        PriceChangeMedHis1 pcmh = listDetail.get(selectedRow);
+                        selectedMed = pcmh.getMed();
+                        unitTableModel.setCurrMed(selectedMed);
 
-                    String purUnit = "";
-                    if (pcmh.getPurchaseUnit() != null) {
-                        purUnit = pcmh.getPurchaseUnit().getItemUnitCode();
+                        String purUnit = "";
+                        if (pcmh.getPurchaseUnit() != null) {
+                            purUnit = pcmh.getPurchaseUnit().getItemUnitCode();
+                        }
+                        txtPurPrice.setText(NumberUtil.NZero(pcmh.getPurchasePrice()).toString()
+                                + " " + purUnit);
+
+                        String costUnit = "";
+                        if (pcmh.getCostUnit() != null) {
+                            costUnit = pcmh.getCostUnit().getItemUnitCode();
+                        }
+                        txtCostPrice.setText(NumberUtil.NZero(pcmh.getCostPrice()).toString()
+                                + " " + costUnit);
+
+                        if (selectedMed != null) {
+                            lblInfo.setText(selectedMed.getMedName());
+                            getCostDetail(selectedMed.getMedId());
+                        } else {
+                            modelSCDT.removeAll();
+                        }
+
+                        if (listPcuh != null) {
+                            listDetailUnit.addAll(listPcuh);
+                        }
+
                     }
-                    txtPurPrice.setText(NumberUtil.NZero(pcmh.getPurchasePrice()).toString()
-                            + " " + purUnit);
-
-                    String costUnit = "";
-                    if (pcmh.getCostUnit() != null) {
-                        costUnit = pcmh.getCostUnit().getItemUnitCode();
-                    }
-                    txtCostPrice.setText(NumberUtil.NZero(pcmh.getCostPrice()).toString()
-                            + " " + costUnit);
-
-                    if (selectedMed != null) {
-                        lblInfo.setText(selectedMed.getMedName());
-                        getCostDetail(selectedMed.getMedId());
-                    } else {
-                        modelSCDT.removeAll();
-                    }
-
-                    if (listPcuh != null) {
-                        listDetailUnit.addAll(listPcuh);
-                    }
-
+                } catch (IndexOutOfBoundsException ex) {
+                    log.error(ex.toString());
                 }
-            } catch (IndexOutOfBoundsException ex) {
-                log.error(ex.toString());
             }
         });
     }// </editor-fold>
 
     private void getCostDetail(String itemId) {
-        if (itemId == null) {
-            modelSCDT.removeAll();
-        } else {
-            String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
-                    + itemId + "' and c.userId = '" + Global.loginUser.getUserId() + "'"
-                    + " and c.costFor = 'Opening' ";
+        try {
+            if (itemId == null) {
+                modelSCDT.removeAll();
+            } else {
+                String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
+                        + itemId + "' and c.userId = '" + Global.machineId + "'"
+                        + " and c.costFor = 'Opening' ";
 
-            List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
-            modelSCDT.setListStockCostingDetail(listCostDetail);
+                List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
+                modelSCDT.setListStockCostingDetail(listCostDetail);
+            }
+        } catch (Exception ex) {
+            log.error("getCostDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -641,7 +650,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
 
                 //dao.open();
                 for (PriceChangeMedHis1 pcmHis : listDetail) {
-                    log.info("Med Id : " + pcmHis.getMed().getMedId());
+                    log.info("Med Id : " + pcmHis.getMed().getMedId() + " remark : " + pcmHis.getRemark());
                     if (pcmHis.getListUnit() != null) {
                         Medicine med = (Medicine) dao.find(Medicine.class, pcmHis.getMed().getMedId());
 
@@ -715,7 +724,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     @Override
     public void history() {
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Price Change Search", dao);
+                "Price Change Search", dao, -1);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -869,10 +878,8 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if (tblMedicine.getCellEditor() != null) {
-                    tblMedicine.getCellEditor().stopCellEditing();
-                }
-
+                tblMedicine.getCellEditor().stopCellEditing();
+            } catch (Exception ex) {
                 int row = tblMedicine.getSelectedRow();
                 int col = tblMedicine.getSelectedColumn();
 
@@ -890,8 +897,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     tblMedicine.setRowSelectionInterval(row + 1, row + 1);
                     tblMedicine.setColumnSelectionInterval(0, 0); //Move to Code
                 }
-            } catch (Exception ex) {
-
             }
         }
     };
@@ -1061,25 +1066,22 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     };
 
     private void getSelectedItem(String selectedMedId) {
-        String[] medIdList = selectedMedId.split(",");
-
-        for (String medId : medIdList) {
-            Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId.replace("'", ""));
-            if (selectedMed.getRelationGroupId().size() > 0) {
-                selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
+        try {
+            String[] medIdList = selectedMedId.split(",");
+            for (String medId : medIdList) {
+                Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId.replace("'", ""));
+                if (selectedMed.getRelationGroupId().size() > 0) {
+                    selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
+                }
+                medUp.add(selectedMed);
+                int selectRow = medTableModel.getLastIndex();
+                medTableModel.setMed(selectedMed, selectRow);
+                unitTableModel.setCurrMed(selectedMed);
             }
-            medUp.add(selectedMed);
-            int selectRow = medTableModel.getLastIndex();
-            medTableModel.setMed(selectedMed, selectRow);
-            unitTableModel.setCurrMed(selectedMed);
-            //medTableModel.addEmptyRow();
-            /*if (selectedMedId == null) {
-                        selectedMedId = "'" + rs.getString("med_id") + "'";
-                    } else {
-                        selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
-                    }*/
-            //selectedMedId = rs.getString("med_id");
-            //getMedInfo(selectedMedId);
+        } catch (Exception ex) {
+            log.error("getSelectedItem : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1215,15 +1217,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             String strSql1 = "select distinct med_id"
                     + " from v_purchase where date(pur_date) between '"
                     + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
-                    + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'"
-                    + " and med_id in (" + selectIds + ")";
-
-            if (selectIds.isEmpty()) {
-                strSql1 = "select distinct med_id"
-                        + " from v_purchase where date(pur_date) between '"
-                        + DateUtil.toDateStrMYSQL(txtPurFrom.getText().trim())
-                        + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
-            }
+                    + "' and '" + DateUtil.toDateStrMYSQL(txtPurTo.getText().trim()) + "'";
 
             strSql1 = strSql1 + " and deleted = false";
             if (locationId != -1) {
@@ -1242,19 +1236,17 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     }
                     rs1.close();
                 }
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 log.error("fillByPercent : " + ex.toString());
             } finally {
                 //selectIds = "";
                 dao.close();
             }
-        } else {
-            if (!selectIds.isEmpty()) {
-                if (filter == null) {
-                    filter = "med_id in (" + selectIds + ")";
-                } else {
-                    filter = filter + " and med_id in (" + selectIds + ")";
-                }
+        } else if (!selectIds.isEmpty()) {
+            if (filter == null) {
+                filter = "med_id in (" + selectIds + ")";
+            } else {
+                filter = filter + " and med_id in (" + selectIds + ")";
             }
         }
 
@@ -1276,7 +1268,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 while (rs.next()) {
                     selectedMedId = rs.getString("med_id");
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (!selectedMed.getRelationGroupId().isEmpty()) {
+                    if (selectedMed.getRelationGroupId().size() > 0) {
                         selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
                     }
                     medUp.add(selectedMed);
@@ -1289,7 +1281,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                         selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
                     }*/
                 }
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
                 dao.closeStatment();
@@ -1307,7 +1299,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         double ePercent = NumberUtil.NZero(txtEPercent.getText().trim()) / 100;
         double incValue;
         boolean isFillWithCostPrice = chkFillWithCostPrice.isSelected();
-        boolean isFillWithPurPrice = chkFillWithSalePrice.isSelected();
 
         for (PriceChangeMedHis1 pcmh : listDetail) {
             if (count < listDetail.size() - 1) {
@@ -1315,42 +1306,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
 
                 for (PriceChangeUnitHis1 pcuh : listUnit) {
                     if (isFillWithCostPrice) {
-                        if (nPercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * nPercent);
-                            pcuh.setnPriceNew(Math.ceil(incValue));
-                        }
-
-                        if (aPercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * aPercent);
-                            pcuh.setaPriceNew(Math.ceil(incValue));
-                        }
-
-                        if (bPercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * bPercent);
-                            pcuh.setbPriceNew(Math.ceil(incValue));
-                        }
-
-                        if (cPercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * cPercent);
-                            pcuh.setcPriceNew(Math.ceil(incValue));
-                        }
-
-                        if (dPercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * dPercent);
-                            pcuh.setdPriceNew(Math.ceil(incValue));
-                        }
-
-                        if (ePercent != 0.0) {
-                            incValue = NumberUtil.NZero(pcuh.getCostPrice())
-                                    + (NumberUtil.NZero(pcuh.getCostPrice()) * ePercent);
-                            pcuh.setePriceNew(Math.ceil(incValue));
-                        }
-                    } else if (isFillWithPurPrice) {
                         if (nPercent != 0.0) {
                             incValue = NumberUtil.NZero(pcuh.getCostPrice())
                                     + (NumberUtil.NZero(pcuh.getCostPrice()) * nPercent);
@@ -1431,17 +1386,23 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
-        BindingUtil.BindComboFilter(cboItemBrand, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+        try {
+            BindingUtil.BindComboFilter(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
+            BindingUtil.BindComboFilter(cboItemBrand, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void insertStockFilterCode() {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(txtDate.getText()) + "'";
@@ -1464,22 +1425,20 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             if (!tmpMedFilter.isEmpty()) {
                 strSQL = strSQL + " and m.med_id in (" + tmpMedFilter + ")";
             }
-        } else {
-            if (listDetail.size() > 1) {
-                for (PriceChangeMedHis1 pcmh : listDetail) {
-                    if (pcmh.getMed() != null) {
-                        String medId = pcmh.getMed().getMedId();
-                        if (tmpMedFilter.isEmpty()) {
-                            tmpMedFilter = "'" + medId + "'";
-                        } else {
-                            tmpMedFilter = tmpMedFilter + ",'" + medId + "'";
-                        }
+        } else if (listDetail.size() > 1) {
+            for (PriceChangeMedHis1 pcmh : listDetail) {
+                if (pcmh.getMed() != null) {
+                    String medId = pcmh.getMed().getMedId();
+                    if (tmpMedFilter.isEmpty()) {
+                        tmpMedFilter = "'" + medId + "'";
+                    } else {
+                        tmpMedFilter = tmpMedFilter + ",'" + medId + "'";
                     }
                 }
+            }
 
-                if (!tmpMedFilter.isEmpty()) {
-                    strSQL = strSQL + " and m.med_id in (" + tmpMedFilter + ")";
-                }
+            if (!tmpMedFilter.isEmpty()) {
+                strSQL = strSQL + " and m.med_id in (" + tmpMedFilter + ")";
             }
         }
 
@@ -1498,9 +1457,9 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     private void calculateCost() {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String strMethod = "FIFO";
 
             dao.execSql(deleteTmpData1, deleteTmpData2);
@@ -1510,7 +1469,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
 
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(txtDate.getText()), "Opening",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
 
             //String strLocation = "0";
             /*dao.execProc("insert_cost_detail",
@@ -1589,24 +1548,26 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                                     }
                                 }
                             }
+
+                            //Cost Balance
+                            String strHSQL = "select c from StockCosting c where c.key.userId = '"
+                                    + Global.machineId + "' and c.key.tranOption = 'Opening'"
+                                    + " and c.key.medicine.medId = '" + medId + "'";
+                            List<StockCosting> listStockCosting = dao.findAllHSQL(strHSQL);
+                            if (listStockCosting != null) {
+                                if (!listStockCosting.isEmpty()) {
+                                    StockCosting sc = listStockCosting.get(0);
+                                    pcmh.setStkBalanceSmallest(sc.getBlaQty().doubleValue());
+                                    pcmh.setStkBalanceStr(sc.getBalQtyStr());
+                                }
+                            }
+
+                            medTableModel.fireDataChanged();
                         } catch (Exception ex) {
                             log.error("getAnalystData Purchase : " + medId + " : " + ex.toString());
+                        } finally {
+                            dao.close();
                         }
-
-                        //Cost Balance
-                        String strHSQL = "select c from StockCosting c where c.key.userId = '"
-                                + Global.loginUser.getUserId() + "' and c.key.tranOption = 'Opening'"
-                                + " and c.key.medicine.medId = '" + medId + "'";
-                        List<StockCosting> listStockCosting = dao.findAllHSQL(strHSQL);
-                        if (listStockCosting != null) {
-                            if (!listStockCosting.isEmpty()) {
-                                StockCosting sc = listStockCosting.get(0);
-                                pcmh.setStkBalanceSmallest(sc.getBlaQty().doubleValue());
-                                pcmh.setStkBalanceStr(sc.getBalQtyStr());
-                            }
-                        }
-
-                        medTableModel.fireDataChanged();
                     }
                 }
             }
@@ -1614,7 +1575,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void insertCostDetail(String costFor, String costDate, String method) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         String strDelete = "delete from tmp_costing_detail where cost_for = '" + costFor + "' and user_id = '" + userId + "'";
         String strSql = "select tsc.med_id item_id, bal_qty ttl_stock, cost_price.tran_date, cost_price.tran_option, \n"
                 + "         cost_price.ttl_qty, cost_price.smallest_cost, cost_price, item_unit\n"
@@ -1791,14 +1752,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         }
     }
 
-    private void checkBoxSelect(String ctrlName) {
-        if (ctrlName.equals("FillWithCost")) {
-            chkFillWithSalePrice.setSelected(false);
-        } else if (ctrlName.equals("FillWithSalePrice")) {
-            chkFillWithCostPrice.setSelected(false);
-        }
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1845,7 +1798,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         txtTo = new javax.swing.JFormattedTextField();
         chkFillWithCostPrice = new javax.swing.JCheckBox();
         butFindLost = new javax.swing.JButton();
-        chkFillWithSalePrice = new javax.swing.JCheckBox();
         jScrollPane3 = new javax.swing.JScrollPane();
         tblCostDetail = new javax.swing.JTable();
 
@@ -2009,25 +1961,11 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         });
 
         chkFillWithCostPrice.setText("Fill With Cost");
-        chkFillWithCostPrice.setName("FillWithCost"); // NOI18N
-        chkFillWithCostPrice.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkFillWithCostPriceActionPerformed(evt);
-            }
-        });
 
         butFindLost.setText("Find Lost");
         butFindLost.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butFindLostActionPerformed(evt);
-            }
-        });
-
-        chkFillWithSalePrice.setText("Fill With Pur Price");
-        chkFillWithSalePrice.setName("FillWithSalePrice"); // NOI18N
-        chkFillWithSalePrice.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkFillWithSalePriceActionPerformed(evt);
             }
         });
 
@@ -2043,13 +1981,13 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                         .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(txtRemark))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cboItemType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cboCategory, 0, 157, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(cboCategory, 0, 187, Short.MAX_VALUE)
+                    .addComponent(cboItemType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cboLocation, 0, 157, Short.MAX_VALUE)
-                    .addComponent(cboItemBrand, 0, 157, Short.MAX_VALUE))
+                    .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cboItemBrand, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(txtPurTo)
@@ -2075,13 +2013,14 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtEPercent, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(chkFillWithSalePrice, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(chkFillWithCostPrice, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(chkFillWithCostPrice)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butFindLost, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboCategory, cboItemBrand, cboItemType, cboLocation});
+
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -2115,14 +2054,11 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                         .addComponent(txtDPercent)
                         .addComponent(txtCPercent, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(3, 3, 3)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(chkFillWithCostPrice)
-                            .addComponent(butFindLost))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(chkFillWithSalePrice))))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(chkFillWithCostPrice)
+                        .addComponent(butFindLost))))
             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
@@ -2145,7 +2081,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jScrollPane1)
                     .addComponent(jScrollPane3)
                     .addGroup(layout.createSequentialGroup()
@@ -2166,9 +2102,9 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 45, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2283,14 +2219,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
         checkLost();
     }//GEN-LAST:event_butFindLostActionPerformed
 
-    private void chkFillWithCostPriceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkFillWithCostPriceActionPerformed
-        checkBoxSelect(chkFillWithCostPrice.getName());
-    }//GEN-LAST:event_chkFillWithCostPriceActionPerformed
-
-    private void chkFillWithSalePriceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkFillWithSalePriceActionPerformed
-        checkBoxSelect(chkFillWithSalePrice.getName());
-    }//GEN-LAST:event_chkFillWithSalePriceActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butFill;
     private javax.swing.JButton butFindLost;
@@ -2302,7 +2230,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JComboBox<String> cboLocation;
     private javax.swing.JCheckBox chkCalculate;
     private javax.swing.JCheckBox chkFillWithCostPrice;
-    private javax.swing.JCheckBox chkFillWithSalePrice;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;

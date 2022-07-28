@@ -69,9 +69,15 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
-        bindStatus = true;
-        catTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
+        try {
+            BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
+            bindStatus = true;
+            catTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -194,7 +200,7 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
                             "Are you sure to delete?",
                             "Category delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblCategory.getCellEditor() != null){
+                    if (tblCategory.getCellEditor() != null) {
                         tblCategory.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -314,12 +320,10 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
     private void txtFilterGroupKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterGroupKeyReleased
         if (txtFilterGroup.getText().isEmpty()) {
             sorterGroup.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorterGroup.setRowFilter(swrfGroup);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorterGroup.setRowFilter(swrfGroup);
-            } else {
-                sorterGroup.setRowFilter(RowFilter.regexFilter(txtFilterGroup.getText()));
-            }
+            sorterGroup.setRowFilter(RowFilter.regexFilter(txtFilterGroup.getText()));
         }
     }//GEN-LAST:event_txtFilterGroupKeyReleased
 

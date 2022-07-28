@@ -90,8 +90,13 @@ public class TraderPayAccountSetupDialog extends javax.swing.JDialog {
      */
     private void initTable() {
         //Get Category from database.
-        model.setList(dao.findAllHSQL("select o from TraderPayAccount o order by o.desp"));
-
+        try {
+            model.setList(dao.findAllHSQL("select o from TraderPayAccount o order by o.desp"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Define table selection model to single row selection.
         tblAccount.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.

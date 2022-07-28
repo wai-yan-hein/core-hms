@@ -34,11 +34,13 @@ import com.cv.app.common.RegNo;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.tempentity.TempAmountLink;
 import com.cv.app.opd.ui.util.AmountLinkDialog;
+import com.cv.app.opd.ui.util.AppointmentDoctorDialog;
 import com.cv.app.opd.ui.util.DoctorSearchNameFilterDialog;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -81,6 +83,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -312,6 +315,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             txtBillTotal.setVisible(false);
             jLabel4.setVisible(false);
             butAdmit.setVisible(false);
+            //tblStockList.setVisible(true);
             if (Util1.getPropValue("system.sale.show.stocktable").equals("Y")) {
                 jScrollPane6.setVisible(true);
             } else {
@@ -326,10 +330,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         butAdmit.setVisible(false);
 
         chkVouComp.setText(Util1.getPropValue("system.sale.comp.check.name"));
-        ptCash = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
-        ptCredit = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        try {
+            ptCash = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
+            ptCredit = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        } catch (Exception ex) {
+            log.error("Sale : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         assignDefaultValue();
 
         //timerFocus();
@@ -412,12 +422,17 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         } else if (Util1.getPropValue("system.app.usage.type").equals("School")) {
 
         } else {
-            tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
-            if (tmpObj != null) {
-                tmpCusId = ((Trader) tmpObj).getTraderId();
-                selected("CustomerList", tmpObj);
+            try {
+                tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
+                if (tmpObj != null) {
+                    tmpCusId = ((Trader) tmpObj).getTraderId();
+                    selected("CustomerList", tmpObj);
+                }
+            } catch (Exception ex) {
+                log.error("assignDefaultValue : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
-
             if (currSaleVou.getCustomerId() != null) {
                 if (currSaleVou.getCustomerId().getTraderId().equals(tmpCusId)) {
                     cboPayment.setSelectedItem(ptCash);
@@ -480,66 +495,85 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
-        if (vouNo.equals("-")) {
-            log.error("DC voucher error : " + txtVouNo.getText() + " @ "
-                    + txtSaleDate.getText() + " @ " + vouEngine.getVouInfo());
-            JOptionPane.showMessageDialog(Util1.getParent(),
-                    "DC vou no error. Exit the program and try again.",
-                    "DC Vou No", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
-        } else {
-            List<SaleHis> listSH = dao.findAllHSQL(
-                    "select o from SaleHis o where o.saleInvId = '" + txtVouNo.getText() + "'");
-            if (listSH != null) {
-                if (!listSH.isEmpty()) {
-                    vouEngine.updateVouNo();
-                    vouNo = vouEngine.getVouNo();
-                    txtVouNo.setText(vouNo);
-                    listSH = null;
-                    listSH = dao.findAllHSQL(
-                            "select o from SaleHis o where o.saleInvId = '" + txtVouNo.getText() + "'");
-                    if (listSH != null) {
-                        if (!listSH.isEmpty()) {
-                            log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
-                                    + txtSaleDate.getText());
-                            JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate sale vou no. Exit the program and try again.",
-                                    "Sale Vou No", JOptionPane.ERROR_MESSAGE);
-                            System.exit(1);
-                            //txtVouNo.setText(null);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
+            if (vouNo.equals("-")) {
+                log.error("DC voucher error : " + txtVouNo.getText() + " @ "
+                        + txtSaleDate.getText() + " @ " + vouEngine.getVouInfo());
+                JOptionPane.showMessageDialog(Util1.getParent(),
+                        "DC vou no error. Exit the program and try again.",
+                        "DC Vou No", JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            } else {
+                List<SaleHis> listSH = dao.findAllHSQL(
+                        "select o from SaleHis o where o.saleInvId = '" + txtVouNo.getText() + "'");
+                if (listSH != null) {
+                    if (!listSH.isEmpty()) {
+                        vouEngine.updateVouNo();
+                        vouNo = vouEngine.getVouNo();
+                        txtVouNo.setText(vouNo);
+                        listSH = null;
+                        listSH = dao.findAllHSQL(
+                                "select o from SaleHis o where o.saleInvId = '" + txtVouNo.getText() + "'");
+                        if (listSH != null) {
+                            if (!listSH.isEmpty()) {
+                                log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
+                                        + txtSaleDate.getText());
+                                JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate sale vou no. Exit the program and try again.",
+                                        "Sale Vou No", JOptionPane.ERROR_MESSAGE);
+                                System.exit(1);
+                                //txtVouNo.setText(null);
+                            }
                         }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initCombo() {
-        isBind = true;
-        BindingUtil.BindCombo(cboPayment, dao.findAllHSQL(
-                "select o from PaymentType o order by o.paymentTypeName"));
-        BindingUtil.BindCombo(cboLocation, getLocationFilter());
-        BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            isBind = true;
+            BindingUtil.BindCombo(cboPayment, dao.findAllHSQL(
+                    "select o from PaymentType o order by o.paymentTypeName"));
+            BindingUtil.BindCombo(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPayment, this);
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboVouStatus, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
-        isBind = false;
+            new ComBoBoxAutoComplete(cboPayment, this);
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboVouStatus, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+            isBind = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowSale = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowSale = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        return null;
     }
 
     @Override
@@ -548,9 +582,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             case "CustomerList":
                 try {
                 Trader cus = (Trader) selectObj;
-
+                String selCusId = cus.getTraderId();
                 //Check overdue
-                if (Util1.getPropValue("system.overdue.check").equals("Y") && cus != null) {
+                /*if (Util1.getPropValue("system.overdue.check").equals("Y") && cus != null) {
                     if (isOverDue(cus.getTraderId())) {
                         clear();
                         return;
@@ -559,6 +593,40 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     if (isOverdue((Customer) cus)) {
                         clear();
                         return;
+                    }
+                }*/
+                //Check overdue
+                String tmpCusId = Util1.getPropValue("system.default.customer");
+                if (Util1.getPropValue("system.overdue.check").equals("Y") && cus != null) {
+                    if (isOverDue(cus.getTraderId())) {
+                        //clear();
+                        txtCusId.setText("");
+                        txtCusName.setText("");
+                        return;
+                    }
+                } else if (Util1.getPropValue("system.overdue.check").equals("S") && cus != null) {
+                    if (!tmpCusId.equals(selCusId)) {
+                        Customer tmpCus = (Customer) dao.find(Customer.class, cus.getTraderId());
+                        if (tmpCus.getTraderGroup() == null) {
+                            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid Customer Group.",
+                                    "Customer Group", JOptionPane.ERROR_MESSAGE);
+                            //return;
+                        } else {
+                            if (tmpCus.getTraderGroup().getGroupId().equals(Util1.getPropValue("system.cus.base.group"))
+                                    && !tmpCus.getTraderId().equals(Util1.getPropValue("system.default.customer"))) {
+                                if (isBaseGroupOverdue(currSaleVou.getCustomerId())) {
+                                    txtCusId.setText("");
+                                    txtCusName.setText("");
+                                    //clear();
+                                    return;
+                                }
+                            } else if (isOverdue((Customer) tmpCus)) {
+                                txtCusId.setText("");
+                                txtCusName.setText("");
+                                //clear();
+                                return;
+                            }
+                        }
                     }
                 }
 
@@ -677,6 +745,41 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         lblOTID.setText(null);
                     }
                     getPatientBill(ptt.getRegNo());
+
+                    //Booking info
+                    String regNo = ptt.getRegNo();
+                    List<Booking> listBK = dao.findAllHSQL(
+                            "select o from Booking o where o.regNo = '"
+                            + regNo + "' and o.bkDate = '" + DateUtil.toDateStrMYSQL(txtSaleDate.getText()) + "'");
+                    if (listBK != null) {
+                        if (!listBK.isEmpty()) {
+                            if (listBK.size() == 1) {
+                                Booking bk = listBK.get(0);
+                                String visitId = bk.getDoctor().getDoctorId() + "-" + bk.getRegNo() + "-"
+                                        + DateUtil.getDatePart(bk.getBkDate(), "ddMMyyyy")
+                                        + "-" + bk.getBkSerialNo();
+                                currSaleVou.setVisitId(visitId);
+                                selected("DoctorSearch", bk.getDoctor());
+                            } else if (listBK.size() > 1) {
+                                AppointmentDoctorDialog dialog = new AppointmentDoctorDialog();
+                                dialog.setLocationRelativeTo(null);
+                                dialog.setData(listBK);
+                                dialog.setVisible(true);
+                                Booking selBK = dialog.getSelectedBK();
+                                if (selBK != null) {
+                                    String visitId = selBK.getDoctor().getDoctorId() + "-" + selBK.getRegNo() + "-"
+                                            + DateUtil.getDatePart(selBK.getBkDate(), "ddMMyyyy")
+                                            + "-" + selBK.getBkSerialNo();
+                                    currSaleVou.setVisitId(visitId);
+                                    selected("DoctorSearch", selBK.getDoctor());
+                                }
+                            } else {
+                                if (ptt.getDoctor() != null) {
+                                    selected("DoctorSearch", ptt.getDoctor());
+                                }
+                            }
+                        }
+                    }
                 } else {
                     txtCusId.setText(null);
                     txtCusName.setText(null);
@@ -1062,7 +1165,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 tran.setRemark(tph.getRemark());
                 tran.setPaymentId(tph.getPaymentId());
                 tran.setSaleVouNo(tph.getSaleVou());
-                tran.setUserId(Global.loginUser.getUserId());
+                tran.setUserId(Global.machineId);
                 tran.setTranType("D");
                 tran.setSortId(2);
 
@@ -1173,82 +1276,91 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void initSaleTable() {
-        tblSale.getTableHeader().setReorderingAllowed(false);
-        tblSale.getTableHeader().setFont(Global.lableFont);
-        tblSale.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-        //Adjust column width
-        tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
-        tblSale.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
-        tblSale.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
-        tblSale.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
-        tblSale.getColumnModel().getColumn(4).setPreferredWidth(30);//Qty
-        tblSale.getColumnModel().getColumn(5).setPreferredWidth(15);//Unit
-        tblSale.getColumnModel().getColumn(6).setPreferredWidth(60);//Sale price
-        tblSale.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount
-        tblSale.getColumnModel().getColumn(8).setPreferredWidth(20);//FOC
-        tblSale.getColumnModel().getColumn(9).setPreferredWidth(15);//FOC-Unit
-        tblSale.getColumnModel().getColumn(10).setPreferredWidth(70);//Amount
-        tblSale.getColumnModel().getColumn(11).setPreferredWidth(70);//Location
-        tblSale.getColumnModel().getColumn(12).setPreferredWidth(70);//STK-Balance
-
-        //tblSale.getColumnModel().getColumn(11).setMinWidth(0);
-        //tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
-        //tblSale.getColumnModel().getColumn(11).setWidth(0);
-        addSaleTableModelListener();
-
-        //Change JTable cell editor
-        /*tblSale.getColumnModel().getColumn(0).setCellEditor(
-                new SaleTableCodeCellEditor(dao));*/
-        tblSale.getColumnModel().getColumn(0).setCellEditor(codeCellEditor);
-        tblSale.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor(this));
-        tblSale.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
-        tblSale.getColumnModel().getColumn(6).setCellEditor(new SaleTableUnitCellEditor());
-        tblSale.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
-        //tblSale.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
-        tblSale.getColumnModel().getColumn(10).setCellEditor(new BestTableCellEditor(this));
-
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        //Replace with FOC column
-        //tblSale.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboChargeType));
-
-        if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
-            JComboBox cboLocationCell = new JComboBox();
-            cboLocationCell.setFont(Global.textFont); // NOI18N
-            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
-            tblSale.getColumnModel().getColumn(11).setCellEditor(new DefaultCellEditor(cboLocationCell));
-            saleTableModel.setLocation((Location) cboLocation.getSelectedItem());
-            tblSale.getColumnModel().getColumn(11).setPreferredWidth(50);//Location
-        } else {
-            tblSale.getColumnModel().getColumn(11).setPreferredWidth(0);//Location
-            tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
-            tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
-        }
-
-        tblSale.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblSale.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
-            txtRecNo.setText(Integer.toString(tblSale.getSelectedRow() + 1));
-            if (tblSale.getSelectedRow() < saleTableModel.getRowCount()) {
-                int row = tblSale.convertRowIndexToModel(tblSale.getSelectedRow());
-                lblBrandName.setText(saleTableModel.getBrandName(row));
-                lblRemark.setText(saleTableModel.getRemark(row));
-                Object tmp = tblSale.getValueAt(tblSale.getSelectedRow(), 0);
-                if (tmp != null) {
-                    String selectMedId = tmp.toString();
-                    List<Stock> listStock = stockList.getStockList(selectMedId);
-                    if (listStock == null) {
-                        listStock = new ArrayList();
-                    }
-                    stockTableModel.setListStock(listStock);
-                } else {
-                    List<Stock> listStock = new ArrayList();
-                    stockTableModel.setListStock(listStock);
-                }
+        try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblSale.setCellSelectionEnabled(true);
             }
-        });
+            tblSale.getTableHeader().setReorderingAllowed(false);
+            tblSale.getTableHeader().setFont(Global.lableFont);
+            tblSale.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+            //Adjust column width
+            tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
+            tblSale.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
+            tblSale.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
+            tblSale.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
+            tblSale.getColumnModel().getColumn(4).setPreferredWidth(30);//Qty
+            tblSale.getColumnModel().getColumn(5).setPreferredWidth(15);//Unit
+            tblSale.getColumnModel().getColumn(6).setPreferredWidth(60);//Sale price
+            tblSale.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount
+            tblSale.getColumnModel().getColumn(8).setPreferredWidth(20);//FOC
+            tblSale.getColumnModel().getColumn(9).setPreferredWidth(15);//FOC-Unit
+            tblSale.getColumnModel().getColumn(10).setPreferredWidth(70);//Amount
+            tblSale.getColumnModel().getColumn(11).setPreferredWidth(70);//Location
+            tblSale.getColumnModel().getColumn(12).setPreferredWidth(70);//STK-Balance
 
-        tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
-        tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            //tblSale.getColumnModel().getColumn(11).setMinWidth(0);
+            //tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
+            //tblSale.getColumnModel().getColumn(11).setWidth(0);
+            addSaleTableModelListener();
+
+            //Change JTable cell editor
+            /*tblSale.getColumnModel().getColumn(0).setCellEditor(
+                new SaleTableCodeCellEditor(dao));*/
+            tblSale.getColumnModel().getColumn(0).setCellEditor(codeCellEditor);
+            tblSale.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor(this));
+            tblSale.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
+            tblSale.getColumnModel().getColumn(6).setCellEditor(new SaleTableUnitCellEditor());
+            tblSale.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
+            //tblSale.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
+            tblSale.getColumnModel().getColumn(10).setCellEditor(new BestTableCellEditor(this));
+
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            //Replace with FOC column
+            //tblSale.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboChargeType));
+
+            if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
+                JComboBox cboLocationCell = new JComboBox();
+                cboLocationCell.setFont(Global.textFont); // NOI18N
+                BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+                tblSale.getColumnModel().getColumn(11).setCellEditor(new DefaultCellEditor(cboLocationCell));
+                saleTableModel.setLocation((Location) cboLocation.getSelectedItem());
+                tblSale.getColumnModel().getColumn(11).setPreferredWidth(50);//Location
+            } else {
+                tblSale.getColumnModel().getColumn(11).setPreferredWidth(0);//Location
+                tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
+                tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
+            }
+
+            tblSale.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblSale.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                txtRecNo.setText(Integer.toString(tblSale.getSelectedRow() + 1));
+                if (tblSale.getSelectedRow() < saleTableModel.getRowCount()) {
+                    int row = tblSale.convertRowIndexToModel(tblSale.getSelectedRow());
+                    lblBrandName.setText(saleTableModel.getBrandName(row));
+                    lblRemark.setText(saleTableModel.getRemark(row));
+                    Object tmp = tblSale.getValueAt(tblSale.getSelectedRow(), 0);
+                    if (tmp != null) {
+                        String selectMedId = tmp.toString();
+                        List<Stock> listStock = stockList.getStockList(selectMedId);
+                        if (listStock == null) {
+                            listStock = new ArrayList();
+                        }
+                        stockTableModel.setListStock(listStock);
+                    } else {
+                        List<Stock> listStock = new ArrayList();
+                        stockTableModel.setListStock(listStock);
+                    }
+                }
+            });
+
+            tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
+            tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+        } catch (Exception ex) {
+            log.error("initSaleTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addSaleTableModelListener() {
@@ -1597,8 +1709,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblSale.getActionMap().put("F8-Action", actionItemDelete);
 
         //Enter event on tblSale
-        //tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
-        //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
+        tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
+        tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
 
         //Enter event on tblExpense
         tblExpense.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
@@ -1667,16 +1779,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }*/
         }
     };
-    
+
     private Action actionTblSaleEnterKey = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            /*try {
+            try {
                 if (tblSale.getCellEditor() != null) {
                     tblSale.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
-            }*/
+            }
 
             if (!Util1.getPropValue("system.sale.barcode").equals("Y")) {
                 int row = tblSale.getSelectedRow();
@@ -2058,18 +2170,24 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void initExpenseTable() {
-        //Adjust column width
-        tblExpense.getColumnModel().getColumn(0).setPreferredWidth(60); //Date
-        tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
-        tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amt-In
-        tblExpense.getColumnModel().getColumn(3).setPreferredWidth(60);//Amt-Out
+        try {
+            //Adjust column width
+            tblExpense.getColumnModel().getColumn(0).setPreferredWidth(60); //Date
+            tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
+            tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amt-In
+            tblExpense.getColumnModel().getColumn(3).setPreferredWidth(60);//Amt-Out
 
-        addExpenseTableModelListener();
+            addExpenseTableModelListener();
 
-        JComboBox cboExpenseType = new JComboBox();
-        cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
-        BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
-        tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
+            JComboBox cboExpenseType = new JComboBox();
+            cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
+            BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
+            tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
+        } catch (Exception ex) {
+            log.error("initExpenseTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addExpenseTableModelListener() {
@@ -2112,6 +2230,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             return;
         }
 
+        log.error("save1() start : " + currSaleVou.getSaleInvId());
         //For BK Pagolay
         try {
             Date d = new Date();
@@ -2129,6 +2248,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         } finally {
             dao.close();
         }
+        log.error("save1() after bksale : " + currSaleVou.getSaleInvId());
         //For BK Pagolay
 
         try {
@@ -2147,11 +2267,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             }
         } catch (Exception ex) {
-            log.error("insert packing : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+            log.error("insert packing : " + " - " + currSaleVou.getSaleInvId() + " - " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
         } finally {
             dao.close();
         }
-
+        log.error("save1() after insert_packing : " + currSaleVou.getSaleInvId());
         try {
             boolean iAllow = true;
             if (iAllow == true) {
@@ -2171,6 +2291,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         ttlItem++;
                     }
                 }
+                log.error("save1() after save sale detail his : " + currSaleVou.getSaleInvId() + " - " + tmpListSDH.size());
                 if (ttlItem != fttlItem) {
                     log.error("Error in total item, Vou No : " + currSaleVou.getSaleInvId()
                             + " List Items Total : " + fttlItem + " Save Items Total : " + ttlItem);
@@ -2180,24 +2301,28 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 if (listExpense != null) {
                     for (SaleExpense se : listExpense) {
                         if (se.getExpType() != null) {
-                            se.setVouNo(vouNo);
-                            se.setSaleExpenseId(vouNo + "-" + se.getUniqueId().toString());
+                            if (se.getVouNo() == null) {
+                                se.setVouNo(vouNo);
+                                se.setSaleExpenseId(vouNo + "-" + se.getUniqueId().toString());
+                            }
                             dao.save1(se);
                         }
                     }
                 }
                 //currSaleVou.setExpense(listExpense);
-
+                log.error("save1() after sale expense save : " + currSaleVou.getSaleInvId());
                 List<SaleOutstand> listOuts = getOutstandingItem();
                 if (listOuts != null) {
                     for (SaleOutstand so : listOuts) {
-                        so.setVouNo(vouNo);
-                        so.setOutsId(vouNo + "-" + so.getItemId().getMedId());
+                        if (so.getVouNo() == null) {
+                            so.setVouNo(vouNo);
+                            so.setOutsId(vouNo + "-" + so.getItemId().getMedId());
+                        }
                         dao.save1(so);
                     }
                 }
                 //currSaleVou.setListOuts(listOuts);
-
+                log.error("save1() after sale outstanding save : " + currSaleVou.getSaleInvId());
                 List<SaleWarranty> listWarranty = currSaleVou.getWarrandy();
                 if (listWarranty != null) {
                     for (SaleWarranty sw : listWarranty) {
@@ -2205,14 +2330,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         dao.save1(sw);
                     }
                 }
-
+                log.error("save1() after sale warranty save : " + currSaleVou.getSaleInvId());
                 dao.save1(currSaleVou);
                 dao.commit();
                 //dao.save(currSaleVou);
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
+                log.error("save1() after voucher update : " + currSaleVou.getSaleInvId());
                 deleteDetail();
+                log.error("save1() after deleteDetail : " + currSaleVou.getSaleInvId());
                 updateVouTotal(currSaleVou.getSaleInvId());
                 if (!Util1.getPropValue("system.app.usage.type").equals("School")
                         || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2221,7 +2348,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                 //Upload to Account
                 uploadToAccount(currSaleVou);
-
+                log.error("save1() after uploadToAccount : " + currSaleVou.getSaleInvId());
                 clear();
 
             } else {
@@ -2231,10 +2358,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         } catch (Exception ex) {
             dao.rollBack();
-            log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            log.error("save : " + currSaleVou.getSaleInvId() + " - " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
             dao.close();
         }
+
+        log.error("save1() end : " + currSaleVou.getSaleInvId());
     }
 
     @Override
@@ -2267,6 +2396,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 //removeEmptyRow();
                 //currSaleVou.setSaleDetailHis(listDetail);
 
+                log.error("save() start : " + currSaleVou.getSaleInvId());
                 //For BK Pagolay
                 try {
                     Date d = new Date();
@@ -2280,11 +2410,13 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             currSaleVou.getPaid().toString(),
                             currSaleVou.getBalance().toString());
                 } catch (Exception ex) {
-                    log.error("bksale : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                    log.error("bksale : " + ex.getStackTrace()[0].getLineNumber() + "-"
+                            + currSaleVou.getSaleInvId() + " - " + ex);
                 } finally {
                     dao.close();
                 }
                 //For BK Pagolay
+                log.error("save() after bksale : " + currSaleVou.getSaleInvId());
 
                 try {
                     for (SaleDetailHis sdh : listDetail) {
@@ -2302,10 +2434,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                     }
                 } catch (Exception ex) {
-                    log.error("insert packing : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                    log.error("insert packing : " + currSaleVou.getSaleInvId() + " - " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
                 } finally {
                     dao.close();
                 }
+                log.error("save() sfter insert_packing : " + currSaleVou.getSaleInvId());
                 try {
                     boolean iAllow = true;
                     if (lblStatus.getText().equals("EDIT")) {
@@ -2330,6 +2463,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 ttlItem++;
                             }
                         }
+                        log.error("save() after sale detail his save : " + currSaleVou.getSaleInvId() + " - " + tmpListSDH.size());
                         if (ttlItem != (fttlItem - 1)) {
                             log.error("Error in total item, Vou No : " + currSaleVou.getSaleInvId()
                                     + " List Items Total : " + fttlItem + " Save Items Total : " + ttlItem);
@@ -2346,7 +2480,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             }
                         }
                         //currSaleVou.setExpense(listExpense);
-
+                        log.error("save() after sale expense save : " + currSaleVou.getSaleInvId());
                         List<SaleOutstand> listOuts = getOutstandingItem();
                         if (listOuts != null) {
                             for (SaleOutstand so : listOuts) {
@@ -2356,7 +2490,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             }
                         }
                         //currSaleVou.setListOuts(listOuts);
-
+                        log.error("save() after outstanding save : " + currSaleVou.getSaleInvId());
                         List<SaleWarranty> listWarranty = currSaleVou.getWarrandy();
                         if (listWarranty != null) {
                             for (SaleWarranty sw : listWarranty) {
@@ -2364,13 +2498,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 dao.save1(sw);
                             }
                         }
-
+                        log.error("save() after sale warranty save : " + currSaleVou.getSaleInvId());
                         dao.save1(currSaleVou);
                         dao.commit();
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
                         }
                         deleteDetail();
+                        log.error("save() after delete detail : " + currSaleVou.getSaleInvId());
                         updateVouTotal(currSaleVou.getSaleInvId());
                         if (!Util1.getPropValue("system.app.usage.type").equals("School")
                                 || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2389,27 +2524,39 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                 } catch (Exception ex) {
                     dao.rollBack();
-                    log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                    log.error("save : vou no : " + currSaleVou.getSaleInvId() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                     JOptionPane.showMessageDialog(Util1.getParent(), "Error : " + ex.toString(),
                             "Sale Save", JOptionPane.ERROR_MESSAGE);
                 } finally {
                     dao.close();
                 }
+
+                log.error("save() finished : " + currSaleVou.getSaleInvId());
             }
         }
     }
 
     @Override
     public void newForm() {
-        int status = JOptionPane.showConfirmDialog(this, "Are you sure to want new voucher?", "Message", JOptionPane.CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (status == 0) {
+        if (Util1.getPropValue("system.sale.newvou.conform").equals("Y")) {
+            int status = JOptionPane.showConfirmDialog(this, "Are you sure to want new voucher?", "Message",
+                    JOptionPane.CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (status == 0) {
+                clear();
+            }
+        } else {
             clear();
         }
     }
 
     @Override
     public void history() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Sale Voucher Search", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Sale Voucher Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -2441,15 +2588,44 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 currSaleVou.setDeleted(true);
                 currSaleVou.setIntgUpdStatus(null);
                 //save();
-                save1();
+                //save1();
+                try {
+                    Date d = new Date();
+                    dao.execProc("bksale",
+                            currSaleVou.getSaleInvId(),
+                            DateUtil.toDateTimeStrMYSQL(d),
+                            Global.loginUser.getUserId(),
+                            Global.machineId,
+                            currSaleVou.getVouTotal().toString(),
+                            currSaleVou.getDiscount().toString(),
+                            currSaleVou.getPaid().toString(),
+                            currSaleVou.getBalance().toString());
+                } catch (Exception ex) {
+                    log.error("bksale : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                } finally {
+                    dao.close();
+                }
+
+                String vouNo = currSaleVou.getSaleInvId();
+                try {
+                    dao.execSql("update sale_his set deleted = true, intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("delete error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                //Upload to Account
+                uploadToAccount(currSaleVou);
+                log.error("save1() after uploadToAccount : " + currSaleVou.getSaleInvId());
                 if (!Util1.getPropValue("system.app.usage.type").equals("School")
                         || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                     if (currSaleVou.getCustomerId() != null) {
-                        String vouNo = currSaleVou.getSaleInvId();
+
                         String traderId = currSaleVou.getCustomerId().getTraderId();
                         updatePayent(vouNo, traderId);
                     }
                 }
+                clear();
             }
         } else {
             JOptionPane.showMessageDialog(Util1.getParent(), "You have no permission to delete voucher.",
@@ -2557,98 +2733,120 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void copyVoucher(String vouNo) {
-        SaleHis tmpSaleHis = (SaleHis) dao.find(SaleHis.class, vouNo);
+        try {
+            SaleHis tmpSaleHis = (SaleHis) dao.find(SaleHis.class, vouNo);
 
-        txtSaleDate.setText(DateUtil.toDateStr(tmpSaleHis.getSaleDate()));
-        saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-        txtDueDate.setText(DateUtil.toDateStr(tmpSaleHis.getDueDate()));
-        txtRemark.setText(tmpSaleHis.getRemark());
+            txtSaleDate.setText(DateUtil.toDateStr(tmpSaleHis.getSaleDate()));
+            saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+            txtDueDate.setText(DateUtil.toDateStr(tmpSaleHis.getDueDate()));
+            txtRemark.setText(tmpSaleHis.getRemark());
 
-        if (tmpSaleHis.getCustomerId() != null) {
-            txtCusId.setText(tmpSaleHis.getCustomerId().getTraderId());
-            txtCusName.setText(tmpSaleHis.getCustomerId().getTraderName());
-            txtCreditLimit.setValue(((Customer) tmpSaleHis.getCustomerId()).getCreditLimit());
-        } else if (tmpSaleHis.getPatientId() != null) {
-            txtCusId.setText(tmpSaleHis.getPatientId().getRegNo());
-            txtCusName.setText(tmpSaleHis.getPatientId().getPatientName());
-        } else {
-            txtCusId.setText(null);
-            txtCusName.setText(null);
-            txtCreditLimit.setValue(null);
+            if (tmpSaleHis.getCustomerId() != null) {
+                txtCusId.setText(tmpSaleHis.getCustomerId().getTraderId());
+                txtCusName.setText(tmpSaleHis.getCustomerId().getTraderName());
+                txtCreditLimit.setValue(((Customer) tmpSaleHis.getCustomerId()).getCreditLimit());
+            } else if (tmpSaleHis.getPatientId() != null) {
+                txtCusId.setText(tmpSaleHis.getPatientId().getRegNo());
+                txtCusName.setText(tmpSaleHis.getPatientId().getPatientName());
+            } else {
+                txtCusId.setText(null);
+                txtCusName.setText(null);
+                txtCreditLimit.setValue(null);
+            }
+
+            //txtDrCode.setText();
+            //txtDrName.setText();
+            cboLocation.setSelectedItem(tmpSaleHis.getLocationId());
+            cboPayment.setSelectedItem(tmpSaleHis.getPaymentTypeId());
+            cboVouStatus.setSelectedItem(tmpSaleHis.getVouStatus());
+
+            //List<SaleDetailHis> listSdh = tmpSaleHis.getSaleDetailHis();
+            List<SaleDetailHis> listSdh = dao.findAllHSQL(
+                    "select o from SaleDetailHis o where o.vouNo = '"
+                    + vouNo + "' order by o.uniqueId"
+            );
+
+            //List<SaleExpense> listSe = tmpSaleHis.getExpense();
+            List<SaleExpense> listSe = dao.findAllHSQL(
+                    "select o from SaleExpense o where o.vouNo = '"
+                    + vouNo + "'"
+            );
+
+            //listDetail.removeAll(listDetail);
+            //listExpense.removeAll(listExpense);
+            listDetail = new ArrayList();
+            listExpense = new ArrayList();
+
+            for (SaleDetailHis sdh : listSdh) {
+                SaleDetailHis tmpSdh = new SaleDetailHis();
+
+                BeanUtils.copyProperties(sdh, tmpSdh);
+                tmpSdh.setSaleDetailId(null);
+                listDetail.add(tmpSdh);
+            }
+            listDetail.add(new SaleDetailHis());
+
+            for (SaleExpense se : listSe) {
+                SaleExpense tmpSe = new SaleExpense();
+
+                BeanUtils.copyProperties(se, tmpSe);
+                tmpSe.setSaleExpenseId(null);
+                listExpense.add(tmpSe);
+            }
+
+            listExpense.add(new SaleExpense());
+
+            List<SaleOutstand> listOuts = new ArrayList();
+            //List<SaleOutstand> tmpListOuts = currSaleVou.getListOuts();
+            List<SaleOutstand> tmpListOuts = dao.findAllHSQL(
+                    "select o from SaleOutstand o where o.vouNo = '"
+                    + vouNo + "'");
+            for (SaleOutstand so : tmpListOuts) {
+                SaleOutstand tmpSo = new SaleOutstand();
+                BeanUtils.copyProperties(so, tmpSo);
+                tmpSo.setOutsId(null);
+                listOuts.add(tmpSo);
+            }
+
+            List<SaleWarranty> listWarrandy = new ArrayList();
+            //List<SaleWarranty> tmpListW = currSaleVou.getWarrandy();
+            List<SaleWarranty> tmpListW = dao.findAllHSQL(
+                    "select o from SaleWarranty o where o.vouNo = '"
+                    + vouNo + "'"
+            );
+            for (SaleWarranty sw : tmpListW) {
+                SaleWarranty tmpSw = new SaleWarranty();
+                BeanUtils.copyProperties(sw, tmpSw);
+                tmpSw.setWarrantyId(null);
+                listWarrandy.add(tmpSw);
+            }
+
+            lblStatus.setText("NEW");
+
+            txtVouTotal.setValue(tmpSaleHis.getVouTotal());
+            txtVouPaid.setValue(tmpSaleHis.getPaid());
+            txtVouDiscount.setValue(tmpSaleHis.getDiscount());
+            txtTotalExpense.setValue(tmpSaleHis.getExpenseTotal());
+            txtTtlExpIn.setValue(tmpSaleHis.getTtlExpenseIn());
+            txtVouBalance.setValue((tmpSaleHis.getVouTotal() + tmpSaleHis.getExpenseTotal() + tmpSaleHis.getTtlExpenseIn())
+                    - (tmpSaleHis.getPaid() + tmpSaleHis.getDiscount()));
+
+            //dao.evict(tmpSaleHis);
+            currSaleVou = new SaleHis();
+            BeanUtils.copyProperties(tmpSaleHis, currSaleVou);
+            currSaleVou.setSaleDetailHis(listDetail);
+            currSaleVou.setExpense(listExpense);
+            currSaleVou.setListOuts(listOuts);
+            currSaleVou.setWarrandy(listWarrandy);
+            currSaleVou.setDeleted(false);
+            saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+            saleTableModel.setListDetail(listDetail);
+            expTableModel.setListDetail(listExpense);
+        } catch (Exception ex) {
+            log.error("copyVoucher : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        //txtDrCode.setText();
-        //txtDrName.setText();
-        cboLocation.setSelectedItem(tmpSaleHis.getLocationId());
-        cboPayment.setSelectedItem(tmpSaleHis.getPaymentTypeId());
-        cboVouStatus.setSelectedItem(tmpSaleHis.getVouStatus());
-
-        List<SaleDetailHis> listSdh = tmpSaleHis.getSaleDetailHis();
-        List<SaleExpense> listSe = tmpSaleHis.getExpense();
-
-        //listDetail.removeAll(listDetail);
-        //listExpense.removeAll(listExpense);
-        listDetail = new ArrayList();
-        listExpense = new ArrayList();
-
-        for (SaleDetailHis sdh : listSdh) {
-            SaleDetailHis tmpSdh = new SaleDetailHis();
-
-            BeanUtils.copyProperties(sdh, tmpSdh);
-            tmpSdh.setSaleDetailId(null);
-            listDetail.add(tmpSdh);
-        }
-        listDetail.add(new SaleDetailHis());
-
-        for (SaleExpense se : listSe) {
-            SaleExpense tmpSe = new SaleExpense();
-
-            BeanUtils.copyProperties(se, tmpSe);
-            tmpSe.setSaleExpenseId(null);
-            listExpense.add(tmpSe);
-        }
-
-        listExpense.add(new SaleExpense());
-
-        List<SaleOutstand> listOuts = new ArrayList();
-        List<SaleOutstand> tmpListOuts = currSaleVou.getListOuts();
-        for (SaleOutstand so : tmpListOuts) {
-            SaleOutstand tmpSo = new SaleOutstand();
-            BeanUtils.copyProperties(so, tmpSo);
-            tmpSo.setOutsId(null);
-            listOuts.add(tmpSo);
-        }
-
-        List<SaleWarranty> listWarrandy = new ArrayList();
-        List<SaleWarranty> tmpListW = currSaleVou.getWarrandy();
-        for (SaleWarranty sw : tmpListW) {
-            SaleWarranty tmpSw = new SaleWarranty();
-            BeanUtils.copyProperties(sw, tmpSw);
-            tmpSw.setWarrantyId(null);
-            listWarrandy.add(tmpSw);
-        }
-
-        lblStatus.setText("NEW");
-
-        txtVouTotal.setValue(tmpSaleHis.getVouTotal());
-        txtVouPaid.setValue(tmpSaleHis.getPaid());
-        txtVouDiscount.setValue(tmpSaleHis.getDiscount());
-        txtTotalExpense.setValue(tmpSaleHis.getExpenseTotal());
-        txtTtlExpIn.setValue(tmpSaleHis.getTtlExpenseIn());
-        txtVouBalance.setValue((tmpSaleHis.getVouTotal() + tmpSaleHis.getExpenseTotal() + tmpSaleHis.getTtlExpenseIn())
-                - (tmpSaleHis.getPaid() + tmpSaleHis.getDiscount()));
-
-        //dao.evict(tmpSaleHis);
-        currSaleVou = new SaleHis();
-        BeanUtils.copyProperties(tmpSaleHis, currSaleVou);
-        currSaleVou.setSaleDetailHis(listDetail);
-        currSaleVou.setExpense(listExpense);
-        currSaleVou.setListOuts(listOuts);
-        currSaleVou.setWarrandy(listWarrandy);
-        currSaleVou.setDeleted(false);
-        saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-        saleTableModel.setListDetail(listDetail);
-        expTableModel.setListDetail(listExpense);
     }
 
     @Override
@@ -2683,6 +2881,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     //currSaleVou.setSaleDetailHis(saleTableModel.getListDetail());
                     //currSaleVou.setExpense(listExpense);
 
+                    log.error("print() start : " + currSaleVou.getSaleInvId());
                     //For BK Pagolay
                     try {
                         Date d = new Date();
@@ -2696,11 +2895,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 currSaleVou.getPaid().toString(),
                                 currSaleVou.getBalance().toString());
                     } catch (Exception ex) {
-                        log.error("bksale : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                        log.error("bksale : " + currSaleVou.getSaleInvId() + " - " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
                     } finally {
                         dao.close();
                     }
-
+                    log.error("print() after bksale : " + currSaleVou.getSaleInvId());
                     /*txtCusLastBalance.setValue(
                             (NumberUtil.getDouble(txtCusLastBalance.getText())
                             + NumberUtil.getDouble(currSaleVou.getBalance()))
@@ -2711,8 +2910,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             if (canEdit) {
                                 String vouNo = currSaleVou.getSaleInvId();
                                 List<SaleDetailHis> tmpListSDH = saleTableModel.getListDetail();
-                                dao.open();
-                                dao.beginTran();
+                                //dao.open();
+                                //dao.beginTran();
                                 int ttlItem = 0;
                                 int fttlItem = NumberUtil.NZeroInt(txtTotalItem.getText());
                                 if (tmpListSDH != null) {
@@ -2721,10 +2920,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         if (sdh.getSaleDetailId() == null) {
                                             sdh.setSaleDetailId(vouNo + "-" + sdh.getUniqueId().toString());
                                         }
-                                        dao.save1(sdh);
+                                        dao.save(sdh);
                                         ttlItem++;
                                     }
                                 }
+                                log.error("print() after save sale detail his : " + currSaleVou.getSaleInvId() + " - " + tmpListSDH.size());
                                 if (ttlItem != (fttlItem - 1)) {
                                     log.error("Error in total item, Vou No : " + currSaleVou.getSaleInvId()
                                             + " List Items Total : " + fttlItem + " Save Items Total : " + ttlItem);
@@ -2735,34 +2935,38 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 if (listExpense != null) {
                                     for (SaleExpense se : listExpense) {
                                         if (se.getExpType() != null) {
-                                            se.setVouNo(vouNo);
-                                            se.setSaleExpenseId(vouNo + "-" + se.getUniqueId().toString());
-                                            dao.save1(se);
+                                            if (se.getVouNo() == null) {
+                                                se.setVouNo(vouNo);
+                                                se.setSaleExpenseId(vouNo + "-" + se.getUniqueId().toString());
+                                            }
+                                            dao.save(se);
                                         }
                                     }
                                 }
                                 //currSaleVou.setExpense(listExpense);
-
+                                log.error("print() after sale expense save : " + currSaleVou.getSaleInvId());
                                 List<SaleOutstand> listOuts = getOutstandingItem();
                                 if (listOuts != null) {
                                     for (SaleOutstand so : listOuts) {
-                                        so.setVouNo(vouNo);
-                                        so.setOutsId(vouNo + "-" + so.getItemId().getMedId());
-                                        dao.save1(so);
+                                        if (so.getVouNo() == null) {
+                                            so.setVouNo(vouNo);
+                                            so.setOutsId(vouNo + "-" + so.getItemId().getMedId());
+                                        }
+                                        dao.save(so);
                                     }
                                 }
                                 //currSaleVou.setListOuts(listOuts);
-
+                                log.error("print() after SaleOutstand save : " + currSaleVou.getSaleInvId());
                                 List<SaleWarranty> listWarranty = currSaleVou.getWarrandy();
                                 if (listWarranty != null) {
                                     for (SaleWarranty sw : listWarranty) {
                                         sw.setVouNo(vouNo);
-                                        dao.save1(sw);
+                                        dao.save(sw);
                                     }
                                 }
-
-                                dao.save1(currSaleVou);
-                                dao.commit();
+                                log.error("print() after SaleWarrany save : " + currSaleVou.getSaleInvId());
+                                dao.save(currSaleVou);
+                                //dao.commit();
                                 //dao.save(currSaleVou);
                                 if (lblStatus.getText().equals("NEW")) {
                                     vouEngine.updateVouNo();
@@ -2772,6 +2976,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 updateVouTotal(currSaleVou.getSaleInvId());
                                 //Upload to Account
                                 uploadToAccount(currSaleVou);
+                                log.error("print() after uploadToAccount : " + currSaleVou.getSaleInvId());
                             }
                         }
                         String traderId = Util1.getPropValue("system.sale.general.customer");
@@ -2783,7 +2988,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         + NumberUtil.getDouble(currSaleVou.getBalance())
                                         + tranTableModel.getTotal()
                                 );
-                                tt.setUserId(Global.loginUser.getUserId());
+                                tt.setUserId(Global.machineId);
                                 //tt.setTranOption("Last Balance : ");
                                 if (tt.getAmount() < 0) {
                                     tt.setTranOption(Util1.getPropValue("system.app.sale.lastbalanceM"));
@@ -2803,7 +3008,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         for (SaleExpense se : listExpense) {
                                             tt = new TraderTransaction();
                                             tt.setAmount(se.getExpAmount());
-                                            tt.setUserId(Global.loginUser.getUserId());
+                                            tt.setUserId(Global.machineId);
                                             //tt.setTranOption("Current Vou : ");
                                             tt.setTranOption(se.getExpType().getExpenseName());
                                             tt.setTranDate(currSaleVou.getSaleDate());
@@ -2829,7 +3034,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                                 tt = new TraderTransaction();
                                 tt.setAmount(NumberUtil.NZero(txtSaleLastBalance.getText()));
-                                tt.setUserId(Global.loginUser.getUserId());
+                                tt.setUserId(Global.machineId);
                                 //tt.setTranOption("Pre. Balance : ");
                                 tt.setTranOption(Util1.getPropValue("system.app.sale.prvbalance"));
                                 tt.setTranDate(DateUtil.toDate(strLastSaleDate));
@@ -2842,7 +3047,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         }
                     } catch (Exception ex) {
                         dao.rollBack();
-                        log.error("print : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                        log.error("print : " + currSaleVou.getSaleInvId() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                         JOptionPane.showMessageDialog(Util1.getParent(), "Error cannot print.",
                                 "Sale print", JOptionPane.ERROR_MESSAGE);
                         return;
@@ -2854,6 +3059,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
              JOptionPane.showMessageDialog(Util1.getParent(), "Need Permission",
              "Sale print", JOptionPane.ERROR_MESSAGE);
              }*/
+
+            log.error("print() end database update : " + currSaleVou.getSaleInvId());
 
             String reportNameProp;
             if (chkPrintOption.isSelected()) {
@@ -2899,7 +3106,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             try {
                 String delSql = "delete from tmp_amount_link where user_id = '"
-                        + Global.loginUser.getUserId() + "'";
+                        + Global.machineId + "'";
                 dao.execSql(delSql);
             } catch (Exception ex) {
                 log.error("link delete : " + ex.getMessage());
@@ -2910,7 +3117,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 try {
 
                     String strSql = "INSERT INTO tmp_amount_link(user_id,tran_option,inv_id,amount,print_status)\n"
-                            + "  select '" + Global.loginUser.getUserId() + "', tran_source, inv_id, balance, true\n"
+                            + "  select '" + Global.machineId + "', tran_source, inv_id, balance, true\n"
                             + "    from (select date(tran_date) tran_date, cus_id, currency, 'Pharmacy' as tran_source, inv_id, \n"
                             + "                 sum(ifnull(paid,0)) balance\n"
                             + "			from v_session\n"
@@ -2920,31 +3127,31 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             + "		  select date(tran_date) tran_date, patient_id cus_id, currency_id currency, \n"
                             + "				 tran_option tran_source, opd_inv_id inv_id, sum(ifnull(paid,0)) balance\n"
                             + "			from v_session_clinic\n"
-                            + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD','OT') and deleted = false\n"
+                            + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD') and deleted = false\n"
                             + "		   group by date(tran_date), patient_id, currency_id, tran_option, opd_inv_id) a\n"
                             + "   where tran_source <> '" + Util1.getPropValue("system.link.amount")
                             + "'    and tran_date = '" + DateUtil.toDateStr(currSaleVou.getSaleDate(), "yyyy-MM-dd")
                             + "'    and cus_id = '" + currSaleVou.getPatientId().getRegNo() + "'";
 
                     dao.execSql(strSql);
+
+                    List<TempAmountLink> listTAL = dao.findAllHSQL(
+                            "select o from TempAmountLink o where o.key.userId = '" + Global.machineId + "'");
+                    if (listTAL != null) {
+                        if (!listTAL.isEmpty()) {
+                            AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
+                            dialog.setVisible(true);
+                            double ttlLinkAmt = dialog.getTtlAmt();
+                            if (ttlLinkAmt != 0) {
+                                params.put("link_amt_status", "Y");
+                                params.put("link_amt", ttlLinkAmt + currSaleVou.getPaid());
+                            }
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error("print link amount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
                 } finally {
                     dao.close();
-                }
-
-                List<TempAmountLink> listTAL = dao.findAllHSQL(
-                        "select o from TempAmountLink o where o.key.userId = '" + Global.loginUser.getUserId() + "'");
-                if (listTAL != null) {
-                    if (!listTAL.isEmpty()) {
-                        AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
-                        dialog.setVisible(true);
-                        double ttlLinkAmt = dialog.getTtlAmt();
-                        if (ttlLinkAmt != 0) {
-                            params.put("link_amt_status", "Y");
-                            params.put("link_amt", ttlLinkAmt + currSaleVou.getPaid());
-                        }
-                    }
                 }
             }
 
@@ -3044,7 +3251,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             params.put("comp_address", Util1.getPropValue("report.address"));
             params.put("phone", Util1.getPropValue("report.phone"));
 
-            params.put("user_id", Global.loginUser.getUserId());
+            params.put("user_id", Global.machineId);
             params.put("user_short", Global.loginUser.getUserShortName());
             params.put("inv_id", currSaleVou.getSaleInvId());
             params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
@@ -3118,7 +3325,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
@@ -3444,31 +3651,33 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     private void getTraderTransaction() {
         Trader trader = currSaleVou.getCustomerId();
-        Trader1 t1 = (Trader1) dao.find(Trader1.class, trader.getTraderId());
+
         String strTrdOpt;
         String strTodayDateTime = getTranDateTime();
         //String tmpStr = trader.getTraderId().substring(0, 3);
-        if (t1.getDiscriminator().equals("S")) {
-            strTrdOpt = "SUP";
-        } else {
-            strTrdOpt = "CUS";
-        }
 
         try {
+            Trader1 t1 = (Trader1) dao.find(Trader1.class, trader.getTraderId());
+            if (t1.getDiscriminator().equals("S")) {
+                strTrdOpt = "SUP";
+            } else {
+                strTrdOpt = "CUS";
+            }
+
             Currency curr = (Currency) cboCurrency.getSelectedItem();
             dao.execProc("get_trader_transaction",
                     trader.getTraderId(), strTrdOpt, strTodayDateTime, curr.getCurrencyCode(),
-                    Global.loginUser.getUserId(),
+                    Global.machineId,
                     Global.machineId);
 
             List<TraderTransaction> listTran = dao.findAll("TraderTransaction",
-                    "userId = '" + Global.loginUser.getUserId() + "' and tranType = 'D'"
+                    "userId = '" + Global.machineId + "' and tranType = 'D'"
                     + " and machineId = '" + Global.machineId + "'");
             if (listTran != null) {
                 tranTableModel.setListDetail(listTran);
             }
 
-            listTTDetail = dao.findAll("TTranDetail", "userId = '" + Global.loginUser.getUserId()
+            listTTDetail = dao.findAll("TTranDetail", "userId = '" + Global.machineId
                     + "' and machineId = '" + Global.machineId + "'");
             ttdTableModel.setListTTranDetail(listTTDetail);
         } catch (Exception ex) {
@@ -3501,14 +3710,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         //Trader last balance
         if (!strTodayDateTime.isEmpty()) {
             String strTrdOpt;
-            Trader1 t1 = (Trader1) dao.find(Trader1.class, currSaleVou.getCustomerId().getTraderId());
-            if (t1.getDiscriminator().equals("S")) {
-                strTrdOpt = "SUP";
-            } else {
-                strTrdOpt = "CUS";
-            }
 
             try {
+                Trader1 t1 = (Trader1) dao.find(Trader1.class, currSaleVou.getCustomerId().getTraderId());
+                if (t1.getDiscriminator().equals("S")) {
+                    strTrdOpt = "SUP";
+                } else {
+                    strTrdOpt = "CUS";
+                }
                 Currency curr = (Currency) cboCurrency.getSelectedItem();
                 ResultSet resultSet = dao.getPro("trader_last_balance",
                         currSaleVou.getCustomerId().getTraderId(), strTrdOpt,
@@ -3537,27 +3746,37 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
             } catch (SQLException ex) {
                 log.error("getTraderLastBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            } catch (Exception ex) {
+                log.error("getTraderLastBalance : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
     }
 
     private void getPayment(String lastSaleDateTime, String currVouDateTime) {
-        String strSql = "select v from TraderPayHis v where v.trader.traderId = '"
-                + currSaleVou.getCustomerId().getTraderId()
-                + "' and v.deleted = false and v.payDt > '"
-                + lastSaleDateTime + "' and v.payDt <= '" + currVouDateTime + "'";
-        List<TraderPayHis> listPay = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select v from TraderPayHis v where v.trader.traderId = '"
+                    + currSaleVou.getCustomerId().getTraderId()
+                    + "' and v.deleted = false and v.payDt > '"
+                    + lastSaleDateTime + "' and v.payDt <= '" + currVouDateTime + "'";
+            List<TraderPayHis> listPay = dao.findAllHSQL(strSql);
 
-        for (TraderPayHis tph : listPay) {
-            selected("SelectPayment", tph);
+            for (TraderPayHis tph : listPay) {
+                selected("SelectPayment", tph);
+            }
+        } catch (Exception ex) {
+            log.error("getPayment : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private boolean isHaveTransaction(String vouNo) {
         boolean status = false;
-        ResultSet resultSet = dao.getPro("is_have_vou_transaction", vouNo);
 
         try {
+            ResultSet resultSet = dao.getPro("is_have_vou_transaction", vouNo);
             if (resultSet != null) {
                 resultSet.next();
                 String value = resultSet.getString("tstatus");
@@ -3606,7 +3825,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             for (Integer id : deleteIds) {
                 dao.executeUpdateHSQL(strDeleteHSQL, id);
                 dao.deleteSQLNoTran("delete from trader_tran where user_id = '"
-                        + Global.loginUser.getUserId() + "' and pay_id = "
+                        + Global.machineId + "' and pay_id = "
                         + id);
             }
             tranTableModel.removeDeletePayment();
@@ -3777,10 +3996,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                 dao.open();
                 //dr = (Doctor) dao.find(Doctor.class, txtDrCode.getText());
-                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '" 
+                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '"
                         + txtDrCode.getText().trim() + "' and o.active = true");
-                if(listDr != null){
-                    if(!listDr.isEmpty()){
+                if (listDr != null) {
+                    if (!listDr.isEmpty()) {
                         dr = listDr.get(0);
                     }
                 }
@@ -3994,7 +4213,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {
@@ -4002,7 +4221,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                         pbp.setBillTypeDesp(resultSet.getString("payment_type_name"));
                         pbp.setBillTypeId(resultSet.getInt("bill_type"));
-                        pbp.setCreatedBy(Global.loginUser.getUserId());
+                        pbp.setCreatedBy(Global.machineId);
                         pbp.setCurrency(resultSet.getString("currency"));
                         pbp.setPayDate(DateUtil.toDate(txtSaleDate.getText()));
                         pbp.setRegNo(resultSet.getString("reg_no"));
@@ -4027,10 +4246,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private void insertTraderFilterCode(String traderId) {
         String currencyId;
         String strSQLDelete = "delete from tmp_trader_bal_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_trader_bal_filter(trader_id,currency,op_date,user_id, amount) "
                 + "select t.trader_id, t.cur_code, "
-                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.machineId
                 + "', trop.op_amount"
                 + " from v_trader_cur t left join "
                 + "(select trader_id, currency, max(op_date) op_date, op_amount from trader_op "
@@ -4062,7 +4281,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void execTraderBalanceWithUPV() {
-        dao.execProc("get_trader_unpaid_vou", Global.loginUser.getUserId(),
+        dao.execProc("get_trader_unpaid_vou", Global.machineId,
                 DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                 DateUtil.toDateStrMYSQL(txtDueDate.getText()));
     }
@@ -4091,15 +4310,21 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         String strTmpDate = DateUtil.toDateStr(tmpDate, "dd/MM/yyyy");
         boolean status = false;
         String strSql = "select o from TraderUnpaidVou o where o.userId = '"
-                + Global.loginUser.getUserId() + "' and o.dueDate < '"
+                + Global.machineId + "' and o.dueDate < '"
                 + DateUtil.toDateStrMYSQL(strTmpDate) + "'";
-        List<TraderUnpaidVou> listTUV = dao.findAllHSQL(strSql);
-        if (listTUV != null) {
-            if (!listTUV.isEmpty()) {
-                status = true;
-                JOptionPane.showMessageDialog(Util1.getParent(), "Overdue voucher have.\nYou cannot open new voucher.",
-                        "Overdue Voucher", JOptionPane.ERROR_MESSAGE);
+        try {
+            List<TraderUnpaidVou> listTUV = dao.findAllHSQL(strSql);
+            if (listTUV != null) {
+                if (!listTUV.isEmpty()) {
+                    status = true;
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Overdue voucher have.\nYou cannot open new voucher.",
+                            "Overdue Voucher", JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (Exception ex) {
+            log.error("isOverDue1 : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return status;
     }
@@ -4238,6 +4463,55 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
         }
         return id;
+    }
+
+    private boolean isBaseGroupOverdue(Trader cus) {
+        boolean status = false;
+
+        if (Util1.getPropValue("system.cus.base.group.ovc").equals("Y")) {
+            log.info("Soe group");
+            try {
+                String saleDate = DateUtil.toDateStrMYSQL(txtSaleDate.getText());
+                String strSql = "select t.trader_id, sum(ifnull(ph.paid_amtc,0)+ifnull(ph.discount,0)) ttl_period_paid\n"
+                        + "from trader t, payment_his ph\n"
+                        + "where t.trader_id = ph.trader_id and ph.deleted = false\n"
+                        + "and ph.pay_date between DATE_SUB('" + saleDate + "', INTERVAL ifnull(t.credit_days,0) DAY) "
+                        + "and '" + saleDate + "' and t.trader_id = '" + cus.getTraderId() + "'\n"
+                        + "group by t.trader_id";
+                ResultSet rs = dao.execSQL(strSql);
+                Double ttlPeriodPaid = 0.0;
+                Double ttlLastBalance = NumberUtil.NZero(txtCusLastBalance.getValue())
+                        - NumberUtil.NZero(txtVouBalance.getValue());
+
+                if (rs != null) {
+                    if (rs.next()) {
+                        ttlPeriodPaid = rs.getDouble("ttl_period_paid");
+                    }
+                }
+                log.info("ttlLastBalance : " + ttlLastBalance + " ttlPeriodPaid : " + ttlPeriodPaid);
+                if ((ttlLastBalance - ttlPeriodPaid) > 3) {
+                    status = true;
+                    currSaleVou.setIsOverdue(status);
+                    //lblCreditLimit.setText("Total Paid : ");
+                    //txtCreditLimit.setValue(ttlPeriodPaid);
+                    String msg = "Overdue have. You cannot open new voucher for this customer.\n"
+                            + "Total Balance : " + ttlLastBalance + "\n"
+                            + "Total Paid : " + ttlPeriodPaid;
+                    JOptionPane.showMessageDialog(Util1.getParent(), msg,
+                            "Overdue", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    status = false;
+                    currSaleVou.setIsOverdue(status);
+                    //lblCreditLimit.setText("Credit limit : ");
+                }
+            } catch (Exception ex) {
+                log.error("isOverdue system.cus.base.group.ovc : " + ex.toString());
+            }
+        } else {
+            status = false;
+        }
+
+        return status;
     }
 
     /**
@@ -4775,7 +5049,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         tblSale.setAutoCreateColumnsFromModel(false);
         tblSale.setFont(Global.textFont);
-        tblSale.setCellSelectionEnabled(true);
         tblSale.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         tblSale.setRowHeight(23);
         tblSale.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -4823,7 +5096,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         panelExpense.setLayout(panelExpenseLayout);
         panelExpenseLayout.setHorizontalGroup(
             panelExpenseLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
+            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 500, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
             .add(panelExpenseLayout.createSequentialGroup()
                 .add(29, 29, 29)
                 .add(lblExpTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 91, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -4933,7 +5206,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane6)
+            .add(jScrollPane6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 500, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
             .add(jPanel4Layout.createSequentialGroup()
                 .add(jLabel12)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -5256,7 +5529,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtVouBalance)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel9Layout.createSequentialGroup()
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(txtTaxP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
+                            .add(txtTaxP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 49, Short.MAX_VALUE)
                             .add(txtDiscP))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)

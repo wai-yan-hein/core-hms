@@ -7,7 +7,6 @@ package com.cv.app.pharmacy.ui.entry;
 import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.pharmacy.database.entity.RetOutDetailHis;
 import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Customer;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -106,9 +105,9 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         genVouNo();
         addNewRow();
 
-        applyFocusPolicy();
-        AddFocusMoveKey();
-        this.setFocusTraversalPolicy(focusPolicy);
+        //applyFocusPolicy();
+        //AddFocusMoveKey();
+        //this.setFocusTraversalPolicy(focusPolicy);
         retOutTableModel.setParent(tblRetOut);
         lblStatus.setText("NEW");
         assignDefaultValue();
@@ -127,32 +126,40 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 }
             }
         }
+
+        log.info("Return Out");
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
 
-        List<RetOutHis> listROH = dao.findAllHSQL(
-                "select o from RetOutHis o where o.retOutId = '" + txtVouNo.getText() + "'");
-        if (listROH != null) {
-            if (!listROH.isEmpty()) {
-                vouEngine.updateVouNo();
-                vouNo = vouEngine.getVouNo();
-                txtVouNo.setText(vouNo);
-                listROH = null;
-                listROH = dao.findAllHSQL(
-                        "select o from RetOutHis o where o.retOutId = '" + txtVouNo.getText() + "'");
-                if (listROH != null) {
-                    if (!listROH.isEmpty()) {
-                        log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
-                                + txtReturnOutDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate return out vou no. Exit the program and try again.",
-                                "Return Out Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
+            List<RetOutHis> listROH = dao.findAllHSQL(
+                    "select o from RetOutHis o where o.retOutId = '" + txtVouNo.getText() + "'");
+            if (listROH != null) {
+                if (!listROH.isEmpty()) {
+                    vouEngine.updateVouNo();
+                    vouNo = vouEngine.getVouNo();
+                    txtVouNo.setText(vouNo);
+                    listROH = null;
+                    listROH = dao.findAllHSQL(
+                            "select o from RetOutHis o where o.retOutId = '" + txtVouNo.getText() + "'");
+                    if (listROH != null) {
+                        if (!listROH.isEmpty()) {
+                            log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
+                                    + txtReturnOutDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate return out vou no. Exit the program and try again.",
+                                    "Return Out Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(1);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -192,25 +199,39 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboLocation, getLocationFilter());
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPayment, this);
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
+            new ComBoBoxAutoComplete(cboPayment, this);
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowRetOut = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowRetOut = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        
+        return null;
     }
 
     private void actionMapping() {
@@ -289,25 +310,31 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
     public void getMedInfo(String medCode) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -338,12 +365,22 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 currRetOut.setCustomer(cus);
 
                 if (cus != null) {
-                    txtCusId.setText(cus.getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusId.setText(cus.getStuCode());
+                    } else {
+                        txtCusId.setText(cus.getTraderId());
+                    }
                     txtCusName.setText(cus.getTraderName());
 
-                    //Change payment type to credit
-                    PaymentType pt = (PaymentType) dao.find(PaymentType.class, 2);
-                    cboPayment.setSelectedItem(pt);
+                    try {
+                        //Change payment type to credit
+                        PaymentType pt = (PaymentType) dao.find(PaymentType.class, 2);
+                        cboPayment.setSelectedItem(pt);
+                    } catch (Exception ex) {
+                        log.error("selected CustomerList : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                 } else {
                     txtCusId.setText(null);
                     txtCusName.setText(null);
@@ -380,7 +417,11 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
                 txtVouNo.setText(currRetOut.getRetOutId());
                 txtReturnOutDate.setText(DateUtil.toDateStr(currRetOut.getRetOutDate()));
-                txtCusId.setText(currRetOut.getCustomer().getTraderId());
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    txtCusId.setText(currRetOut.getCustomer().getStuCode());
+                } else {
+                    txtCusId.setText(currRetOut.getCustomer().getTraderId());
+                }
                 txtCusName.setText(currRetOut.getCustomer().getTraderName());
                 txtRemark.setText(currRetOut.getRemark());
                 txtVouTotal.setValue(currRetOut.getVouTotal());
@@ -451,7 +492,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
     // <editor-fold defaultstate="collapsed" desc="calculateTotalAmount">
     private void calculateTotalAmount() {
-        Double totalAmount = new Double(0);
+        Double totalAmount = 0d;
 
         for (RetOutDetailHis sdh : listDetail) {
             totalAmount += NumberUtil.NZero(sdh.getAmount());
@@ -653,8 +694,12 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
     @Override
     public void history() {
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Return Out Voucher Search", dao);
+                "Return Out Voucher Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -687,7 +732,35 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
             if (yes_no == 0) {
                 currRetOut.setDeleted(true);
                 currRetOut.setIntgUpdStatus(null);
-                save();
+                
+                try{
+                    dao.execProc("bkreturnout",
+                            currRetOut.getRetOutId(),
+                            Global.loginUser.getUserId(),
+                            Global.machineId,
+                            currRetOut.getVouTotal().toString(),
+                            currRetOut.getPaid().toString(),
+                            currRetOut.getBalance().toString());
+                }catch(Exception ex){
+                    log.error("bkreturnout : " + ex.getMessage());
+                }finally{
+                    dao.close();
+                }
+                
+                String vouNo = currRetOut.getRetOutId();
+                try {
+                    dao.execSql("update ret_out_his set deleted = true, intg_upd_status = null where ret_out_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("delete error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                
+                //For upload to account
+                uploadToAccount(currRetOut);
+                newForm();
+                
+                //save();
             }
         }
     }
@@ -880,12 +953,16 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
     private void assignDefaultValue() {
         Object tmpObj;
 
-        //tmpObj = Util1.getDefaultValue("Trader");
-        tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.supplier"));
-        if (tmpObj != null) {
-            selected("CustomerList", tmpObj);
+        try {
+            tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.supplier"));
+            if (tmpObj != null) {
+                selected("CustomerList", tmpObj);
+            }
+        } catch (Exception ex) {
+            log.error("assignDefaultValue : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         tmpObj = Util1.getDefaultValue("Currency");
         if (tmpObj != null) {
             cboCurrency.setSelectedItem(tmpObj);
@@ -942,19 +1019,24 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
     };
 
     private void getCustomerList() {
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Supplier List", dao);
+                "Supplier List", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
 
     private void getCustomer() {
-        Customer cus = null;
-
+        Trader cus = null;
+        log.info("trader_id : " + txtCusId.getText().trim().toUpperCase());
         if (txtCusId.getText() != null && !txtCusId.getText().isEmpty()) {
             try {
-                dao.open();
+                cus = getTrader(txtCusId.getText().trim().toUpperCase());
+                /*dao.open();
                 String traderId = txtCusId.getText().trim().toUpperCase();
                 String prefix = traderId.substring(0, 3);
                 if (Util1.getPropValue("system.purchase.emitted.prifix").equals("Y")) {
@@ -963,7 +1045,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                     }
                 }
                 cus = (Customer) dao.find(Customer.class, traderId);
-                dao.close();
+                dao.close();*/
             } catch (Exception ex) {
                 log.error("getCustomer : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
@@ -974,6 +1056,47 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         } else {
             selected("CustomerList", cus);
         }
+    }
+
+    private Trader getTrader(String traderId) {
+        Trader cus = null;
+        try {
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
+            }
+
+            if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                int locationId = -1;
+                if (cboLocation.getSelectedItem() instanceof Location) {
+                    locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+                }
+                String strSql = "select o from Trader o where "
+                        + "o.active = true and o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ") and " + strFieldName + " = '" + traderId + "' order by o.traderName";
+                log.info("strSql : " + strSql);
+                List<Trader> listTrader = dao.findAllHSQL(strSql);
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
+            } else {
+                List<Trader> listTrader = dao.findAllHSQL("select o from Trader where " + strFieldName + " = '" + traderId + "'");
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("getTrader : " + ex.toString());
+        } finally {
+            dao.close();
+        }
+
+        return cus;
     }
 
     private void removeEmptyRow() {
@@ -1467,10 +1590,12 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
     }//GEN-LAST:event_txtCusIdFocusLost
 
     private void txtCusIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusIdActionPerformed
+        log.info("getCustomer");
         if (txtCusId.getText() == null || txtCusId.getText().isEmpty()) {
             txtCusName.setText(null);
             currRetOut.setCustomer(null);
         } else {
+            log.info("getCustomer");
             getCustomer();
         }
     }//GEN-LAST:event_txtCusIdActionPerformed

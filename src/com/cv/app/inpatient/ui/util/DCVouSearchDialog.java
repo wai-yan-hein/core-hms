@@ -242,107 +242,125 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboMachine,
-                dao.findAllHSQL("select o from MachineInfo o order by o.machineName"));
-        BindingUtil.BindComboFilter(cboUser,
-                dao.findAllHSQL("select o from Appuser o order by o.userName"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboMachine,
+                    dao.findAllHSQL("select o from MachineInfo o order by o.machineName"));
+            BindingUtil.BindComboFilter(cboUser,
+                    dao.findAllHSQL("select o from Appuser o order by o.userName"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboMachine);
-        new ComBoBoxAutoComplete(cboUser);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboMachine);
+            new ComBoBoxAutoComplete(cboUser);
 
-        cboPayment.setSelectedIndex(0);
-        cboCurrency.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboCurrency.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'DCVouSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'DCVouSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("DCVouSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("DCVouSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFrom.setText(DateUtil.getTodayDateStr());
-            txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFrom.setText(DateUtil.getTodayDateStr());
+                txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getTrader() != null) {
-                txtPtNo.setText(vouFilter.getTrader().getTraderId());
-                txtPtName.setText(vouFilter.getTrader().getTraderName());
-            }
+                if (vouFilter.getTrader() != null) {
+                    txtPtNo.setText(vouFilter.getTrader().getTraderId());
+                    txtPtName.setText(vouFilter.getTrader().getTraderName());
+                }
 
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
 
-            if (vouFilter.getPaymentType() != null) {
-                cboPayment.setSelectedItem(vouFilter.getPaymentType());
-            }
+                if (vouFilter.getPaymentType() != null) {
+                    cboPayment.setSelectedItem(vouFilter.getPaymentType());
+                }
 
-            if (vouFilter.getCurrency() != null) {
-                cboCurrency.setSelectedItem(vouFilter.getCurrency());
-            }
+                if (vouFilter.getCurrency() != null) {
+                    cboCurrency.setSelectedItem(vouFilter.getCurrency());
+                }
 
-            if (vouFilter.getRemark() != null) {
-                txtRemark.setText(vouFilter.getRemark());
-            }
+                if (vouFilter.getRemark() != null) {
+                    txtRemark.setText(vouFilter.getRemark());
+                }
 
-            if (vouFilter.getMachine() != null) {
-                cboMachine.setSelectedItem(vouFilter.getMachine());
-            }
+                if (vouFilter.getMachine() != null) {
+                    cboMachine.setSelectedItem(vouFilter.getMachine());
+                }
 
-            if (vouFilter.getAppUser() != null) {
-                cboUser.setSelectedItem(vouFilter.getAppUser());
-            }
+                if (vouFilter.getAppUser() != null) {
+                    cboUser.setSelectedItem(vouFilter.getAppUser());
+                }
 
-            if (vouFilter.getPatient() != null) {
-                txtPtName.setText(vouFilter.getPatient().getPatientName());
-                txtPtNo.setText(vouFilter.getPatient().getRegNo());
-            } else if (vouFilter.getPtName() != null) {
-                if (!vouFilter.getPtName().isEmpty()) {
-                    txtPtName.setText(vouFilter.getPtName());
+                if (vouFilter.getPatient() != null) {
+                    txtPtName.setText(vouFilter.getPatient().getPatientName());
+                    txtPtNo.setText(vouFilter.getPatient().getRegNo());
+                } else if (vouFilter.getPtName() != null) {
+                    if (!vouFilter.getPtName().isEmpty()) {
+                        txtPtName.setText(vouFilter.getPtName());
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initTable() {
-        List<DCVouSrvFilter> listVouSrvFilter = dao.findAll("DCVouSrvFilter",
-                "key.tranOption = 'DCVoucherSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        srvFilterTableModel.setListVouSrvFilter(listVouSrvFilter);
-        srvFilterTableModel.addEmptyRow();
-        tblService.getColumnModel().getColumn(0).setCellEditor(
-                new DCTableCellEditor(dao));
+        try {
+            List<DCVouSrvFilter> listVouSrvFilter = dao.findAll("DCVouSrvFilter",
+                    "key.tranOption = 'DCVoucherSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            srvFilterTableModel.setListVouSrvFilter(listVouSrvFilter);
+            srvFilterTableModel.addEmptyRow();
+            tblService.getColumnModel().getColumn(0).setCellEditor(
+                    new DCTableCellEditor(dao));
 
-        tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
-        tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
-        tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
-        tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
-        tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
+            tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
+            tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
+            tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
+            tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
+            tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
 
-        //Define table selection model to single row selection.
-        tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblVou.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+            //Define table selection model to single row selection.
+            tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblVou.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                selectedRow = tblVou.getSelectedRow();
-            }
-        });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    selectedRow = tblVou.getSelectedRow();
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String getHSQL() {
@@ -358,7 +376,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                 + "join appuser usr on sh.created_by = usr.user_id\n"
                 + "where date(sh.dc_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFrom.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtTo.getText()));
 
@@ -480,7 +498,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                     vs.setVouTotal(rs.getDouble("vou_total"));
                     vs.setLocation(rs.getString("package_id"));
                     vs.setDcStatus(rs.getInt("dc_status"));
-                    
+
                     listVS.add(vs);
                 }
             }
@@ -493,7 +511,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
 
         return listVS;
     }
-    
+
     @Override
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
@@ -551,7 +569,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         public void actionPerformed(ActionEvent e) {
             if (tblService.getSelectedRow() >= 0) {
                 try {
-                    if(tblService.getCellEditor() != null){
+                    if (tblService.getCellEditor() != null) {
                         tblService.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -973,29 +991,27 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
   private void txtPtNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPtNoActionPerformed
       if (txtPtNo.getText().isEmpty()) {
           selected("PatientSearch", null);
-      } else {
-          if (txtPtNo.getText() != null && !txtPtNo.getText().isEmpty()) {
-              try {
-                  Patient pt;
+      } else if (txtPtNo.getText() != null && !txtPtNo.getText().isEmpty()) {
+          try {
+              Patient pt;
 
-                  dao.open();
-                  pt = (Patient) dao.find(Patient.class, txtPtNo.getText());
-                  dao.close();
+              dao.open();
+              pt = (Patient) dao.find(Patient.class, txtPtNo.getText());
+              dao.close();
 
-                  if (pt == null) {
-                      txtPtNo.setText(null);
-                      txtPtName.setText(null);
+              if (pt == null) {
+                  txtPtNo.setText(null);
+                  txtPtName.setText(null);
 
-                      JOptionPane.showMessageDialog(Util1.getParent(),
-                              "Invalid patient code.",
-                              "Patient Code", JOptionPane.ERROR_MESSAGE);
-                  } else {
-                      selected("PatientSearch", pt);
-                      tblService.requestFocusInWindow();
-                  }
-              } catch (Exception ex) {
-                  log.error("getPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                  JOptionPane.showMessageDialog(Util1.getParent(),
+                          "Invalid patient code.",
+                          "Patient Code", JOptionPane.ERROR_MESSAGE);
+              } else {
+                  selected("PatientSearch", pt);
+                  tblService.requestFocusInWindow();
               }
+          } catch (Exception ex) {
+              log.error("getPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
           }
       }
   }//GEN-LAST:event_txtPtNoActionPerformed
@@ -1040,7 +1056,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
 
     private void txtDocNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDocNoActionPerformed
         // TODO add your handling code here:
-         if (txtDocNo.getText() != null && !txtDocNo.getText().isEmpty()) {
+        if (txtDocNo.getText() != null && !txtDocNo.getText().isEmpty()) {
             try {
                 Doctor dr;
 

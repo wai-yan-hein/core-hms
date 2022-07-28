@@ -19,13 +19,14 @@ import org.apache.log4j.Logger;
  * @author WSwe
  */
 public class PaymentListDialog extends javax.swing.JDialog {
-    //static Logger log = Logger.getLogger(PaymentListDialog.class.getName());
+
+    static Logger log = Logger.getLogger(PaymentListDialog.class.getName());
     private SelectionObserver observer;
     private String traderId;
     private int selectedRow = -1;
     private AbstractDataAccess dao;
     private PaymentListTableModel tableModel = new PaymentListTableModel();
-    
+
     /**
      * Creates new form PaymentListDialog
      */
@@ -33,17 +34,17 @@ public class PaymentListDialog extends javax.swing.JDialog {
             String traderId) {
         super(Util1.getParent(), true);
         initComponents();
-        
+
         this.dao = dao;
         this.observer = selection;
         this.traderId = traderId;
-        
+
         getPayment();
         initTable();
-        
+
         Dimension screen = Util1.getScreenSize();
-        int x = (screen.width - this.getWidth()) /2;
-        int y = (screen.height - this.getHeight()) /2;
+        int x = (screen.width - this.getWidth()) / 2;
+        int y = (screen.height - this.getHeight()) / 2;
 
         setLocation(x, y);
         setVisible(true);
@@ -57,24 +58,30 @@ public class PaymentListDialog extends javax.swing.JDialog {
         tblPayList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblPayList.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                  @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblPayList.getSelectedRow();
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedRow = tblPayList.getSelectedRow();
+            }
+        });
     }
 
-    private void getPayment(){
-        tableModel.setListTraderPayHis(dao.findAllHSQL(getHSQL()));
+    private void getPayment() {
+        try {
+            tableModel.setListTraderPayHis(dao.findAllHSQL(getHSQL()));
+        } catch (Exception ex) {
+            log.error("getPayment : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    private String getHSQL(){
+
+    private String getHSQL() {
         String strSql = "select v from TraderPayHis v where v.trader.traderId = '"
                 + traderId + "' and v.deleted = false and v.saleVou is null and v.paidAmtC <> 0";
-        
+
         return strSql;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -122,10 +129,10 @@ public class PaymentListDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void tblPayListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblPayListMouseClicked
-        if(evt.getClickCount() == 2 && selectedRow >= 0){
-            observer.selected("SelectPayment", 
+        if (evt.getClickCount() == 2 && selectedRow >= 0) {
+            observer.selected("SelectPayment",
                     tableModel.getPayment(tblPayList.convertRowIndexToModel(selectedRow)));
-            
+
             //dispose();
         }
     }//GEN-LAST:event_tblPayListMouseClicked

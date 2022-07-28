@@ -18,27 +18,28 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class OPDTableCellEditor extends AbstractCellEditor implements TableCellEditor{
+public class OPDTableCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+    static Logger log = Logger.getLogger(OPDTableCellEditor.class.getName());
     private JComponent component = null;
     private AbstractDataAccess dao;
     private OPDAutoCompleter completer;
-    
-    public OPDTableCellEditor(AbstractDataAccess dao){
+
+    public OPDTableCellEditor(AbstractDataAccess dao) {
         this.dao = dao;
     }
-    
+
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int rowIndex, int vColIndex) {
+            boolean isSelected, int rowIndex, int vColIndex) {
         JTextField jtf = new JTextField();
-        List<Service> listService = dao.findAllHSQL(
-            "select o from Service o where o.status = true order by o.serviceName");
-        
+
         KeyListener keyListener = new KeyListener() {
             @Override
             public void keyPressed(KeyEvent keyEvent) {
@@ -66,21 +67,29 @@ public class OPDTableCellEditor extends AbstractCellEditor implements TableCellE
 
         jtf.addKeyListener(keyListener);
         component = jtf;
-        if(value != null){
+        if (value != null) {
             jtf.setText(value.toString());
             jtf.selectAll();
         }
-        completer = new OPDAutoCompleter(jtf, listService, this);
-        
+        try {
+            List<Service> listService = dao.findAllHSQL(
+                    "select o from Service o where o.status = true order by o.serviceName");
+            completer = new OPDAutoCompleter(jtf, listService, this);
+        } catch (Exception ex) {
+            log.error("getTableCellEditorComponent : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
         return component;
     }
-    
+
     @Override
     public Object getCellEditorValue() {
         Service srv = completer.getSelService();
         return srv;
     }
-    
+
     @Override
     public boolean isCellEditable(EventObject anEvent) {
         if (anEvent instanceof MouseEvent) {

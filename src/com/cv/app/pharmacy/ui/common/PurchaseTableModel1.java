@@ -40,12 +40,13 @@ public class PurchaseTableModel1 extends AbstractTableModel {
     private final AbstractDataAccess dao;
     private final MedicineUP medUp;
     private final MedInfo medInfo;
-    private final ChargeType defaultChargeType;
+    private ChargeType defaultChargeType;
     private String deletedList;
     private Location location;
     private JLabel lblItemBrand;
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
     private Float expPercent;
+    private int maxUniqueId = 0;
 
     public PurchaseTableModel1(List<PurDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo) {
@@ -53,7 +54,13 @@ public class PurchaseTableModel1 extends AbstractTableModel {
         this.dao = dao;
         this.medUp = medUp;
         this.medInfo = medInfo;
-        defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        try {
+            defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        } catch (Exception ex) {
+            log.error("PurchaseTableModel1 : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable parent) {
@@ -150,12 +157,10 @@ public class PurchaseTableModel1 extends AbstractTableModel {
                         } else {
                             return record.getMedId().getShortName();
                         }
+                    } else if (record.getMedId() == null) {
+                        return null;
                     } else {
-                        if (record.getMedId() == null) {
-                            return null;
-                        } else {
-                            return record.getMedId().getMedId();
-                        }
+                        return record.getMedId().getMedId();
                     }
                 case 1: //Medicine Name
                     if (record.getMedId() == null) {
@@ -284,18 +289,16 @@ public class PurchaseTableModel1 extends AbstractTableModel {
                 case 6: //Discount1
                     if (value == null) {
                         record.setDiscount1(null);
+                    } else if (value.toString().trim().isEmpty()) {
+                        record.setDiscount1(null);
                     } else {
-                        if (value.toString().trim().isEmpty()) {
-                            record.setDiscount1(null);
-                        } else {
-                            record.setDiscount1(Double.valueOf(value.toString().trim()));
-                        }
+                        record.setDiscount1(Double.valueOf(value.toString().trim()));
                     }
                     break;
                 case 7: //FOC
                     if (NumberUtil.NZeroFloat(value) == 0) {
                         record.setFocQty(null);
-                        record.setFocSmallestQty(new Float(0));
+                        record.setFocSmallestQty(0f);
                     } else {
                         record.setFocQty(Float.valueOf(value.toString()));
                     }
@@ -443,11 +446,11 @@ public class PurchaseTableModel1 extends AbstractTableModel {
 
         PurDetailHis record = listDetail.get(row);
 
-        if (NumberUtil.NZeroL(record.getPurDetailId()) > 0) {
+        if (record.getPurDetailId() != null) {
             if (deletedList == null) {
-                deletedList = record.getPurDetailId().toString();
+                deletedList = "'" + record.getPurDetailId() + "'";
             } else {
-                deletedList = deletedList + "," + record.getPurDetailId().toString();
+                deletedList = deletedList + ",'" + record.getPurDetailId() + "'";
             }
         }
 
@@ -530,21 +533,22 @@ public class PurchaseTableModel1 extends AbstractTableModel {
     public boolean isValidEntry() {
         boolean status = true;
 
-        if (listDetail != null) {
+        if (listDetail == null) {
             return false;
         }
-        
-        PurDetailHis tmpRecord = listDetail.get(listDetail.size() - 2);
-        int row = NumberUtil.NZeroInt(tmpRecord.getUniqueId());
+
+        int row = maxUniqueId;
+        int dataCnt = 0;
+
         for (PurDetailHis record : listDetail) {
-            if (row < listDetail.size() - 1) {
-                if (record.getMedId().getMedId() != null) {
-                    if (NumberUtil.NZeroFloat(record.getQuantity()) <= 0
-                            && NumberUtil.NZeroFloat(record.getFocQty()) <= 0) {
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
-                                "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
-                        status = false;
-                    } /*else if (NumberUtil.NZero(record.getDiscount1()) < 0) {
+            if (record.getMedId().getMedId() != null) {
+                dataCnt++;
+                if (NumberUtil.NZeroFloat(record.getQuantity()) <= 0
+                        && NumberUtil.NZeroFloat(record.getFocQty()) <= 0) {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
+                            "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
+                    status = false;
+                } /*else if (NumberUtil.NZero(record.getDiscount1()) < 0) {
                          JOptionPane.showMessageDialog(Util1.getParent(), "Discount1 must be positive value.",
                          "Minus qty.", JOptionPane.ERROR_MESSAGE);
                          status = false;
@@ -553,26 +557,24 @@ public class PurchaseTableModel1 extends AbstractTableModel {
                          "Minus qty.", JOptionPane.ERROR_MESSAGE);
                          status = false;
                          }*/ else if (NumberUtil.NZero(record.getPrice()) < 0) {
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Price must be positive value.",
-                                "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
-                        status = false;
-                    } else {
-                        if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                            record.setUniqueId(row + 1);
-                            row++;
-                        }
-                    }
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Price must be positive value.",
+                            "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
+                    status = false;
+                } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                    record.setUniqueId(row + 1);
+                    row++;
                 }
             }
         }
 
-        if (row == 0) {
+        if (dataCnt == 0) {
             JOptionPane.showMessageDialog(Util1.getParent(), "No purchase record.",
                     "No data.", JOptionPane.ERROR_MESSAGE);
             status = false;
         }
 
-        parent.setRowSelectionInterval(row, row);
+        maxUniqueId = row;
+        parent.setRowSelectionInterval(0, 0);
 
         return status;
     }
@@ -580,6 +582,12 @@ public class PurchaseTableModel1 extends AbstractTableModel {
     public void setListDetail(List<PurDetailHis> listDetail) {
         this.listDetail = listDetail;
 
+        if (listDetail != null) {
+            if (!listDetail.isEmpty()) {
+                PurDetailHis tmpD = listDetail.get(listDetail.size() - 1);
+                maxUniqueId = tmpD.getUniqueId();
+            }
+        }
         if (!hasEmptyRow()) {
             addEmptyRow();
         }
@@ -748,5 +756,9 @@ public class PurchaseTableModel1 extends AbstractTableModel {
         String strSql = "SELECT * FROM com.cv.app.pharmacy.database.entity.PurDetailHis"
                 + " WHERE medId.medId IS NOT NULL";
         return JoSQLUtil.getResult(strSql, listDetail);
+    }
+
+    public void clear() {
+        maxUniqueId = 0;
     }
 }

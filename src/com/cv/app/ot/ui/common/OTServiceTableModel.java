@@ -25,7 +25,7 @@ public class OTServiceTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(OTServiceTableModel.class.getName());
     private List<OTProcedure> listOTP = new ArrayList();
-    private final String[] columnNames = {"Code", "Description", "Fees", 
+    private final String[] columnNames = {"Code", "Description", "Fees",
         "Hospital", "Staff", "Nurse", "MO", "Active", "CFS"};
     private final AbstractDataAccess dao;
     private int groupId;
@@ -174,7 +174,7 @@ public class OTServiceTableModel extends AbstractTableModel {
         }
         if (Util1.getPropValue("system.ot.setup.autocalculate").equals("Y")) {
             record.setSrvFees(NumberUtil.NZero(record.getSrvFees1()) + NumberUtil.NZero(record.getSrvFees2())
-                    + NumberUtil.NZero(record.getSrvFees3()) + NumberUtil.NZero(record.getSrvFees3()));
+                    + NumberUtil.NZero(record.getSrvFees3()) + NumberUtil.NZero(record.getSrvFees4()));
         }
         saveRecord(record);
         try {
@@ -213,9 +213,15 @@ public class OTServiceTableModel extends AbstractTableModel {
     }
 
     private void getService() {
-        listOTP = dao.findAllHSQL("select o from OTProcedure o where o.groupId = " + groupId + " order by o.serviceName");
-        addNewRow();
-        fireTableDataChanged();
+        try {
+            listOTP = dao.findAllHSQL("select o from OTProcedure o where o.groupId = " + groupId + " order by o.serviceName");
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getService : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

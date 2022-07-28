@@ -88,14 +88,14 @@ public class PackingTableModel extends AbstractTableModel {
                 case 0: //Code
                     if (value == null) {
                         pi.setKey(new PackingItemKey());
-                        pi.setQtyInSmallest(new Double(0));
+                        pi.setQtyInSmallest(0d);
                         pi.setUnit(null);
-                        pi.setUnitQty(new Float(0));
+                        pi.setUnitQty(0f);
                     } else if (value.toString().trim().isEmpty()) {
                         pi.setKey(new PackingItemKey());
-                        pi.setQtyInSmallest(new Double(0));
+                        pi.setQtyInSmallest(0d);
                         pi.setUnit(null);
-                        pi.setUnitQty(new Float(0));
+                        pi.setUnitQty(0f);
                     } else {
                         Medicine med = getMedInfo(value.toString().trim());
                         pi.getKey().setItem(med);
@@ -189,22 +189,8 @@ public class PackingTableModel extends AbstractTableModel {
         Medicine medicine;
 
         if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                //selected("MedicineList", medicine);
-                List<RelationGroup> listRel = medicine.getRelationGroupId();
-                medicine.setRelationGroupId(listRel);
-
-                if (listRel.size() > 0) {
-                    medUp.add(medicine);
-                    return medicine;
-                } else {
-                    log.error("getMedInfo - relationGroup : " + medicine.getMedId());
-                }
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+            try {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
@@ -218,10 +204,30 @@ public class PackingTableModel extends AbstractTableModel {
                     } else {
                         log.error("getMedInfo - relationGroup : " + medicine.getMedId());
                     }
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        //selected("MedicineList", medicine);
+                        List<RelationGroup> listRel = medicine.getRelationGroupId();
+                        medicine.setRelationGroupId(listRel);
+
+                        if (listRel.size() > 0) {
+                            medUp.add(medicine);
+                            return medicine;
+                        } else {
+                            log.error("getMedInfo - relationGroup : " + medicine.getMedId());
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } catch (Exception ex) {
+                log.error("getMedInfo : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         } else {
             log.info("getMedInfo : Blank medicine code.");
@@ -304,11 +310,11 @@ public class PackingTableModel extends AbstractTableModel {
         if (itemId != null) {
             if (deleteId.isEmpty()) {
                 deleteId = "'" + itemId + "'";
-            }else{
+            } else {
                 deleteId = ",'" + itemId + "'";
             }
         }
-        
+
         listPI.remove(row);
         if (!hasEmptyRow()) {
             addEmptyRow();
@@ -316,8 +322,8 @@ public class PackingTableModel extends AbstractTableModel {
 
         fireTableRowsDeleted(row, row);
     }
-    
-    public String getDeleteId(){
+
+    public String getDeleteId() {
         return deleteId;
     }
 }

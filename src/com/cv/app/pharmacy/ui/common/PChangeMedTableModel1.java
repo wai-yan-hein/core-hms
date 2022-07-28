@@ -125,12 +125,10 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                         } else {
                             return record.getMed().getShortName();
                         }
+                    } else if (record.getMed() == null) {
+                        return null;
                     } else {
-                        if (record.getMed() == null) {
-                            return null;
-                        } else {
-                            return record.getMed().getMedId();
-                        }
+                        return record.getMed().getMedId();
                     }
                 case 1: //Medicine Name
                     if (record.getMed() == null) {
@@ -341,7 +339,14 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
         fireTableCellUpdated(pos, 0);
         parent.setColumnSelectionInterval(2, 2);
 
-        HashMap<String, ItemUnit> hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
+        HashMap<String, ItemUnit> hmUnit = null;
+        try {
+            hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
+        } catch (Exception ex) {
+            log.error("setMed5 : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         double smallestCost = 0;
         if (record != null) {
             try {
@@ -388,6 +393,8 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                 }
             } catch (SQLException ex) {
                 log.error("setMed3 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+            } catch (Exception ex) {
+                log.error("setMed4 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
             } finally {
                 dao.closeStatment();
             }
@@ -428,10 +435,15 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
 
         if (record != null) {
             try {
-                String strLatestMarket = "select med_id, max(change_date) last_date, "
+                /*String strLatestMarket = "select med_id, max(change_date) last_date, "
                         + "market_price, market_unit, remark_med "
                         + "from v_price_change_med where med_id = '" + med.getMedId()
-                        + "' group by med_id";
+                        + "' group by med_id";*/
+                String strLatestMarket = "select market_price, market_unit, remark_med\n"
+                        + "from v_price_change_med\n"
+                        + "where med_id = '" + med.getMedId() + "'\n"
+                        + "order by created_date desc\n"
+                        + "limit 1";
                 ResultSet rsLatestMarket = dao.execSQL(strLatestMarket);
 
                 while (rsLatestMarket.next()) {

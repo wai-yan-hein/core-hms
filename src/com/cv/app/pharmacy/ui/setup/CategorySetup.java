@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * CategorySetup.java
  *
  * Created on Apr 22, 2012, 9:51:38 PM
@@ -93,25 +93,30 @@ public class CategorySetup extends javax.swing.JPanel {
      */
     private void initTable() {
         //Get Category from database.
-        catTableModel.setListCategory(dao.findAllHSQL("select o from Category o order by o.catName"));
-
+        try {
+            catTableModel.setListCategory(dao.findAllHSQL("select o from Category o order by o.catName"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Define table selection model to single row selection.
         tblCategory.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
         tblCategory.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblCategory.getSelectedRow() >= 0) {
-                            selectedRow = tblCategory.convertRowIndexToModel(
-                                    tblCategory.getSelectedRow());
-                        }
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblCategory.getSelectedRow() >= 0) {
+                    selectedRow = tblCategory.convertRowIndexToModel(
+                            tblCategory.getSelectedRow());
+                }
 
-                        if (selectedRow >= 0) {
-                            setCurrCategory(catTableModel.getCategory(selectedRow));
-                        }
-                    }
-                });
+                if (selectedRow >= 0) {
+                    setCurrCategory(catTableModel.getCategory(selectedRow));
+                }
+            }
+        });
     }
 
     public void setFocus() {

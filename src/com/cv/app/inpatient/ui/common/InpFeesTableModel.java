@@ -179,44 +179,50 @@ public class InpFeesTableModel extends AbstractTableModel {
     }
 
     private void getServiceFees() {
-        listServiceFees = dao.findAll("ServiceFees", "serviceId = " + srvId);
-        List<InpFeesTemplate> listFeesTemplate = dao.findAll("InpFeesTemplate",
-                "groupId = " + groupId);
+        try {
+            listServiceFees = dao.findAll("ServiceFees", "serviceId = " + srvId);
+            List<InpFeesTemplate> listFeesTemplate = dao.findAll("InpFeesTemplate",
+                    "groupId = " + groupId);
 
-        if (listServiceFees != null) {
-            if (listServiceFees.isEmpty() && srvId != -1) {
-                for (InpFeesTemplate ft : listFeesTemplate) {
-                    InpServiceFees sf = new InpServiceFees();
-                    sf.setFeesDesp(ft.getTemplateName());
-                    sf.setServiceId(srvId);
-                    listServiceFees.add(sf);
-                }
-            }
-
-            if (listServiceFees.size() != listFeesTemplate.size() && srvId != -1) {
-                String strFilter = null;
-
-                for (InpServiceFees sf : listServiceFees) {
-                    if (strFilter == null) {
-                        strFilter = "'" + sf.getFeesDesp() + "'";
-                    } else {
-                        strFilter = strFilter + ",'" + sf.getFeesDesp() + "'";
+            if (listServiceFees != null) {
+                if (listServiceFees.isEmpty() && srvId != -1) {
+                    for (InpFeesTemplate ft : listFeesTemplate) {
+                        InpServiceFees sf = new InpServiceFees();
+                        sf.setFeesDesp(ft.getTemplateName());
+                        sf.setServiceId(srvId);
+                        listServiceFees.add(sf);
                     }
                 }
 
-                String strSQL = "SELECT * FROM com.cv.app.opd.database.entity.InpFeesTemplate"
-                        + " WHERE templateName NOT IN (" + strFilter + ")";
-                List<InpFeesTemplate> list = JoSQLUtil.getResult(strSQL, listFeesTemplate);
+                if (listServiceFees.size() != listFeesTemplate.size() && srvId != -1) {
+                    String strFilter = null;
 
-                for (InpFeesTemplate ft : list) {
-                    InpServiceFees sf = new InpServiceFees();
-                    sf.setFeesDesp(ft.getTemplateName());
-                    sf.setServiceId(srvId);
-                    listServiceFees.add(sf);
+                    for (InpServiceFees sf : listServiceFees) {
+                        if (strFilter == null) {
+                            strFilter = "'" + sf.getFeesDesp() + "'";
+                        } else {
+                            strFilter = strFilter + ",'" + sf.getFeesDesp() + "'";
+                        }
+                    }
+
+                    String strSQL = "SELECT * FROM com.cv.app.opd.database.entity.InpFeesTemplate"
+                            + " WHERE templateName NOT IN (" + strFilter + ")";
+                    List<InpFeesTemplate> list = JoSQLUtil.getResult(strSQL, listFeesTemplate);
+
+                    for (InpFeesTemplate ft : list) {
+                        InpServiceFees sf = new InpServiceFees();
+                        sf.setFeesDesp(ft.getTemplateName());
+                        sf.setServiceId(srvId);
+                        listServiceFees.add(sf);
+                    }
                 }
-            }
 
-            fireTableDataChanged();
+                fireTableDataChanged();
+            }
+        } catch (Exception ex) {
+            log.error("getServiceFees : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

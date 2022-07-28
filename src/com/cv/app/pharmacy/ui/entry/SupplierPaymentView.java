@@ -5,6 +5,7 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
+import com.cv.app.util.Util1;
 import javax.swing.JComponent;
 import org.springframework.richclient.application.PageComponentContext;
 import org.springframework.richclient.application.support.AbstractView;
@@ -14,12 +15,15 @@ import org.springframework.richclient.application.support.AbstractView;
  * @author lenovo
  */
 public class SupplierPaymentView extends AbstractView{
-    private SupplierPayment panel;
+    //private SupplierPayment panel;
 
     @Override
     protected JComponent createControl() {
-       panel = new SupplierPayment();
-       return panel;
+        if (Util1.getPropValue("system.pharmacy.cuspayment").equals("N")) {
+            return new SupplierPayment1();
+        }else{
+            return new SupplierPayment();
+        }
     }
     @Override
      protected void registerLocalCommandExecutors(PageComponentContext context) {

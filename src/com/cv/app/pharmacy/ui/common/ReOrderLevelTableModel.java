@@ -344,7 +344,7 @@ public class ReOrderLevelTableModel extends AbstractTableModel {
             
             String strSql = "update re_order_level rol left join (select user_id, location_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
                     + "	from tmp_stock_balance_exp\n"
-                    + "	where user_id = '" + Global.loginUser.getUserId() + "' and location_id = " + locationId.toString() + "\n"
+                    + "	where user_id = '" + Global.machineId + "' and location_id = " + locationId.toString() + "\n"
                     + "           and ifnull(bal_qty,0) <> 0 "
                     + "	group by user_id, location_id, med_id) tsbe on rol.item_id = tsbe.med_id and rol.location_id = tsbe.location_id join "
                     + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "

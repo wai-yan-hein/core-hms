@@ -66,9 +66,7 @@ public class TraderFilterTableModel extends AbstractTableModel {
                     return null;
                 } else {
                     if (prifxStatus.equals("Y")) {
-                        return record.getKey().getTraderId().getTraderId()
-                                .replace("CUS", "")
-                                .replace("SUP", "");
+                        return record.getKey().getTraderId().getStuCode();
                     }else{
                         return record.getKey().getTraderId().getTraderId();
                     }
@@ -169,7 +167,7 @@ public class TraderFilterTableModel extends AbstractTableModel {
     }
 
     public void getTraderInfo(String traderId, int row) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         final String TABLE = "com.cv.app.pharmacy.database.tempentity.TraderFilter";
         String strSQL = "SELECT * FROM " + TABLE
                                         + " WHERE key.traderId.traderId = '" + traderId + "'";
@@ -182,6 +180,8 @@ public class TraderFilterTableModel extends AbstractTableModel {
                 dao.close();
 
                 if (trader != null) {
+                    TraderFilter tmp = listTraderFilter.get(row);
+                    dao.delete(tmp);
                     TraderFilter tf = new TraderFilter(
                             new TraderFilterKey(trader, userId));
                     dao.save(tf);

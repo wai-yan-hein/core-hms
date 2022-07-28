@@ -187,7 +187,7 @@ public class CodeTableModel extends AbstractTableModel {
     }
 
     public void getMedInfo(String medCode, int row) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         final String TABLE = "com.cv.app.pharmacy.database.tempentity.VouCodeFilter";
         String strSQL = "SELECT * FROM " + TABLE
                 + " WHERE key.itemCode.medId = '" + medCode + "'";

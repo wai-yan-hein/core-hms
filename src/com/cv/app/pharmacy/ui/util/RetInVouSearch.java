@@ -58,6 +58,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
+    private final String prifxStatus = Util1.getPropValue("system.sale.emitted.prifix");
 
     /**
      * Creates new form RetInVouSearch
@@ -100,7 +101,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 }
             }
         }
-        
+
         txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
 
@@ -111,7 +112,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 Trader cus = (Trader) selectObj;
 
                 if (cus != null) {
-                    txtCusCode.setText(cus.getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode.setText(cus.getStuCode());
+                    } else {
+                        txtCusCode.setText(cus.getTraderId());
+                    }
                     txtCusName.setText(cus.getTraderName());
                     vouFilter.setTrader(cus);
                 } else {
@@ -123,32 +128,49 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
-        dialog.setPreferredSize(new Dimension(1200,600));
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Customer List", dao, locationId);
+        dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
 
-        cboPayment.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'RetInSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'RetInSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -185,7 +207,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -197,15 +219,21 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -256,9 +284,14 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         /*String strSql = "select distinct v from RetInHis v join v.listDetail h where v.retInDate between '"
                 + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";*/
+        String strFieldName = "sh.cus_id";
+        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+            strFieldName = "tr.stu_no";
+        }
         String strSql = "select distinct date(sh.ret_in_date) ret_in_date, sh.ret_in_id, sh.remark, \n"
                 + "ifnull(sh.cus_id,ifnull(sh.reg_no, sh.stu_no)) cus_id, ifnull(tr.trader_name, ifnull(pd.patient_name, sh.stu_name)) cus_name, "
-                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted\n"
+                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted, \n"
+                + "tr.stu_no \n"
                 + "from ret_in_his sh\n"
                 + "join ret_in_detail_his sdh on sh.ret_in_id = sdh.vou_no\n"
                 + "join medicine med on sdh.med_id = med.med_id\n"
@@ -268,7 +301,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 + "left join trader tr on sh.cus_id = tr.trader_id "
                 + "where sh.ret_in_date between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
 
@@ -276,7 +309,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                 strSql = strSql + " and sh.reg_no = '" + txtCusCode.getText() + "'";
             } else {
-                strSql = strSql + " and sh.cus_id = '" + txtCusCode.getText() + "'";
+                strSql = strSql + " and " + strFieldName + " = '" + txtCusCode.getText() + "'";
             }
         } else {
             vouFilter.setTrader(null);
@@ -309,6 +342,30 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             vouFilter.setPaymentType(paymentType);
         } else {
             vouFilter.setPaymentType(null);
+        }
+
+        if (txtCode.getText() != null) {
+            if (!txtCode.getText().trim().isEmpty()) {
+                String itemCode = txtCode.getText().trim().toUpperCase();
+                vouFilter.setItemCode(itemCode);
+                strSql = strSql + " and upper(med.short_name) like '" + itemCode.toUpperCase() + "%'";
+            } else {
+                vouFilter.setItemCode(null);
+            }
+        } else {
+            vouFilter.setItemCode(null);
+        }
+
+        if (txtDesp.getText() != null) {
+            if (!txtDesp.getText().trim().isEmpty()) {
+                String itemDesp = txtDesp.getText().trim().toUpperCase();
+                vouFilter.setItemDesp(itemDesp);
+                strSql = strSql + " and upper(med.med_name) like '" + itemDesp.toUpperCase() + "%'";
+            } else {
+                vouFilter.setItemDesp(null);
+            }
+        } else {
+            vouFilter.setItemDesp(null);
         }
 
         //Filter history save
@@ -351,7 +408,12 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 while (rs.next()) {
                     VoucherSearch vs = new VoucherSearch();
                     vs.setCusName(rs.getString("cus_name"));
-                    vs.setCusNo(rs.getString("cus_id"));
+                    if (prifxStatus.equals("Y")) {
+                        log.info("stu_no : " + rs.getString("stu_no"));
+                        vs.setCusNo(rs.getString("stu_no"));
+                    } else {
+                        vs.setCusNo(rs.getString("cus_id"));
+                    }
                     vs.setInvNo(rs.getString("ret_in_id"));
                     vs.setIsDeleted(rs.getBoolean("deleted"));
                     vs.setLocation(rs.getString("location_name"));
@@ -372,7 +434,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
 
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListRetInHis(getSearchVoucher());
         txtTotalAmount.setValue(vouTableModel.getTotal());
@@ -402,7 +464,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                         + " and key.userId = '" + Global.machineId + "'");
             } else {
                 tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetInVouSearch'"
-                        + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+                        + " and key.userId = '" + Global.machineId + "'");
             }
 
             if (tmpFilter == null) {
@@ -411,7 +473,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 if (propValue.equals("M")) {
                     vouFilter.getKey().setUserId(Global.machineId);
                 } else {
-                    vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+                    vouFilter.getKey().setUserId(Global.machineId);
                 }
 
                 txtFromDate.setText(DateUtil.getTodayDateStr());
@@ -422,7 +484,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
                 if (vouFilter.getTrader() != null) {
-                    txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode.setText(vouFilter.getTrader().getStuCode());
+                    } else {
+                        txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    }
                     txtCusName.setText(vouFilter.getTrader().getTraderName());
                 }
 
@@ -448,41 +514,45 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private Trader getTrader(String traderId) {
         Trader cus = null;
         try {
-            if (!traderId.contains("SUP")) {
-                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                    if (!Util1.getPropValue("system.default.customer").equals(traderId)) {
-                        if (!traderId.contains("CUS")) {
-                            traderId = "CUS" + traderId;
-                        }
-                    }
-                }
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
             }
+
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-                String strSql;
                 int locationId;
+                String strSql;
                 if (cboLocation.getSelectedItem() instanceof Location) {
                     locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
                     strSql = "select o from Trader o where "
-                        + "o.active = true and o.traderId in (select a.key.traderId "
-                        + "from LocationTraderMapping a where a.key.locationId = "
-                        + locationId + ") and o.traderId = '" + traderId.toUpperCase() + "' order by o.traderName";
-                }else {
+                            + "o.active = true and o.traderId in (select a.key.traderId "
+                            + "from LocationTraderMapping a where a.key.locationId = "
+                            + locationId + ") and " + strFieldName + " = '" + traderId.toUpperCase() + "' order by o.traderName";
+                } else {
                     strSql = "select o from Trader o where "
                             + "o.active = true and o.traderId in (select a.key.traderId "
                             + "from LocationTraderMapping a where a.key.locationId in ("
                             + "select a.key.locationId from UserLocationMapping a "
                             + "where a.key.userId = '" + Global.loginUser.getUserId()
-                            + "' and a.isAllowSessCheck = true)) and o.traderId = '" 
+                            + "' and a.isAllowRetIn = true)) and " + strFieldName + " = '"
                             + traderId.toUpperCase() + "' order by o.traderName";
                 }
                 List<Trader> listTrader = dao.findAllHSQL(strSql);
+                log.info("strSql : " + strSql);
                 if (listTrader != null) {
                     if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);
                     }
                 }
             } else {
-                cus = (Trader) dao.find(Trader.class, traderId);
+                String strSql = "select o from Trader where " + strFieldName + " = '" + traderId + "'";
+                log.info("strSql 1: " + strSql);
+                List<Trader> listTrader = dao.findAllHSQL(strSql);
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
             }
         } catch (Exception ex) {
             log.error("getTrader : " + ex.toString());
@@ -492,7 +562,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
 
         return cus;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -520,6 +590,10 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         txtVouNo = new javax.swing.JFormattedTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblMedicine = new javax.swing.JTable(tblMedicineModel);
+        jLabel9 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        txtCode = new javax.swing.JTextField();
+        txtDesp = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblVoucher = new javax.swing.JTable();
         lblTotalRec = new javax.swing.JLabel();
@@ -605,13 +679,19 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
+        jLabel9.setFont(Global.lableFont);
+        jLabel9.setText("Code");
+
+        jLabel10.setFont(Global.lableFont);
+        jLabel10.setText("Desp");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(1, 1, 1)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
@@ -622,9 +702,13 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                             .addComponent(jLabel4)
                             .addComponent(jLabel5)
                             .addComponent(jLabel6)
-                            .addComponent(jLabel8))
+                            .addComponent(jLabel8)
+                            .addComponent(jLabel9)
+                            .addComponent(jLabel10))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtDesp)
+                            .addComponent(txtCode)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(txtCusCode, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -642,6 +726,9 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                                 .addGap(0, 4, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel8, jLabel9});
+
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -672,8 +759,16 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(txtVouNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 355, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(txtCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel10)
+                    .addComponent(txtDesp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -792,11 +887,15 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             txtCusName.setText(null);
         } else {
             Trader trader = getTrader(txtCusCode.getText().trim());
-            if(trader != null){
-                txtCusCode.setText(trader.getTraderId());
+            if (trader != null) {
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    txtCusCode.setText(trader.getStuCode());
+                } else {
+                    txtCusCode.setText(trader.getTraderId());
+                }
                 txtCusName.setText(trader.getTraderName());
                 vouFilter.setTrader(trader);
-            }else{
+            } else {
                 vouFilter.setTrader(null);
                 txtCusCode.setText(null);
                 txtCusName.setText(null);
@@ -830,6 +929,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private javax.swing.JComboBox cboPayment;
     private javax.swing.JComboBox cboSession;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -837,14 +937,17 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblTotalRec;
     private javax.swing.JTable tblMedicine;
     private javax.swing.JTable tblVoucher;
+    private javax.swing.JTextField txtCode;
     private javax.swing.JTextField txtCusCode;
     private javax.swing.JTextField txtCusName;
+    private javax.swing.JTextField txtDesp;
     private javax.swing.JFormattedTextField txtFromDate;
     private javax.swing.JFormattedTextField txtToDate;
     private javax.swing.JFormattedTextField txtTotalAmount;

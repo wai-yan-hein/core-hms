@@ -255,8 +255,14 @@ public class InpMedUsageTableModel extends AbstractTableModel {
     }
 
     private void getMedUsage() {
-        listInpMedUsage = dao.findAll("InpMedUsage", "key.service = " + srvId);
-        addNewRow();
+        try {
+            listInpMedUsage = dao.findAll("InpMedUsage", "key.service = " + srvId);
+            addNewRow();
+        } catch (Exception ex) {
+            log.error("getMedUsage : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void addNewRow() {

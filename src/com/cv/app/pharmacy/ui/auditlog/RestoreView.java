@@ -66,7 +66,6 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -124,8 +123,8 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     private String strPrvDate;
     private Object prvLocation;
     private Object prvPymet;
-    private final PaymentType ptCash;
-    private final PaymentType ptCredit;
+    private PaymentType ptCash;
+    private PaymentType ptCredit;
     private List<String> tmpVouList = new ArrayList(); //For temp voucher
     private String focusCtrlName = "-";
     private PatientBillTableModel tblPatientBillTableModel = new PatientBillTableModel();
@@ -237,9 +236,9 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
         String cusType = Util1.getPropValue("system.sale.default.cus.type");
         if (cusType.isEmpty()) {
-            saleTableModel.setCusType("N","con");
+            saleTableModel.setCusType("N", "con");
         } else {
-            saleTableModel.setCusType(cusType,"con");
+            saleTableModel.setCusType(cusType, "con");
         }
         applySecurityPolicy();
 
@@ -286,10 +285,16 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
         butWarranty.setVisible(false);
         //butOutstanding.setVisible(false);
-        ptCash = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
-        ptCredit = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        try {
+            ptCash = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
+            ptCredit = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        } catch (Exception ex) {
+            log.error("RestoreView : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         assignDefaultValue();
 
         //timerFocus();
@@ -360,6 +365,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             case "School":
                 break;
             default:
+                try {
                 tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
                 if (tmpObj != null) {
                     tmpCusId = ((Trader) tmpObj).getTraderId();
@@ -372,7 +378,12 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                         cboPayment.setSelectedItem(ptCredit);
                     }
                 }
-                break;
+            } catch (Exception ex) {
+                log.error("assignDefaultValue : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
         }
 
         tmpObj = Util1.getDefaultValue("Currency");
@@ -408,30 +419,42 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
-        List<SaleHis> listSH = dao.findAllHSQL(
-                "select o from SaleHis o where o.saleInvId = '" + vouNo + "'");
-        if (listSH != null) {
-            if (!listSH.isEmpty()) {
-                log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
-                        + txtSaleDate.getText());
-                JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate sale vou no. Exit the program and try again.",
-                        "Sale Vou No", JOptionPane.ERROR_MESSAGE);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
+            List<SaleHis> listSH = dao.findAllHSQL(
+                    "select o from SaleHis o where o.saleInvId = '" + vouNo + "'");
+            if (listSH != null) {
+                if (!listSH.isEmpty()) {
+                    log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
+                            + txtSaleDate.getText());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate sale vou no. Exit the program and try again.",
+                            "Sale Vou No", JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        ComBoBoxAutoComplete comBoBoxAutoComplete = new ComBoBoxAutoComplete(cboPayment, this);
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboVouStatus, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
+            ComBoBoxAutoComplete comBoBoxAutoComplete = new ComBoBoxAutoComplete(cboPayment, this);
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboVouStatus, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -467,9 +490,9 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     }
 
                     if (cus.getTypeId() != null) {
-                        saleTableModel.setCusType(cus.getTypeId().getDescription(),"cus");
+                        saleTableModel.setCusType(cus.getTypeId().getDescription(), "cus");
                     } else {
-                        saleTableModel.setCusType("N","cus");
+                        saleTableModel.setCusType("N", "cus");
                     }
                     //Trader transaction
                     if (Util1.hashPrivilege("SaleCustomerInfoShow")) {
@@ -498,9 +521,9 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     if (ptt.getAdmissionNo() != null) {
                         String priceType = Util1.getPropValue("system.sale.adm.price");
                         if (priceType.isEmpty()) {
-                            saleTableModel.setCusType("N","pt");
+                            saleTableModel.setCusType("N", "pt");
                         } else {
-                            saleTableModel.setCusType(priceType,"pt");
+                            saleTableModel.setCusType(priceType, "pt");
                         }
                     }
                     txtCusId.setText(ptt.getRegNo());
@@ -538,9 +561,9 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     if (patient.getAdmissionNo() != null) {
                         String priceType = Util1.getPropValue("system.sale.adm.price");
                         if (priceType.isEmpty()) {
-                            saleTableModel.setCusType("N","pt");
+                            saleTableModel.setCusType("N", "pt");
                         } else {
-                            saleTableModel.setCusType(priceType,"pt");
+                            saleTableModel.setCusType(priceType, "pt");
                         }
                     }
                     txtCusId.setText(patient.getRegNo());
@@ -612,148 +635,148 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                 break;
             case "SaleVouList":
                 try {
-                    clear();
-                    dao.open();
-                    if (selectObj instanceof SaleHis) {
-                        /*currSaleVou = (SaleHis) dao.find(SaleHis.class,
+                clear();
+                dao.open();
+                if (selectObj instanceof SaleHis) {
+                    /*currSaleVou = (SaleHis) dao.find(SaleHis.class,
                          ((SaleHis) selectObj).getSaleInvId());*/
-                        currSaleVou = (SaleHis) selectObj;
-                    } else {
-                        currSaleVou = (SaleHis) dao.find(SaleHis.class,
-                                selectObj.toString());
-                    }
+                    currSaleVou = (SaleHis) selectObj;
+                } else {
+                    currSaleVou = (SaleHis) dao.find(SaleHis.class,
+                            selectObj.toString());
+                }
 
-                    if (Util1.getNullTo(currSaleVou.getDeleted())) {
-                        lblStatus.setText("DELETED");
-                    } else {
-                        lblStatus.setText("RESTORE");
-                    }
+                if (Util1.getNullTo(currSaleVou.getDeleted())) {
+                    lblStatus.setText("DELETED");
+                } else {
+                    lblStatus.setText("RESTORE");
+                }
 
-                    cboLocation.setSelectedItem(currSaleVou.getLocationId());
-                    cboVouStatus.setSelectedItem(currSaleVou.getVouStatus());
-                    cboPayment.setSelectedItem(currSaleVou.getPaymentTypeId());
+                cboLocation.setSelectedItem(currSaleVou.getLocationId());
+                cboVouStatus.setSelectedItem(currSaleVou.getVouStatus());
+                cboPayment.setSelectedItem(currSaleVou.getPaymentTypeId());
 
-                    txtVouNo.setText(currSaleVou.getSaleInvId());
-                    txtSaleDate.setText(DateUtil.toDateStr(currSaleVou.getSaleDate()));
-                    saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-                    txtDueDate.setText(DateUtil.toDateStr(currSaleVou.getDueDate()));
-                    if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-                        if (currSaleVou.getPatientId() != null) {
-                            txtCusId.setText(currSaleVou.getPatientId().getRegNo());
-                            txtCusName.setText(currSaleVou.getPatientId().getPatientName());
-                        } else {
-                            txtCusId.setText(null);
-                            txtCusName.setText(null);
-                        }
-                    } else if (currSaleVou.getCustomerId() != null) {
-                        txtCusId.setText(currSaleVou.getCustomerId().getTraderId());
-                        txtCusName.setText(currSaleVou.getCustomerId().getTraderName());
+                txtVouNo.setText(currSaleVou.getSaleInvId());
+                txtSaleDate.setText(DateUtil.toDateStr(currSaleVou.getSaleDate()));
+                saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+                txtDueDate.setText(DateUtil.toDateStr(currSaleVou.getDueDate()));
+                if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+                    if (currSaleVou.getPatientId() != null) {
+                        txtCusId.setText(currSaleVou.getPatientId().getRegNo());
+                        txtCusName.setText(currSaleVou.getPatientId().getPatientName());
                     } else {
                         txtCusId.setText(null);
                         txtCusName.setText(null);
                     }
-
-                    txtRemark.setText(currSaleVou.getRemark());
-                    txtAdmissionNo.setText(currSaleVou.getAdmissionNo());
-
-                    Doctor dr = currSaleVou.getDoctor();
-                    if (dr != null) {
-                        txtDrCode.setText(dr.getDoctorId());
-                        txtDrName.setText(dr.getDoctorName());
-                    } else {
-                        txtDrCode.setText(null);
-                        txtDrName.setText(null);
-                    }
-
-                    txtVouTotal.setValue(currSaleVou.getVouTotal());
-                    txtVouPaid.setValue(currSaleVou.getPaid());
-                    txtVouDiscount.setValue(currSaleVou.getDiscount());
-
-                    txtTotalExpense.setValue(currSaleVou.getExpenseTotal());
-                    txtTtlExpIn.setValue(currSaleVou.getTtlExpenseIn());
-
-                    txtDiscP.setText(NumberUtil.NZero(currSaleVou.getDiscP()).toString());
-                    txtTaxP.setText(NumberUtil.NZero(currSaleVou.getTaxP()).toString());
-                    txtTax.setValue(currSaleVou.getTaxAmt());
-
-                    txtGrandTotal.setValue((currSaleVou.getVouTotal()
-                            + NumberUtil.NZero(currSaleVou.getTaxAmt())
-                            + NumberUtil.NZero(currSaleVou.getExpenseTotal()))
-                            - NumberUtil.NZero(currSaleVou.getDiscount()));
-
-                    txtVouBalance.setValue((currSaleVou.getVouTotal()
-                            + NumberUtil.NZero(currSaleVou.getTaxAmt())
-                            + NumberUtil.NZero(currSaleVou.getExpenseTotal()))
-                            - (NumberUtil.NZero(currSaleVou.getDiscount())
-                            + NumberUtil.NZero(currSaleVou.getPaid())));
-                    if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-                        if (currSaleVou.getCustomerId() instanceof Customer) {
-                            txtCreditLimit.setValue(((Customer) currSaleVou.getCustomerId()).getCreditLimit());
-                        }
-
-                        if (currSaleVou.getCustomerId().getTypeId() != null) {
-                            saleTableModel.setCusType(currSaleVou.getCustomerId().getTypeId().getDescription(),"vou");
-                        }
-                    }
-
-                    //This statment is for Outstanding lazy loading
-                    if (currSaleVou.getListOuts() != null) {
-                        if (currSaleVou.getListOuts().size() > 0) {
-                            List<SaleOutstand> listOuts = currSaleVou.getListOuts();
-                            currSaleVou.setListOuts(listOuts);
-                        }
-                    }
-                    //=============================================
-
-                    //This statment is for Warranty laxy loading
-                    if (currSaleVou.getWarrandy() != null) {
-                        if (currSaleVou.getWarrandy().size() > 0) {
-                            List<SaleWarranty> listWarranty = currSaleVou.getWarrandy();
-                            currSaleVou.setWarrandy(listWarranty);
-                        }
-                    }
-                    //=============================================
-
-                    if (currSaleVou.getExpense() != null) {
-                        if (currSaleVou.getExpense().size() > 0) {
-                            currSaleVou.setExpense(currSaleVou.getExpense());
-                        }
-                    }
-
-                    listDetail = currSaleVou.getSaleDetailHis();
-                    for (SaleDetailHis sdh : listDetail) {
-                        medUp.add(sdh.getMedId());
-                    }
-                    saleTableModel.setListDetail(listDetail);
-
-                    listExpense = currSaleVou.getExpense();
-                    expTableModel.setListDetail(listExpense);
-                    dao.close();
-
-                    haveTransaction = isHaveTransaction(currSaleVou.getSaleInvId());
-                    if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-                        getTraderTransaction();
-                        getTraderLastBalance();
-                    }
-
-                    dao.close();
-
-                    double lastBalance = NumberUtil.NZero(txtSaleLastBalance.getValue())
-                            + NumberUtil.NZero(txtVouBalance.getValue())
-                            + tranTableModel.getTotal();
-
-                    txtCusLastBalance.setValue(lastBalance);
-                    txtDifference.setValue(NumberUtil.NZero(txtCreditLimit.getValue())
-                            - NumberUtil.NZero(txtCusLastBalance.getValue()));
-                    txtTotalItem.setText(String.valueOf(listDetail.size()));
-                    //calculateTotalAmount();
-                } catch (Exception ex) {
-                    log.error("selected 1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                } else if (currSaleVou.getCustomerId() != null) {
+                    txtCusId.setText(currSaleVou.getCustomerId().getTraderId());
+                    txtCusName.setText(currSaleVou.getCustomerId().getTraderName());
+                } else {
+                    txtCusId.setText(null);
+                    txtCusName.setText(null);
                 }
 
-                tblSale.requestFocusInWindow();
-                applySecurityPolicy();
-                break;
+                txtRemark.setText(currSaleVou.getRemark());
+                txtAdmissionNo.setText(currSaleVou.getAdmissionNo());
+
+                Doctor dr = currSaleVou.getDoctor();
+                if (dr != null) {
+                    txtDrCode.setText(dr.getDoctorId());
+                    txtDrName.setText(dr.getDoctorName());
+                } else {
+                    txtDrCode.setText(null);
+                    txtDrName.setText(null);
+                }
+
+                txtVouTotal.setValue(currSaleVou.getVouTotal());
+                txtVouPaid.setValue(currSaleVou.getPaid());
+                txtVouDiscount.setValue(currSaleVou.getDiscount());
+
+                txtTotalExpense.setValue(currSaleVou.getExpenseTotal());
+                txtTtlExpIn.setValue(currSaleVou.getTtlExpenseIn());
+
+                txtDiscP.setText(NumberUtil.NZero(currSaleVou.getDiscP()).toString());
+                txtTaxP.setText(NumberUtil.NZero(currSaleVou.getTaxP()).toString());
+                txtTax.setValue(currSaleVou.getTaxAmt());
+
+                txtGrandTotal.setValue((currSaleVou.getVouTotal()
+                        + NumberUtil.NZero(currSaleVou.getTaxAmt())
+                        + NumberUtil.NZero(currSaleVou.getExpenseTotal()))
+                        - NumberUtil.NZero(currSaleVou.getDiscount()));
+
+                txtVouBalance.setValue((currSaleVou.getVouTotal()
+                        + NumberUtil.NZero(currSaleVou.getTaxAmt())
+                        + NumberUtil.NZero(currSaleVou.getExpenseTotal()))
+                        - (NumberUtil.NZero(currSaleVou.getDiscount())
+                        + NumberUtil.NZero(currSaleVou.getPaid())));
+                if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+                    if (currSaleVou.getCustomerId() instanceof Customer) {
+                        txtCreditLimit.setValue(((Customer) currSaleVou.getCustomerId()).getCreditLimit());
+                    }
+
+                    if (currSaleVou.getCustomerId().getTypeId() != null) {
+                        saleTableModel.setCusType(currSaleVou.getCustomerId().getTypeId().getDescription(), "vou");
+                    }
+                }
+
+                //This statment is for Outstanding lazy loading
+                if (currSaleVou.getListOuts() != null) {
+                    if (currSaleVou.getListOuts().size() > 0) {
+                        List<SaleOutstand> listOuts = currSaleVou.getListOuts();
+                        currSaleVou.setListOuts(listOuts);
+                    }
+                }
+                //=============================================
+
+                //This statment is for Warranty laxy loading
+                if (currSaleVou.getWarrandy() != null) {
+                    if (currSaleVou.getWarrandy().size() > 0) {
+                        List<SaleWarranty> listWarranty = currSaleVou.getWarrandy();
+                        currSaleVou.setWarrandy(listWarranty);
+                    }
+                }
+                //=============================================
+
+                if (currSaleVou.getExpense() != null) {
+                    if (currSaleVou.getExpense().size() > 0) {
+                        currSaleVou.setExpense(currSaleVou.getExpense());
+                    }
+                }
+
+                listDetail = currSaleVou.getSaleDetailHis();
+                for (SaleDetailHis sdh : listDetail) {
+                    medUp.add(sdh.getMedId());
+                }
+                saleTableModel.setListDetail(listDetail);
+
+                listExpense = currSaleVou.getExpense();
+                expTableModel.setListDetail(listExpense);
+                dao.close();
+
+                haveTransaction = isHaveTransaction(currSaleVou.getSaleInvId());
+                if (!Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+                    getTraderTransaction();
+                    getTraderLastBalance();
+                }
+
+                dao.close();
+
+                double lastBalance = NumberUtil.NZero(txtSaleLastBalance.getValue())
+                        + NumberUtil.NZero(txtVouBalance.getValue())
+                        + tranTableModel.getTotal();
+
+                txtCusLastBalance.setValue(lastBalance);
+                txtDifference.setValue(NumberUtil.NZero(txtCreditLimit.getValue())
+                        - NumberUtil.NZero(txtCusLastBalance.getValue()));
+                txtTotalItem.setText(String.valueOf(listDetail.size()));
+                //calculateTotalAmount();
+            } catch (Exception ex) {
+                log.error("selected 1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
+
+            tblSale.requestFocusInWindow();
+            applySecurityPolicy();
+            break;
             case "SelectPayment":
                 TraderPayHis tph = (TraderPayHis) selectObj;
                 TraderTransaction tran = new TraderTransaction();
@@ -856,75 +879,81 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void initSaleTable() {
-        tblSale.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
-        tblSale.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
-        tblSale.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
-        tblSale.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
-        tblSale.getColumnModel().getColumn(4).setPreferredWidth(30);//Qty
-        tblSale.getColumnModel().getColumn(5).setPreferredWidth(15);//Unit
-        tblSale.getColumnModel().getColumn(6).setPreferredWidth(60);//Sale price
-        tblSale.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount
-        tblSale.getColumnModel().getColumn(8).setPreferredWidth(20);//FOC
-        tblSale.getColumnModel().getColumn(9).setPreferredWidth(15);//FOC-Unit
-        tblSale.getColumnModel().getColumn(10).setPreferredWidth(70);//Amount
+        try {
+            tblSale.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
+            tblSale.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
+            tblSale.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
+            tblSale.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
+            tblSale.getColumnModel().getColumn(4).setPreferredWidth(30);//Qty
+            tblSale.getColumnModel().getColumn(5).setPreferredWidth(15);//Unit
+            tblSale.getColumnModel().getColumn(6).setPreferredWidth(60);//Sale price
+            tblSale.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount
+            tblSale.getColumnModel().getColumn(8).setPreferredWidth(20);//FOC
+            tblSale.getColumnModel().getColumn(9).setPreferredWidth(15);//FOC-Unit
+            tblSale.getColumnModel().getColumn(10).setPreferredWidth(70);//Amount
 
-        addSaleTableModelListener();
+            addSaleTableModelListener();
 
-        //Change JTable cell editor
-        tblSale.getColumnModel().getColumn(0).setCellEditor(
-                new SaleTableCodeCellEditor(dao));
-        tblSale.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor(this));
-        tblSale.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
-        tblSale.getColumnModel().getColumn(6).setCellEditor(new SaleTableUnitCellEditor());
-        tblSale.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
-        //tblSale.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
-        tblSale.getColumnModel().getColumn(10).setCellEditor(new BestTableCellEditor(this));
+            //Change JTable cell editor
+            tblSale.getColumnModel().getColumn(0).setCellEditor(
+                    new SaleTableCodeCellEditor(dao));
+            tblSale.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor(this));
+            tblSale.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor(this));
+            tblSale.getColumnModel().getColumn(6).setCellEditor(new SaleTableUnitCellEditor());
+            tblSale.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
+            //tblSale.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
+            tblSale.getColumnModel().getColumn(10).setCellEditor(new BestTableCellEditor(this));
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        //Replace with FOC column
-        //tblSale.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboChargeType));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            //Replace with FOC column
+            //tblSale.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-        if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
-            JComboBox cboLocationCell = new JComboBox();
-            cboLocationCell.setFont(Global.textFont); // NOI18N
-            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
-            tblSale.getColumnModel().getColumn(11).setCellEditor(new DefaultCellEditor(cboLocationCell));
-            saleTableModel.setLocation((Location) cboLocation.getSelectedItem());
-            tblSale.getColumnModel().getColumn(11).setPreferredWidth(50);//Location
-        } else {
-            tblSale.getColumnModel().getColumn(11).setPreferredWidth(0);//Location
-            tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
-            tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
-        }
+            if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
+                JComboBox cboLocationCell = new JComboBox();
+                cboLocationCell.setFont(Global.textFont); // NOI18N
+                BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+                tblSale.getColumnModel().getColumn(11).setCellEditor(new DefaultCellEditor(cboLocationCell));
+                saleTableModel.setLocation((Location) cboLocation.getSelectedItem());
+                tblSale.getColumnModel().getColumn(11).setPreferredWidth(50);//Location
+            } else {
+                tblSale.getColumnModel().getColumn(11).setPreferredWidth(0);//Location
+                tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
+                tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
+            }
 
-        tblSale.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblSale.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                txtRecNo.setText(Integer.toString(tblSale.getSelectedRow() + 1));
-                if (tblSale.getSelectedRow() < saleTableModel.getRowCount()) {
-                    Object tmp = tblSale.getValueAt(tblSale.getSelectedRow(), 0);
-                    if (tmp != null) {
-                        String selectMedId = tmp.toString();
-                        List<Stock> listStock = stockList.getStockList(selectMedId);
-                        if (listStock == null) {
-                            listStock = new ArrayList();
+            tblSale.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblSale.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    txtRecNo.setText(Integer.toString(tblSale.getSelectedRow() + 1));
+                    if (tblSale.getSelectedRow() < saleTableModel.getRowCount()) {
+                        Object tmp = tblSale.getValueAt(tblSale.getSelectedRow(), 0);
+                        if (tmp != null) {
+                            String selectMedId = tmp.toString();
+                            List<Stock> listStock = stockList.getStockList(selectMedId);
+                            if (listStock == null) {
+                                listStock = new ArrayList();
+                            }
+                            stockTableModel.setListStock(listStock);
+                        } else {
+                            List<Stock> listStock = new ArrayList();
+                            stockTableModel.setListStock(listStock);
                         }
-                        stockTableModel.setListStock(listStock);
-                    } else {
-                        List<Stock> listStock = new ArrayList();
-                        stockTableModel.setListStock(listStock);
                     }
                 }
-            }
-        });
+            });
 
-        tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
-        tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
+            tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+        } catch (Exception ex) {
+            log.error("initSaleTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addSaleTableModelListener() {
@@ -971,21 +1000,27 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         Medicine medicine;
 
         if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+            try {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } catch (Exception ex) {
+                log.error("getMedInfo : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         } else {
             log.info("getMedInfo : Blank medicine code.");
@@ -994,12 +1029,12 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
     private void getMedList(String filter) {
         int locationId = -1;
-        if(cboLocation.getSelectedItem() instanceof Location){
-            locationId = ((Location)cboLocation.getSelectedItem()).getLocationId();
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
         }
         String cusGroup = "-";
-        if(currSaleVou.getCustomerId() != null){
-            if(currSaleVou.getCustomerId().getTraderGroup() != null){
+        if (currSaleVou.getCustomerId() != null) {
+            if (currSaleVou.getCustomerId().getTraderGroup() != null) {
                 cusGroup = currSaleVou.getCustomerId().getTraderGroup().getGroupId();
             }
         }
@@ -1224,7 +1259,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblSale.getCellEditor() != null){
+                if (tblSale.getCellEditor() != null) {
                     tblSale.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -1244,7 +1279,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblSale.getCellEditor() != null){
+                if (tblSale.getCellEditor() != null) {
                     tblSale.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -1289,7 +1324,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblExpense.getCellEditor() != null){
+                if (tblExpense.getCellEditor() != null) {
                     tblExpense.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -1365,7 +1400,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                                     "Sale item delete", JOptionPane.YES_NO_OPTION);
                         }
 
-                        if(tblSale.getCellEditor() != null){
+                        if (tblSale.getCellEditor() != null) {
                             tblSale.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -1403,7 +1438,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                         yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                                 "Expense item delete", JOptionPane.YES_NO_OPTION);
 
-                        if(tblExpense.getCellEditor() != null){
+                        if (tblExpense.getCellEditor() != null) {
                             tblExpense.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -1450,7 +1485,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         txtRemark.setText("");
         lblStatus.setText("NEW");
         txtCreditLimit.setValue(0.0);
-        saleTableModel.setCusType("N","vou");
+        saleTableModel.setCusType("N", "vou");
         lblSaleLastBal.setText("Balance : ");
         tranTableModel.clear();
         lblDate.setText("");
@@ -1561,18 +1596,24 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void initExpenseTable() {
-        //Adjust column width
-        tblExpense.getColumnModel().getColumn(0).setPreferredWidth(60); //Date
-        tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
-        tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amt-In
-        tblExpense.getColumnModel().getColumn(3).setPreferredWidth(60);//Amt-Out
+        try {
+            //Adjust column width
+            tblExpense.getColumnModel().getColumn(0).setPreferredWidth(60); //Date
+            tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
+            tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amt-In
+            tblExpense.getColumnModel().getColumn(3).setPreferredWidth(60);//Amt-Out
 
-        addExpenseTableModelListener();
+            addExpenseTableModelListener();
 
-        JComboBox cboExpenseType = new JComboBox();
-        cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
-        BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
-        tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
+            JComboBox cboExpenseType = new JComboBox();
+            cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
+            BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
+            tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
+        } catch (Exception ex) {
+            log.error("initExpenseTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addExpenseTableModelListener() {
@@ -1617,7 +1658,8 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
     @Override
     public void history() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Sale Voucher Search", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Sale Voucher Search", dao, -1);
     }
 
     @Override
@@ -1719,98 +1761,104 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void copyVoucher(String vouNo) {
-        SaleHis tmpSaleHis = (SaleHis) dao.find(SaleHis.class, vouNo);
+        try {
+            SaleHis tmpSaleHis = (SaleHis) dao.find(SaleHis.class, vouNo);
 
-        txtSaleDate.setText(DateUtil.toDateStr(tmpSaleHis.getSaleDate()));
-        saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-        txtDueDate.setText(DateUtil.toDateStr(tmpSaleHis.getDueDate()));
-        txtRemark.setText(tmpSaleHis.getRemark());
+            txtSaleDate.setText(DateUtil.toDateStr(tmpSaleHis.getSaleDate()));
+            saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+            txtDueDate.setText(DateUtil.toDateStr(tmpSaleHis.getDueDate()));
+            txtRemark.setText(tmpSaleHis.getRemark());
 
-        if (tmpSaleHis.getCustomerId() != null) {
-            txtCusId.setText(tmpSaleHis.getCustomerId().getTraderId());
-            txtCusName.setText(tmpSaleHis.getCustomerId().getTraderName());
-            txtCreditLimit.setValue(((Customer) tmpSaleHis.getCustomerId()).getCreditLimit());
-        } else if (tmpSaleHis.getPatientId() != null) {
-            txtCusId.setText(tmpSaleHis.getPatientId().getRegNo());
-            txtCusName.setText(tmpSaleHis.getPatientId().getPatientName());
-        } else {
-            txtCusId.setText(null);
-            txtCusName.setText(null);
-            txtCreditLimit.setValue(null);
+            if (tmpSaleHis.getCustomerId() != null) {
+                txtCusId.setText(tmpSaleHis.getCustomerId().getTraderId());
+                txtCusName.setText(tmpSaleHis.getCustomerId().getTraderName());
+                txtCreditLimit.setValue(((Customer) tmpSaleHis.getCustomerId()).getCreditLimit());
+            } else if (tmpSaleHis.getPatientId() != null) {
+                txtCusId.setText(tmpSaleHis.getPatientId().getRegNo());
+                txtCusName.setText(tmpSaleHis.getPatientId().getPatientName());
+            } else {
+                txtCusId.setText(null);
+                txtCusName.setText(null);
+                txtCreditLimit.setValue(null);
+            }
+
+            //txtDrCode.setText();
+            //txtDrName.setText();
+            cboLocation.setSelectedItem(tmpSaleHis.getLocationId());
+            cboPayment.setSelectedItem(tmpSaleHis.getPaymentTypeId());
+            cboVouStatus.setSelectedItem(tmpSaleHis.getVouStatus());
+
+            List<SaleDetailHis> listSdh = tmpSaleHis.getSaleDetailHis();
+            List<SaleExpense> listSe = tmpSaleHis.getExpense();
+
+            //listDetail.removeAll(listDetail);
+            //listExpense.removeAll(listExpense);
+            listDetail = new ArrayList();
+            listExpense = new ArrayList();
+
+            for (SaleDetailHis sdh : listSdh) {
+                SaleDetailHis tmpSdh = new SaleDetailHis();
+
+                BeanUtils.copyProperties(sdh, tmpSdh);
+                tmpSdh.setSaleDetailId(null);
+                listDetail.add(tmpSdh);
+            }
+            listDetail.add(new SaleDetailHis());
+
+            for (SaleExpense se : listSe) {
+                SaleExpense tmpSe = new SaleExpense();
+
+                BeanUtils.copyProperties(se, tmpSe);
+                tmpSe.setSaleExpenseId(null);
+                listExpense.add(tmpSe);
+            }
+
+            listExpense.add(new SaleExpense());
+
+            List<SaleOutstand> listOuts = new ArrayList();
+            List<SaleOutstand> tmpListOuts = currSaleVou.getListOuts();
+            for (SaleOutstand so : tmpListOuts) {
+                SaleOutstand tmpSo = new SaleOutstand();
+                BeanUtils.copyProperties(so, tmpSo);
+                tmpSo.setOutsId(null);
+                listOuts.add(tmpSo);
+            }
+
+            List<SaleWarranty> listWarrandy = new ArrayList();
+            List<SaleWarranty> tmpListW = currSaleVou.getWarrandy();
+            for (SaleWarranty sw : tmpListW) {
+                SaleWarranty tmpSw = new SaleWarranty();
+                BeanUtils.copyProperties(sw, tmpSw);
+                tmpSw.setWarrantyId(null);
+                listWarrandy.add(tmpSw);
+            }
+
+            lblStatus.setText("NEW");
+
+            txtVouTotal.setValue(tmpSaleHis.getVouTotal());
+            txtVouPaid.setValue(tmpSaleHis.getPaid());
+            txtVouDiscount.setValue(tmpSaleHis.getDiscount());
+            txtTotalExpense.setValue(tmpSaleHis.getExpenseTotal());
+            txtTtlExpIn.setValue(tmpSaleHis.getTtlExpenseIn());
+            txtVouBalance.setValue((tmpSaleHis.getVouTotal() + tmpSaleHis.getExpenseTotal() + tmpSaleHis.getTtlExpenseIn())
+                    - (tmpSaleHis.getPaid() + tmpSaleHis.getDiscount()));
+
+            //dao.evict(tmpSaleHis);
+            currSaleVou = new SaleHis();
+            BeanUtils.copyProperties(tmpSaleHis, currSaleVou);
+            currSaleVou.setSaleDetailHis(listDetail);
+            currSaleVou.setExpense(listExpense);
+            currSaleVou.setListOuts(listOuts);
+            currSaleVou.setWarrandy(listWarrandy);
+            currSaleVou.setDeleted(false);
+            saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+            saleTableModel.setListDetail(listDetail);
+            expTableModel.setListDetail(listExpense);
+        } catch (Exception ex) {
+            log.info("copyVoucher : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        //txtDrCode.setText();
-        //txtDrName.setText();
-        cboLocation.setSelectedItem(tmpSaleHis.getLocationId());
-        cboPayment.setSelectedItem(tmpSaleHis.getPaymentTypeId());
-        cboVouStatus.setSelectedItem(tmpSaleHis.getVouStatus());
-
-        List<SaleDetailHis> listSdh = tmpSaleHis.getSaleDetailHis();
-        List<SaleExpense> listSe = tmpSaleHis.getExpense();
-
-        //listDetail.removeAll(listDetail);
-        //listExpense.removeAll(listExpense);
-        listDetail = new ArrayList();
-        listExpense = new ArrayList();
-
-        for (SaleDetailHis sdh : listSdh) {
-            SaleDetailHis tmpSdh = new SaleDetailHis();
-
-            BeanUtils.copyProperties(sdh, tmpSdh);
-            tmpSdh.setSaleDetailId(null);
-            listDetail.add(tmpSdh);
-        }
-        listDetail.add(new SaleDetailHis());
-
-        for (SaleExpense se : listSe) {
-            SaleExpense tmpSe = new SaleExpense();
-
-            BeanUtils.copyProperties(se, tmpSe);
-            tmpSe.setSaleExpenseId(null);
-            listExpense.add(tmpSe);
-        }
-
-        listExpense.add(new SaleExpense());
-
-        List<SaleOutstand> listOuts = new ArrayList();
-        List<SaleOutstand> tmpListOuts = currSaleVou.getListOuts();
-        for (SaleOutstand so : tmpListOuts) {
-            SaleOutstand tmpSo = new SaleOutstand();
-            BeanUtils.copyProperties(so, tmpSo);
-            tmpSo.setOutsId(null);
-            listOuts.add(tmpSo);
-        }
-
-        List<SaleWarranty> listWarrandy = new ArrayList();
-        List<SaleWarranty> tmpListW = currSaleVou.getWarrandy();
-        for (SaleWarranty sw : tmpListW) {
-            SaleWarranty tmpSw = new SaleWarranty();
-            BeanUtils.copyProperties(sw, tmpSw);
-            tmpSw.setWarrantyId(null);
-            listWarrandy.add(tmpSw);
-        }
-
-        lblStatus.setText("NEW");
-
-        txtVouTotal.setValue(tmpSaleHis.getVouTotal());
-        txtVouPaid.setValue(tmpSaleHis.getPaid());
-        txtVouDiscount.setValue(tmpSaleHis.getDiscount());
-        txtTotalExpense.setValue(tmpSaleHis.getExpenseTotal());
-        txtTtlExpIn.setValue(tmpSaleHis.getTtlExpenseIn());
-        txtVouBalance.setValue((tmpSaleHis.getVouTotal() + tmpSaleHis.getExpenseTotal() + tmpSaleHis.getTtlExpenseIn())
-                - (tmpSaleHis.getPaid() + tmpSaleHis.getDiscount()));
-
-        //dao.evict(tmpSaleHis);
-        currSaleVou = new SaleHis();
-        BeanUtils.copyProperties(tmpSaleHis, currSaleVou);
-        currSaleVou.setSaleDetailHis(listDetail);
-        currSaleVou.setExpense(listExpense);
-        currSaleVou.setListOuts(listOuts);
-        currSaleVou.setWarrandy(listWarrandy);
-        currSaleVou.setDeleted(false);
-        saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-        saleTableModel.setListDetail(listDetail);
-        expTableModel.setListDetail(listExpense);
     }
 
     @Override
@@ -1919,7 +1967,8 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     break;
                 }
                 default: {
-                    UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+                    UtilDialog dialog = new UtilDialog(Util1.getParent(), true,
+                            this, "Customer List", dao, -1);
                     break;
                 }
             }
@@ -2055,21 +2104,21 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             strTrdOpt = "CUS";
         }
         String appCurr = Util1.getPropValue("system.app.currency");
-        
+
         try {
             dao.execProc("get_trader_transaction",
                     trader.getTraderId(), strTrdOpt, strTodayDateTime, appCurr,
-                    Global.loginUser.getUserId(),
+                    Global.machineId,
                     Global.machineId);
 
             List<TraderTransaction> listTran = dao.findAll("TraderTransaction",
-                    "userId = '" + Global.loginUser.getUserId() + "' and tranType = 'D'"
+                    "userId = '" + Global.machineId + "' and tranType = 'D'"
                     + " and machineId = '" + Global.machineId + "'");
             if (listTran != null) {
                 tranTableModel.setListDetail(listTran);
             }
 
-            listTTDetail = dao.findAll("TTranDetail", "userId = '" + Global.loginUser.getUserId()
+            listTTDetail = dao.findAll("TTranDetail", "userId = '" + Global.machineId
                     + "' and machineId = '" + Global.machineId + "'");
             ttdTableModel.setListTTranDetail(listTTDetail);
         } catch (Exception ex) {
@@ -2143,22 +2192,28 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void getPayment(String lastSaleDateTime, String currVouDateTime) {
-        String strSql = "select v from TraderPayHis v where v.trader.traderId = '"
-                + currSaleVou.getCustomerId().getTraderId()
-                + "' and v.deleted = false and v.payDt > '"
-                + lastSaleDateTime + "' and v.payDt <= '" + currVouDateTime + "'";
-        List<TraderPayHis> listPay = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select v from TraderPayHis v where v.trader.traderId = '"
+                    + currSaleVou.getCustomerId().getTraderId()
+                    + "' and v.deleted = false and v.payDt > '"
+                    + lastSaleDateTime + "' and v.payDt <= '" + currVouDateTime + "'";
+            List<TraderPayHis> listPay = dao.findAllHSQL(strSql);
 
-        for (TraderPayHis tph : listPay) {
-            selected("SelectPayment", tph);
+            for (TraderPayHis tph : listPay) {
+                selected("SelectPayment", tph);
+            }
+        } catch (Exception ex) {
+            log.error("getPayment : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private boolean isHaveTransaction(String vouNo) {
         boolean status = false;
-        ResultSet resultSet = dao.getPro("is_have_vou_transaction", vouNo);
 
         try {
+            ResultSet resultSet = dao.getPro("is_have_vou_transaction", vouNo);
             if (resultSet != null) {
                 resultSet.next();
                 String value = resultSet.getString("tstatus");
@@ -2169,6 +2224,8 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             }
         } catch (Exception ex) {
             log.error("isHaveTransaction : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } finally {
+            dao.close();
         }
 
         return status;
@@ -2207,7 +2264,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             for (Integer id : deleteIds) {
                 dao.executeUpdateHSQL(strDeleteHSQL, id);
                 dao.deleteSQLNoTran("delete from trader_tran where user_id = '"
-                        + Global.loginUser.getUserId() + "' and pay_id = "
+                        + Global.machineId + "' and pay_id = "
                         + id);
             }
             tranTableModel.removeDeletePayment();
@@ -2491,23 +2548,31 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     public void timerFocus() {
+
         Timer timer = new Timer(1000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                txtCusId.requestFocus();
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
-                    Global.listItem = dao.findAll("Medicine", "active = true and medTypeId.itemTypeCode in (select a.key.itemType.itemTypeCode from ItemTypeMapping a)");
-                } else {
-                    Global.listItem = dao.findAll("Medicine", "active = true");
+                try {
+                    txtCusId.requestFocus();
+                    //setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
+                        Global.listItem = dao.findAll("Medicine", "active = true and medTypeId.itemTypeCode in (select a.key.itemType.itemTypeCode from ItemTypeMapping a)");
+                    } else {
+                        Global.listItem = dao.findAll("Medicine", "active = true");
+                    }
+                    //setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    System.gc();
+                    log.info("Sale Timer work.");
+                } catch (Exception ex) {
+                    log.error("timerFocus : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
-                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                System.gc();
-                log.info("Sale Timer work.");
             }
         });
         timer.setRepeats(false);
         timer.start();
+
     }
 
     public void getPatientBill(String regNo) {
@@ -2519,7 +2584,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {
@@ -2552,10 +2617,10 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     private void insertTraderFilterCode(String traderId) {
         String currencyId;
         String strSQLDelete = "delete from tmp_trader_bal_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_trader_bal_filter(trader_id,currency,op_date,user_id, amount) "
                 + "select t.trader_id, t.cur_code, "
-                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.machineId
                 + "', trop.op_amount"
                 + " from v_trader_cur t left join "
                 + "(select trader_id, currency, max(op_date) op_date, op_amount from trader_op "
@@ -2587,7 +2652,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void execTraderBalanceWithUPV() {
-        dao.execProc("get_trader_unpaid_vou", Global.loginUser.getUserId(),
+        dao.execProc("get_trader_unpaid_vou", Global.machineId,
                 DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                 DateUtil.toDateStrMYSQL(txtDueDate.getText()));
     }
@@ -2597,7 +2662,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
         execTraderBalanceWithUPV();
         Date tmpDate = DateUtil.toDate(txtSaleDate.getText(), "dd/MM/yyyy");
         Calendar c = Calendar.getInstance();
-
+        boolean status = false;
         try {
             c.setTime(tmpDate); // Now use today date.
             int ttlDay = 0;
@@ -2609,22 +2674,21 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             }
             c.add(Calendar.DAY_OF_MONTH, ttlDay);
             tmpDate = c.getTime();
+
+            String strTmpDate = DateUtil.toDateStr(tmpDate, "dd/MM/yyyy");
+            String strSql = "select o from TraderUnpaidVou o where o.userId = '"
+                    + Global.machineId + "' and o.dueDate < '"
+                    + DateUtil.toDateStrMYSQL(strTmpDate) + "'";
+            List<TraderUnpaidVou> listTUV = dao.findAllHSQL(strSql);
+            if (listTUV != null) {
+                if (!listTUV.isEmpty()) {
+                    status = true;
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Overdue voucher have.\nYou cannot open new voucher.",
+                            "Overdue Voucher", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         } catch (Exception ex) {
             log.error("isOverDue : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
-
-        String strTmpDate = DateUtil.toDateStr(tmpDate, "dd/MM/yyyy");
-        boolean status = false;
-        String strSql = "select o from TraderUnpaidVou o where o.userId = '"
-                + Global.loginUser.getUserId() + "' and o.dueDate < '"
-                + DateUtil.toDateStrMYSQL(strTmpDate) + "'";
-        List<TraderUnpaidVou> listTUV = dao.findAllHSQL(strSql);
-        if (listTUV != null) {
-            if (!listTUV.isEmpty()) {
-                status = true;
-                JOptionPane.showMessageDialog(Util1.getParent(), "Overdue voucher have.\nYou cannot open new voucher.",
-                        "Overdue Voucher", JOptionPane.ERROR_MESSAGE);
-            }
         }
         return status;
     }

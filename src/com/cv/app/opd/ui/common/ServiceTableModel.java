@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -23,6 +24,7 @@ import javax.swing.table.AbstractTableModel;
  */
 public class ServiceTableModel extends AbstractTableModel {
 
+    static Logger log = Logger.getLogger(ServiceTableModel.class.getName());
     private List<Service> listService = new ArrayList();
     private final String[] columnNames = {"Code", "Description", "Fees", "Srv Fee", "MO Fee",
         "Staff Fee", "Tech Fee", "Refer Fee", "Read Fee", "%", "CFS", "Active", "Doctor"};
@@ -243,7 +245,7 @@ public class ServiceTableModel extends AbstractTableModel {
                     + NumberUtil.NZero(record.getFees3()) + NumberUtil.NZero(record.getFees4()) + NumberUtil.NZero(record.getFees5())
                     + NumberUtil.NZero(record.getFees6()));
         }
-        
+
         if (labGroupId != -1) {
             record.setLabGroupId(labGroupId);
         } else {
@@ -310,9 +312,16 @@ public class ServiceTableModel extends AbstractTableModel {
         if (labGroupId != -1) {
             strSql = strSql + " and o.labGroupId = " + labGroupId;
         }
-        listService = dao.findAllHSQL(strSql);
-        addNewRow();
-        fireTableDataChanged();
+
+        try {
+            listService = dao.findAllHSQL(strSql);
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getService : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

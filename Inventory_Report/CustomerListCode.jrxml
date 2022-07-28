@@ -6,8 +6,9 @@
 	<parameter name="compName" class="java.lang.String"/>
 	<parameter name="user_id" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select tr.trader_id, tr.trader_name, tr.discriminator
-from trader tr, (select distinct trader_id from tmp_trader_bal_filter where user_id = $P{user_id}) filter
+		<![CDATA[select if(ifnull(a.sys_p,'-')='Y', tr.stu_no, tr.trader_id) as trader_id, tr.trader_name, tr.discriminator
+from trader tr, (select distinct trader_id from tmp_trader_bal_filter where user_id = $P{user_id}) filter,
+(select sys_prop_value as sys_p from sys_prop where sys_prop_desp = 'system.sale.emitted.prifix') a
 where tr.trader_id = filter.trader_id and tr.discriminator = 'C'
 order by tr.trader_id;]]>
 	</queryString>
@@ -27,7 +28,9 @@ order by tr.trader_id;]]>
 		<band height="52" splitType="Stretch">
 			<textField>
 				<reportElement x="0" y="0" width="273" height="20" uuid="1263aa23-1a8a-48f4-a1cf-c71173820234"/>
-				<textElement verticalAlignment="Middle"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
 			</textField>
 			<staticText>

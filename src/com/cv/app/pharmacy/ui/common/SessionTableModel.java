@@ -10,6 +10,7 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.util.NumberUtil;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
@@ -41,7 +42,7 @@ public class SessionTableModel extends AbstractTableModel {
     public Class getColumnClass(int column) {
         switch (column) {
             case 0: //Tran Date
-                return String.class;
+                return Date.class;
             case 1: //Vou No
                 return String.class;
             case 2: //Ref. Vou.
@@ -94,7 +95,7 @@ public class SessionTableModel extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Tran Date
-                    return DateUtil.toDateStr(vSession.getTranDate(), "dd/MM/yyyy hh.mm aa");
+                    return vSession.getTranDate();
                 case 1: //Vou No
                     if (vSession.isDeleted()) {
                         return vSession.getKey().getInvId() + "*";

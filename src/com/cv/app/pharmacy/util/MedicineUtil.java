@@ -22,8 +22,8 @@ public class MedicineUtil {
 
         return getQtyInStr(listRelG, qtyInSmallest);
     }
-    
-    public static String getQtyInStr(List<RelationGroup> listRelG, float qtyInSmallest){
+
+    public static String getQtyInStr(List<RelationGroup> listRelG, float qtyInSmallest) {
         boolean isMinus = false;
         String qtyStr = "";
 
@@ -40,9 +40,9 @@ public class MedicineUtil {
 
             if (qtyInSmallest >= relG.getSmallestQty() && qtyInSmallest != 0) {
                 unitQty = qtyInSmallest / relG.getSmallestQty();
-                lUnitQty = (long)(qtyInSmallest / relG.getSmallestQty());
-                
-                if(listRelG.size() > 1){
+                lUnitQty = (long) (qtyInSmallest / relG.getSmallestQty());
+
+                if (listRelG.size() > 1) {
                     unitQty = lUnitQty;
                 }
                 qtyInSmallest = qtyInSmallest - (unitQty * relG.getSmallestQty());
@@ -53,10 +53,10 @@ public class MedicineUtil {
 
                 DecimalFormat df = new DecimalFormat("###.#");
                 String strUnitQty = "0";
-                try{
+                try {
                     strUnitQty = df.format(unitQty);
-                }catch(Exception ex){
-                    
+                } catch (Exception ex) {
+
                 }
                 if (qtyStr.length() > 0) {
                     qtyStr = qtyStr + "," + strUnitQty + unit;
@@ -72,14 +72,50 @@ public class MedicineUtil {
 
         return qtyStr;
     }
-    
-    public static HashMap getUnitHash(List<ItemUnit> listUnit){
+
+    public static HashMap getUnitHash(List<ItemUnit> listUnit) {
         HashMap<String, ItemUnit> hmUnit = new HashMap();
-        
-        for(ItemUnit iu : listUnit){
+
+        for (ItemUnit iu : listUnit) {
             hmUnit.put(iu.getItemUnitCode(), iu);
         }
-        
+
         return hmUnit;
+    }
+
+    public static String getQtyInStr(String strQtyList, String strUnitList, float qtyInSmallest) {
+        String qtyStr = "";
+        boolean isMinus = false;
+
+        if (qtyInSmallest < 0) {
+            isMinus = true;
+            qtyInSmallest = qtyInSmallest * -1;
+        }
+        
+        if (qtyInSmallest != 0) {
+            String[] qtyList = strQtyList.split("/");
+            String[] unitList = strUnitList.split("/");
+
+            for (int i = 0; i < qtyList.length; i++) {
+                float unitSmallest = Float.parseFloat(qtyList[i]);
+                float unitQty = (qtyInSmallest - (qtyInSmallest % unitSmallest)) / unitSmallest;
+                qtyInSmallest = qtyInSmallest - (unitQty * unitSmallest);
+                String strUnitQty = String.format("%.0f", unitQty);
+                if (qtyStr.isEmpty()) {
+                    qtyStr = strUnitQty.replace(".0", "") + unitList[i];
+                }else{
+                    qtyStr = qtyStr + "," + strUnitQty.replace(".0", "") + unitList[i];
+                }
+
+                if (qtyInSmallest <= 0) {
+                    break;
+                }
+            }
+        }
+        
+        if(isMinus){
+            qtyStr = "-" + qtyStr;
+        }
+        return qtyStr;
     }
 }

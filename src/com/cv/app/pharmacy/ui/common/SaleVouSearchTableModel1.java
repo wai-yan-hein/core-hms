@@ -82,27 +82,18 @@ public class SaleVouSearchTableModel1 extends AbstractTableModel {
                     return vs.getRefNo();
                 case 3: //Customer
                     if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-                        
+
                         if (vs.getCusNo() != null) {
                             return vs.getCusNo() + " - " + vs.getCusName();
                         } else {
                             return vs.getCusName();
                         }
+                    } else if (vs.getCusNo() != null) {
+                        return vs.getCusNo() + " - " + vs.getCusName();
+                    } else if (vs.getCusName() != null) {
+                        return vs.getCusName();
                     } else {
-                        if (vs.getCusNo() != null) {
-                            if (prifxStatus.equals("Y")) {
-                                return vs.getCusNo().replace("CUS", "").replace("SUP", "")
-                                        + " - " + vs.getCusName();
-                            } else {
-                                return vs.getCusNo() + " - " + vs.getCusName();
-                            }
-                        } else {
-                            if (vs.getCusName() != null) {
-                                return vs.getCusName();
-                            } else {
-                                return null;
-                            }
-                        }
+                        return null;
                     }
                 case 4: //User
                     return vs.getUserName();

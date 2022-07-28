@@ -8,7 +8,6 @@ package com.cv.app.pharmacy.ui.setup;
 import com.cv.app.common.Global;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.ItemGroup;
 import com.cv.app.pharmacy.database.entity.PharmacySystem;
 import com.cv.app.util.Util1;
 import java.awt.event.MouseAdapter;
@@ -170,7 +169,7 @@ public class PharmacySystemTreeSetup extends javax.swing.JDialog implements Tree
             DefaultMutableTreeNode node;
             TreePath parentPath = trePharSystem.getSelectionPath();
             node = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
-            
+
             if (node != null) {
                 setCurrSystem((PharmacySystem) node.getUserObject());
             }
@@ -217,15 +216,21 @@ public class PharmacySystemTreeSetup extends javax.swing.JDialog implements Tree
     }
 
     private void createTreeNode(Long parentGroupId, DefaultMutableTreeNode treeRoot) {
-        List<PharmacySystem> listPS = dao.findAllHSQL(
-                "from PharmacySystem as ps where ps.parentId =" + parentGroupId
-        + " order by ps.systemDesp");
+        try {
+            List<PharmacySystem> listPS = dao.findAllHSQL(
+                    "from PharmacySystem as ps where ps.parentId =" + parentGroupId
+                    + " order by ps.systemDesp");
 
-        listPS.forEach(tmpPS -> {
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(tmpPS);
-            treeRoot.add(child);
-            createTreeNode(tmpPS.getId(), child);
-        });
+            listPS.forEach(tmpPS -> {
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(tmpPS);
+                treeRoot.add(child);
+                createTreeNode(tmpPS.getId(), child);
+            });
+        } catch (Exception ex) {
+            log.error("createTreeNode : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /**

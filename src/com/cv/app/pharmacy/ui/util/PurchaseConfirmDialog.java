@@ -16,18 +16,21 @@ import java.awt.Dimension;
 import javax.swing.JFormattedTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
 public class PurchaseConfirmDialog extends javax.swing.JDialog {
+
+    static Logger log = Logger.getLogger(PurchaseConfirmDialog.class.getName());
     private PurHis currPurVou;
     private AbstractDataAccess dao;
     private boolean confStatus = false;
     private double supBalance;
     private boolean cashOut;
-    
+
     private DocumentListener discPListener = new DocumentListener() {
         @Override
         public void changedUpdate(DocumentEvent e) {
@@ -112,11 +115,11 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
             calcTax("Amt", txtTaxAmt.getText());
         }
     };
-    
+
     /**
      * Creates new form PurchaseConfirmDialog
      */
-    public PurchaseConfirmDialog(PurHis currPurVou, AbstractDataAccess dao, 
+    public PurchaseConfirmDialog(PurHis currPurVou, AbstractDataAccess dao,
             double supBalance, boolean cashOut) {
         super(Util1.getParent(), true);
         this.currPurVou = currPurVou;
@@ -128,7 +131,7 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         initCombo();
         initTextBoxAlign();
         initTextBox();
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -138,10 +141,16 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        new ComBoBoxAutoComplete(cboPayment);
+        try {
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            new ComBoBoxAutoComplete(cboPayment);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void initTextBoxAlign() {
         txtDiscount.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtLastBalance.setHorizontalAlignment(JFormattedTextField.RIGHT);
@@ -152,7 +161,7 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         txtTaxP.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtTaxAmt.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtExpense.setHorizontalAlignment(JFormattedTextField.RIGHT);
-        
+
         txtDiscount.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtLastBalance.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtPaid.setFormatterFactory(NumberUtil.getDecimalFormat());
@@ -163,7 +172,7 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         txtTaxAmt.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtExpense.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
-    
+
     private void initTextBox() {
         txtDiscount.setValue(currPurVou.getDiscount());
         txtPaid.setValue(currPurVou.getPaid());
@@ -173,65 +182,65 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         txtTaxP.setValue(currPurVou.getTaxP());
         txtTaxAmt.setValue(currPurVou.getTaxAmt());
         txtExpense.setValue(currPurVou.getExpenseTotal());
-        
+
         cboPayment.setSelectedItem(currPurVou.getPaymentTypeId());
     }
-    
-    private void calcDisc(String option, String value){
-        if(option.equals("Amt")){
+
+    private void calcDisc(String option, String value) {
+        if (option.equals("Amt")) {
             txtDiscP.setValue(0.0);
-        }else{
+        } else {
             double discPercent = NumberUtil.NZero(value);
             double vouTotal = NumberUtil.NZero(txtVTotal.getValue());
-            
-            txtDiscount.setValue((vouTotal * discPercent)/100);
+
+            txtDiscount.setValue((vouTotal * discPercent) / 100);
         }
-        
+
         reCalculateAmt();
     }
-    
-    private void calcTax(String option, String value){
-        if(option.equals("Amt")){
+
+    private void calcTax(String option, String value) {
+        if (option.equals("Amt")) {
             txtTaxP.setValue(0.0);
-        }else{
+        } else {
             double taxPercent = NumberUtil.NZero(value);
             double discount = NumberUtil.NZero(txtDiscount.getValue());
             double vouTotal = NumberUtil.NZero(txtVTotal.getValue());
-            
-            txtTaxAmt.setValue(((vouTotal - discount) * taxPercent)/100);
+
+            txtTaxAmt.setValue(((vouTotal - discount) * taxPercent) / 100);
         }
-        
+
         reCalculateAmt();
     }
-    
-    private void reCalculateAmt(){
+
+    private void reCalculateAmt() {
         double vouTotal = currPurVou.getVouTotal();
         double paid = NumberUtil.NZero(txtPaid.getValue());
         double discount = NumberUtil.NZero(txtDiscount.getValue());
         double tax = NumberUtil.NZero(txtTaxAmt.getValue());
         double expense = NumberUtil.NZero(txtExpense.getValue());
-        
-        if(cashOut){
+
+        if (cashOut) {
             expense = 0;
         }
-        
-        if(((PaymentType)cboPayment.getSelectedItem()).getPaymentTypeId().equals(1)){
+
+        if (((PaymentType) cboPayment.getSelectedItem()).getPaymentTypeId().equals(1)) {
             paid = (vouTotal + expense + tax) - discount;
             txtPaid.setValue(paid);
             txtPaid.setEditable(false);
-        }else{
+        } else {
             txtPaid.setEditable(true);
         }
-        
-        txtVouBalance.setValue((vouTotal + tax + expense )-(paid + discount));
-        txtLastBalance.setValue(supBalance + ((vouTotal + tax + expense)-(paid + discount)));
+
+        txtVouBalance.setValue((vouTotal + tax + expense) - (paid + discount));
+        txtLastBalance.setValue(supBalance + ((vouTotal + tax + expense) - (paid + discount)));
     }
-    
+
     public boolean getConfStatus() {
         return confStatus;
     }
-    
-    private void assignToVou(){
+
+    private void assignToVou() {
         currPurVou.setPaymentTypeId((PaymentType) cboPayment.getSelectedItem());
         currPurVou.setVouTotal(NumberUtil.getDouble(txtVTotal.getText()));
         currPurVou.setPaid(NumberUtil.getDouble(txtPaid.getText()));
@@ -241,7 +250,7 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         currPurVou.setTaxP(NumberUtil.getDouble(txtTaxP.getText()));
         currPurVou.setTaxAmt(NumberUtil.getDouble(txtTaxAmt.getText()));
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -503,23 +512,23 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtDiscPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDiscPActionPerformed
-        
+
     }//GEN-LAST:event_txtDiscPActionPerformed
 
     private void txtDiscountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDiscountActionPerformed
-        
+
     }//GEN-LAST:event_txtDiscountActionPerformed
 
     private void txtTaxPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTaxPActionPerformed
-        
+
     }//GEN-LAST:event_txtTaxPActionPerformed
 
     private void txtTaxAmtActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTaxAmtActionPerformed
-        
+
     }//GEN-LAST:event_txtTaxAmtActionPerformed
 
     private void cboPaymentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentActionPerformed
-        if(cboPayment.getSelectedItem() != null){
+        if (cboPayment.getSelectedItem() != null) {
             reCalculateAmt();
         }
     }//GEN-LAST:event_cboPaymentActionPerformed

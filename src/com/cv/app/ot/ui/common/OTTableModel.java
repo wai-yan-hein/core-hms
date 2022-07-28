@@ -51,7 +51,13 @@ public class OTTableModel extends AbstractTableModel {
 
     public OTTableModel(AbstractDataAccess dao) {
         this.dao = dao;
-        defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        try {
+            defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        } catch (Exception ex) {
+            log.error("OTTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable table) {
@@ -76,21 +82,8 @@ public class OTTableModel extends AbstractTableModel {
             if (column == 3) {
                 if (record.getService() == null) {
                     return false;
-                } else {
-                    if (vouStatus.equals("EDIT")) {
-                        if (Util1.hashPrivilege("OTVoucherEditChange")) {
-                            if (record.getService().isCfs() == null) {
-                                return false;
-                            } else {
-                                if (isAlreadyP) {
-                                    return !isAlreadyP;
-                                }
-                                return record.getService().isCfs();
-                            }
-                        } else {
-                            return false;
-                        }
-                    } else {
+                } else if (vouStatus.equals("EDIT")) {
+                    if (Util1.hashPrivilege("OTVoucherEditChange")) {
                         if (record.getService().isCfs() == null) {
                             return false;
                         } else {
@@ -99,44 +92,45 @@ public class OTTableModel extends AbstractTableModel {
                             }
                             return record.getService().isCfs();
                         }
+                    } else {
+                        return false;
                     }
+                } else if (record.getService().isCfs() == null) {
+                    return false;
+                } else {
+                    if (isAlreadyP) {
+                        return !isAlreadyP;
+                    }
+                    return record.getService().isCfs();
                 }
             } else {
                 return false;
             }
-        } else {
-            /*if (record.getService() == null) {
+        } else /*if (record.getService() == null) {
              return true;
-             } else {*/
-            if (vouStatus.equals("EDIT")) {
-                if (isAlreadyP) {
-                    return !isAlreadyP;
-                }
-                if (canEdit) {
-                    return canEdit;
-                } else {
-                    return Util1.hashPrivilege("OTVoucherEditChange");
-                }
+             } else {*/ if (vouStatus.equals("EDIT")) {
+            if (isAlreadyP) {
+                return !isAlreadyP;
+            }
+            if (canEdit) {
+                return canEdit;
             } else {
-                if (isAlreadyP) {
-                    return !isAlreadyP;
-                } else {
-                    if(column == 0){
-                        if(record.getListOTDF() == null){
-                            return true;
-                        }else{
-                            if(record.getListOTDF().isEmpty()){
-                                return true;
-                            }else{
-                                return false;
-                            }
-                        }
-                    }
+                return Util1.hashPrivilege("OTVoucherEditChange");
+            }
+        } else if (isAlreadyP) {
+            return !isAlreadyP;
+        } else {
+            if (column == 0) {
+                if (record.getListOTDF() == null) {
                     return true;
+                } else if (record.getListOTDF().isEmpty()) {
+                    return true;
+                } else {
+                    return false;
                 }
             }
-            //}
-        }
+            return true;
+        } //}
     }
 
     public void setVouStatus(String vouStatus) {
@@ -509,15 +503,13 @@ public class OTTableModel extends AbstractTableModel {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Invalid amount.",
                             "Amount", JOptionPane.ERROR_MESSAGE);
                     status = false;
-                } else {
-                    if (opdh.getService() != null) {
-                        entryRow++;
-                        if (NumberUtil.NZeroInt(opdh.getUniqueId()) == 0) {
-                            row += 1;
-                            opdh.setUniqueId(row);
-                        }
-                        opdh.setReaderStatus(false);
+                } else if (opdh.getService() != null) {
+                    entryRow++;
+                    if (NumberUtil.NZeroInt(opdh.getUniqueId()) == 0) {
+                        row += 1;
+                        opdh.setUniqueId(row);
                     }
+                    opdh.setReaderStatus(false);
                 }
             }
         }

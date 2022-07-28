@@ -8,11 +8,8 @@ import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.tempentity.ItemCodeFilter;
-import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterKey;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt;
 import com.cv.app.pharmacy.util.MedicineUP;
-import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
@@ -127,7 +124,7 @@ public class ReportItemCodeFilterTableModel extends AbstractTableModel {
 
     private void calculateTotal() {
         if (lblTotal != null) {
-            Long total = new Long(0);
+            Long total = 0l;
 
             if (listCodeFilter != null) {
                 for (ItemCodeFilterRpt icf : listCodeFilter) {
@@ -261,7 +258,7 @@ public class ReportItemCodeFilterTableModel extends AbstractTableModel {
     }
 
     public void getMedInfo(String medCode, ItemCodeFilterRpt record) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         /*final String TABLE = "com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt";
         String strSQL = "SELECT * FROM " + TABLE
                 + " WHERE item.medId = '" + medCode + "'";*/
@@ -346,7 +343,7 @@ public class ReportItemCodeFilterTableModel extends AbstractTableModel {
     public void setCostList(String[] codes) {
         if (codes != null) {
             if (codes.length > 0) {
-                String userId = Global.loginUser.getUserId();
+                String userId = Global.machineId;
                 List<ItemCodeFilterRpt> listCode = new ArrayList();
                 String prvCode = "-";
                 try {

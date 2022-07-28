@@ -13,7 +13,6 @@ import com.cv.app.inpatient.database.entity.BuildingStructure;
 import com.cv.app.inpatient.database.entity.RBooking;
 import com.cv.app.inpatient.ui.util.RoomBookingSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.controller.BestDataAccess;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -157,14 +156,20 @@ public class RoomBooking extends javax.swing.JPanel implements FormAction,
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboRoom,
-                dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null order by o.description"));
-        new ComBoBoxAutoComplete(cboRoom);
+        try {
+            BindingUtil.BindCombo(cboRoom,
+                    dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null order by o.description"));
+            new ComBoBoxAutoComplete(cboRoom);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
     public void selected(Object source, Object selectObj) {
-       if (source.equals("BookingSearch")) {
+        if (source.equals("BookingSearch")) {
             lblStatus.setText("EDIT");
             currBooking = (RBooking) selectObj;
 
@@ -317,6 +322,7 @@ public class RoomBooking extends javax.swing.JPanel implements FormAction,
         formActionKeyMapping(txtContactNo);
         formActionKeyMapping(cboRoom);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

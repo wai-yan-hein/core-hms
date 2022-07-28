@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * MenuSetup.java
  *
  * Created on Apr 22, 2012, 9:52:49 PM
@@ -44,29 +44,32 @@ import org.springframework.richclient.application.Application;
  *
  * @author winswe
  */
-public class MenuSetup extends javax.swing.JPanel implements TreeSelectionListener{
+public class MenuSetup extends javax.swing.JPanel implements TreeSelectionListener {
+
     static Logger log = Logger.getLogger(MenuSetup.class.getName());
     private Menu currMenu;
     private final AbstractDataAccess dao = Global.dao;
     private DefaultMutableTreeNode treeRoot;
     private BestAppFocusTraversalPolicy focusPolicy;
-    
-    /** Creates new form MenuSetup */
+
+    /**
+     * Creates new form MenuSetup
+     */
     public MenuSetup() {
         initComponents();
-        
-        try{
+
+        try {
             dao.open();
             initCombo();
             initTree();
             dao.close();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
         }
-        
+
         clear();
         treMenu.addTreeSelectionListener(this);
-        
+
         applyFocusPolicy();
         AddFocusMoveKey();
         this.setFocusTraversalPolicy(focusPolicy);
@@ -88,24 +91,24 @@ public class MenuSetup extends javax.swing.JPanel implements TreeSelectionListen
      */
     public void setCurrMenu(Menu currMenu) {
         System.out.println("setCurrMenu");
-        
+
         this.currMenu = currMenu;
-        
-        try{
+
+        try {
             dao.open();
-            if(currMenu.getParent() != null){
-                Menu menu = (Menu)dao.find(Menu.class, currMenu.getParent());
+            if (currMenu.getParent() != null) {
+                Menu menu = (Menu) dao.find(Menu.class, currMenu.getParent());
                 cboParent.setSelectedItem(menu);
             }
-            
+
             dao.close();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
             cboParent.setSelectedItem(null);
         }
-        
+
         propertyChangeSupport.firePropertyChange("currMenu", 0, 1);
-            
+
     }
     private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -129,157 +132,167 @@ public class MenuSetup extends javax.swing.JPanel implements TreeSelectionListen
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
 
-    private void clear(){
+    private void clear() {
         setCurrMenu(new Menu());
         setFocus();
     }
-    
-    private void initTree(){
-        DefaultTreeModel treeModel = (DefaultTreeModel)treMenu.getModel();
-        try{
+
+    private void initTree() {
+        DefaultTreeModel treeModel = (DefaultTreeModel) treMenu.getModel();
+        try {
             treeModel.setRoot(null);
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
         }
-        
+
         treeRoot = null;
         treeRoot = new DefaultMutableTreeNode("BEST-System");
-        createTreeNode(0,treeRoot);
+        createTreeNode(0, treeRoot);
         treeModel.setRoot(treeRoot);
-        
-        
+
         //treMenu.addPropertyChangeListener(propertyChangeListener);
     }
-    
-    private void createTreeNode(int parentMenuID, DefaultMutableTreeNode treeRoot){
-        List<Menu> listMenu = dao.findAllHSQL("from Menu as mu where mu.parent =" + parentMenuID);
-        
-        for(Menu menu : listMenu){
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(menu);
-            treeRoot.add(child);
-            createTreeNode(menu.getMenuId(), child);
+
+    private void createTreeNode(int parentMenuID, DefaultMutableTreeNode treeRoot) {
+        try {
+            List<Menu> listMenu = dao.findAllHSQL("from Menu as mu where mu.parent =" + parentMenuID);
+
+            for (Menu menu : listMenu) {
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(menu);
+                treeRoot.add(child);
+                createTreeNode(menu.getMenuId(), child);
+            }
+        } catch (Exception ex) {
+            log.error("createTreeNode : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
-    
+
     @Override
     public void valueChanged(TreeSelectionEvent se) {
         JTree tree = (JTree) se.getSource();
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree
-            .getLastSelectedPathComponent();
-        
-        if(selectedNode != null){
+                .getLastSelectedPathComponent();
+
+        if (selectedNode != null) {
             //if ((selectedNode.isLeaf() && !selectedNode.isRoot())) {
-                Menu selMenu = (Menu) selectedNode.getUserObject();
-                setCurrMenu(selMenu);
+            Menu selMenu = (Menu) selectedNode.getUserObject();
+            setCurrMenu(selMenu);
             //}
         }
     }
-    
-    private void showDialog(String panelName){
-        SetupDialog dialog = new SetupDialog(Application.instance().getActiveWindow().getControl(), 
+
+    private void showDialog(String panelName) {
+        SetupDialog dialog = new SetupDialog(Application.instance().getActiveWindow().getControl(),
                 true, panelName);
-        
+
         //Calculate dialog position to centre.
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screen = toolkit.getScreenSize();
-        int x = (screen.width - dialog.getWidth()) /2;
-        int y = (screen.height - dialog.getHeight()) /2;
-        
+        int x = (screen.width - dialog.getWidth()) / 2;
+        int y = (screen.height - dialog.getHeight()) / 2;
+
         dialog.setLocation(x, y);
         dialog.show();
         System.out.println("After dialog close");
     }
-    
-    private void initCombo(){
+
+    private void initCombo() {
         int currMenuId = 0;
-        
-        try{
-          if(currMenu != null){
-            currMenuId = NumberUtil.NZeroInt(currMenu.getMenuId());
-          }
-        }catch(Exception ex){
-            log.error(ex.toString());
+
+        try {
+            if (currMenu != null) {
+                currMenuId = NumberUtil.NZeroInt(currMenu.getMenuId());
+            }
+
+            BindingUtil.BindCombo(cboType, dao.findAll("MenuType"));
+            BindingUtil.BindCombo(cboParent, dao.findAllHSQL("from Menu as mu where mu.menuId <> "
+                    + currMenuId));
+            new ComBoBoxAutoComplete(cboType);
+            new ComBoBoxAutoComplete(cboParent);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.toString());
+        } finally {
+            dao.close();
         }
-        
-        BindingUtil.BindCombo(cboType, dao.findAll("MenuType"));
-        BindingUtil.BindCombo(cboParent, dao.findAllHSQL("from Menu as mu where mu.menuId <> " 
-                + currMenuId));
-        new ComBoBoxAutoComplete(cboType);
-        new ComBoBoxAutoComplete(cboParent);
     }
-    
-    private int getParentMenuId(Menu menu){
+
+    private int getParentMenuId(Menu menu) {
         int id = 0;
-        
-        try{
+
+        try {
             id = menu.getMenuId();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
         }
-        
+
         return id;
     }
-    
-    private boolean isValidEntry(){
+
+    private boolean isValidEntry() {
         boolean status = true;
-        
-        if(Util1.nullToBlankStr(currMenu.getMenuName()).equals("")){
+
+        if (Util1.nullToBlankStr(currMenu.getMenuName()).equals("")) {
             status = false;
-            JOptionPane.showMessageDialog(this, "Menu Name must not be blank or null.", 
+            JOptionPane.showMessageDialog(this, "Menu Name must not be blank or null.",
                     "Menu Name null error.", JOptionPane.ERROR_MESSAGE);
             txtName.requestFocusInWindow();
-        }else if(currMenu.getMenuType() == null){
+        } else if (currMenu.getMenuType() == null) {
             status = false;
-            JOptionPane.showMessageDialog(this, "Menu Type must be choose.", 
+            JOptionPane.showMessageDialog(this, "Menu Type must be choose.",
                     "Menu Type null error.", JOptionPane.ERROR_MESSAGE);
             cboType.requestFocusInWindow();
-        }else{
+        } else {
             currMenu.setMenuName(currMenu.getMenuName().trim());
-            
-            if(currMenu.getMenuClass() != null)
+
+            if (currMenu.getMenuClass() != null) {
                 currMenu.setMenuClass(currMenu.getMenuClass().trim());
-            
-            if(currMenu.getMenuUrl() != null)
+            }
+
+            if (currMenu.getMenuUrl() != null) {
                 currMenu.setMenuUrl(currMenu.getMenuUrl().trim());
-            
-            currMenu.setParent(getParentMenuId((Menu)cboParent.getSelectedItem()));
+            }
+
+            currMenu.setParent(getParentMenuId((Menu) cboParent.getSelectedItem()));
         }
-        
+
         return status;
     }
-    
-    private void applyFocusPolicy(){
+
+    private void applyFocusPolicy() {
         @SuppressWarnings("UseOfObsoleteCollectionType")
         Vector<Component> focusOrder = new Vector();
-        
+
         focusOrder.add(txtName);
         focusPolicy = new BestAppFocusTraversalPolicy(focusOrder);
     }
-    
+
     // <editor-fold defaultstate="collapsed" desc="AddFocusMoveKey">
-    private void AddFocusMoveKey(){
+    private void AddFocusMoveKey() {
         Set backwardKeys = getFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS);
         Set newBackwardKeys = new HashSet(backwardKeys);
-        
+
         Set forwardKeys = getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS);
         Set newForwardKeys = new HashSet(forwardKeys);
 
         newForwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0));
         newForwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0));
-        
+
         newBackwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0));
-        
+
         setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, newForwardKeys);
         setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, newBackwardKeys);
     }//</editor-fold>
-    
-    public void setFocus(){
+
+    public void setFocus() {
         txtName.requestFocusInWindow();
     }
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -463,22 +476,22 @@ public class MenuSetup extends javax.swing.JPanel implements TreeSelectionListen
     }//GEN-LAST:event_butMenuTypeSetupActionPerformed
 
     private void butSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveActionPerformed
-        try{
-            if(isValidEntry()){
+        try {
+            if (isValidEntry()) {
                 dao.save(currMenu);
                 clear();
                 dao.open();
                 initCombo();
                 initTree();
             }
-        }catch (ConstraintViolationException ex) {
+        } catch (ConstraintViolationException ex) {
             JOptionPane.showMessageDialog(this, "Duplicate entry.",
                     "Menu Name", JOptionPane.ERROR_MESSAGE);
             dao.rollBack();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error(ex.toString());
-        }finally{
-          dao.close();
+        } finally {
+            dao.close();
         }
     }//GEN-LAST:event_butSaveActionPerformed
 

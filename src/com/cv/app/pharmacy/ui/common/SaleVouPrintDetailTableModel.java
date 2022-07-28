@@ -20,7 +20,7 @@ public class SaleVouPrintDetailTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(SaleVouPrintDetailTableModel.class.getName());
     private List<SaleDetailHis> list = new ArrayList();
     private final String[] columnNames = {"Code", "Description", "Relation-Str",
-        "Exp-Date", "Qty", "Cost", "Sale Price", "Discount", "FOC",
+        "Qty", "Cost", "Sale Price", "Discount", "FOC",
         "Amount"};
 
     @Override
@@ -42,19 +42,17 @@ public class SaleVouPrintDetailTableModel extends AbstractTableModel {
                 return String.class;
             case 2: //Relation-Str
                 return String.class;
-            case 3: //Exp-Date
-                return Date.class;
-            case 4: //Qty
+            case 3: //Qty
                 return String.class;
-            case 5: //Cost
+            case 4: //Cost
                 return Double.class;
-            case 6: //Sale Price
+            case 5: //Sale Price
                 return Double.class;
-            case 7: //Discount
+            case 6: //Discount
                 return Double.class;
-            case 8: //FOC
+            case 7: //FOC
                 return String.class;
-            case 9: //Amount
+            case 8: //Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -81,19 +79,17 @@ public class SaleVouPrintDetailTableModel extends AbstractTableModel {
                     return record.getMedName();
                 case 2: //Relation-Str
                     return record.getRelStr();
-                case 3: //Exp-Date
-                    return record.getExpDate();
-                case 4: //Qty
+                case 3: //Qty
                     return record.getSaleQty();
-                case 5: //Cost
+                case 4: //Cost
                     return record.getCostPrice();
-                case 6: //Sale Price
+                case 5: //Sale Price
                     return record.getSalePrice();
-                case 7: //Discount
+                case 6: //Discount
                     return record.getItemDiscount();
-                case 8: //FOC
+                case 7: //FOC
                     return record.getFocQty();
-                case 9: //Amount
+                case 8: //Amount
                     return record.getSaleAmount();
                 default:
                     return Object.class;

@@ -9,7 +9,6 @@ import com.cv.app.common.Global;
 import com.cv.app.inpatient.database.entity.FacilityType;
 import com.cv.app.inpatient.ui.common.FacilityTypeTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.controller.BestDataAccess;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.List;
@@ -98,9 +97,15 @@ public class FacilityTypeSetupDialog extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        List<FacilityType> list = dao.findAllHSQL(
-                "select o from FacilityType o order by o.typeDesp");
-        tblTypeTableModel.setList(list);
+        try {
+            List<FacilityType> list = dao.findAllHSQL(
+                    "select o from FacilityType o order by o.typeDesp");
+            tblTypeTableModel.setList(list);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblType.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {

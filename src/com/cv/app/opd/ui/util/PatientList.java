@@ -126,16 +126,22 @@ public class PatientList extends javax.swing.JPanel {
     }
 
     private void getData() {
-        List<Patient> listPatient = null;
+        try {
+            List<Patient> listPatient = null;
 
-        /* if (title.contains("Supplier") && !chkOption.isSelected()) {
+            /* if (title.contains("Supplier") && !chkOption.isSelected()) {
             listTrader = dao.findAll("Supplier", "Active = true");
         } else if (title.contains("Customer") && !chkOption.isSelected()) {
             listTrader = dao.findAll("Customer", "Active = true");
         } else {*/
-        listPatient = dao.findAll("Patient");
+            listPatient = dao.findAll("Patient");
 
-        tableModel.setListPatient(listPatient);
+            tableModel.setListPatient(listPatient);
+        } catch (Exception ex) {
+            log.error("getData : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {
@@ -147,7 +153,7 @@ public class PatientList extends javax.swing.JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblCustomer.getCellEditor() != null){
+                if (tblCustomer.getCellEditor() != null) {
                     tblCustomer.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -211,7 +217,13 @@ public class PatientList extends javax.swing.JPanel {
     };
 
     private void filterItem(String strFilter) {
-        tableModel.setListPatient(dao.findAll("Patient"));
+        try {
+            tableModel.setListPatient(dao.findAll("Patient"));
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //statusFilter = true;
     }
 

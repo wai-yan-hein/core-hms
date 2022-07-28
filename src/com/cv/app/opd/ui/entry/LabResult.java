@@ -78,12 +78,17 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
     }
 
     private void initCombo() {
-        List<AgeRange> listAR = dao.findAllHSQL("select o from AgeRange o order by o.sortOrder");
-        BindingUtil.BindCombo(cboAgeRange, listAR);
-        new ComBoBoxAutoComplete(cboAgeRange, this);
-        cboAgeRange.setSelectedItem(null);
-        cboAgeRange.setEnabled(false);
-
+        try {
+            List<AgeRange> listAR = dao.findAllHSQL("select o from AgeRange o order by o.sortOrder");
+            BindingUtil.BindCombo(cboAgeRange, listAR);
+            new ComBoBoxAutoComplete(cboAgeRange, this);
+            cboAgeRange.setSelectedItem(null);
+            cboAgeRange.setEnabled(false);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     //FormAction
@@ -147,14 +152,14 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
         List<VOpd> listVOpd = tblLabTestTableModel.getListVOPD();
         boolean status = false;
         String delSql = "delete from tmp_lab where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         int serviceId = -1;//528
         String testRefDrName = "-";
 
         try {
             dao.execSql(delSql);
             dao.execSql("delete from tmp_lab_result_filter where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
 
             for (VOpd tmp : listVOpd) {
                 if (tmp.getPrint() != null) {
@@ -178,7 +183,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
                                 if (lrh.getPrint()) {
                                     TempLabResultFilter tlrf = new TempLabResultFilter();
                                     tlrf.setResultId(lrh.getKey().getLabResultId());
-                                    tlrf.setUserId(Global.loginUser.getUserId());
+                                    tlrf.setUserId(Global.machineId);
 
                                     dao.save(tlrf);
                                 }
@@ -187,7 +192,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
 
                         status = true;
                         String strSql = "INSERT INTO tmp_lab(user_id,service_id)"
-                                + "  values ('" + Global.loginUser.getUserId() + "','" + tmp.getKey().getServiceId() + "') ";
+                                + "  values ('" + Global.machineId + "','" + tmp.getKey().getServiceId() + "') ";
                         dao.execSql(strSql);
                     }
                 }
@@ -200,7 +205,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
 
         if (status) {
             Map<String, Object> params = new HashMap();
-            params.put("user_id", Global.loginUser.getUserId());
+            params.put("user_id", Global.machineId);
             params.put("invoiceNo", txtVouNo.getText());
             params.put("patientName", txtPtName.getText());
             params.put("regNo", txtRegNo.getText());
@@ -232,6 +237,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
             String phoneNo = Util1.getPropValue("report.phone");
             String address = Util1.getPropValue("report.address");
             params.put("compName", compName);
+            params.put("category", Util1.getPropValue("report.company.cat"));
             params.put("phoneNo", phoneNo);
             params.put("comAddress", address);
             params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
@@ -413,73 +419,79 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
     }
 
     private void initTable() {
-        tblLabTest.setName("tblLabTest");
-        tblLabTest.getTableHeader().setFont(Global.lableFont);
-        tblLabTest.getColumnModel().getColumn(0).setPreferredWidth(200);//Lab Test
-        tblLabTest.getColumnModel().getColumn(1).setPreferredWidth(20);//Date
-        tblLabTest.getColumnModel().getColumn(2).setPreferredWidth(100);//Doctor
-        tblLabTest.getColumnModel().getColumn(3).setPreferredWidth(100);//Patho
-        tblLabTest.getColumnModel().getColumn(3).setCellEditor(new PathoCellEditor());
-        tblLabTest.getColumnModel().getColumn(4).setPreferredWidth(5);
-        tblLabTest.getColumnModel().getColumn(5).setPreferredWidth(5);
+        try {
+            tblLabTest.setName("tblLabTest");
+            tblLabTest.getTableHeader().setFont(Global.lableFont);
+            tblLabTest.getColumnModel().getColumn(0).setPreferredWidth(200);//Lab Test
+            tblLabTest.getColumnModel().getColumn(1).setPreferredWidth(20);//Date
+            tblLabTest.getColumnModel().getColumn(2).setPreferredWidth(100);//Doctor
+            tblLabTest.getColumnModel().getColumn(3).setPreferredWidth(100);//Patho
+            tblLabTest.getColumnModel().getColumn(3).setCellEditor(new PathoCellEditor());
+            tblLabTest.getColumnModel().getColumn(4).setPreferredWidth(5);
+            tblLabTest.getColumnModel().getColumn(5).setPreferredWidth(5);
 
-        JComboBox cboLabMachine = new JComboBox();
-        BindingUtil.BindCombo(cboLabMachine, dao.findAllHSQL("select o from LabMachine o order by o.lMachineName"));
-        cboLabMachine.setEditable(true);
-        tblLabTest.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(cboLabMachine));
+            JComboBox cboLabMachine = new JComboBox();
+            BindingUtil.BindCombo(cboLabMachine, dao.findAllHSQL("select o from LabMachine o order by o.lMachineName"));
+            cboLabMachine.setEditable(true);
+            tblLabTest.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(cboLabMachine));
 
-        ButtonColumn buttonColumn = new ButtonColumn(tblLabTest, actionComment, 7);
+            ButtonColumn buttonColumn = new ButtonColumn(tblLabTest, actionComment, 7);
 
-        tblLabResult.setName("tblLabResult");
-        tblLabResult.getTableHeader().setFont(Global.lableFont);
-        tblLabResult.getColumnModel().getColumn(0).setPreferredWidth(130);//Test
-        tblLabResult.getColumnModel().getColumn(1).setPreferredWidth(250);//Result
-        tblLabResult.getColumnModel().getColumn(2).setPreferredWidth(150);//Ref. Range
-        tblLabResult.getColumnModel().getColumn(3).setPreferredWidth(10);//Unit
-        tblLabResult.getColumnModel().getColumn(4).setPreferredWidth(80);//Remark
-        tblLabResult.getColumnModel().getColumn(5).setPreferredWidth(30);//Method
-        tblLabResult.getColumnModel().getColumn(6).setPreferredWidth(5);//Print
-        tblLabResult.getColumnModel().getColumn(7).setPreferredWidth(5);//Comment
-        ButtonColumn buttonColumn1 = new ButtonColumn(tblLabResult, actionComment, 7);
+            tblLabResult.setName("tblLabResult");
+            tblLabResult.getTableHeader().setFont(Global.lableFont);
+            tblLabResult.getColumnModel().getColumn(0).setPreferredWidth(130);//Test
+            tblLabResult.getColumnModel().getColumn(1).setPreferredWidth(250);//Result
+            tblLabResult.getColumnModel().getColumn(2).setPreferredWidth(150);//Ref. Range
+            tblLabResult.getColumnModel().getColumn(3).setPreferredWidth(10);//Unit
+            tblLabResult.getColumnModel().getColumn(4).setPreferredWidth(80);//Remark
+            tblLabResult.getColumnModel().getColumn(5).setPreferredWidth(30);//Method
+            tblLabResult.getColumnModel().getColumn(6).setPreferredWidth(5);//Print
+            tblLabResult.getColumnModel().getColumn(7).setPreferredWidth(5);//Comment
+            ButtonColumn buttonColumn1 = new ButtonColumn(tblLabResult, actionComment, 7);
 
-        tblLabResult.getColumnModel().getColumn(1).setCellEditor(
-                new LabResultTableCellEditor(dao));//Result
-        tblLabResult.getColumnModel().getColumn(4).setCellEditor(
-                new LabResultTableCellEditor(dao));//Remark
+            tblLabResult.getColumnModel().getColumn(1).setCellEditor(
+                    new LabResultTableCellEditor(dao));//Result
+            tblLabResult.getColumnModel().getColumn(4).setCellEditor(
+                    new LabResultTableCellEditor(dao));//Remark
 
-        JComboBox cboLabResultMethod = new JComboBox();
-        BindingUtil.BindCombo(cboLabResultMethod, dao.findAll("LabResultMethod"));
-        cboLabResultMethod.setEditable(true);
-        tblLabResult.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(cboLabResultMethod));
+            JComboBox cboLabResultMethod = new JComboBox();
+            BindingUtil.BindCombo(cboLabResultMethod, dao.findAll("LabResultMethod"));
+            cboLabResultMethod.setEditable(true);
+            tblLabResult.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(cboLabResultMethod));
 
-        tblLabTest.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int selectRow = -1;
-                if (tblLabTest.getSelectedRow() >= 0) {
-                    selectRow = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
+            tblLabTest.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    int selectRow = -1;
+                    if (tblLabTest.getSelectedRow() >= 0) {
+                        selectRow = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
+                    }
+
+                    if (selectRow >= 0) {
+                        selectedTest(selectRow);
+                    }
                 }
-
-                if (selectRow >= 0) {
-                    selectedTest(selectRow);
-                }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void selectedTest(int selectRow) {
         VOpd test = tblLabTestTableModel.getListVOPD().get(selectRow);
 
         if (!hm.containsKey(test.getKey().getServiceId())) {
-            List<LabResultHis> listLRH = dao.findAllHSQL("select o from LabResultHis o where o.key.opdInvId = '"
-                    + test.getKey().getVouNo() + "' and o.key.labTestId = " + test.getKey().getServiceId().toString()
-                    + " order by o.sortOrder");
-            List<OPDLabResult> listResult = dao.findAllHSQL("select o from OPDLabResult o where o.serviceId = "
-                    + test.getKey().getServiceId().toString() + " order by o.sortOrder");
-            int uniqueId = 1;
-
             try {
+                List<LabResultHis> listLRH = dao.findAllHSQL("select o from LabResultHis o where o.key.opdInvId = '"
+                        + test.getKey().getVouNo() + "' and o.key.labTestId = " + test.getKey().getServiceId().toString()
+                        + " order by o.sortOrder");
+                List<OPDLabResult> listResult = dao.findAllHSQL("select o from OPDLabResult o where o.serviceId = "
+                        + test.getKey().getServiceId().toString() + " order by o.sortOrder");
+                int uniqueId = 1;
+
                 if (listLRH == null) {
                     listLRH = new ArrayList();
 

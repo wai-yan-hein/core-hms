@@ -61,15 +61,15 @@ public class CheckStockBalance extends javax.swing.JPanel {
                 }
             }
         }
-        
+
         butPrint.setVisible(false);
     }
 
     private void calculate() {
         String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strMethod = cboMethod.getSelectedItem().toString();
 
         try {
@@ -80,7 +80,7 @@ public class CheckStockBalance extends javax.swing.JPanel {
 
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(txtStockDate.getText()), "Opening",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
 
             /*String strLocation;
         if (cboLocation.getSelectedItem() instanceof Location) {
@@ -91,7 +91,7 @@ public class CheckStockBalance extends javax.swing.JPanel {
         }*/
             dao.execProc("insert_cost_detail",
                     "Opening", DateUtil.toDateStrMYSQL(txtStockDate.getText()),
-                    Global.loginUser.getUserId(), strMethod);
+                    Global.machineId, strMethod);
 
             dao.commit();
 
@@ -108,9 +108,9 @@ public class CheckStockBalance extends javax.swing.JPanel {
 
     private void insertStockFilterCode() {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(txtStockDate.getText()) + "'";
@@ -136,7 +136,7 @@ public class CheckStockBalance extends javax.swing.JPanel {
             strLocation = location.getLocationId().toString();
         }
 
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         try {
             dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
                     + userId + "'");
@@ -164,7 +164,7 @@ public class CheckStockBalance extends javax.swing.JPanel {
                         + "0+round(if(ifnull(tsc.bal_qty,0)=0,0,ifnull(tsc.total_cost,0)/tsc.bal_qty),0) as smallest_cost,\n"
                         + "tsc.location_id\n"
                         + "from tmp_stock_costing tsc, v_med_unit_smallest_rel B\n"
-                        + "where tsc.med_id = b.med_id and tsc.user_id = '" + Global.loginUser.getUserId()
+                        + "where tsc.med_id = b.med_id and tsc.user_id = '" + Global.machineId
                         + "' and tsc.location_id = " + strLocation + " and tsc.tran_option = 'Opening'");
             }
         } catch (Exception ex) {
@@ -175,18 +175,24 @@ public class CheckStockBalance extends javax.swing.JPanel {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
-        new ComBoBoxAutoComplete(cboLocation);
+        try {
+            BindingUtil.BindCombo(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+            new ComBoBoxAutoComplete(cboLocation);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getData() {
         String strSql = "select tsc.med_id, tsc.med_name, tsc.med_rel_str, tsc.user_id, tsc.bal_qty, tsc.bal_qty_str,\n"
                 + "tsc.total_cost, tsc.smallest_cost, tsc.location_id, tsc.usr_bal_qty, tsc.usr_bal_qty_str,\n"
                 + "tsc.usr_ttl_cost, tsc.diff_qty, tsc.diff_qty_str, tsc.diff_cost\n"
-                + "from v_stock_checking tsc where tsc.user_id = '" + Global.loginUser.getUserId() + "'";
-        
+                + "from v_stock_checking tsc where tsc.user_id = '" + Global.machineId + "'";
+
         String filter = cboFilter.getSelectedItem().toString();
-        if(!filter.equals("All")){
+        if (!filter.equals("All")) {
             strSql = strSql + " and (ifnull(tsc.diff_qty,0)<>0 or ifnull(tsc.diff_cost,0)<>0)";
         }
         try {
@@ -263,13 +269,13 @@ public class CheckStockBalance extends javax.swing.JPanel {
                 StockCheckBatch scb = new StockCheckBatch();
                 scb.setBatchNo(txtBatchNo.getText());
                 scb.setTranDate(new Date());
-                scb.setUserId(Global.loginUser.getUserId());
+                scb.setUserId(Global.machineId);
 
                 dao.open();
                 dao.beginTran();
                 dao.save1(scb);
 
-                try ( CSVReader csvReader = new CSVReader(reader)) {
+                try (CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
 
@@ -310,22 +316,23 @@ public class CheckStockBalance extends javax.swing.JPanel {
                 + "tsc.diff_qty = ifnull(tsc.bal_qty,0)-ifnull(scd.ttl_qty,0),\n"
                 + "tsc.diff_qty_str = get_qty_in_str(ifnull(tsc.bal_qty,0)-ifnull(scd.ttl_qty,0), b.unit_smallest, b.unit_str),\n"
                 + "tsc.diff_cost = (ifnull(tsc.bal_qty,0)-ifnull(scd.ttl_qty,0))*ifnull(tsc.smallest_cost,0)\n"
-                + "where tsc.user_id = '" + Global.loginUser.getUserId() 
+                + "where tsc.user_id = '" + Global.machineId
                 + "' and tsc.location_id = " + locationId.toString() + " and scd.batch_no = '" + batchNo + "'";
-        try{
+        try {
             dao.execSql(strSql);
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("updateBalance : " + ex.toString());
-        }finally{
+        } finally {
             dao.close();
         }
     }
 
-    private void clear(){
+    private void clear() {
         tableModel.setList(new ArrayList());
         txtBatchNo.setText("");
         txtStockDate.setText(DateUtil.getTodayDateStr());
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

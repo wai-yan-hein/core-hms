@@ -46,6 +46,7 @@ import org.apache.log4j.Logger;
  */
 public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionListener,
         KeyPropagate {
+
     static Logger log = Logger.getLogger(GroupingSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao; // Data access object.
     private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("Grouping");
@@ -54,7 +55,7 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
     private int newNodeSuffix = 1;
     private ItemGroupDetailTableModel groupDetailTableModel = new ItemGroupDetailTableModel(dao);
     private ItemGroup selectedIg;
-    
+
     /**
      * Creates new form GroupingSetup
      */
@@ -68,11 +69,11 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
         disableCtrl();
     }
 
-    private void disableCtrl(){
+    private void disableCtrl() {
         cboItemType.setEnabled(false);
         cboCategory.setEnabled(false);
         cboBrand.setEnabled(false);
-        
+
         butBrandAdd.setEnabled(false);
         butBrandRemove.setEnabled(false);
         butCategoryAdd.setEnabled(false);
@@ -80,12 +81,12 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
         butItemTypeAdd.setEnabled(false);
         butItemTypeRemove.setEnabled(false);
     }
-    
-    private void enableCtrl(){
+
+    private void enableCtrl() {
         cboItemType.setEnabled(true);
         cboCategory.setEnabled(true);
         cboBrand.setEnabled(true);
-        
+
         butBrandAdd.setEnabled(true);
         butBrandRemove.setEnabled(true);
         butCategoryAdd.setEnabled(true);
@@ -93,19 +94,25 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
         butItemTypeAdd.setEnabled(true);
         butItemTypeRemove.setEnabled(true);
     }
-    
-    private void initCombo(){
-        BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindCombo(cboCategory, 
-            dao.findAllHSQL("select o from Category o order by o.catName"));
-        BindingUtil.BindCombo(cboBrand, 
-            dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
 
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrand, this);
+    private void initCombo() {
+        try {
+            BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindCombo(cboCategory,
+                    dao.findAllHSQL("select o from Category o order by o.catName"));
+            BindingUtil.BindCombo(cboBrand,
+                    dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrand, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void initTable() {
         //groupDetailTableModel.addEmptyRow();
         tblItem.getColumnModel().getColumn(0).setPreferredWidth(50);
@@ -239,8 +246,8 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
     public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent,
             Object child,
             boolean shouldBeVisible) {
-        DefaultMutableTreeNode childNode =
-                new DefaultMutableTreeNode(child);
+        DefaultMutableTreeNode childNode
+                = new DefaultMutableTreeNode(child);
 
         if (parent == null) {
             parent = rootNode;
@@ -264,19 +271,19 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
             DefaultMutableTreeNode node;
             TreePath parentPath = treGrouping.getSelectionPath();
             node = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
-            
+
             if (node != null) {
-              String strGrpName = node.getUserObject().toString();
+                String strGrpName = node.getUserObject().toString();
                 selectedIg.setGroupName(strGrpName);
-                
-                try{
+
+                try {
                     dao.save(selectedIg);
                     node.setUserObject(selectedIg);
                     lblGroupName.setText(strGrpName);
                     enableCtrl();
-                }catch(Exception ex){
+                } catch (Exception ex) {
                     log.error("treeNodesChanged : " + ex.toString());
-                }finally{
+                } finally {
                     dao.close();
                 }
             }
@@ -323,13 +330,19 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
     }
 
     private void createTreeNode(int parentGroupId, DefaultMutableTreeNode treeRoot) {
-        List<ItemGroup> listItemGroup = dao.findAllHSQL(
-                "from ItemGroup as ig where ig.parentGroupId =" + parentGroupId);
+        try {
+            List<ItemGroup> listItemGroup = dao.findAllHSQL(
+                    "from ItemGroup as ig where ig.parentGroupId =" + parentGroupId);
 
-        for (ItemGroup ig : listItemGroup) {
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(ig);
-            treeRoot.add(child);
-            createTreeNode(ig.getGroupId(), child);
+            for (ItemGroup ig : listItemGroup) {
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(ig);
+                treeRoot.add(child);
+                createTreeNode(ig.getGroupId(), child);
+            }
+        } catch (Exception ex) {
+            log.error("createTreeNode : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -356,13 +369,13 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
             disableCtrl();
         }
     }
-    
+
     private final Action actionItemDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblItem.getSelectedRow() >= 0) {
                 try {
-                    if(tblItem.getCellEditor() != null){
+                    if (tblItem.getCellEditor() != null) {
                         tblItem.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -405,7 +418,7 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
             
         }*/
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -583,48 +596,48 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
     }// </editor-fold>//GEN-END:initComponents
 
     private void butItemTypeAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butItemTypeAddActionPerformed
-        ItemType selIT = (ItemType)cboItemType.getSelectedItem();
-        if(selIT instanceof ItemType && selectedIg != null){
+        ItemType selIT = (ItemType) cboItemType.getSelectedItem();
+        if (selIT instanceof ItemType && selectedIg != null) {
             String id = selIT.getItemTypeCode();
             groupDetailTableModel.addItemType(selectedIg.getGroupId(), id);
         }
     }//GEN-LAST:event_butItemTypeAddActionPerformed
 
     private void butItemTypeRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butItemTypeRemoveActionPerformed
-        ItemType selIT = (ItemType)cboItemType.getSelectedItem();
-        if(selIT instanceof ItemType && selectedIg != null){
+        ItemType selIT = (ItemType) cboItemType.getSelectedItem();
+        if (selIT instanceof ItemType && selectedIg != null) {
             String id = selIT.getItemTypeCode();
             groupDetailTableModel.deleteItemType(selectedIg.getGroupId(), id);
         }
     }//GEN-LAST:event_butItemTypeRemoveActionPerformed
 
     private void butCategoryAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCategoryAddActionPerformed
-        Category cat = (Category)cboCategory.getSelectedItem();
-        if(cat instanceof Category){
+        Category cat = (Category) cboCategory.getSelectedItem();
+        if (cat instanceof Category) {
             int id = cat.getCatId();
             groupDetailTableModel.addCategory(selectedIg.getGroupId(), id);
         }
     }//GEN-LAST:event_butCategoryAddActionPerformed
 
     private void butCategoryRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCategoryRemoveActionPerformed
-        Category cat = (Category)cboCategory.getSelectedItem();
-        if(cat instanceof Category){
+        Category cat = (Category) cboCategory.getSelectedItem();
+        if (cat instanceof Category) {
             int id = cat.getCatId();
             groupDetailTableModel.deleteCategory(selectedIg.getGroupId(), id);
         }
     }//GEN-LAST:event_butCategoryRemoveActionPerformed
 
     private void butBrandAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBrandAddActionPerformed
-        ItemBrand ib = (ItemBrand)cboBrand.getSelectedItem();
-        if(ib instanceof ItemBrand){
+        ItemBrand ib = (ItemBrand) cboBrand.getSelectedItem();
+        if (ib instanceof ItemBrand) {
             int id = ib.getBrandId();
             groupDetailTableModel.addBrand(selectedIg.getGroupId(), id);
         }
     }//GEN-LAST:event_butBrandAddActionPerformed
 
     private void butBrandRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBrandRemoveActionPerformed
-        ItemBrand ib = (ItemBrand)cboBrand.getSelectedItem();
-        if(ib instanceof ItemBrand){
+        ItemBrand ib = (ItemBrand) cboBrand.getSelectedItem();
+        if (ib instanceof ItemBrand) {
             int id = ib.getBrandId();
             groupDetailTableModel.deleteBrand(selectedIg.getGroupId(), id);
         }

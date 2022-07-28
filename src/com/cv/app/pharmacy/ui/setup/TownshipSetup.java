@@ -6,12 +6,12 @@ package com.cv.app.pharmacy.ui.setup;
 
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
+import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.Menu;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.ui.common.TownshipTableModel;
 import com.cv.app.util.BindingUtil;
-import static com.cv.app.util.BindingUtil.BindCombo;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
 import java.util.List;
@@ -69,30 +69,42 @@ public class TownshipSetup extends javax.swing.JDialog {
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboParent, dao.findAll("Township"));
-        new ComBoBoxAutoComplete(cboParent);
+        try {
+            BindingUtil.BindComboFilter(cboParent, dao.findAll("Township"));
+            new ComBoBoxAutoComplete(cboParent);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
-        tableModel.setListTownship(dao.findAll("Township"));
+        try {
+            tableModel.setListTownship(dao.findAll("Township"));
 
-        //Define table selection model to single row selection.
-        tblTownship.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblTownship.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblTownship.getSelectedRow() >= 0) {
-                    selectedRow = tblTownship.convertRowIndexToModel(
-                            tblTownship.getSelectedRow());
-                }
+            //Define table selection model to single row selection.
+            tblTownship.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblTownship.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblTownship.getSelectedRow() >= 0) {
+                        selectedRow = tblTownship.convertRowIndexToModel(
+                                tblTownship.getSelectedRow());
+                    }
 
-                if (selectedRow >= 0) {
-                    setTownship(tableModel.getTownship(selectedRow));
+                    if (selectedRow >= 0) {
+                        setTownship(tableModel.getTownship(selectedRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private boolean isValidEntry() {
@@ -116,8 +128,15 @@ public class TownshipSetup extends javax.swing.JDialog {
         currTownship = tsp;
         txtTownshipName.setText(tsp.getTownshipName());
         if (currTownship.getParentId() != null) {
-            Township townshipParent = (Township) dao.find(Township.class, currTownship.getParentId());
-            cboParent.setSelectedItem(townshipParent);
+            try {
+                Township townshipParent = (Township) dao.find(Township.class, currTownship.getParentId());
+                cboParent.setSelectedItem(townshipParent);
+            } catch (Exception ex) {
+                cboParent.setSelectedItem(null);
+                log.error("setTownship : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
         lblStatus.setText("EDIT");
 
@@ -171,23 +190,25 @@ public class TownshipSetup extends javax.swing.JDialog {
 
     private void delete() {
         try {
-            if (lblStatus.getText().equals("EDIT")) {
-                int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
-                        "Township Delete", JOptionPane.YES_NO_OPTION);
+            if (isCanDelete(currTownship.getParentId())) {
+                if (lblStatus.getText().equals("EDIT")) {
+                    int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
+                            "Township Delete", JOptionPane.YES_NO_OPTION);
 
-                if (yes_no == 0) {
-                    dao.delete(currTownship);
-                    int tmpRow = selectedRow;
-                    selectedRow = -1;
-                    tblTownship.setRowSorter(null);
-                    tableModel.deleteTownship(tmpRow);
-                    tblTownship.setRowSorter(sorter);
+                    if (yes_no == 0) {
+                        dao.delete(currTownship);
+                        int tmpRow = selectedRow;
+                        selectedRow = -1;
+                        tblTownship.setRowSorter(null);
+                        tableModel.deleteTownship(tmpRow);
+                        tblTownship.setRowSorter(sorter);
+                    }
                 }
-            }
 
-            clear();
+                clear();
+            }
         } catch (ConstraintViolationException ex) {
-            JOptionPane.showMessageDialog(this, "Cannot delete this category.",
+            JOptionPane.showMessageDialog(this, "Cannot delete this township.",
                     "Township Delete", JOptionPane.ERROR_MESSAGE);
             dao.rollBack();
         } catch (Exception ex) {
@@ -195,6 +216,39 @@ public class TownshipSetup extends javax.swing.JDialog {
         } finally {
             dao.close();
         }
+    }
+
+    private boolean isCanDelete(int id) {
+        try {
+            List<Patient> listP = dao.findAllHSQL(
+                    "select o from Patient o where o.township.townshipId = " + id
+            );
+            if (listP != null) {
+                if (!listP.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This township is use in patient.\nCannot delete this township.",
+                            "Township Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
+            List<Ams> listA = dao.findAllHSQL(
+                    "select o from Ams o where o.township.townshipId = " + id
+            );
+            if (listA != null) {
+                if (!listA.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This township is use in admission.\nCannot delete this township.",
+                            "Township Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+        } catch (Exception ex) {
+            log.error("isCanDelete : " + id + " : " + ex.getMessage());
+            return false;
+        } finally {
+            dao.close();
+        }
+
+        return true;
     }
 
     private RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {

@@ -53,78 +53,96 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
         initTable();
         actionMapping();
         initTextPane();
-        List<VService> tmpList = dao.findAllHSQL(
-                "select o from VService o where o.groupId = 1 order by o.serviceName");
-        if (tmpList != null) {
-            labTestTableModel.setListService(tmpList);
+        try {
+            List<VService> tmpList = dao.findAllHSQL(
+                    "select o from VService o where o.groupId = 1 order by o.serviceName");
+            if (tmpList != null) {
+                labTestTableModel.setListService(tmpList);
+            }
+        } catch (Exception ex) {
+            log.error("LabResultSetup : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initTable() {
-        tblLabTest.getTableHeader().setFont(Global.lableFont);
-        tblLabTest.getColumnModel().getColumn(0).setPreferredWidth(10);//Code
-        tblLabTest.getColumnModel().getColumn(1).setPreferredWidth(200);//Lab Test
-        tblLabTest.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblLabTest.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblLabTest.getSelectedRow() >= 0) {
-                    int index = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
-                    VService service = labTestTableModel.getListService().get(index);
+        try {
+            tblLabTest.getTableHeader().setFont(Global.lableFont);
+            tblLabTest.getColumnModel().getColumn(0).setPreferredWidth(10);//Code
+            tblLabTest.getColumnModel().getColumn(1).setPreferredWidth(200);//Lab Test
+            tblLabTest.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblLabTest.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblLabTest.getSelectedRow() >= 0) {
+                        int index = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
+                        VService service = labTestTableModel.getListService().get(index);
 
-                    if (service != null) {
-                        lblLabTest.setText(service.getServiceName());
-                        labResultTableModel.setSelectTestId(service.getServiceId());
-                        txtLabRemark.setText(service.getLabRemark());
-                        txtLabResultRemark.setText("");
+                        if (service != null) {
+                            lblLabTest.setText(service.getServiceName());
+                            labResultTableModel.setSelectTestId(service.getServiceId());
+                            txtLabRemark.setText(service.getLabRemark());
+                            txtLabResultRemark.setText("");
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        tblLabResult.getTableHeader().setFont(Global.lableFont);
-        tblLabResult.getColumnModel().getColumn(0).setPreferredWidth(150);//Printed Text
-        tblLabResult.getColumnModel().getColumn(1).setPreferredWidth(50);//Unit
-        tblLabResult.getColumnModel().getColumn(2).setPreferredWidth(80);//Normal
-        tblLabResult.getColumnModel().getColumn(3).setPreferredWidth(40);//Type
-        tblLabResult.getColumnModel().getColumn(4).setPreferredWidth(40);//Sort Order
+            tblLabResult.getTableHeader().setFont(Global.lableFont);
+            tblLabResult.getColumnModel().getColumn(0).setPreferredWidth(150);//Printed Text
+            tblLabResult.getColumnModel().getColumn(1).setPreferredWidth(50);//Unit
+            tblLabResult.getColumnModel().getColumn(2).setPreferredWidth(80);//Normal
+            tblLabResult.getColumnModel().getColumn(3).setPreferredWidth(40);//Type
+            tblLabResult.getColumnModel().getColumn(4).setPreferredWidth(40);//Sort Order
 
-        tblLabResult.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblLabResult.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblLabResult.getSelectedRow() >= 0) {
-                    int index = tblLabResult.convertRowIndexToModel(tblLabResult.getSelectedRow());
-                    OPDLabResult result = labResultTableModel.getListResult().get(index);
+            tblLabResult.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblLabResult.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblLabResult.getSelectedRow() >= 0) {
+                        int index = tblLabResult.convertRowIndexToModel(tblLabResult.getSelectedRow());
+                        OPDLabResult result = labResultTableModel.getListResult().get(index);
 
-                    if (result != null) {
-                        lblLabResult.setText(result.getResultText() + " indicator ...");
-                        labResultIndTableModel.setSelectResultId(result.getResultId());
-                        txtLabResultRemark.setText(result.getLabResultRemark());
+                        if (result != null) {
+                            lblLabResult.setText(result.getResultText() + " indicator ...");
+                            labResultIndTableModel.setSelectResultId(result.getResultId());
+                            txtLabResultRemark.setText(result.getLabResultRemark());
+                        }
                     }
                 }
-            }
-        });
-        JComboBox cboResultType = new JComboBox();
-        BindingUtil.BindCombo(cboResultType, dao.findAll("OPDResultType"));
-        tblLabResult.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboResultType));
+            });
+            JComboBox cboResultType = new JComboBox();
+            BindingUtil.BindCombo(cboResultType, dao.findAll("OPDResultType"));
+            tblLabResult.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboResultType));
 
-        tblLabResultInd.getTableHeader().setFont(Global.lableFont);
-        tblLabResultInd.getColumnModel().getColumn(0).setPreferredWidth(50);//High Value
-        tblLabResultInd.getColumnModel().getColumn(1).setPreferredWidth(150);//Low Value
-        tblLabResultInd.getColumnModel().getColumn(2).setPreferredWidth(30);//Sex
-        JComboBox cboSex = new JComboBox();
-        BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
-        tblLabResultInd.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboSex));
-        tblLabResultInd.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblLabResultInd.getTableHeader().setFont(Global.lableFont);
+            tblLabResultInd.getColumnModel().getColumn(0).setPreferredWidth(50);//High Value
+            tblLabResultInd.getColumnModel().getColumn(1).setPreferredWidth(150);//Low Value
+            tblLabResultInd.getColumnModel().getColumn(2).setPreferredWidth(30);//Sex
+            JComboBox cboSex = new JComboBox();
+            BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
+            tblLabResultInd.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboSex));
+            tblLabResultInd.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboGroup, dao.findAllHSQL("select o from OPDCategory o where groupId = 1 order by o.catName"));
-        bindStatus = true;
-        labTestTableModel.setGroupId(((OPDCategory) cboGroup.getSelectedItem()).getCatId());
+        try {
+            BindingUtil.BindCombo(cboGroup, dao.findAllHSQL("select o from OPDCategory o where groupId = 1 order by o.catName"));
+            bindStatus = true;
+            labTestTableModel.setGroupId(((OPDCategory) cboGroup.getSelectedItem()).getCatId());
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -163,7 +181,7 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
         public void actionPerformed(ActionEvent e) {
             if (tblLabResultInd.getSelectedRow() >= 0) {
                 try {
-                    if(tblLabResultInd.getCellEditor() != null){
+                    if (tblLabResultInd.getCellEditor() != null) {
                         tblLabResultInd.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -180,7 +198,7 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
         public void actionPerformed(ActionEvent e) {
             if (tblLabResult.getSelectedRow() >= 0) {
                 try {
-                    if(tblLabResult.getCellEditor() != null){
+                    if (tblLabResult.getCellEditor() != null) {
                         tblLabResult.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -204,7 +222,7 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
                             "Are you sure to delete?",
                             "Category delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblLabTest.getCellEditor() != null){
+                    if (tblLabTest.getCellEditor() != null) {
                         tblLabTest.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {

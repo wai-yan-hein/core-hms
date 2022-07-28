@@ -5,6 +5,7 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
+import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.entity.Supplier;
 import com.cv.app.pharmacy.ui.common.PurVouDetailTableModel;
@@ -14,11 +15,13 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.ItemBrand;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.pharmacy.database.helper.PurchaseVoucher;
 import com.cv.app.pharmacy.database.entity.PurDetailHis;
-import com.cv.app.pharmacy.database.entity.PurHis;
+import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.util.BindingUtil;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,7 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
     private final PurVouDetailTableModel detailTableModel = new PurVouDetailTableModel();
     private int mouseClick = 2;
     private final TableRowSorter<TableModel> sorter;
+    private String selTraderId = "-";
 
     /**
      * Creates new form PurchaseCostUpdate
@@ -66,7 +70,7 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
                 }
             }
         }
-
+        initCombo();
         initTable();
     }
 
@@ -76,7 +80,12 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
             switch (source.toString()) {
                 case "CustomerList":
                     Supplier sup = (Supplier) selectObj;
-                    txtTraderId.setText(sup.getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtTraderId.setText(sup.getStuCode());
+                    } else {
+                        txtTraderId.setText(sup.getTraderId());
+                    }
+                    selTraderId = sup.getTraderId();
                     txtSupName.setText(sup.getTraderName());
                     break;
             }
@@ -90,14 +99,16 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
             try {
                 dao.open();
                 String traderId = txtTraderId.getText().trim().toUpperCase();
-                String prefix = traderId.substring(0, 3);
-                if (Util1.getPropValue("system.purchase.emitted.prifix").equals("Y")) {
-                    if (!prefix.contains("SUP")) {
-                        traderId = "SUP" + traderId;
+                String strFieldName = "o.traderId";
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    strFieldName = "o.stuCode";
+                }
+                List<Trader> listT = dao.findAllHSQL("select o from Supplier o where " + strFieldName + " = '" + traderId + "'");
+                if (listT != null) {
+                    if (!listT.isEmpty()) {
+                        sup = (Supplier) listT.get(0);
                     }
                 }
-                sup = (Supplier) dao.find(Supplier.class, traderId);
-                dao.close();
             } catch (Exception ex) {
                 log.error("getCustomer : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
@@ -158,14 +169,15 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
     }
 
     private void search() {
-        String strSql = "select date(ph.pur_date) pur_date, ph.pur_inv_id, ph.cus_id, t.trader_name, ph.vou_total\n"
+        String strSql = "select date(ph.pur_date) pur_date, ph.pur_inv_id, ph.cus_id, t.trader_name, ph.vou_total,\n"
+                + "t.stu_no \n"
                 + "from pur_his ph left join trader t on ph.cus_id = t.trader_id\n"
                 + "where deleted = false";
         strSql = strSql + " and date(ph.pur_date) between '" + DateUtil.toDateTimeStrMYSQL(txtFrom.getText())
                 + "' and '" + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "'";
         if (txtTraderId.getText() != null) {
             if (!txtTraderId.getText().trim().isEmpty()) {
-                strSql = strSql + " and ph.cus_id = '" + txtTraderId.getText().trim() + "'";
+                strSql = strSql + " and ph.cus_id = '" + selTraderId + "'";
             }
         }
 
@@ -185,7 +197,11 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
                 while (rs.next()) {
                     PurchaseVoucher pv = new PurchaseVoucher();
                     pv.setPurDate(rs.getDate("pur_date"));
-                    pv.setSupId(rs.getString("cus_id"));
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        pv.setSupId(rs.getString("stu_no"));
+                    } else {
+                        pv.setSupId(rs.getString("cus_id"));
+                    }
                     pv.setSupName(rs.getString("trader_name"));
                     pv.setVouTotal(rs.getDouble("vou_total"));
                     pv.setVouoNo(rs.getString("pur_inv_id"));
@@ -211,14 +227,14 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
     private List<PurDetailHis> getDetail(String vouNo) {
         List<PurDetailHis> listPDH = null;
         try {
-            /*listPDH = dao.findAllHSQL(
-                "select o from PurDetailHis o where o.vouNo = '" + vouNo 
-                        + "' order by o.uniqueId");*/
-            PurHis ph = (PurHis) dao.find(PurHis.class, vouNo);
+            listPDH = dao.findAllHSQL(
+                    "select o from PurDetailHis o where o.vouNo = '" + vouNo
+                    + "' order by o.uniqueId");
+            /*PurHis ph = (PurHis) dao.find(PurHis.class, vouNo);
 
             if (ph.getPurDetailHis().size() > 0) {
                 listPDH = ph.getPurDetailHis();
-            }
+            }*/
         } catch (Exception ex) {
             log.error("getDetail : " + ex.toString());
         } finally {
@@ -236,6 +252,18 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
                     detailTableModel.setListD(getDetail(pv.getVouoNo()));
                 }
             }
+        }
+    }
+
+    private void initCombo() {
+        try {
+            BindingUtil.BindComboFilter(cboBrandName, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+
+            new ComBoBoxAutoComplete(cboBrandName);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -260,6 +288,8 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
         butUpdate = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         txtPercent = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        cboBrandName = new javax.swing.JComboBox<>();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblVouList = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -317,6 +347,10 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
 
         jLabel4.setText("%");
 
+        jLabel8.setText("Brand : ");
+
+        cboBrandName.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -335,7 +369,11 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtTraderId, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtSupName, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE)
+                .addComponent(txtSupName)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cboBrandName, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(butSearch)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -361,7 +399,9 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
                     .addComponent(butSearch)
                     .addComponent(butUpdate)
                     .addComponent(jLabel4)
-                    .addComponent(txtPercent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtPercent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8)
+                    .addComponent(cboBrandName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -468,14 +508,21 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
     private void butUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butUpdateActionPerformed
         String strVouList = vouListTableModel.getUpdateVoucher();
         float percent = NumberUtil.FloatZero(txtPercent.getText());
+        String brandId = "";
+        if (cboBrandName.getSelectedItem() instanceof ItemBrand) {
+            ItemBrand ib = (ItemBrand) cboBrandName.getSelectedItem();
+        }
         if (!strVouList.equals("-") && percent != 0) {
-            String strSql = "update pur_his ph join pur_join pj on ph.pur_inv_id = pj.pur_inv_id\n"
-                    + "join pur_detail_his pdh on pj.pur_detail_id = pdh.pur_detail_id\n"
+            String strSql = "update pur_his ph \n"
+                    + "join pur_detail_his pdh on ph.pur_inv_id = pdh.vou_no\n"
                     + "set item_expense_p = " + percent + ", item_expense = ifnull(pdh.pur_amount,0) * (" + percent + " / 100 ), \n"
                     + "pur_unit_cost = (((ifnull(pdh.pur_amount,0)/(ifnull(pdh.pur_smallest_qty,0) + ifnull(pdh.pur_foc_smallest_qty,0)))+((ifnull(pdh.pur_amount,0) * \n"
                     + "	(" + percent + " / 100 ))/(ifnull(pdh.pur_smallest_qty,0) + ifnull(pdh.pur_foc_smallest_qty,0)))) * ifnull(pdh.pur_smallest_qty,0))/\n"
                     + " ifnull(pdh.pur_qty,0)\n"
                     + "where ph.pur_inv_id in (" + strVouList + ") and ifnull(pdh.pur_qty,0) <> 0";
+            if (!brandId.isEmpty()) {
+                strSql = strSql + " and pdh.med_id in (select med_id from medicine where brand_id = " + brandId + ") ";
+            }
             log.info("vouList : " + strSql);
             try {
                 dao.execSql(strSql);
@@ -492,12 +539,14 @@ public class PurchaseCostUpdate extends javax.swing.JPanel implements SelectionO
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butSearch;
     private javax.swing.JButton butUpdate;
+    private javax.swing.JComboBox<String> cboBrandName;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;

@@ -38,7 +38,7 @@ public class DCTableModel extends AbstractTableModel {
     private List<DCDetailHis> listOPDDetailHis = new ArrayList();
     private final String[] columnNames = {"Code", "Description", "Qty", "Price", "Charge Type", "Amount"};
     private final AbstractDataAccess dao;
-    private final ChargeType defaultChargeType;
+    private ChargeType defaultChargeType;
     private String deletedList;
     private HashMap<Integer, Double> doctFees;
     private JTable parent;
@@ -52,7 +52,13 @@ public class DCTableModel extends AbstractTableModel {
 
     public DCTableModel(AbstractDataAccess dao) {
         this.dao = dao;
-        defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        try {
+            defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        } catch (Exception ex) {
+            log.error("DCTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable table) {
@@ -98,15 +104,13 @@ public class DCTableModel extends AbstractTableModel {
                     } else {
                         return false;
                     }
+                } else if (record.getService().isCfs() == null) {
+                    return false;
                 } else {
-                    if (record.getService().isCfs() == null) {
-                        return false;
-                    } else {
-                        if (isAlreadyP) {
-                            return !isAlreadyP;
-                        }
-                        return record.getService().isCfs();
+                    if (isAlreadyP) {
+                        return !isAlreadyP;
                     }
+                    return record.getService().isCfs();
                 }
             } else {
                 return false;
@@ -715,12 +719,18 @@ public class DCTableModel extends AbstractTableModel {
 
     private boolean isNeedDetail(int serviceId) {
         boolean status = false;
-        List<DrDetailId> listDDI = dao.findAllHSQL(
-                "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
-        if (listDDI != null) {
-            if (!listDDI.isEmpty()) {
-                status = true;
+        try {
+            List<DrDetailId> listDDI = dao.findAllHSQL(
+                    "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
+            if (listDDI != null) {
+                if (!listDDI.isEmpty()) {
+                    status = true;
+                }
             }
+        } catch (Exception ex) {
+            log.error("isNeedDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return status;
     }
@@ -778,51 +788,57 @@ public class DCTableModel extends AbstractTableModel {
     }
 
     private void addAutoService(int serviceId) {
-        String strSql = "select o from InpService o where o.serviceId in "
-                + "(select a.key.addServiceId from AutoAddIdMapping a where a.key.tranOption = 'DC' "
-                + "and a.key.tranServiceId = " + serviceId + ")";
-        List<InpService> listSrv = dao.findAllHSQL(strSql);
-        List<DCDetailHis> listTmp = new ArrayList();
-        Collections.copy(listOPDDetailHis, listTmp);
+        try {
+            String strSql = "select o from InpService o where o.serviceId in "
+                    + "(select a.key.addServiceId from AutoAddIdMapping a where a.key.tranOption = 'DC' "
+                    + "and a.key.tranServiceId = " + serviceId + ")";
+            List<InpService> listSrv = dao.findAllHSQL(strSql);
+            List<DCDetailHis> listTmp = new ArrayList();
+            Collections.copy(listOPDDetailHis, listTmp);
 
-        if (listSrv != null) {
-            if (!listSrv.isEmpty()) {
-                for (InpService srv : listSrv) {
-                    DCDetailHis record = new DCDetailHis();
-                    record.setService(srv);
-                    List<VAddService> listAdd = dao.findAllHSQL("select o from VAddService o where o.addServiceId = '"
-                            + srv.getServiceId() + "' and o.tranOption = 'DC' and o.tranServiceId = " + serviceId);
-                    if (!listAdd.isEmpty()) {
-                        record.setQuantity(listAdd.get(0).getAddQty());
-                    } else {
-                        record.setQuantity(1);
-                    }
-
-                    record.setPrice(srv.getFees());
-                    record.setSrvFee1(srv.getFees1());
-                    record.setSrvFee2(srv.getFees2());
-                    record.setSrvFee3(srv.getFees3());
-                    record.setSrvFee4(srv.getFees4());
-                    record.setSrvFee5(srv.getFees5());
-                    record.setChargeType(defaultChargeType);
-
-                    Double amount = null;
-                    if (record.getChargeType() != null) {
-                        if (record.getChargeType().getChargeTypeId() == 1) {
-                            amount = NumberUtil.NZeroInt(record.getQuantity()) * NumberUtil.NZero(record.getPrice());
+            if (listSrv != null) {
+                if (!listSrv.isEmpty()) {
+                    for (InpService srv : listSrv) {
+                        DCDetailHis record = new DCDetailHis();
+                        record.setService(srv);
+                        List<VAddService> listAdd = dao.findAllHSQL("select o from VAddService o where o.addServiceId = '"
+                                + srv.getServiceId() + "' and o.tranOption = 'DC' and o.tranServiceId = " + serviceId);
+                        if (!listAdd.isEmpty()) {
+                            record.setQuantity(listAdd.get(0).getAddQty());
+                        } else {
+                            record.setQuantity(1);
                         }
-                    }
-                    record.setAmount(amount);
-                    listTmp.add(record);
 
-                    //listOPDDetailHis.add(record);
-                    //calculateAmount(listOPDDetailHis.size() - 1);
-                    //fireTableRowsInserted(listOPDDetailHis.size() - 1, listOPDDetailHis.size() - 1);
-                    //parent.scrollRectToVisible(parent.getCellRect(parent.getRowCount() - 1, 0, true));
-                    parent.getCellRect(parent.getRowCount() - 1, 0, true);
+                        record.setPrice(srv.getFees());
+                        record.setSrvFee1(srv.getFees1());
+                        record.setSrvFee2(srv.getFees2());
+                        record.setSrvFee3(srv.getFees3());
+                        record.setSrvFee4(srv.getFees4());
+                        record.setSrvFee5(srv.getFees5());
+                        record.setChargeType(defaultChargeType);
+
+                        Double amount = null;
+                        if (record.getChargeType() != null) {
+                            if (record.getChargeType().getChargeTypeId() == 1) {
+                                amount = NumberUtil.NZeroInt(record.getQuantity()) * NumberUtil.NZero(record.getPrice());
+                            }
+                        }
+                        record.setAmount(amount);
+                        listTmp.add(record);
+
+                        //listOPDDetailHis.add(record);
+                        //calculateAmount(listOPDDetailHis.size() - 1);
+                        //fireTableRowsInserted(listOPDDetailHis.size() - 1, listOPDDetailHis.size() - 1);
+                        //parent.scrollRectToVisible(parent.getCellRect(parent.getRowCount() - 1, 0, true));
+                        parent.getCellRect(parent.getRowCount() - 1, 0, true);
+                    }
+                    listOPDDetailHis = listTmp;
                 }
-                listOPDDetailHis = listTmp;
             }
+        } catch (Exception ex) {
+            log.error("addAutoService : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -848,18 +864,24 @@ public class DCTableModel extends AbstractTableModel {
                 String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                         + "service.serviceId in (" + paidId + ")";
                 List listPaid = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
-                if (listPaid == null) {
-                    InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
-                    addService(service, paid);
-                } else if (listPaid.isEmpty()) {
-                    InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
-                    addService(service, paid);
-                } else {
-                    DCDetailHis record = (DCDetailHis) listPaid.get(0);
-                    record.setPrice(paid);
-                    record.setAmount(record.getQuantity() * record.getPrice());
+                try {
+                    if (listPaid == null) {
+                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        addService(service, paid);
+                    } else if (listPaid.isEmpty()) {
+                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        addService(service, paid);
+                    } else {
+                        DCDetailHis record = (DCDetailHis) listPaid.get(0);
+                        record.setPrice(paid);
+                        record.setAmount(record.getQuantity() * record.getPrice());
+                    }
+                    fireTableDataChanged();
+                } catch (Exception ex) {
+                    log.error("addPaidGain : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
-                fireTableDataChanged();
             }
         }
 
@@ -869,18 +891,24 @@ public class DCTableModel extends AbstractTableModel {
                 String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                         + "service.serviceId in (" + pkgGainId + ")";
                 List list = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
-                if (list == null) {
-                    InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
-                    addService(service, gainAmt);
-                } else if (list.isEmpty()) {
-                    InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
-                    addService(service, gainAmt);
-                } else {
-                    DCDetailHis record = (DCDetailHis) list.get(0);
-                    record.setPrice(gainAmt);
-                    record.setAmount(record.getQuantity() * record.getPrice());
+                try {
+                    if (list == null) {
+                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        addService(service, gainAmt);
+                    } else if (list.isEmpty()) {
+                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        addService(service, gainAmt);
+                    } else {
+                        DCDetailHis record = (DCDetailHis) list.get(0);
+                        record.setPrice(gainAmt);
+                        record.setAmount(record.getQuantity() * record.getPrice());
+                    }
+                    fireTableDataChanged();
+                } catch (Exception ex) {
+                    log.error("addPaidGain 1" + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
-                fireTableDataChanged();
             }
         }
 

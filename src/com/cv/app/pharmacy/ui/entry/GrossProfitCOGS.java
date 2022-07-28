@@ -48,7 +48,7 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
     private ItemCodeFilterTableModel codeTableModel = new ItemCodeFilterTableModel(dao, true);
     private GPTableModel gpTableModel = new GPTableModel();
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form GrossProfit
      */
@@ -79,13 +79,13 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
 
         txtGP.setHorizontalAlignment(JFormattedTextField.RIGHT);
         txtGP.setFormatterFactory(NumberUtil.getDecimalFormat());
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -94,17 +94,23 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
     }
 
     private void initCombo() {
-        isInit = true;
-        BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
-        BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
-        BindingUtil.BindComboFilter(cboCustomG, dao.findAll("ItemGroup"));
+        try {
+            isInit = true;
+            BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
+            BindingUtil.BindComboFilter(cboCustomG, dao.findAll("ItemGroup"));
 
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrand, this);
-        new ComBoBoxAutoComplete(cboCustomG, this);
-        isInit = false;
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrand, this);
+            new ComBoBoxAutoComplete(cboCustomG, this);
+            isInit = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -171,11 +177,11 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
     private void calculate() {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             Date opDate = DateUtil.toDate(dao.getMax("op_date", "stock_op_his", null), "yyyy-MM-dd");
-            if(opDate == null){
+            if (opDate == null) {
                 opDate = DateUtil.toDate("1900-12-31", "yyyy-MM-dd");
             }
             Date tranDate = DateUtil.toDate(txtFrom.getText());
@@ -196,26 +202,26 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
             insertStockFilterCode(strOpDate);
             dao.execProc("gen_cost_balance1",
                     DateUtil.toDateStrMYSQL(strOpDate), "Opening",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
             dao.commit();
             dao.execProc("insert_cost_detail",
                     "Opening", DateUtil.toDateStrMYSQL(strOpDate),
-                    Global.loginUser.getUserId(), strMethod);
+                    Global.machineId, strMethod);
             dao.commit();
             dao.close();
             //For closing value
             insertStockFilterCode(txtTo.getText());
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(txtTo.getText()), "Closing",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
             dao.commit();
             dao.execProc("insert_cost_detail",
                     "Closing", DateUtil.toDateStrMYSQL(txtTo.getText()),
-                    Global.loginUser.getUserId(), strMethod);
+                    Global.machineId, strMethod);
             dao.commit();
             //Calculating GP
             dao.execProc("calculate_gp", "Opening", "Closing", DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.loginUser.getUserId());
+                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.machineId);
             dao.commit();
             dao.close();
             applyFilter();
@@ -225,58 +231,68 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
     }
 
     private void applyFilter() {
-        String strHSQL = getHSQL();
-        List<VGrossProfit> listGrossProfit
-                = dao.findAllHSQL(strHSQL);
-        dao.commit();
-        gpTableModel.setListGrossProfit(listGrossProfit);
+        try {
+            String strHSQL = getHSQL();
+            List<VGrossProfit> listGrossProfit
+                    = dao.findAllHSQL(strHSQL);
+            dao.commit();
+            gpTableModel.setListGrossProfit(listGrossProfit);
 
-        double op_value = 0;
-        double ttl_pur = 0;
-        double cl_value = 0;
-        double cogs = 0;
-        double ttl_sale = 0;
-        double grossProfit = 0;
+            double op_value = 0;
+            double ttl_pur = 0;
+            double cl_value = 0;
+            double cogs = 0;
+            double ttl_sale = 0;
+            double grossProfit = 0;
 
-        for (VGrossProfit gp : listGrossProfit) {
-            //totalCost += NumberUtil.NZero(sc.getTtlCost());
-            op_value += gp.getOpValue();
-            ttl_pur += gp.getTtlPur();
-            cl_value += gp.getClValue();
-            cogs += gp.getCogsValue();
-            ttl_sale += gp.getTtlSale();
-            grossProfit += gp.getGpValue();
+            for (VGrossProfit gp : listGrossProfit) {
+                //totalCost += NumberUtil.NZero(sc.getTtlCost());
+                op_value += gp.getOpValue();
+                ttl_pur += gp.getTtlPur();
+                cl_value += gp.getClValue();
+                cogs += gp.getCogsValue();
+                ttl_sale += gp.getTtlSale();
+                grossProfit += gp.getGpValue();
+            }
+
+            txtOpValue.setValue(op_value);
+            txtTtlPur.setValue(ttl_pur);
+            txtClValue.setValue(cl_value);
+            txtCogs.setValue(cogs);
+            txtTtlSale.setValue(ttl_sale);
+            txtGP.setValue(grossProfit);
+        } catch (Exception ex) {
+            log.error("applyFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        txtOpValue.setValue(op_value);
-        txtTtlPur.setValue(ttl_pur);
-        txtClValue.setValue(cl_value);
-        txtCogs.setValue(cogs);
-        txtTtlSale.setValue(ttl_sale);
-        txtGP.setValue(grossProfit);
-
-        dao.close();
     }
 
     private String getHSQL() {
         String strHSQL = "select c from VGrossProfit c where c.key.userId = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         if (cboCustomG.getSelectedItem() instanceof ItemGroup) {
             ItemGroup itemGroup = (ItemGroup) cboCustomG.getSelectedItem();
-            List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
-                    "group_id = " + itemGroup.getGroupId());
-            String tmpItemList = "";
+            try {
+                List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
+                        "group_id = " + itemGroup.getGroupId());
+                String tmpItemList = "";
 
-            for (ItemGroupDetail igd : listItemGroupDetail) {
-                if (tmpItemList.isEmpty()) {
-                    tmpItemList = "'" + igd.getItem().getMedId() + "'";
-                } else {
-                    tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                for (ItemGroupDetail igd : listItemGroupDetail) {
+                    if (tmpItemList.isEmpty()) {
+                        tmpItemList = "'" + igd.getItem().getMedId() + "'";
+                    } else {
+                        tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                    }
                 }
-            }
 
-            strHSQL = strHSQL + " and c.key.itemId in (" + tmpItemList + ")";
+                strHSQL = strHSQL + " and c.key.itemId in (" + tmpItemList + ")";
+            } catch (Exception ex) {
+                log.error("getHSQL : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -316,9 +332,9 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
 
     private void insertStockFilterCode(String strDate) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(strDate) + "'";
@@ -352,7 +368,7 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
             if (codeTableModel.getListCodeFilter().size() > 1) {
                 strSQL = strSQL + " and m.med_id in (select item_code from "
                         + "tmp_item_code_filter where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             }
         }
 
@@ -376,7 +392,7 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
 
         params.put("compName", compName);
         params.put("data_date", txtFrom.getText() + " to " + txtTo.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("method", cboMethod.getSelectedItem().toString());
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -421,7 +437,7 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
 
         params.put("compName", compName);
         params.put("data_date", txtFrom.getText() + " to " + txtTo.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             ItemType itemType = (ItemType) cboItemType.getSelectedItem();
             params.put("item_type", itemType.getItemTypeCode());
@@ -457,7 +473,7 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
 
     private void deleteTmpData() {
         String strSql1 = "delete from tmp_item_code_filter where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         dao.execSql(strSql1);
     }

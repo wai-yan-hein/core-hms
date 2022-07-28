@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
  * @author asus
  */
 public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, SelectionObserver {
-    
+
     static Logger log = Logger.getLogger(ReaderEntry.class.getName());
     private final ReaderEntryTableModel tblModel = new ReaderEntryTableModel();
     private final AbstractDataAccess dao = Global.dao;
@@ -44,21 +44,21 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         initComponents();
         initTable();
         initCombo();
-        
+
         if (Util1.getPropValue("system.login.default.value").equals("Y")) {
-                if (Global.loginDate == null) {
-                    Global.loginDate = DateUtil.getTodayDateStr();
-                }
-                txtFrom.setText(Global.loginDate);
-                txtTo.setText(Global.loginDate);
-            } else {
-                txtFrom.setText(DateUtil.getTodayDateStr());
-                txtTo.setText(DateUtil.getTodayDateStr());
+            if (Global.loginDate == null) {
+                Global.loginDate = DateUtil.getTodayDateStr();
             }
+            txtFrom.setText(Global.loginDate);
+            txtTo.setText(Global.loginDate);
+        } else {
+            txtFrom.setText(DateUtil.getTodayDateStr());
+            txtTo.setText(DateUtil.getTodayDateStr());
+        }
     }
 
     private void initTable() {
-        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.loginUser.getUserId() + "'");
+        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
         tblReaderEntry.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         tblReaderEntry.getColumnModel().getColumn(0).setPreferredWidth(40);//Date
@@ -74,13 +74,13 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         tblReaderEntry.getColumnModel().getColumn(10).setPreferredWidth(130);//Technician
         tblReaderEntry.getColumnModel().getColumn(11).setPreferredWidth(10);//Status
         tblReaderEntry.getColumnModel().getColumn(12).setPreferredWidth(10);//Print
-        
+
         //Change JTable cell editor
         tblReaderEntry.getColumnModel().getColumn(8).setCellEditor(
                 new OTDrFeeTableCellEditor(dao, this));
         tblReaderEntry.getColumnModel().getColumn(9).setCellEditor(
                 new OTDrFeeTableCellEditor(dao, this));
-        
+
         /*JComboBox cboTechnician = new JComboBox();
         List<Technician> listTech = dao.findAllHSQL("select o from Technician o where o.active = true order by o.techName");
         BindingUtil.BindCombo(cboTechnician, listTech);
@@ -93,18 +93,24 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
 
     }
 
-    private void initCombo(){
-        BindingUtil.BindCombo(cboService, 
-                dao.findAllHSQL("select o from Service o where o.status = true order by o.serviceName"));
-        BindingUtil.BindComboFilter(cboOPDCG,
-                dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
-        
-        cboService.setSelectedItem(null);
-        
-        new ComBoBoxAutoComplete(cboService, this);
-        new ComBoBoxAutoComplete(cboOPDCG, this);
+    private void initCombo() {
+        try {
+            BindingUtil.BindCombo(cboService,
+                    dao.findAllHSQL("select o from Service o where o.status = true order by o.serviceName"));
+            BindingUtil.BindComboFilter(cboOPDCG,
+                    dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
+
+            cboService.setSelectedItem(null);
+
+            new ComBoBoxAutoComplete(cboService, this);
+            new ComBoBoxAutoComplete(cboOPDCG, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void getPatient() {
         if (txtRegNo.getText() != null && !txtRegNo.getText().isEmpty()) {
             try {
@@ -121,7 +127,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid patient code.",
                             "Patient Code", JOptionPane.ERROR_MESSAGE);
-                }else{
+                } else {
                     txtRegNo.setText(pt.getRegNo());
                     txtPtName.setText(pt.getPatientName());
                 }
@@ -133,9 +139,9 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
             txtPtName.setText(null);
         }
     }
-    
+
     @Override
-    public void selected(Object source, Object selectObj){
+    public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "PatientSearch":
                 Patient patient = (Patient) selectObj;
@@ -144,7 +150,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                 break;
         }
     }
-    
+
     private void printXRayForm() {
         String reportName = Util1.getPropValue("report.xray.form");
         String reportPath = Util1.getAppWorkFolder()
@@ -155,7 +161,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         String compName = Util1.getPropValue("report.company.name");
         String phoneNo = Util1.getPropValue("report.phone");
         String address = Util1.getPropValue("report.address");
-        params.put("p_user_id", Global.loginUser.getUserId());
+        params.put("p_user_id", Global.machineId);
         params.put("compName", compName);
         params.put("phoneNo", phoneNo);
         params.put("comAddress", address);
@@ -169,7 +175,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
             log.error("printXRayForm : " + ex.getMessage());
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -363,18 +369,18 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         if (cboService.getSelectedItem() instanceof Service) {
             serviceId = ((Service) cboService.getSelectedItem()).getServiceId().toString();
         }
-        
+
         String groupId = "-";
         if (cboOPDCG.getSelectedItem() instanceof OPDCusLabGroup) {
             OPDCusLabGroup grp = (OPDCusLabGroup) cboOPDCG.getSelectedItem();
             groupId = grp.getId().toString();
         }
-        
+
         String complete = cboComplete.getSelectedItem().toString();
-        if(complete.equals("ALL")){
+        if (complete.equals("ALL")) {
             complete = "-";
         }
-        
+
         tblModel.search(txtFrom.getText(), txtTo.getText(), serviceId,
                 txtRegNo.getText(), txtPtName.getText(), groupId, complete);
     }//GEN-LAST:event_butSearchActionPerformed

@@ -15,15 +15,20 @@ import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
-import com.cv.app.pharmacy.ui.common.PurVouSearchTableModel;
+import com.cv.app.pharmacy.ui.common.PurVouSearchTableModel1;
+import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.awt.event.ActionEvent;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -44,13 +49,15 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     private SelectionObserver observer;
     private int selectedRow = -1;
     private CodeTableModel tblMedicineModel = new CodeTableModel(Global.dao, true, "PurSearch");
-    private PurVouSearchTableModel purVouTableModel = new PurVouSearchTableModel();
+    private PurVouSearchTableModel1 purVouTableModel = new PurVouSearchTableModel1();
     private final TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
-    private int mouseClick = 2;
-    
+    private int mouseClick = 1;
+    private final String prifxStatus = Util1.getPropValue("system.sale.emitted.prifix");
+
     /**
      * Creates new form PurchaseVouSearch
+     *
      * @param parent
      * @param observer
      * @param dao
@@ -74,12 +81,13 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         //Search history
         getPrvFilter();
         initTableMedicine();
+        actionMapping();
         search();
         sorter = new TableRowSorter(tblVoucher.getModel());
         tblVoucher.setRowSorter(sorter);
         initTableVoucher();
         addSelectionListenerVoucher();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -91,7 +99,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                 }
             }
         }
-        txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat());
+        //txtVouTotal.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
 
     @Override
@@ -113,37 +121,58 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Supplier List", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Supplier List", dao, locationId);
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
-        BindingUtil.BindComboFilter(cboVStatus, dao.findAll("VouStatus"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+            BindingUtil.BindComboFilter(cboVStatus, dao.findAll("VouStatus"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboCusGroup);
-        new ComBoBoxAutoComplete(cboVStatus);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboCusGroup);
+            new ComBoBoxAutoComplete(cboVStatus);
 
-        cboPayment.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
-        cboCusGroup.setSelectedIndex(0);
-        cboVStatus.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+            cboCusGroup.setSelectedIndex(0);
+            cboVStatus.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'PurSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'PurSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
+        tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(10);
+        tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(190);
+        tblMedicine.getColumnModel().getColumn(0).setCellEditor(
+                new SaleTableCodeCellEditor(dao));
     }
 
     private void initTableVoucher() {
@@ -174,15 +203,21 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo :" + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -207,48 +242,61 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     }// </editor-fold>
 
     private String getHSQL() {
-        String strSql = "select distinct v from PurHis v join v.purDetailHis h where v.purDate between '"
-                + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
+        String strFieldName = "sh.cus_id";
+        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+            strFieldName = "tr.stu_no";
+        }
+        String strSql = "select distinct date(sh.pur_date) pur_date, sh.pur_inv_id, sh.remark, sh.ref_no, \n"
+                + "sh.cus_id, tr.trader_name, sh.paid, sh.discount, sh.balance,\n"
+                + "usr.user_name, sh.vou_total, l.location_name, sh.deleted, sh.balance, \n"
+                + "tr.stu_no \n"
+                + "from pur_his sh\n"
+                + "join pur_detail_his sdh on sh.pur_inv_id = sdh.vou_no\n"
+                + "join medicine med on sdh.med_id = med.med_id\n"
+                + "join appuser usr on sh.created_by = usr.user_id\n"
+                + "join location l on sh.location = l.location_id \n"
+                + "left join trader tr on sh.cus_id = tr.trader_id "
+                + "where sh.pur_date between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";
 
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
 
         if (txtCusCode.getText() != null && !txtCusCode.getText().isEmpty()) {
-            strSql = strSql + " and v.customerId.traderId = '" + txtCusCode.getText() + "'";
+            strSql = strSql + " and " + strFieldName + " = '" + txtCusCode.getText() + "'";
         } else {
             vouFilter.setTrader(null);
         }
 
         if (cboLocation.getSelectedItem() instanceof Location) {
             Location location = (Location) cboLocation.getSelectedItem();
-            strSql = strSql + " and v.locationId.locationId = " + location.getLocationId();
+            strSql = strSql + " and sh.location = " + location.getLocationId();
         } else {
             vouFilter.setLocation(null);
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-                strSql = strSql + " and v.locationId.locationId in (select a.key.locationId from UserLocationMapping a \n"
-                        + "where a.key.userId = '" + Global.loginUser.getUserId()
-                        + "' and a.isAllowSessCheck = true)";
+                strSql = strSql + " and sh.location in (select a.location_id from user_location_mapping a \n"
+                        + "where a.user_id = '" + Global.loginUser.getUserId()
+                        + "' and a.allow_sale = true)";
             }
         }
 
         if (cboSession.getSelectedItem() instanceof Session) {
             Session session = (Session) cboSession.getSelectedItem();
-            strSql = strSql + " and v.session = " + session.getSessionId();
+            strSql = strSql + " and sh.session_id = " + session.getSessionId();
         } else {
             vouFilter.setSession(null);
         }
 
         if (cboPayment.getSelectedItem() instanceof PaymentType) {
             PaymentType paymentType = (PaymentType) cboPayment.getSelectedItem();
-            strSql = strSql + " and v.paymentTypeId.paymentTypeId = " + paymentType.getPaymentTypeId();
+            strSql = strSql + " and sh.payment_type = " + paymentType.getPaymentTypeId();
             vouFilter.setPaymentType(paymentType);
         } else {
             vouFilter.setPaymentType(null);
         }
 
         if (!txtVouNo.getText().trim().isEmpty()) {
-            strSql = strSql + " and v.purInvId = '" + txtVouNo.getText().trim() + "'";
+            strSql = strSql + " and sh.pur_inv_id = '" + txtVouNo.getText().trim() + "'";
             vouFilter.setVouNo(txtVouNo.getText().trim());
         } else {
             vouFilter.setVouNo(null);
@@ -256,49 +304,57 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
 
         if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
             CustomerGroup cusGroup = (CustomerGroup) cboCusGroup.getSelectedItem();
-            strSql = strSql + " and v.customerId.traderGroup.groupId = " + cusGroup.getGroupId();
+            strSql = strSql + " and tr.group_id = '"
+                    + cusGroup.getGroupId() + "'";
         } else {
             vouFilter.setCusGroup(null);
         }
 
         if (cboVStatus.getSelectedItem() instanceof VouStatus) {
             VouStatus vouStatus = (VouStatus) cboVStatus.getSelectedItem();
-            strSql = strSql + " and v.vouStatus.statusId = " + vouStatus.getStatusId();
+            strSql = strSql + " and sh.vou_status = " + vouStatus.getStatusId();
         } else {
             vouFilter.setVouStatus(null);
         }
 
         if (!txtRemark.getText().trim().isEmpty()) {
-            strSql = strSql + " and v.refNo like '" + txtRemark.getText() + "%' ";
+            strSql = strSql + " and sh.remark like '%" + txtRemark.getText() + "%' ";
             vouFilter.setRemark(txtRemark.getText());
         } else {
             vouFilter.setRemark(null);
         }
-        
-        if(txtCode.getText() != null){
-            if(!txtCode.getText().trim().isEmpty()){
+
+        if (txtCode.getText() != null) {
+            if (!txtCode.getText().trim().isEmpty()) {
                 String itemCode = txtCode.getText().trim().toUpperCase();
                 vouFilter.setItemCode(itemCode);
-                strSql = strSql + " and upper(h.medId.medId) like '" + itemCode + "%'";
-            }else{
+                strSql = strSql + " and upper(med.short_name) like '" + itemCode.toUpperCase() + "%'";
+            } else {
                 vouFilter.setItemCode(null);
             }
-        }else{
+        } else {
             vouFilter.setItemCode(null);
         }
-        
-        if(txtDesp.getText() != null){
-            if(!txtDesp.getText().trim().isEmpty()){
+
+        if (txtDesp.getText() != null) {
+            if (!txtDesp.getText().trim().isEmpty()) {
                 String itemDesp = txtDesp.getText().trim().toUpperCase();
                 vouFilter.setItemDesp(itemDesp);
-                strSql = strSql + " and upper(h.medId.medName) like '" + itemDesp + "%'";
-            }else{
+                strSql = strSql + " and upper(med.med_name) like '" + itemDesp.toUpperCase() + "%'";
+            } else {
                 vouFilter.setItemDesp(null);
             }
-        }else{
+        } else {
             vouFilter.setItemDesp(null);
         }
-        
+
+        String strType = cboType.getSelectedItem().toString();
+        if (strType.equals("Normal")) {
+            strSql = strSql + " and sh.deleted = false";
+        } else {
+            strSql = strSql + " and sh.deleted = true";
+        }
+
         //Filter history save
         try {
             if (chkSave.isSelected()) {
@@ -310,18 +366,78 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             log.error("getHSQL : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
 
-        return strSql + " order by date(v.purDate) DESC, v.purInvId DESC";
+        List<VouCodeFilter> listMedicine = tblMedicineModel.getListCodeFilter();
+
+        if (listMedicine.size() > 1) {
+            strSql = strSql + " and sdh.med_id in (";
+            String medList = "";
+
+            for (VouCodeFilter filter : listMedicine) {
+                if (filter.getKey() != null) {
+                    if (medList.length() > 0) {
+                        medList = medList + ",'" + filter.getKey().getItemCode().getMedId() + "'";
+                    } else {
+                        medList = "'" + filter.getKey().getItemCode().getMedId() + "'";
+                    }
+                }
+            }
+
+            strSql = strSql + medList + ")";
+        }
+        return strSql + " order by date(sh.pur_date) DESC, sh.pur_inv_id DESC";
+    }
+
+    private List<VoucherSearch> getSearchVoucher() {
+        String strSql = getHSQL();
+        List<VoucherSearch> listVS = null;
+
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            listVS = new ArrayList();
+            if (rs != null) {
+                while (rs.next()) {
+                    VoucherSearch vs = new VoucherSearch();
+                    vs.setCusName(rs.getString("trader_name"));
+                    if (prifxStatus.equals("Y")) {
+                        //log.info("stu_no : " + rs.getString("stu_no"));
+                        vs.setCusNo(rs.getString("stu_no"));
+                    } else {
+                        vs.setCusNo(rs.getString("cus_id"));
+                    }
+                    vs.setInvNo(rs.getString("sh.pur_inv_id"));
+                    vs.setIsDeleted(rs.getBoolean("deleted"));
+                    vs.setLocation(rs.getString("location_name"));
+                    vs.setRefNo(rs.getString("ref_no"));
+                    vs.setTranDate(rs.getDate("pur_date"));
+                    vs.setUserName(rs.getString("user_name"));
+                    vs.setVouTotal(rs.getDouble("vou_total"));
+                    vs.setBalance(rs.getDouble("balance"));
+                    vs.setPaid(rs.getDouble("paid"));
+                    vs.setDiscount(rs.getDouble("discount"));
+                    vs.setBalance(rs.getDouble("balance"));
+                    listVS.add(vs);
+                }
+            }
+
+        } catch (Exception ex) {
+            log.error("getSearchVoucher : " + ex.toString());
+        } finally {
+            dao.close();
+        }
+
+        return listVS;
     }
 
     private void search() {
         String strSql = getHSQL();
-        //System.out.println("HSQL : " + strSql);
+        System.out.println("HSQL : " + strSql);
 
         try {
-            dao.open();
-            purVouTableModel.setListPurHis(dao.findAllHSQL(strSql));
-            txtTotalAmount.setValue(purVouTableModel.getTotal());
-            dao.close();
+            purVouTableModel.setListPurHis(getSearchVoucher());
+            txtVouTotal.setValue(NumberUtil.roundTo(purVouTableModel.getTotal(), 0));
+            txtDiscount.setValue(NumberUtil.roundTo(purVouTableModel.getTtlDisc(), 0));
+            txtPaid.setValue(NumberUtil.roundTo(purVouTableModel.getTtlPaid(), 0));
+            txtBalance.setValue(NumberUtil.roundTo(purVouTableModel.getTtlBalance(), 0));
         } catch (Exception ex) {
             log.error("search : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
@@ -331,8 +447,8 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
 
     private void select() {
         if (selectedRow >= 0) {
-            observer.selected("PurVouList",
-                    purVouTableModel.getSelectVou(tblVoucher.convertRowIndexToModel(selectedRow)));
+            VoucherSearch vs = purVouTableModel.getSelectVou(tblVoucher.convertRowIndexToModel(selectedRow));
+            observer.selected("PurVouList", vs);
 
             if (parent instanceof JDialog) {
                 ((JDialog) parent).dispose();
@@ -346,110 +462,125 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     private void getPrvFilter() {
         VouFilter tmpFilter;
         String propValue = Util1.getPropValue("system.search.filter.history");
-        if (propValue.equals("M")) {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
-                    + " and key.userId = '" + Global.machineId + "'");
-        } else {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
-                    + " and key.userId = '" + Global.loginUser.getUserId() + "'");
-        }
-
-        if (tmpFilter == null) {
-            chkSave.setSelected(false);
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("PurVouSearch");
+        try {
             if (propValue.equals("M")) {
-                vouFilter.getKey().setUserId(Global.machineId);
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             } else {
-                vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             }
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            chkSave.setSelected(true);
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+            if (tmpFilter == null) {
+                chkSave.setSelected(false);
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("PurVouSearch");
+                if (propValue.equals("M")) {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                } else {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                }
 
-            if (vouFilter.getTrader() != null) {
-                txtCusCode.setText(vouFilter.getTrader().getTraderId());
-                txtCusName.setText(vouFilter.getTrader().getTraderName());
-            }
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                chkSave.setSelected(true);
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
-            }
+                if (vouFilter.getTrader() != null) {
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode.setText(vouFilter.getTrader().getStuCode());
+                    } else {
+                        txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    }
+                    txtCusName.setText(vouFilter.getTrader().getTraderName());
+                }
 
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
 
-            if (vouFilter.getPaymentType() != null) {
-                cboPayment.setSelectedItem(vouFilter.getPaymentType());
-            }
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
 
-            txtVouNo.setText(vouFilter.getVouNo());
+                if (vouFilter.getPaymentType() != null) {
+                    cboPayment.setSelectedItem(vouFilter.getPaymentType());
+                }
 
-            if (vouFilter.getCusGroup() != null) {
-                cboCusGroup.setSelectedItem(vouFilter.getCusGroup());
-            }
+                txtVouNo.setText(vouFilter.getVouNo());
 
-            if (vouFilter.getVouStatus() != null) {
-                cboVStatus.setSelectedItem(vouFilter.getVouStatus());
-            }
+                if (vouFilter.getCusGroup() != null) {
+                    cboCusGroup.setSelectedItem(vouFilter.getCusGroup());
+                }
 
-            if (vouFilter.getRemark() != null) {
-                txtRemark.setText(vouFilter.getRemark());
-            }
-            
-            if (vouFilter.getItemCode() != null) {
-                txtCode.setText(vouFilter.getItemCode().trim());
-            }
+                if (vouFilter.getVouStatus() != null) {
+                    cboVStatus.setSelectedItem(vouFilter.getVouStatus());
+                }
 
-            if (vouFilter.getItemDesp() != null) {
-                txtDesp.setText(vouFilter.getItemDesp().trim());
+                if (vouFilter.getRemark() != null) {
+                    txtRemark.setText(vouFilter.getRemark());
+                }
+
+                if (vouFilter.getItemCode() != null) {
+                    txtCode.setText(vouFilter.getItemCode().trim());
+                }
+
+                if (vouFilter.getItemDesp() != null) {
+                    txtDesp.setText(vouFilter.getItemDesp().trim());
+                }
             }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private Trader getTrader(String traderId) {
         Trader cus = null;
         try {
-            if (!traderId.contains("SUP")) {
-                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                    if (!Util1.getPropValue("system.default.customer").equals(traderId)) {
-                        traderId = "SUP" + traderId;
-                    }
-                }
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
             }
-            /*if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+
+            if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 String strSql;
-                int locationId;
                 if (cboLocation.getSelectedItem() instanceof Location) {
-                    locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+                    int locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
                     strSql = "select o from Trader o where "
                             + "o.active = true and o.traderId in (select a.key.traderId "
                             + "from LocationTraderMapping a where a.key.locationId = "
-                            + locationId + ") and o.traderId = '" + traderId.toUpperCase() + "' order by o.traderName";
+                            + locationId + ") and " + strFieldName + " = '" + traderId + "' order by o.traderName";
                 } else {
                     strSql = "select o from Trader o where "
                             + "o.active = true and o.traderId in (select a.key.traderId "
                             + "from LocationTraderMapping a where a.key.locationId in ("
                             + "select a.key.locationId from UserLocationMapping a "
                             + "where a.key.userId = '" + Global.loginUser.getUserId()
-                            + "' and a.isAllowSessCheck = true)) and o.traderId = '"
+                            + "' and a.isAllowPur = true)) and " + strFieldName + " = '"
                             + traderId.toUpperCase() + "' order by o.traderName";
                 }
+
+                log.info("getTrader : " + strSql);
                 List<Trader> listTrader = dao.findAllHSQL(strSql);
+
                 if (listTrader != null) {
                     if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);
                     }
                 }
-            } else {*/
-                cus = (Trader) dao.find(Trader.class, traderId);
-            //}
+            } else {
+                List<Trader> listTrader = dao.findAllHSQL("select o from Trader where " + strFieldName + " = '" + traderId + "'");
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
+            }
         } catch (Exception ex) {
             log.error("getTrader : " + ex.toString());
         } finally {
@@ -457,6 +588,69 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         }
 
         return cus;
+    }
+
+    private void actionMapping() {
+        //F3 event on tblSale
+        tblMedicine.getInputMap().put(KeyStroke.getKeyStroke("F3"), "F3-Action");
+        tblMedicine.getActionMap().put("F3-Action", actionMedList);
+
+        //F8 event on tblSale
+        tblMedicine.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
+        tblMedicine.getActionMap().put("F8-Action", actionMedDelete);
+
+        //Enter event on tblSale
+        //tblSale.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
+        //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
+    }
+
+    private Action actionMedList = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                tblMedicine.getCellEditor().stopCellEditing();
+            } catch (Exception ex) {
+                //No entering medCode, only press F3
+                try {
+                    dao.open();
+                    getMedList("");
+                    dao.close();
+                } catch (Exception ex1) {
+                    log.error("actionMedList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
+                }
+            }
+        }
+    };
+
+    private Action actionMedDelete = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (tblMedicine.getSelectedRow() >= 0) {
+                tblMedicineModel.delete(tblMedicine.getSelectedRow());
+            }
+        }
+    };
+
+    private List getLocationFilter() {
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowSale = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
+        return null;
     }
 
     /**
@@ -495,16 +689,26 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         jLabel13 = new javax.swing.JLabel();
         txtCode = new javax.swing.JTextField();
         txtDesp = new javax.swing.JTextField();
+        jLabel14 = new javax.swing.JLabel();
+        cboType = new javax.swing.JComboBox<>();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tblMedicine = new javax.swing.JTable(tblMedicineModel);
         jScrollPane2 = new javax.swing.JScrollPane();
         tblVoucher = new javax.swing.JTable();
         butSearch = new javax.swing.JButton();
         butSelect = new javax.swing.JButton();
-        lblTotalRec = new javax.swing.JLabel();
         butPromo = new javax.swing.JButton();
         jLabel11 = new javax.swing.JLabel();
-        txtTotalAmount = new javax.swing.JFormattedTextField();
+        txtVouTotal = new javax.swing.JFormattedTextField();
+        txtDiscount = new javax.swing.JFormattedTextField();
+        txtPaid = new javax.swing.JFormattedTextField();
+        txtBalance = new javax.swing.JFormattedTextField();
+        lblTotalRec = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
 
-        setPreferredSize(new java.awt.Dimension(1200, 600));
+        setPreferredSize(new java.awt.Dimension(1400, 600));
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Date");
@@ -529,7 +733,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         });
 
         jLabel3.setFont(Global.lableFont);
-        jLabel3.setText("Customer");
+        jLabel3.setText("Supplier");
 
         txtCusCode.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         txtCusCode.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -559,17 +763,17 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         jLabel4.setFont(Global.lableFont);
         jLabel4.setText("Location");
 
-        cboLocation.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboLocation.setFont(Global.textFont);
 
         jLabel5.setFont(Global.lableFont);
         jLabel5.setText("Session");
 
-        cboSession.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboSession.setFont(Global.textFont);
 
         jLabel6.setFont(Global.lableFont);
         jLabel6.setText("Payment");
 
-        cboPayment.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboPayment.setFont(Global.textFont);
 
         jLabel8.setFont(Global.lableFont);
         jLabel8.setText("Vou No");
@@ -579,12 +783,12 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         jLabel9.setFont(Global.lableFont);
         jLabel9.setText("Cus-G");
 
-        cboCusGroup.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboCusGroup.setFont(Global.textFont);
 
         jLabel10.setFont(Global.lableFont);
         jLabel10.setText("V-Status");
 
-        cboVStatus.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboVStatus.setFont(Global.textFont);
 
         jLabel7.setFont(Global.lableFont);
         jLabel7.setText("Ref. Vou.");
@@ -595,9 +799,26 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
+        jLabel12.setFont(Global.lableFont);
         jLabel12.setText("Code");
 
+        jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Desp");
+
+        txtCode.setFont(Global.textFont);
+
+        txtDesp.setFont(Global.textFont);
+
+        jLabel14.setFont(Global.lableFont);
+        jLabel14.setText("Type");
+
+        cboType.setFont(Global.textFont);
+        cboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Normal", "Deleted" }));
+
+        tblMedicine.setFont(Global.textFont);
+        tblMedicine.setRowHeight(23);
+        tblMedicine.setShowVerticalLines(false);
+        jScrollPane1.setViewportView(tblMedicine);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -607,49 +828,59 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(20, 20, 20)
-                        .addComponent(cboLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel3)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtCusCode))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel8)
-                            .addComponent(jLabel9)
-                            .addComponent(jLabel10)
-                            .addComponent(jLabel7)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel13))
-                        .addGap(21, 21, 21)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtDesp)
-                            .addComponent(txtCode)
-                            .addComponent(txtRemark)
-                            .addComponent(cboVStatus, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cboCusGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtVouNo)
-                            .addComponent(cboSession, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cboPayment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(jLabel10)
+                        .addGap(18, 18, 18)
+                        .addComponent(cboVStatus, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtRemark))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel12)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtCode))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel13)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtDesp))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtToDate, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                 .addComponent(chkSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addComponent(jLabel1))
-                        .addGap(20, 20, 20)
+                                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel8)
+                            .addComponent(jLabel9))
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(txtToDate, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE))
-                            .addComponent(txtCusCode)
-                            .addComponent(txtCusName))))
+                            .addComponent(cboCusGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtVouNo)
+                            .addComponent(cboPayment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cboSession, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtCusName)
+                            .addComponent(cboLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel14)
+                        .addGap(18, 18, 18)
+                        .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 314, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel12, jLabel13, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {chkSave, jLabel1, jLabel10, jLabel12, jLabel13, jLabel14, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
 
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -698,13 +929,19 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
                     .addComponent(txtCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel13)
                     .addComponent(txtDesp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 155, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
@@ -734,8 +971,6 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
-        lblTotalRec.setText("Total Records : 0");
-
         butPromo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         butPromo.setText("Promo List");
         butPromo.addActionListener(new java.awt.event.ActionListener() {
@@ -744,27 +979,58 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
-        jLabel11.setText("Total Amount : ");
+        jLabel11.setText("VTotal  : ");
 
-        txtTotalAmount.setEditable(false);
-        txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtVouTotal.setEditable(false);
+        txtVouTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        txtDiscount.setEditable(false);
+        txtDiscount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        txtPaid.setEditable(false);
+        txtPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        txtBalance.setEditable(false);
+        txtBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        lblTotalRec.setText("Total Records : 0");
+
+        jLabel15.setText("Disc : ");
+
+        jLabel16.setText("Paid : ");
+
+        jLabel17.setText("Balance : ");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 237, Short.MAX_VALUE)
+                        .addComponent(txtVouTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel15)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 7, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel17)
+                        .addGap(7, 7, 7)
+                        .addComponent(txtBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 96, Short.MAX_VALUE)
                         .addComponent(butPromo)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butSearch)
@@ -772,20 +1038,31 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                         .addComponent(butSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtBalance, txtDiscount, txtPaid, txtVouTotal});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 545, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 540, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butSelect)
                     .addComponent(butSearch)
-                    .addComponent(lblTotalRec)
                     .addComponent(butPromo)
                     .addComponent(jLabel11)
-                    .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtVouTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblTotalRec)
+                    .addComponent(jLabel15)
+                    .addComponent(jLabel16)
+                    .addComponent(jLabel17))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -820,12 +1097,17 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         if (txtCusCode.getText() == null || txtCusCode.getText().isEmpty()) {
             txtCusName.setText(null);
         } else {
+            log.info("getTrader");
             Trader trader = getTrader(txtCusCode.getText().trim());
-            if(trader != null){
-                txtCusCode.setText(trader.getTraderId());
+            if (trader != null) {
+                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                    txtCusCode.setText(trader.getStuCode());
+                } else {
+                    txtCusCode.setText(trader.getTraderId());
+                }
                 txtCusName.setText(trader.getTraderName());
                 vouFilter.setTrader(trader);
-            }else{
+            } else {
                 vouFilter.setTrader(null);
             }
         }
@@ -858,8 +1140,8 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     }//GEN-LAST:event_butSelectActionPerformed
 
     private void butPromoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPromoActionPerformed
-        // TODO add your handling code here:
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Purchase Promo Search", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Purchase Promo Search", dao, -1);
     }//GEN-LAST:event_butPromoActionPerformed
 
     private void chkSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkSaveActionPerformed
@@ -882,6 +1164,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     private javax.swing.JComboBox cboLocation;
     private javax.swing.JComboBox cboPayment;
     private javax.swing.JComboBox cboSession;
+    private javax.swing.JComboBox<String> cboType;
     private javax.swing.JComboBox cboVStatus;
     private javax.swing.JCheckBox chkSave;
     private javax.swing.JLabel jLabel1;
@@ -889,6 +1172,10 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -898,17 +1185,22 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblTotalRec;
+    private javax.swing.JTable tblMedicine;
     private javax.swing.JTable tblVoucher;
+    private javax.swing.JFormattedTextField txtBalance;
     private javax.swing.JTextField txtCode;
     private javax.swing.JTextField txtCusCode;
     private javax.swing.JTextField txtCusName;
     private javax.swing.JTextField txtDesp;
+    private javax.swing.JFormattedTextField txtDiscount;
     private javax.swing.JFormattedTextField txtFromDate;
+    private javax.swing.JFormattedTextField txtPaid;
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtToDate;
-    private javax.swing.JFormattedTextField txtTotalAmount;
     private javax.swing.JFormattedTextField txtVouNo;
+    private javax.swing.JFormattedTextField txtVouTotal;
     // End of variables declaration//GEN-END:variables
 }

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" pageWidth="216" pageHeight="1600" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ClinicSession" pageWidth="216" pageHeight="1600" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="72"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
 	<parameter name="user" class="java.lang.String"/>
 	<parameter name="session_name" class="java.lang.String"/>
 	<parameter name="session_user" class="java.lang.String"/>
@@ -29,8 +30,8 @@
 	<queryString>
 		<![CDATA[select * from
 (select oc.cat_name,sum(ifnull(odh.amount,0)) ttl,'OPD' tran_option
-from opd_service os,opd_details_his odh,opd_his oh,opd_join oj,opd_category oc
-where oh.opd_inv_id=oj.opd_inv_id and oj.opd_detail_id=odh.opd_detail_id and
+from opd_service os,opd_details_his odh,opd_his oh,opd_category oc
+where oh.opd_inv_id=odh.vou_no and
 odh.service_id=os.service_id and os.cat_id=oc.cat_id 
 and date(oh.opd_date) between $P{session_fdate} and $P{session_tdate}
 and (oh.session_id = $P{session_id} or '-1' = $P{session_id})
@@ -43,8 +44,8 @@ and (oh.deleted = false)
 group by oc.cat_name
 Union
 select oc.cat_name,sum(ifnull(odh.amount,0)) ttl,'DC' tran_option
-from inp_service os,dc_details_his odh,dc_his oh,dc_join oj,inp_category oc
-where oh.dc_inv_id=oj.dc_inv_id and oj.dc_detail_id=odh.dc_detail_id and
+from inp_service os,dc_details_his odh,dc_his oh,inp_category oc
+where oh.dc_inv_id=odh.vou_no and
 odh.service_id=os.service_id and os.cat_id=oc.cat_id 
 and date(oh.dc_date) between $P{session_fdate} and $P{session_tdate} 
 and (oh.session_id = $P{session_id} or '-1' = $P{session_id}) and (oh.currency_id = $P{session_currency} or 'All' = $P{session_currency})
@@ -55,8 +56,8 @@ and (oh.deleted = false)
 group by oc.cat_name
 Union
 select oc.group_name,sum(ifnull(odh.amount,0)) ttl,'OT' tran_option
-from ot_service os,ot_details_his odh,ot_his oh,ot_join oj,ot_group oc
-where oh.ot_inv_id=oj.ot_inv_id and oj.ot_detail_id=odh.ot_detail_id and
+from ot_service os,ot_details_his odh,ot_his oh,ot_group oc
+where oh.ot_inv_id=odh.vou_no and
 odh.service_id=os.service_id and os.group_id=oc.group_id 
 and date(oh.ot_date) between $P{session_fdate} and $P{session_tdate} 
 and (oh.session_id = $P{session_id} or '-1' = $P{session_id}) and (oh.currency_id = $P{session_currency} or 'All' = $P{session_currency})

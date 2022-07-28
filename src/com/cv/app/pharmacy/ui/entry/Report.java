@@ -21,6 +21,7 @@ import com.cv.app.pharmacy.database.entity.ItemGroup;
 import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.LocationGroup;
+import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.Menu;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Session;
@@ -33,6 +34,8 @@ import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt;
 import com.cv.app.pharmacy.database.tempentity.TmpCostDetails;
 import com.cv.app.pharmacy.database.tempentity.TmpMinusFixed;
 import com.cv.app.pharmacy.database.tempentity.TmpMonthFilter;
+import com.cv.app.pharmacy.database.tempentity.TmpStockBalOuts;
+import com.cv.app.pharmacy.database.tempentity.TmpStockBalOutsKey;
 import com.cv.app.pharmacy.database.tempentity.TmpStockOpeningDetailHisInsert;
 import com.cv.app.pharmacy.database.view.VMedRel;
 import com.cv.app.pharmacy.excel.AuditLogExcel;
@@ -76,6 +79,7 @@ import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableModel;
 import com.cv.app.pharmacy.util.MedicineUP;
+import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -124,6 +128,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private DoctorFilterTableModel doctorFilterTableModel = new DoctorFilterTableModel(dao);
     private final String strCodeFilter = Util1.getPropValue("system.item.location.filter");
     private int mouseClick = 2;
+    private final String prefix = Util1.getPropValue("system.sale.emitted.prifix");
 
     /**
      * Creates new form Report
@@ -156,54 +161,60 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboReportType, dao.findAll("Menu",
-                "parent = 19 and menuType.typeId = 5"));
-        BindingUtil.BindComboFilter(cboPayment,
-                dao.findAllHSQL("select o from PaymentType o order by o.paymentTypeName"));
-        BindingUtil.BindComboFilter(cboLocation,
-                dao.findAllHSQL("select o from Location o order by o.locationName"));
-        BindingUtil.BindComboFilter(cboToLocation,
-                dao.findAllHSQL("select o from Location o order by o.locationName"));
-        BindingUtil.BindComboFilter(cboVouStatus,
-                dao.findAllHSQL("select o from VouStatus o order by o.statusDesp"));
-        BindingUtil.BindComboFilter(cboCurrency,
-                dao.findAllHSQL("select o from Currency o order by o.currencyName"));
-        BindingUtil.BindComboFilter(cboCusGroup,
-                dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboItemType,
-                dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
-        BindingUtil.BindComboFilter(cboCategory,
-                dao.findAllHSQL("select o from Category o order by o.catName"));
-        BindingUtil.BindComboFilter(cboBrand,
-                dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
-        BindingUtil.BindComboFilter(cboTownship,
-                dao.findAllHSQL("select o from Township o order by o.townshipName"));
-        BindingUtil.BindComboFilter(cboExpenseType,
-                dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
-        BindingUtil.BindComboFilter(cboCustomG, dao.findAllHSQL(
-                "select o from ItemGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboSession,
-                dao.findAllHSQL("select o from Session o order by o.sessionName"));
-        BindingUtil.BindComboFilter(cboLocGroup,
-                dao.findAllHSQL("select o from LocationGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboSystem,
-                dao.findAllHSQL("select o from PharmacySystem o order by o.systemDesp"));
+        try {
+            BindingUtil.BindCombo(cboReportType, dao.findAll("Menu",
+                    "parent = 19 and menuType.typeId = 5"));
+            BindingUtil.BindComboFilter(cboPayment,
+                    dao.findAllHSQL("select o from PaymentType o order by o.paymentTypeName"));
+            BindingUtil.BindComboFilter(cboLocation,
+                    dao.findAllHSQL("select o from Location o order by o.locationName"));
+            BindingUtil.BindComboFilter(cboToLocation,
+                    dao.findAllHSQL("select o from Location o order by o.locationName"));
+            BindingUtil.BindComboFilter(cboVouStatus,
+                    dao.findAllHSQL("select o from VouStatus o order by o.statusDesp"));
+            BindingUtil.BindComboFilter(cboCurrency,
+                    dao.findAllHSQL("select o from Currency o order by o.currencyName"));
+            BindingUtil.BindComboFilter(cboCusGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboItemType,
+                    dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+            BindingUtil.BindComboFilter(cboCategory,
+                    dao.findAllHSQL("select o from Category o order by o.catName"));
+            BindingUtil.BindComboFilter(cboBrand,
+                    dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+            BindingUtil.BindComboFilter(cboTownship,
+                    dao.findAllHSQL("select o from Township o order by o.townshipName"));
+            BindingUtil.BindComboFilter(cboExpenseType,
+                    dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
+            BindingUtil.BindComboFilter(cboCustomG, dao.findAllHSQL(
+                    "select o from ItemGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboSession,
+                    dao.findAllHSQL("select o from Session o order by o.sessionName"));
+            BindingUtil.BindComboFilter(cboLocGroup,
+                    dao.findAllHSQL("select o from LocationGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboSystem,
+                    dao.findAllHSQL("select o from PharmacySystem o order by o.systemDesp"));
 
-        AutoCompleteDecorator.decorate(cboPayment);
-        AutoCompleteDecorator.decorate(cboLocation);
-        AutoCompleteDecorator.decorate(cboToLocation);
-        AutoCompleteDecorator.decorate(cboVouStatus);
-        AutoCompleteDecorator.decorate(cboCurrency);
-        AutoCompleteDecorator.decorate(cboReportType);
-        AutoCompleteDecorator.decorate(cboCusGroup);
-        AutoCompleteDecorator.decorate(cboCategory);
-        AutoCompleteDecorator.decorate(cboBrand);
-        AutoCompleteDecorator.decorate(cboTownship);
-        AutoCompleteDecorator.decorate(cboExpenseType);
-        AutoCompleteDecorator.decorate(cboCustomG);
-        AutoCompleteDecorator.decorate(cboSession);
-        AutoCompleteDecorator.decorate(cboLocGroup);
-        AutoCompleteDecorator.decorate(cboSystem);
+            AutoCompleteDecorator.decorate(cboPayment);
+            AutoCompleteDecorator.decorate(cboLocation);
+            AutoCompleteDecorator.decorate(cboToLocation);
+            AutoCompleteDecorator.decorate(cboVouStatus);
+            AutoCompleteDecorator.decorate(cboCurrency);
+            AutoCompleteDecorator.decorate(cboReportType);
+            AutoCompleteDecorator.decorate(cboCusGroup);
+            AutoCompleteDecorator.decorate(cboCategory);
+            AutoCompleteDecorator.decorate(cboBrand);
+            AutoCompleteDecorator.decorate(cboTownship);
+            AutoCompleteDecorator.decorate(cboExpenseType);
+            AutoCompleteDecorator.decorate(cboCustomG);
+            AutoCompleteDecorator.decorate(cboSession);
+            AutoCompleteDecorator.decorate(cboLocGroup);
+            AutoCompleteDecorator.decorate(cboSystem);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String getHSQL() {
@@ -218,8 +229,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void getReportList() {
-        List<Menu> listReport = dao.findAllHSQL(getHSQL());
-        tableModel.setListReport(listReport);
+        try {
+            List<Menu> listReport = dao.findAllHSQL(getHSQL());
+            tableModel.setListReport(listReport);
+        } catch (Exception ex) {
+            log.error("getReportList : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -362,9 +379,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + strOpDate + "'";
@@ -407,7 +424,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         if (codeTableModel.getListCodeFilter().size() > 1) {
             strSQL = strSQL + " and m.med_id in (select item_code from "
                     + "tmp_item_code_filter_rpt where user_id = '"
-                    + Global.loginUser.getUserId() + "')";
+                    + Global.machineId + "')";
         }
 
         if (cboCustomG.getSelectedItem() instanceof ItemGroup) {
@@ -455,9 +472,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void insertItemFilterCode() {
         String strDelSql = "delete from tmp_code_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSql = "insert into tmp_code_filter(item_code, user_id) "
-                + "select m.med_id, '" + Global.loginUser.getUserId() + "' from medicine m ";
+                + "select m.med_id, '" + Global.machineId + "' from medicine m ";
         String strWhere = "";
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -491,11 +508,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             if (!strWhere.isEmpty()) {
                 strWhere = strWhere + " and m.med_id in (select item_code from "
                         + "tmp_item_code_filter_rpt where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             } else {
                 strWhere = "m.med_id in (select item_code from "
                         + "tmp_item_code_filter_rpt where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             }
         }
 
@@ -521,10 +538,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void insertTraderFilterCode(String disc) {
         String currencyId;
         String strSQLDelete = "delete from tmp_trader_bal_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_trader_bal_filter(trader_id,currency,op_date,user_id, amount) "
                 + "select t.trader_id, t.cur_code, "
-                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(trop.op_date, '1900-01-01'),'" + Global.machineId
                 + "', ifnull(trop.op_amount,0)"
                 + " from v_trader_cur t left join "
                 + "(select a.trader_id, a.currency, a.op_date, a.op_amount\n"
@@ -532,7 +549,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 + "where op_date <= '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' group by trader_id, currency) b\n"
                 + "where a.trader_id = b.trader_id and a.currency = b.currency and a.op_date = b.op_date) trop on t.trader_id = trop.trader_id \n"
                 + " and t.cur_code = trop.currency ";
-        
+
         String strFilter = "";
 
         if (disc.equals("C") || disc.equals("S") || disc.equals("P")) {
@@ -573,10 +590,27 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         if (traderTableModel.getRowCount() > 1) {
             if (strFilter.isEmpty()) {
                 strFilter = "t.trader_id in (select trader_id from tmp_trader_filter "
-                        + " where user_id = '" + Global.loginUser.getUserId() + "')";
+                        + " where user_id = '" + Global.machineId + "')";
             } else {
                 strFilter = strFilter + " and t.trader_id in (select trader_id from tmp_trader_filter "
-                        + " where user_id = '" + Global.loginUser.getUserId() + "')";
+                        + " where user_id = '" + Global.machineId + "')";
+            }
+        }
+
+        if (prefix.equals("Y")) {
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                int locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+                if (strFilter.isEmpty()) {
+                    strFilter = "t.trader_id in (select trader_id from location_trader_mapping where location_id = " + locationId + ")";
+                } else {
+                    strFilter = strFilter + " and t.trader_id in (select trader_id from location_trader_mapping where location_id = " + locationId + ")";
+                }
+            } else {
+                /*if(strFilter.isEmpty()){
+                    strFilter = "t.trader_id in ()";
+                }else{
+                    strFilter = strFilter + " and t.trader_id in ()";
+                }*/
             }
         }
 
@@ -599,15 +633,19 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
+    private String getUserLocationFilterSql(String option) {
+        return null;
+    }
+
     /*
      * option = -1 for sale outstand option = -2 for purchase outstand
      */
     private void insertStockOutsFilterCode(int option) {
         String filter = "";
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "' and location_id = " + option;
+                + Global.machineId + "' and location_id = " + option;
         String strSQL = "insert into tmp_stock_filter(location_id, med_id, user_id) "
-                + "select " + option + ", m.med_id, '" + Global.loginUser.getUserId()
+                + "select " + option + ", m.med_id, '" + Global.machineId
                 + "' from medicine m ";
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -644,11 +682,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             if (filter.isEmpty()) {
                 filter = "m.med_id in (select item_code from "
                         + "tmp_item_code_filter_rpt where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             } else {
                 filter = filter + " and m.med_id in (select item_code from "
                         + "tmp_item_code_filter_rpt where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             }
         }
 
@@ -695,222 +733,181 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
         int index = tblReportList.convertRowIndexToModel(tblReportList.getSelectedRow());
         if (index >= 0) {
-            Menu report = tableModel.getSelectedReport(index);
+            try {
+                Menu report = tableModel.getSelectedReport(index);
+                Menu parent = (Menu) dao.find(Menu.class, report.getParent());
+                String disc = "A";
 
-            //insertTraderFilterCode();
-            //insertStockOutsFilterCode(-1);
-
-            /*if (report.getParent() == 34 || report.getParent() == 33) { //Stock Report
-             insertStockFilterCode();
-             }*/
-            Menu parent = (Menu) dao.find(Menu.class, report.getParent());
-            String disc = "A";
-
-            if (parent.getMenuClass().equals("CustomerBalanceUPV")) {
-                disc = "C";
-            }
-            /*if(report.getMenuClass().contains("Customer")){
-             disc = "C";
-             }else if(report.getMenuClass().contains("Supplier")){
-             disc = "S";
-             }*/
- /*if (report.getMenuClass().equals("rptBarCode")) {
-             insertBarcodeFilter();
-             } else {*/
-            insertStockFilterCode();
-            insertTraderFilterCode(disc);
-            //}
-
-            /*switch (parent.getMenuClass()){
-             case "ItemList":
-             case "StockReport":
-             case "SaleReport":
-             case "PurchaseReport":
-             case "ReturnInReport":
-             case "ReturnOutReport":
-             case "DamageReport":
-             case "TransferReport":
-             insertStockFilterCode();
-             break;
-             case "CustomerReport": //Customer balance
-             insertTraderFilterCode();
-             break;
-             }*/
-            switch (report.getMenuClass()) {
-                case "StockBalanceBrand":
-                case "StockBalanceBrandWithSalePrice":
-                case "StockBalanceExp":
-                case "StockBalanceExpKS":
-                case "StockBalance":
-                case "StockBalanceKS":
-                case "StockBalanceAllLoc":
-                case "StockBalanceSystem":
-                    execStockBalanceExp(txtTo.getText());
-                    //String strDueFrom = Util1.nullToBlankStr(txtDueDate.getText());
-                    String strDueTo = Util1.nullToBlankStr(txtDueTo.getText());
-                    if (!strDueTo.isEmpty() && !strDueTo.equals("")) {
-                        String strSql = "delete from tmp_stock_balance_exp where user_id = '"
-                                + Global.loginUser.getUserId() + "' and exp_date > '"
-                                + DateUtil.toDateStrMYSQL(strDueTo) + "'";
-                        try {
-                            dao.execSql(strSql);
-                        } catch (Exception ex) {
-                            log.error("delete : " + ex.getMessage());
+                if (parent.getMenuClass().equals("CustomerBalanceUPV")) {
+                    disc = "C";
+                }
+                insertStockFilterCode();
+                insertTraderFilterCode(disc);
+                switch (report.getMenuClass()) {
+                    case "StockBalanceBrand":
+                    case "StockBalanceBrandWithSalePrice":
+                    case "StockBalanceExp":
+                    case "StockBalanceExpKS":
+                    case "StockBalance":
+                    case "StockBalanceKS":
+                    case "StockBalanceAllLoc":
+                    case "StockBalanceSystem":
+                        execStockBalanceExp(txtTo.getText());
+                        //String strDueFrom = Util1.nullToBlankStr(txtDueDate.getText());
+                        String strDueTo = Util1.nullToBlankStr(txtDueTo.getText());
+                        if (!strDueTo.isEmpty() && !strDueTo.equals("")) {
+                            String strSql = "delete from tmp_stock_balance_exp where user_id = '"
+                                    + Global.machineId + "' and exp_date > '"
+                                    + DateUtil.toDateStrMYSQL(strDueTo) + "'";
+                            try {
+                                dao.execSql(strSql);
+                            } catch (Exception ex) {
+                                log.error("delete : " + ex.getMessage());
+                            }
                         }
+                        break;
+                    case "StockExpireList":
+                        execStockBalanceExp(DateUtil.toDateStr(new Date()));
+                        break;
+                    case "StockMovementExp":
+                    case "StockMovementExpKS":
+                    case "StockMovement":
+                    case "StockMovementKS":
+                    case "stockMovementPurchaseOnly":
+                        //execStockBalanceExp();
+                        execStockMovementExp();
+                        break;
+                    case "StockMovementExpKSReOrder":
+                    case "StockMovementExpKSReOrderNoSale":
+                    case "StockMovementExpKSReOrderNoPur":
+                    case "StockMovementExpKSReOrderChem":
+                        execStockMovementExp1(report.getMenuClass());
+                        break;
+                    case "CustomerBalance":
+                    case "CustomerBalanceByLocation":
+                    case "CustomerBalanceByTownship":
+                    case "SupplierBalance":
+                    case "CustomerBalance_Tsp":
+                        execTraderBalanceDate();
+                        deleteTraderBalanceZero();
+                        break;
+                    case "CustomerInOutBalance":
+                        execTraderBalanceDetail();
+                        break;
+                    case "CustomerInOutBalanceDetailA4":
+                        execTraderBalance();
+                        break;
+                    case "SupplierInOutBalance":
+                    case "SupplierInOutBalanceDetailA4":
+                        supplierTraderBalanceDetail();
+                        break;
+                    case "SupplierInOutBalanceSummaryA4":
+                        supplierTraderBalanceSummary();
+                        //execTraderInOutSummary();
+                        break;
+                    case "CustomerInOutBalanceDetail":
+                        execTraderBalance();
+                        break;
+                    case "rptCusBalanceRemark":
+                        //aaa
+                        execTraderBalanceDetailRemark();
+                        break;
+                    case "CustomerInOutBalSummary":
+                    case "SupplierInOutBalSummary":
+                    case "CustomerInOutBalSummaryByDaily":
+                    case "BIDCustomer":
+                        execTraderInOutSummary();
+                        break;
+                    case "StockInOut":
+                    case "StockInOutKS":
+                        execStockInOutBal();
+                        break;
+                    case "rptBarCode":
+                    case "rptBarCodeMO":
+                    case "rptBarCode_Time_Store":
+                    case "rptCodePriceLabel":
+                        //fillBarcode();
+                        insertBarcodeFilter();
+                        break;
+                    case "CustomerBalanceUPV":
+                        execTraderBalanceWithUPV();
+                        break;
+                    case "rptGroundDifference":
+                        execStockBalanceExp(txtTo.getText());
+                        fixMinusBalance(txtTo.getText());
+                        break;
+                    case "rptDailyTransaction":
+                        printSessionRpt();
+                        break;
+                    case "rptSaleDoctorDetail":
+                    case "rptSaleDoctorSummary":
+                        break;
+                    case "ControlDrugForm3WS":
+                        try {
+                        dao.execProc("control_drug_in_out1",
+                                DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                                DateUtil.toDateStrMYSQL(txtTo.getText()),
+                                getLocationId().toString(),
+                                Global.machineId);
+                    } catch (Exception ex) {
+                        log.error("ControlDrugForm3WS control_drug_in_out1 : " + ex.toString());
+                    } finally {
+                        dao.close();
                     }
                     break;
-                case "StockExpireList":
-                    execStockBalanceExp(DateUtil.toDateStr(new Date()));
+                    case "ControlDrugForm3":
+                    case "ControlDrugForm3MO":
+                        try {
+                        dao.execProc("control_drug_in_out",
+                                DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                                DateUtil.toDateStrMYSQL(txtTo.getText()),
+                                getLocationId().toString(),
+                                Global.machineId);
+                    } catch (Exception ex) {
+                        log.error("ControlDrugForm3MO control_drug_in_out : " + ex.toString());
+                    } finally {
+                        dao.close();
+                    }
                     break;
-                case "StockMovementExp":
-                case "StockMovementExpKS":
-                case "StockMovement":
-                case "StockMovementKS":
-                case "stockMovementPurchaseOnly":
-                    //execStockBalanceExp();
-                    execStockMovementExp();
-                    break;
-                case "StockMovementExpKSReOrder":
-                case "StockMovementExpKSReOrderNoSale":
-                case "StockMovementExpKSReOrderNoPur":
-                case "StockMovementExpKSReOrderChem":
-                    execStockMovementExp1(report.getMenuClass());
-                    break;
-                case "CustomerBalance":
-                case "CustomerBalanceByTownship":
-                case "SupplierBalance":
-                case "CustomerBalance_Tsp":
-                    execTraderBalanceDate();
-                    break;
-                case "CustomerInOutBalance":
-                    execTraderBalanceDetail();
-                    break;
-                case "CustomerInOutBalanceDetailA4":
-                    execTraderBalance();
-                    break;
-                case "SupplierInOutBalance":
-                case "SupplierInOutBalanceDetailA4":
-                    supplierTraderBalanceDetail();
-                    break;
-                case "SupplierInOutBalanceSummaryA4":
-                    supplierTraderBalanceSummary();
-                    //execTraderInOutSummary();
-                    break;
-                case "CustomerInOutBalanceDetail":
-                    execTraderBalance();
-                    break;
-                case "rptCusBalanceRemark":
-                    //aaa
-                    execTraderBalanceDetailRemark();
-                    break;
-                case "CustomerInOutBalSummary":
-                case "SupplierInOutBalSummary":
-                case "CustomerInOutBalSummaryByDaily":
-                case "BIDCustomer":
-                    execTraderInOutSummary();
-                    break;
-                case "StockInOut":
-                case "StockInOutKS":
-                    execStockInOutBal();
-                    break;
-                case "rptBarCode":
-                case "rptBarCodeMO":
-                case "rptBarCode_Time_Store":
-                case "rptCodePriceLabel":
-                    //fillBarcode();
-                    insertBarcodeFilter();
-                    break;
-                case "CustomerBalanceUPV":
-                    execTraderBalanceWithUPV();
-                    break;
-                case "rptGroundDifference":
-                    execStockBalanceExp(txtTo.getText());
-                    fixMinusBalance(txtTo.getText());
-                    break;
-                case "rptDailyTransaction":
-                    printSessionRpt();
-                    break;
-                case "rptSaleDoctorDetail":
-                case "rptSaleDoctorSummary":
-                    break;
-                case "ControlDrugForm3WS":
-                    try {
-                    dao.execProc("control_drug_in_out1",
-                            DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                            DateUtil.toDateStrMYSQL(txtTo.getText()),
-                            getLocationId().toString(),
-                            Global.loginUser.getUserId());
-                } catch (Exception ex) {
-                    log.error("ControlDrugForm3WS control_drug_in_out1 : " + ex.toString());
-                } finally {
-                    dao.close();
+                    case "BorrowBalance":
+                        calculateBorrowBalance();
+                        break;
+                    case "CustomerBalanceNoSale":
+                        execTraderBalanceDateNoSale();
+                        deleteTraderBalanceZero();
+                        break;
+                    case "CustomerBalanceNoPay":
+                        execTraderBalanceDateNoPay();
+                        deleteTraderBalanceZero();
+                        break;
+                    default:
+                        System.out.println("Invalid Report");
                 }
-                break;
-                case "ControlDrugForm3":
-                case "ControlDrugForm3MO":
-                    try {
-                    dao.execProc("control_drug_in_out",
-                            DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                            DateUtil.toDateStrMYSQL(txtTo.getText()),
-                            getLocationId().toString(),
-                            Global.loginUser.getUserId());
-                } catch (Exception ex) {
-                    log.error("ControlDrugForm3MO control_drug_in_out : " + ex.toString());
-                } finally {
-                    dao.close();
+
+                clearValue(report.getMenuClass());
+
+                String reportPath = Util1.getAppWorkFolder()
+                        + Util1.getPropValue("report.folder.path")
+                        + report.getMenuUrl();
+                Map<String, Object> params = getParameter(report.getMenuClass());
+                params.put("p_report_name", report.getMenuName());
+                switch (report.getMenuClass()) {
+                    case "SalePurSummaryMonthlyC":
+                    case "SaleAnalystUnit":
+                    case "PurAnalystUnit":
+                    case "SaleMonthlyC":
+                    case "PurMonthlyC":
+                        int location = getLocationId();
+                        insertMonthFilter(txtFrom.getText(), txtTo.getText(),
+                                Global.machineId, params, location);
+                        break;
                 }
-                break;
-                default:
-                    System.out.println("Invalid Report");
+                dao.close();
+                ReportUtil.viewReport(reportPath, params, dao.getConnection());
+                dao.commit();
+            } catch (Exception ex) {
+                log.info("rpt : " + ex.getMessage());
             }
-
-            /*if (report.getMenuClass().equals("ControlDrugForm3") && report.getMenuUrl().equals("xls")) {
-             ResultSet rs = null;
-             try {
-             rs = dao.execSQL("select tran_date, item_id, item_name, tsio.location_id, location_name, "
-             + "op_qty, sale_qty, in_ttl, out_ttl, closing,\n"
-             + "name1 as vou_no, reg_no, name2 as pt_name, name3 as nric, dr.doctor_name\n"
-             + "from tmp_stock_in_out tsio join location l on  tsio.location_id = l.location_id\n"
-             + "left join doctor dr on tsio.name4 = dr.doctor_id\n"
-             + "where user_id = '" + Global.loginUser.getUserId()
-             + "' and (sale_qty <> 0 or in_ttl <> 0 or out_ttl <> 0)\n"
-             + "order by tran_id, item_id, tran_date;");
-             POIUtil util = new POIUtil();
-             util.createControlDrugForm3(rs, "/Users/winswe/Documents/mws/CoreValue/Cus_program/wesley/test.xls");
-             } catch (Exception ex) {
-             log.error("excel : " + ex);
-             } finally {
-             if(rs != null){
-             try{
-             rs.close();
-             }catch(Exception ex1){
-                            
-             }
-             }
-             dao.close();
-             }
-             } else {*/
-            clearValue(report.getMenuClass());
-
-            //Properties prop = ReportUtil.loadReportPathProperties();
-            String reportPath = Util1.getAppWorkFolder()
-                    + Util1.getPropValue("report.folder.path")
-                    + report.getMenuUrl();
-            Map<String, Object> params = getParameter(report.getMenuClass());
-            switch (report.getMenuClass()) {
-                case "SalePurSummaryMonthlyC":
-                case "SaleAnalystUnit":
-                case "PurAnalystUnit":
-                case "SaleMonthlyC":
-                case "PurMonthlyC":
-                    int location = getLocationId();
-                    insertMonthFilter(txtFrom.getText(), txtTo.getText(),
-                            Global.loginUser.getUserId(), params, location);
-                    break;
-            }
-            dao.close();
-            ReportUtil.viewReport(reportPath, params, dao.getConnection());
-            dao.commit();
             //}
         } else {
             JOptionPane.showMessageDialog(Util1.getParent(), "Please select report in the list.",
@@ -958,9 +955,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             + "inner join (select med_id, user_id, location_id, bal_qty "
                             + "from (select med_id, user_id, location_id, sum(ifnull(bal_qty,0)) bal_qty "
                             + "	    from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' group by user_id, location_id, med_id) a "
+                            + Global.machineId + "' group by user_id, location_id, med_id) a "
                             + "where (" + strSql + ")) dt on t.user_id = dt.user_id and t.med_id = dt.med_id and t.location_id = dt.location_id "
-                            + "where t.user_id = '" + Global.loginUser.getUserId() + "'";
+                            + "where t.user_id = '" + Global.machineId + "'";
                     //System.out.println("Test : " + strSql);
                     //strSql = "delete t from tmp_stock_balance_exp t where " + strSql;
                     dao.execSql(strSql);
@@ -1012,7 +1009,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         //PharmacyReport.StockBalanceExp(dao, stockDate, location.toString(), Global.loginUser.getUserId());
         try {
             dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
             /*dao.execProc("stock_balance_exp", "Opening",
                     DateUtil.toDateStrMYSQL(stockDate),
                     location.toString(),
@@ -1158,18 +1155,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + "            v_med_unit_smallest_rel B\n"
                     + "     where A.med_id = B.med_id\n"
                     + "     group by A.tran_option, A.location_id, A.med_id, A.exp_date";
-            strSql = strSql.replace("prm_user_id", "'" + Global.loginUser.getUserId() + "'")
+            strSql = strSql.replace("prm_user_id", "'" + Global.machineId + "'")
                     .replace("prm_tran_opt", "'Opening'")
                     .replace("prm_stock_date", "'" + DateUtil.toDateStrMYSQL(stockDate) + "'")
                     .replace("prm_location", location.toString());
             dao.execSql(strSql);
-            fixedMinus(Global.loginUser.getUserId());
-            /*ResultSet rs = dao.execSQL(strSql);
-            if(rs != null){
-                while(rs.next()){
-                    log.info("med_id : " + rs.getString("med_id") + " qty : " + rs.getInt("ttl_qty"));
-                }
-            }*/
+            fixedMinus(Global.machineId);
         } catch (Exception ex) {
             log.error("execStockBalanceExp : " + ex.toString());
         } finally {
@@ -1188,8 +1179,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                 location.toString(),
-                Global.loginUser.getUserId());
-        fixedMinus(Global.loginUser.getUserId());
+                Global.machineId);
+        fixedMinus(Global.machineId);
     }
 
     private void execStockMovementExp1(String report) {
@@ -1203,11 +1194,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                 location.toString(),
-                Global.loginUser.getUserId());
+                Global.machineId);
 
         String strSql = "update tmp_stock_balance_exp tsbe, v_med_cost_price vmcp\n"
                 + "set tsbe.pur_price = vmcp.cost_price, tsbe.pur_unit = vmcp.cost_unit\n"
-                + "where tsbe.med_id = vmcp.med_id and tsbe.user_id = '" + Global.loginUser.getUserId() + "'";
+                + "where tsbe.med_id = vmcp.med_id and tsbe.user_id = '" + Global.machineId + "'";
 
         dao.execSql(strSql);
 
@@ -1215,25 +1206,25 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             case "StockMovementExpKSReOrder":
                 if (!chkMinus.isSelected()) {
                     String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)<0)";
+                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)<0)";
                     dao.execSql(strMinusDelete);
                 }
 
                 if (!chkZero.isSelected()) {
                     String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)=0)";
+                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)=0)";
                     dao.execSql(strZeroDelete);
                 }
 
                 if (!chkPlus.isSelected()) {
                     String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)>0)";
+                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)>0)";
                     dao.execSql(strPlusDelete);
                 }
                 break;
@@ -1242,48 +1233,126 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             case "StockMovementExpKSReOrderChem":
                 if (!chkMinus.isSelected()) {
                     String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and (vsm.ttl_stock_balance<0)";
+                            + Global.machineId + "' and (vsm.ttl_stock_balance<0)";
                     dao.execSql(strMinusDelete);
                 }
 
                 if (!chkZero.isSelected()) {
                     String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and (vsm.ttl_stock_balance=0)";
+                            + Global.machineId + "' and (vsm.ttl_stock_balance=0)";
                     dao.execSql(strZeroDelete);
                 }
 
                 if (!chkPlus.isSelected()) {
                     String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.loginUser.getUserId() + "' and med_id in "
+                            + Global.machineId + "' and med_id in "
                             + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.loginUser.getUserId() + "' and (vsm.ttl_stock_balance>0)";
+                            + Global.machineId + "' and (vsm.ttl_stock_balance>0)";
                     dao.execSql(strPlusDelete);
                 }
                 break;
         }
-        fixedMinus(Global.loginUser.getUserId());
+        fixedMinus(Global.machineId);
+    }
+
+    private void execTraderBalanceWithoutPay() {
+        String strSql = "delete from tmp_trader_bal_date where user_id = '"
+                + Global.machineId + "' and trader_id in (select distinct trader_id \n"
+                + "from payment_his where pay_date between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' and deleted = false)";
+        try {
+            dao.execProc("trader_balance_date",
+                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+                    Global.machineId);
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("execTraderBalanceWithoutPay : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void execTraderBalanceWithoutSale() {
+        String strSql = "delete from tmp_trader_bal_date where user_id = '"
+                + Global.machineId + "' and trader_id in (select distinct cus_id \n"
+                + "from sale_his where date(sale_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' and deleted = false)";
+        try {
+            dao.execProc("trader_balance_date",
+                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+                    Global.machineId);
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("execTraderBalanceWithoutPay : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void execTraderBalanceDate() {
-        dao.execProc("trader_balance_date",
-                DateUtil.toDateStrMYSQL(txtTo.getText()),
-                Global.loginUser.getUserId());
+        try {
+            dao.execProc("trader_balance_date",
+                    DateUtil.toDateStrMYSQL(txtTo.getText()),
+                    Global.machineId);
+        } catch (Exception ex) {
+            log.error("execTraderBalanceDate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void execTraderBalanceDateNoSale() {
+        try {
+            dao.execProc("trader_balance_date",
+                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+                    Global.machineId);
+            String strSql = "delete from tmp_trader_bal_date where user_id = '"
+                    + Global.machineId + "' \n"
+                    + "and trader_id in (select distinct cus_id from sale_his where deleted = false \n"
+                    + "and date(sale_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "')";
+            log.info("execTraderBalanceDateNoSale : " + strSql);
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("execTraderBalanceDate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void execTraderBalanceDateNoPay() {
+        try {
+            dao.execProc("trader_balance_date",
+                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+                    Global.machineId);
+            String strSql = "delete from tmp_trader_bal_date where user_id = '"
+                    + Global.machineId + "' \n"
+                    + "and trader_id in (select distinct trader_id from payment_his where deleted = false \n"
+                    + "and pay_date between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "')";
+            log.info("execTraderBalanceDateNoPay : " + strSql);
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("execTraderBalanceDate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void execTraderBalanceDetail() {
         dao.execProc("trader_balance_detail",
-                Global.loginUser.getUserId(),
+                Global.machineId,
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
 
     private void supplierTraderBalanceDetail() {
         dao.execProc("trader_balance_detail1",
-                Global.loginUser.getUserId(),
+                Global.machineId,
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
@@ -1291,19 +1360,19 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void supplierTraderBalanceSummary() {
         dao.execProc("trader_opening",
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                Global.loginUser.getUserId());
+                Global.machineId);
     }
 
     private void execTraderBalanceDetailRemark() {
         dao.execProc("trader_balance_detail_remark",
-                Global.loginUser.getUserId(),
+                Global.machineId,
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
 
     private void execTraderInOutSummary() {
         dao.execProc("trader_bal_in_out_summary",
-                Global.loginUser.getUserId(),
+                Global.machineId,
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
@@ -1320,7 +1389,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     DateUtil.toDateStrMYSQL(txtFrom.getText()),
                     DateUtil.toDateStrMYSQL(txtTo.getText()),
                     location.toString(),
-                    Global.loginUser.getUserId());
+                    Global.machineId);
         } catch (Exception ex) {
             log.error("execStockInOutBal : " + ex.toString());
         } finally {
@@ -1330,7 +1399,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void execTraderBalanceWithUPV() {
         try {
-            dao.execProc("get_trader_unpaid_vou", Global.loginUser.getUserId(),
+            dao.execProc("get_trader_unpaid_vou", Global.machineId,
                     DateUtil.toDateStrMYSQL(txtFrom.getText()),
                     DateUtil.toDateStrMYSQL(txtDueDate.getText()));
         } catch (Exception ex) {
@@ -1371,14 +1440,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         dao.execProc("session_report", from, to, strSession, vouUserId, machineId,
                 locationId, tranType, deleted, strSource, curr, traderId, sign, paidCurr,
-                strAmount, Global.loginUser.getUserId());
+                strAmount, Global.machineId);
     }
 
     private Map getParameter(String report) {
         Map<String, Object> params = new HashMap();
 
         params.put("tran_date", txtFrom.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("compName", Util1.getPropValue("report.company.name"));
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
@@ -1392,22 +1461,24 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         params.put("prm_vou_type", getVouStatus());
         params.put("reg_no", Util1.getString(txtRegNo.getText(), "-"));
         params.put("prm_location_group", getLocationGroup());
-        
+
         String toLocationName = "All";
         int toLocationId = 0;
-        if(cboToLocation.getSelectedItem() instanceof Location){
-            Location toLocation = (Location)cboToLocation.getSelectedItem();
+        if (cboToLocation.getSelectedItem() instanceof Location) {
+            Location toLocation = (Location) cboToLocation.getSelectedItem();
             toLocationName = toLocation.getLocationName();
             toLocationId = toLocation.getLocationId();
         }
         params.put("prm_to_location_name", toLocationName);
         params.put("prm_tlocation", toLocationId);
-        
+
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             ItemType it = (ItemType) cboItemType.getSelectedItem();
             params.put("item_type", it.getItemTypeName());
+            params.put("p_item_type", it.getItemTypeCode());
         } else {
             params.put("item_type", "All");
+            params.put("p_item_type", "-");
         }
 
         if (cboSession.getSelectedItem() instanceof Session) {
@@ -1757,18 +1828,18 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void deleteTmpData() {
         String strSql1 = "delete from tmp_item_code_filter_rpt where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSql2 = "delete from tmp_trader_filter where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSql3 = "delete from tmp_doctor_filter where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         dao.execSql(strSql1, strSql2, strSql3);
     }
 
     private void fillBarcode() {
         String strSQL = "delete from tmp_barcode_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         HashMap<String, Integer> listCopy = new HashMap();
         List<ItemCodeFilterRpt> listFilter = codeTableModel.getListCodeFilter();
 
@@ -1781,11 +1852,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         strSQL = "select distinct med_id from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         ResultSet resultSet = dao.execSQL(strSQL);
 
         try {
-            String userId = Global.loginUser.getUserId();
+            String userId = Global.machineId;
 
             while (!resultSet.next()) {
                 String medId = resultSet.getString("med_id");
@@ -1820,7 +1891,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     if (icf.getUnit() != null) {
                         bf.setUnitShort(icf.getUnit().getItemUnitCode());
                     }
-                    bf.setUserId(Global.loginUser.getUserId());
+                    bf.setUserId(Global.machineId);
                     listBarcodeFilter.add(bf);
                 }
             }
@@ -1828,7 +1899,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         try {
             String strSQL = "delete from tmp_barcode_filter where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
 
             dao.execSql(strSQL);
             dao.saveBatch(listBarcodeFilter);
@@ -1842,30 +1913,30 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void fixMinusBalance(String stockDate) {
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
         } catch (Exception ex) {
             log.error("fixfMinusBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }
 
-        dao.execProc("fix_minus", Global.loginUser.getUserId());
+        dao.execProc("fix_minus", Global.machineId);
         dao.commit();
         dao.execProc("insert_cost", DateUtil.toDateStrMYSQL(stockDate),
-                Global.loginUser.getUserId());
+                Global.machineId);
         dao.commit();
 
         String strSQL = "select distinct med_id from tmp_stock_balance_exp where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         ResultSet resultSet = dao.execSQL(strSQL);
 
         try {
             while (resultSet.next()) {
                 String medId = resultSet.getString("med_id");
                 strSQL = "select v from TmpMinusFixed v where v.key.userId = '"
-                        + Global.loginUser.getUserId() + "' and v.key.itemId = '"
+                        + Global.machineId + "' and v.key.itemId = '"
                         + medId + "' and balance <> 0 order by v.key.expDate desc";
                 List<TmpMinusFixed> listTMF = dao.findAllHSQL(strSQL);
                 strSQL = "select v from TmpCostDetails v where v.userId = '"
-                        + Global.loginUser.getUserId() + "' and v.itemId = '"
+                        + Global.machineId + "' and v.itemId = '"
                         + medId + "' order by v.tranDate desc, v.tranId";
                 List<TmpCostDetails> listTCD = dao.findAllHSQL(strSQL);
 
@@ -1909,73 +1980,79 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void insertTmpStockDetails(String medId, Date expDate,
             int ttlQty, double smallestCost, int locationId) {
-        String strSql = "select v from VMedRel v where v.key.medId = '"
-                + medId + "' order by v.key.uniqueId";
-        List<VMedRel> listVMR = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select v from VMedRel v where v.key.medId = '"
+                    + medId + "' order by v.key.uniqueId";
+            List<VMedRel> listVMR = dao.findAllHSQL(strSql);
 
-        if (ttlQty == 0) {
-            TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-
-            tsodh.setMedId(medId);
-            tsodh.setExpDate(expDate);
-            tsodh.setQty(ttlQty);
-            tsodh.setCostPrice(listVMR.get(0).getSmallestQty() * smallestCost);
-            tsodh.setUnit(listVMR.get(0).getUnitId());
-            tsodh.setUserId(Global.loginUser.getUserId());
-            tsodh.setSmallestQty(0);
-            tsodh.setLocationId(locationId);
-
-            try {
-                dao.save(tsodh);
-            } catch (Exception ex) {
-                log.error("insertTmpStockDetails : 1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            }
-        } else {
-            List<TmpStockOpeningDetailHisInsert> listTSODH = new ArrayList();
-            int leftQty;
-            boolean isMinus = false;
-
-            if (ttlQty < 0) {
-                isMinus = true;
-                leftQty = -1 * ttlQty;
-            } else {
-                leftQty = ttlQty;
-            }
-
-            for (int i = 0; i < listVMR.size(); i++) {
+            if (ttlQty == 0) {
                 TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-                int unitQty = leftQty / listVMR.get(i).getSmallestQty();
 
                 tsodh.setMedId(medId);
                 tsodh.setExpDate(expDate);
-                tsodh.setCostPrice(listVMR.get(i).getSmallestQty() * smallestCost);
-                tsodh.setUnit(listVMR.get(i).getUnitId());
-                tsodh.setUserId(Global.loginUser.getUserId());
+                tsodh.setQty(ttlQty);
+                tsodh.setCostPrice(listVMR.get(0).getSmallestQty() * smallestCost);
+                tsodh.setUnit(listVMR.get(0).getUnitId());
+                tsodh.setUserId(Global.machineId);
+                tsodh.setSmallestQty(0);
                 tsodh.setLocationId(locationId);
 
-                int ttlSmallestQty = listVMR.get(i).getSmallestQty() * unitQty;
+                try {
+                    dao.save(tsodh);
+                } catch (Exception ex) {
+                    log.error("insertTmpStockDetails : 1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                }
+            } else {
+                List<TmpStockOpeningDetailHisInsert> listTSODH = new ArrayList();
+                int leftQty;
+                boolean isMinus = false;
 
-                if (isMinus) { //Minus qty
-                    tsodh.setQty(unitQty * -1);
-                    tsodh.setSmallestQty(ttlSmallestQty * -1);
+                if (ttlQty < 0) {
+                    isMinus = true;
+                    leftQty = -1 * ttlQty;
                 } else {
-                    tsodh.setQty(unitQty);
-                    tsodh.setSmallestQty(ttlSmallestQty);
+                    leftQty = ttlQty;
                 }
 
-                listTSODH.add(tsodh);
-                leftQty = leftQty - ttlSmallestQty;
+                for (int i = 0; i < listVMR.size(); i++) {
+                    TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
+                    int unitQty = leftQty / listVMR.get(i).getSmallestQty();
 
-                if (leftQty == 0) {
-                    i = listVMR.size();
+                    tsodh.setMedId(medId);
+                    tsodh.setExpDate(expDate);
+                    tsodh.setCostPrice(listVMR.get(i).getSmallestQty() * smallestCost);
+                    tsodh.setUnit(listVMR.get(i).getUnitId());
+                    tsodh.setUserId(Global.machineId);
+                    tsodh.setLocationId(locationId);
+
+                    int ttlSmallestQty = listVMR.get(i).getSmallestQty() * unitQty;
+
+                    if (isMinus) { //Minus qty
+                        tsodh.setQty(unitQty * -1);
+                        tsodh.setSmallestQty(ttlSmallestQty * -1);
+                    } else {
+                        tsodh.setQty(unitQty);
+                        tsodh.setSmallestQty(ttlSmallestQty);
+                    }
+
+                    listTSODH.add(tsodh);
+                    leftQty = leftQty - ttlSmallestQty;
+
+                    if (leftQty == 0) {
+                        i = listVMR.size();
+                    }
+                }
+
+                try {
+                    dao.saveBatch(listTSODH);
+                } catch (Exception ex) {
+                    log.error("insertTmpStockDetails : 2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                 }
             }
-
-            try {
-                dao.saveBatch(listTSODH);
-            } catch (Exception ex) {
-                log.error("insertTmpStockDetails : 2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            }
+        } catch (Exception ex) {
+            log.error("insertTmpStockDetails : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -2119,7 +2196,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 + "from v_sale vs join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vs.med_id = tsf.med_id where deleted = false and "
                 + "tsf.user_id = '" + userId + "' and date(vs.sale_date) between '"
                 + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
-                + " and (vs.location_id = " + location + " or " + location + " = 0) \n" 
+                + " and (vs.location_id = " + location + " or " + location + " = 0) \n"
                 + "group by concat(month(sale_date),'-',year(sale_date)), med_id,tsf.user_id) b\n"
                 + "on a.med_id = b.med_id and a.y_m = b.y_m and a.user_id = b.user_id\n"
                 + "left join\n"
@@ -2194,7 +2271,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "rptCodeList":
                     case "rptCodeListSein":
                         genExcel = new ItemCodeListExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2207,7 +2284,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptCodeListSmallestWithPurPrice":
                         genExcel = new ItemCodeListWithPurPriceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2220,7 +2297,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptSaleItemSummaryMo":
                         genExcel = new SaleItemSummaryPatientExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2242,7 +2319,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptSaleItemSummaryAdm":
                         genExcel = new SaleItemSummaryPatientAdmExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2267,7 +2344,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptSaleItemSummaryByCodeSein":
                         genExcel = new SaleItemSummaryByCodeExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2285,7 +2362,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptSaleItemSummaryByDoctor":
                         genExcel = new SaleItemSummaryDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2308,7 +2385,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "StockBalance":
                     case "StockBalanceKS":
                         genExcel = new StockBalanceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2324,7 +2401,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptPurItemSummary":
                         genExcel = new PurchaseItemSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2341,7 +2418,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptTranItemSummary":
                         genExcel = new TransferItemSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2358,7 +2435,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptAdjustItemSummary":
                         genExcel = new StockAdjustItemSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setItemType(getItemType());
@@ -2374,7 +2451,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "StockMovement":
                     case "StockMovementKS":
                         genExcel = new StockMovementExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2391,7 +2468,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptPurchaseItemTypeSummary":
                         genExcel = new PurchaseItemTypeSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2411,7 +2488,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptRetOutItemSummary":
                         genExcel = new ReturnOutItemSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2429,7 +2506,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "StockInOut":
                     case "StockInOutKS":
                         genExcel = new StockInOutExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2443,7 +2520,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptReturnInItemSummary":
                         genExcel = new ReturnInItemSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2459,7 +2536,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "SaleIncomeByDoctor":
                         genExcel = new SaleIncomeByDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2479,7 +2556,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptPurItemSummaryBySupplier":
                         genExcel = new PurchaseItemSummaryBySupplierExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2507,7 +2584,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setLocationId(getLocationId().toString());
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setCurrencyId(getCurrencyId());
                         genExcel.setPaymentType(getPaymentType().toString());
                         genExcel.setVouType(getVouStatus().toString());
@@ -2515,7 +2592,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptBarCode":
                         genExcel = new ItemCodeListWithInfoExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2528,7 +2605,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "ControlDrugForm3":
                         genExcel = new ControlDrugForm3Excel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2545,11 +2622,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                                 getLocationId().toString(),
-                                Global.loginUser.getUserId());
+                                Global.machineId);
                         break;
                     case "ControlDrugForm3WS":
                         genExcel = new ControlDrugForm3WSExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2567,11 +2644,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                                 getLocationId().toString(),
-                                Global.loginUser.getUserId());
+                                Global.machineId);
                         break;
                     case "rptSaleItemSummaryByDateSein":
                         genExcel = new SaleItemSummaryByDateExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2589,7 +2666,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "rptPurchaseSummary":
                         genExcel = new PurchaseSummaryExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2612,11 +2689,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         insertTraderFilterCode("S");
                         execTraderBalanceDate();
                         genExcel = new TraderBalanceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         break;
                     case "rptCodeListPriceS":
                         genExcel = new ItemCodeListWitSalePriceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2630,12 +2707,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "CustomerListName":
                         insertTraderFilterCode("C");
                         genExcel = new CustomerListExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         break;
                     case "SupplierListName":
                         insertTraderFilterCode("S");
                         genExcel = new SupplierListExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         break;
                     case "AuditLog":
                         genExcel = new AuditLogExcel(dao, rptName + ".xls");
@@ -2646,7 +2723,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         genExcel = new SaleSummaryExcel(dao, rptName + ".xls");
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setVouType(getVouStatus().toString());
                         genExcel.setLocationId(getLocationId().toString());
                         genExcel.setCurrencyId(getCurrencyId());
@@ -2664,7 +2741,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "rptCodeListSystem":
                     case "rptCodeListSystemWithSP":
                         genExcel = new ItemCodeListWitSystemSalePriceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2677,7 +2754,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "StockBalanceBrandWithSalePrice":
                         genExcel = new StockBalanceBrandWithSalePriceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setItemType(getItemType());
                         genExcel.setBrandId(getBrand().toString());
                         genExcel.setCategoryId(getCategory().toString());
@@ -2714,7 +2791,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void execTraderBalance() {
         dao.execProc("trader_balance_detail1",
-                Global.loginUser.getUserId(),
+                Global.machineId,
                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
@@ -2777,59 +2854,54 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                     + qty + ", '" + userId + "')";
                             dao.execSql(strInsert);
                             //log.info("if (minusList == null) { : insert : " + medId);
+                        } else if (minusList.isEmpty()) {
+
                         } else {
-                            if (minusList.isEmpty()) {
-
+                            StockExp tmpStk = minusList.get(0);
+                            float tmpBalance = tmpStk.getBalance();
+                            if ((tmpBalance * -1) > qty) {
+                                float tmpQty = tmpBalance + qty;
+                                tmpStk.setBalance(tmpQty);
+                            } else if ((tmpBalance * -1) == qty) {
+                                tmpStk.setBalance(0f);
+                                minusList.remove(0);
                             } else {
-                                StockExp tmpStk = minusList.get(0);
-                                float tmpBalance = tmpStk.getBalance();
-                                if ((tmpBalance * -1) > qty) {
-                                    float tmpQty = tmpBalance + qty;
-                                    tmpStk.setBalance(tmpQty);
-                                } else if ((tmpBalance * -1) == qty) {
-                                    tmpStk.setBalance(0f);
-                                    minusList.remove(0);
-                                } else {
-                                    minusList.remove(0);
-                                    qty = tmpBalance + qty;
-                                    if (!minusList.isEmpty() && qty > 0) {
-                                        List<StockExp> listS = new ArrayList();
-                                        listS.addAll(minusList);
-                                        for (StockExp stk : listS) {
-                                            tmpBalance = stk.getBalance();
-                                            if ((tmpBalance * -1) > qty) {
-                                                stk.setBalance(tmpBalance + qty);
-                                                break;
-                                            } else if ((tmpBalance * -1) == qty) {
-                                                minusList.remove(0);
-                                                break;
-                                            } else {
-                                                minusList.remove(0);
-                                                qty = tmpBalance + qty;
-                                            }
-                                        }
-
-                                        if (qty > 0) {
-                                            String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                                    + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
-                                                    + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
-                                                    + qty + ", '" + userId + "')";
-                                            dao.execSql(strInsert);
-                                            //log.info("if (qty > 0) { insert : " + medId);
-                                        }
-                                    } else {
-                                        if (qty > 0) {
-                                            String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                                    + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
-                                                    + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
-                                                    + qty + ", '" + userId + "')";
-                                            dao.execSql(strInsert);
-                                            //log.info("if (qty > 0) { insert : " + medId);
+                                minusList.remove(0);
+                                qty = tmpBalance + qty;
+                                if (!minusList.isEmpty() && qty > 0) {
+                                    List<StockExp> listS = new ArrayList();
+                                    listS.addAll(minusList);
+                                    for (StockExp stk : listS) {
+                                        tmpBalance = stk.getBalance();
+                                        if ((tmpBalance * -1) > qty) {
+                                            stk.setBalance(tmpBalance + qty);
+                                            break;
+                                        } else if ((tmpBalance * -1) == qty) {
+                                            minusList.remove(0);
+                                            break;
+                                        } else {
+                                            minusList.remove(0);
+                                            qty = tmpBalance + qty;
                                         }
                                     }
+
+                                    if (qty > 0) {
+                                        String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
+                                                + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
+                                                + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
+                                                + qty + ", '" + userId + "')";
+                                        dao.execSql(strInsert);
+                                        //log.info("if (qty > 0) { insert : " + medId);
+                                    }
+                                } else if (qty > 0) {
+                                    String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
+                                            + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
+                                            + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
+                                            + qty + ", '" + userId + "')";
+                                    dao.execSql(strInsert);
+                                    //log.info("if (qty > 0) { insert : " + medId);
                                 }
                             }
-
                         }
                     }
 
@@ -2862,6 +2934,75 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         return tmpCode;
+    }
+
+    private void calculateBorrowBalance() {
+        String strToDate = DateUtil.toDateStrMYSQL(txtTo.getText());
+        String userId = Global.machineId;
+        String strSql = "select a.cus_id, a.med_id, sum(a.ttl_receive) as ttl_receive, sum(a.ttl_issue) as ttl_issue, \n"
+                + "sum(a.ttl_receive-a.ttl_issue) as balance\n"
+                + "from (\n"
+                + "select issue_opt, issue_date, ifnull(currency_id,'MMK') as currency_id, cus_id, med_id, \n"
+                + "sum(ifnull(smallest_qty,0)) as ttl_issue, 0 as ttl_receive\n"
+                + "from v_stock_issue\n"
+                + "where issue_opt = 'Borrow' and deleted = false\n"
+                + " and date(issue_date) <= '" + strToDate + "' \n"
+                + " and med_id in (select distinct med_id from tmp_stock_filter where user_id = '" + userId + "') \n"
+                + " and cus_id in (select distinct trader_id from tmp_trader_bal_filter where user_id = '" + userId + "') \n"
+                + "group by issue_opt, issue_date, ifnull(currency_id,'MMK'), cus_id, med_id\n"
+                + "union all\n"
+                + "select rec_option, receive_date, ifnull(currency_id,'MMK') as currency_id, cus_id, rec_med_id, \n"
+                + "0 as ttl_issue, sum(ifnull(smallest_qty,0)) as ttl_receive\n"
+                + "from v_stock_receive\n"
+                + "where rec_option = 'Borrow' and deleted = false\n"
+                + " and date(receive_date) <= '" + strToDate + "' \n"
+                + " and rec_med_id in (select distinct med_id from tmp_stock_filter where user_id = '" + userId + "') \n"
+                + " and cus_id in (select distinct trader_id from tmp_trader_bal_filter where user_id = '" + userId + "') \n"
+                + "group by rec_option, receive_date, ifnull(currency_id,'MMK'), cus_id, rec_med_id) a\n"
+                + "group by a.cus_id, a.med_id";
+
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                dao.execSql("delete from tmp_stock_bal_outs where user_id = '" + userId + "'");
+                while (rs.next()) {
+                    TmpStockBalOutsKey key = new TmpStockBalOutsKey();
+                    String medId = rs.getString("med_id");
+                    Medicine med = (Medicine) dao.find(Medicine.class, medId);
+                    if (med.getRelationGroupId().size() > 0) {
+                        med.setRelationGroupId(med.getRelationGroupId());
+                    }
+                    key.setItemId(medId);
+                    key.setTraderId(rs.getString("cus_id"));
+                    key.setTranOption("Borrow");
+                    key.setUserId(userId);
+
+                    TmpStockBalOuts sb = new TmpStockBalOuts();
+                    sb.setKey(key);
+                    sb.setQtySmallese(rs.getFloat("balance"));
+                    sb.setQtyStr(MedicineUtil.getQtyInStr(med, rs.getFloat("balance")));
+                    dao.save(sb);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("calculateBorrowBalance : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void deleteTraderBalanceZero() {
+        if (!chkZero.isSelected()) {
+            try {
+                String strSql = "delete from tmp_trader_bal_date where user_id = '"
+                        + Global.machineId + "' and round(amount,0) <=1 and round(amount,0) >=-1";
+                dao.execSql(strSql);
+            } catch (Exception ex) {
+                log.error("traderBalanceZero : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+        }
     }
 
     /**

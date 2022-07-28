@@ -18,10 +18,10 @@ import com.cv.app.common.NumberKeyListener;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.BusinessType;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.TraderTableModel;
-import com.cv.app.pharmacy.ui.util.CustomerSetupFilterDialog;
 import com.cv.app.pharmacy.ui.util.GenChildCustomer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -77,7 +77,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         try {
             swrf = new StartWithRowFilter(txtFilter);
             initCombo();
-            initTable();
             applyFocusPolicy();
             AddFocusMoveKey();
             this.setFocusTraversalPolicy(focusPolicy);
@@ -96,6 +95,8 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             if (Util1.getPropValue("system.customer.code.editable").equals("True")) {
                 txtId.setEditable(true);
             }
+            chkFilter.setSelected(true);
+            initTable();
         } catch (Exception ex) {
             log.error("CustomerSetup : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
@@ -113,7 +114,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         cboPayMethod.setSelectedItem(currCustomer.getPayMethod());
         txtRemark.setText(currCustomer.getRemark());
         txtId.setEnabled(false);
-        
+
         if (currCustomer.getCreditLimit() != null) {
             txtCreditLimit.setText(currCustomer.getCreditLimit().toString());
         } else {
@@ -142,6 +143,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         txtAccountId.setText(currCustomer.getAccountCode());
         chkActive.setSelected(currCustomer.getActive());
         cboTownship.setSelectedItem(currCustomer.getTownship());
+        txtCode.setText(currCustomer.getStuCode());
     }
 
     private void clear() {
@@ -164,15 +166,16 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         txtAccountId.setText(null);
         txtRemark.setText(null);
         cboTownship.setSelectedItem(null);
+        txtCode.setText(null);
         selectRow = -1;
         butGCC.setEnabled(false);
         setFocus();
     }
 
     private void initTable() {
+        filterItem();
+        //tableModel.setListTrader(dao.findAllHSQL("select o from Customer o"));
 
-        tableModel.setListTrader(dao.findAllHSQL("select o from Customer o"));
-        
         //Adjust table column width
         TableColumn column;
         column = tblCustomer.getColumnModel().getColumn(0);
@@ -205,22 +208,32 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     }
 
     private void initCombo() {
-        bindStatus = false;
+        try {
+            bindStatus = true;
 
-        BindingUtil.BindCombo(cboGroup, 
-                dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
-        BindingUtil.BindCombo(cboType, dao.findAll("TraderType"));
-        BindingUtil.BindCombo(cboTownship, dao.findAll("Township"));
-        BindingUtil.BindCombo(cboPayMethod, dao.findAll("PayMethod"));
-        BindingUtil.BindCombo(cboBusinessType, dao.findAll("BusinessType"));
+            BindingUtil.BindCombo(cboGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
+            BindingUtil.BindComboFilter(cboCusGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
+            BindingUtil.BindCombo(cboType, dao.findAll("TraderType"));
+            BindingUtil.BindCombo(cboTownship, dao.findAllHSQL("select o from Township o order by o.townshipName"));
+            BindingUtil.BindCombo(cboPayMethod, dao.findAll("PayMethod"));
+            BindingUtil.BindCombo(cboBusinessType, dao.findAllHSQL("select o from BusinessType o order by o.description"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+            BindingUtil.BindComboFilter(cboFilterTownship, dao.findAllHSQL("select o from Township o order by o.townshipName"));
 
-        new ComBoBoxAutoComplete(cboGroup, this);
-        new ComBoBoxAutoComplete(cboType, this);
-        new ComBoBoxAutoComplete(cboTownship, this);
-        new ComBoBoxAutoComplete(cboPayMethod, this);
-        new ComBoBoxAutoComplete(cboBusinessType, this);
+            new ComBoBoxAutoComplete(cboGroup, this);
+            new ComBoBoxAutoComplete(cboType, this);
+            new ComBoBoxAutoComplete(cboTownship, this);
+            new ComBoBoxAutoComplete(cboPayMethod, this);
+            new ComBoBoxAutoComplete(cboBusinessType, this);
 
-        bindStatus = true;
+            bindStatus = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void showDialog(String panelName) {
@@ -279,6 +292,43 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private boolean isValidEntry() {
         boolean status = true;
 
+        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+            if (txtCode.getText() == null) {
+                status = false;
+                JOptionPane.showMessageDialog(this, "Code cannot be blank.",
+                        "Blank", JOptionPane.ERROR_MESSAGE);
+                txtCode.requestFocus();
+                return status;
+            } else if (txtCode.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Code cannot be blank.",
+                        "Blank", JOptionPane.ERROR_MESSAGE);
+                txtCode.requestFocus();
+                return status;
+            }
+
+            if (txtCode.getText() != null) {
+                if (!txtCode.getText().trim().isEmpty()) {
+                    String strCode = txtCode.getText().trim();
+                    try {
+                        List<Trader> listTr = dao.findAllHSQL("select o from Trader o where o.stuCode = '"
+                                + strCode + "' and o.traderId <> '" + txtId.getText() + "'");
+                        if (listTr != null) {
+                            if (!listTr.isEmpty()) {
+                                status = false;
+                                JOptionPane.showMessageDialog(this, "Duplicate code.",
+                                        "Duplicate", JOptionPane.ERROR_MESSAGE);
+                                return status;
+                            }
+                        }
+                    } catch (Exception ex) {
+                        log.error("isValidEntry : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            }
+        }
+
         if (Util1.nullToBlankStr(txtName.getText()).equals("")) {
             status = false;
             JOptionPane.showMessageDialog(this, "Name cannot be blank or null.",
@@ -301,84 +351,86 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             status = false;
             JOptionPane.showMessageDialog(this, "Credit days cannot be minus value.",
                     "Minus error.", JOptionPane.ERROR_MESSAGE);
-        } else {
+        } else if (!isDuplicate(txtId.getText().trim())) {
+            currCustomer.setTraderId(txtId.getText());
 
-            if (!isDuplicate(txtId.getText().trim())) {
-                currCustomer.setTraderId(txtId.getText());
+            if (cboGroup.getSelectedItem() != null) {
+                currCustomer.setTraderGroup((CustomerGroup) cboGroup.getSelectedItem());
+            } else {
+                currCustomer.setTraderGroup(null);
+            }
 
-                if (cboGroup.getSelectedItem() != null) {
-                    currCustomer.setTraderGroup((CustomerGroup) cboGroup.getSelectedItem());
-                } else {
-                    currCustomer.setTraderGroup(null);
-                }
+            if (cboBusinessType.getSelectedItem() != null) {
+                currCustomer.setBusinessType((BusinessType) cboBusinessType.getSelectedItem());
+            } else {
+                currCustomer.setBusinessType(null);
+            }
 
-                if (cboBusinessType.getSelectedItem() != null) {
-                    currCustomer.setBusinessType((BusinessType) cboBusinessType.getSelectedItem());
-                } else {
-                    currCustomer.setBusinessType(null);
-                }
+            currCustomer.setTraderName(txtName.getText().trim());
 
-                currCustomer.setTraderName(txtName.getText().trim());
+            if (!txtAddress.getText().isEmpty()) {
+                currCustomer.setAddress(txtAddress.getText().trim());
+            } else {
+                currCustomer.setAddress(null);
+            }
 
-                if (!txtAddress.getText().isEmpty()) {
-                    currCustomer.setAddress(txtAddress.getText().trim());
-                } else {
-                    currCustomer.setAddress(null);
-                }
+            if (!txtPhone.getText().isEmpty()) {
+                currCustomer.setPhone(txtPhone.getText().trim());
+            } else {
+                currCustomer.setPhone(null);
+            }
 
-                if (!txtPhone.getText().isEmpty()) {
-                    currCustomer.setPhone(txtPhone.getText().trim());
-                } else {
-                    currCustomer.setPhone(null);
-                }
+            if (!txtEMail.getText().isEmpty()) {
+                currCustomer.setEmail(txtEMail.getText().trim());
+            } else {
+                currCustomer.setEmail(null);
+            }
 
-                if (!txtEMail.getText().isEmpty()) {
-                    currCustomer.setEmail(txtEMail.getText().trim());
-                } else {
-                    currCustomer.setEmail(null);
-                }
+            if (!txtCreditLimit.getText().isEmpty()) {
+                currCustomer.setCreditLimit(NumberUtil.NZeroInt(txtCreditLimit.getText().trim()));
+            } else {
+                currCustomer.setCreditLimit(null);
+            }
 
-                if (!txtCreditLimit.getText().isEmpty()) {
-                    currCustomer.setCreditLimit(NumberUtil.NZeroInt(txtCreditLimit.getText().trim()));
-                } else {
-                    currCustomer.setCreditLimit(null);
-                }
+            if (!txtCreditDays.getText().isEmpty()) {
+                currCustomer.setCreditDays(NumberUtil.NZeroInt(txtCreditDays.getText().trim()));
+            } else {
+                currCustomer.setCreditDays(null);
+            }
 
-                if (!txtCreditDays.getText().isEmpty()) {
-                    currCustomer.setCreditDays(NumberUtil.NZeroInt(txtCreditDays.getText().trim()));
-                } else {
-                    currCustomer.setCreditDays(null);
-                }
+            if (cboType.getSelectedItem() != null) {
+                currCustomer.setTypeId((TraderType) cboType.getSelectedItem());
+            } else {
+                currCustomer.setTypeId(null);
+            }
 
-                if (cboType.getSelectedItem() != null) {
-                    currCustomer.setTypeId((TraderType) cboType.getSelectedItem());
-                } else {
-                    currCustomer.setTypeId(null);
-                }
+            if (!txtParent.getText().isEmpty()) {
+                currCustomer.setParent(txtParent.getText().trim());
+            } else {
+                currCustomer.setParent(null);
+            }
 
-                if (!txtParent.getText().isEmpty()) {
-                    currCustomer.setParent(txtParent.getText().trim());
-                } else {
-                    currCustomer.setParent(null);
-                }
+            if (!txtAccountId.getText().isEmpty()) {
+                currCustomer.setAccountCode(txtAccountId.getText().trim());
+            } else {
+                currCustomer.setAccountCode(null);
+            }
 
-                if (!txtAccountId.getText().isEmpty()) {
-                    currCustomer.setAccountCode(txtAccountId.getText().trim());
-                } else {
-                    currCustomer.setAccountCode(null);
-                }
-
-                currCustomer.setActive(chkActive.isSelected());
-                currCustomer.setTownship((Township) cboTownship.getSelectedItem());
-                currCustomer.setPayMethod((PayMethod) cboPayMethod.getSelectedItem());
-                currCustomer.setRemark(txtRemark.getText());
-                if (lblStatus.getText().equals("NEW")) {
-                    currCustomer.setCreatedBy(Global.loginUser.getUserId());
-                    currCustomer.setCreatedDate(DateUtil.toDateTime(DateUtil.getTodayDateStr()));
-                } else {
-                    currCustomer.setUpdatedBy(Global.loginUser.getUserId());
-                }
-                currCustomer.setUpdatedDate(DateUtil.toDateTime(DateUtil.getTodayDateStr()));
+            currCustomer.setActive(chkActive.isSelected());
+            currCustomer.setTownship((Township) cboTownship.getSelectedItem());
+            currCustomer.setPayMethod((PayMethod) cboPayMethod.getSelectedItem());
+            currCustomer.setRemark(txtRemark.getText());
+            if (lblStatus.getText().equals("NEW")) {
+                currCustomer.setCreatedBy(Global.loginUser.getUserId());
+                currCustomer.setCreatedDate(DateUtil.toDateTime(DateUtil.getTodayDateStr()));
+            } else {
+                currCustomer.setUpdatedBy(Global.loginUser.getUserId());
+            }
+            currCustomer.setUpdatedDate(DateUtil.toDateTime(DateUtil.getTodayDateStr()));
+            if (txtCode.getText() != null) {
+                currCustomer.setStuCode(txtCode.getText().trim());
+            } else {
+                currCustomer.setStuCode(null);
             }
         }
 
@@ -388,17 +440,23 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private boolean isDuplicate(String traderId) {
         boolean status = false;
 
-        if (lblStatus.getText().equals("NEW")) {
-            List<Trader> listT = dao.findAllHSQL("select o from Trader o where o.traderId = '"
-                    + traderId + "'");
-            if (listT != null) {
-                if (!listT.isEmpty()) {
-                    status = true;
-                    JOptionPane.showMessageDialog(this, "Duplicate customer id. You cannot save.",
-                            "Duplicate", JOptionPane.ERROR_MESSAGE);
-                    log.error("isDuplicate : " + traderId);
+        try {
+            if (lblStatus.getText().equals("NEW")) {
+                List<Trader> listT = dao.findAllHSQL("select o from Trader o where o.traderId = '"
+                        + traderId + "'");
+                if (listT != null) {
+                    if (!listT.isEmpty()) {
+                        status = true;
+                        JOptionPane.showMessageDialog(this, "Duplicate customer id. You cannot save.",
+                                "Duplicate", JOptionPane.ERROR_MESSAGE);
+                        log.error("isDuplicate : " + traderId);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("isDuplicate : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
 
         return status;
@@ -597,7 +655,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private void actionMapping() {
         formActionKeyMapping(txtId);
         formActionKeyMapping(txtFilter);
-        formActionKeyMapping(butFilter);
         formActionKeyMapping(cboGroup);
         formActionKeyMapping(txtName);
         formActionKeyMapping(txtAddress);
@@ -636,8 +693,69 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         }
     };
 
-    private void filterItem(String strFilter) {
-        tableModel.setListTrader(dao.findAll("Customer", strFilter));
+    private void filterItem() {
+        //tableModel.setListTrader(dao.findAll("Customer", strFilter));
+        //statusFilter = true;
+        tblCustomer.getSelectionModel().clearSelection();
+        String filter = "";
+        if (chkFilter.isSelected()) {
+            if (filter.isEmpty()) {
+                filter = "o.active = true";
+            } else {
+                filter = filter + " and o.active = true";
+            }
+        } else if (filter.isEmpty()) {
+            filter = "o.active = false";
+        } else {
+            filter = filter + " and o.active = false";
+        }
+
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            int locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            if (filter.isEmpty()) {
+                filter = "o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ")";
+            } else {
+                filter = filter + " and o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ")";
+            }
+        }
+
+        if (cboFilterTownship.getSelectedItem() instanceof Township) {
+            int id = ((Township) cboFilterTownship.getSelectedItem()).getTownshipId();
+            if (filter.isEmpty()) {
+                filter = "o.township.townshipId = " + id;
+            } else {
+                filter = filter + " and o.township.townshipId = " + id;
+            }
+        }
+
+        if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
+            String group = ((CustomerGroup) cboCusGroup.getSelectedItem()).getGroupId();
+            if (filter.isEmpty()) {
+                filter = "o.traderGroup.groupId = '" + group + "'";
+            } else {
+                filter = filter + " and o.traderGroup.groupId = '" + group + "'";
+            }
+        }
+
+        log.info("filter : " + filter);
+        if (filter.isEmpty()) {
+            filter = "select o from Customer o where o.discrimator = 'C' order by o.traderName";
+        } else {
+            filter = "select o from Customer o where o.discrimator = 'C' and " + filter;
+        }
+
+        try {
+            List<Trader> listCUS = dao.findAllHSQL(filter);
+            tableModel.setListTrader(listCUS);
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         statusFilter = true;
     }
 
@@ -700,7 +818,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel10 = new javax.swing.JLabel();
         chkActive = new javax.swing.JCheckBox();
         txtFilter = new javax.swing.JTextField();
-        butFilter = new javax.swing.JButton();
         jLabel11 = new javax.swing.JLabel();
         txtAccountId = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
@@ -719,6 +836,12 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel16 = new javax.swing.JLabel();
         butBusiness = new javax.swing.JButton();
         cboBusinessType = new javax.swing.JComboBox();
+        jLabel17 = new javax.swing.JLabel();
+        txtCode = new javax.swing.JTextField();
+        cboFilterTownship = new javax.swing.JComboBox<>();
+        cboLocation = new javax.swing.JComboBox<>();
+        chkFilter = new javax.swing.JCheckBox();
+        cboCusGroup = new javax.swing.JComboBox<>();
 
         tblCustomer.setFont(Global.textFont);
         tblCustomer.setModel(tableModel);
@@ -735,42 +858,42 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel2.setFont(Global.lableFont);
         jLabel2.setText("Name");
 
-        txtName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtName.setFont(Global.textFont);
 
         jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Address");
 
         txtAddress.setColumns(20);
-        txtAddress.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAddress.setFont(Global.textFont);
         txtAddress.setRows(5);
         jScrollPane2.setViewportView(txtAddress);
 
         jLabel4.setFont(Global.lableFont);
         jLabel4.setText("Phone");
 
-        txtPhone.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtPhone.setFont(Global.textFont);
 
         jLabel5.setFont(Global.lableFont);
         jLabel5.setText("E-Mail");
 
-        txtEMail.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtEMail.setFont(Global.textFont);
 
         jLabel6.setFont(Global.lableFont);
         jLabel6.setText("Credit Limit");
 
-        txtCreditLimit.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtCreditLimit.setFont(Global.textFont);
         txtCreditLimit.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         jLabel7.setFont(Global.lableFont);
         jLabel7.setText("Credit Days");
 
-        txtCreditDays.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtCreditDays.setFont(Global.textFont);
         txtCreditDays.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         jLabel8.setFont(Global.lableFont);
         jLabel8.setText("Group");
 
-        cboGroup.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboGroup.setFont(Global.textFont);
         cboGroup.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 cboGroupItemStateChanged(evt);
@@ -785,7 +908,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel9.setFont(Global.lableFont);
         jLabel9.setText("Parent");
 
-        txtParent.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtParent.setFont(Global.textFont);
 
         jLabel10.setFont(Global.lableFont);
         jLabel10.setText("Active");
@@ -797,10 +920,10 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
         });
         txtFilter.addInputMethodListener(new java.awt.event.InputMethodListener() {
+            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
+            }
             public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
                 txtFilterInputMethodTextChanged(evt);
-            }
-            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
             }
         });
         txtFilter.addActionListener(new java.awt.event.ActionListener() {
@@ -825,23 +948,15 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
         });
 
-        butFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butFilter.setText("...");
-        butFilter.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butFilterActionPerformed(evt);
-            }
-        });
-
         jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Acc ID");
 
-        txtAccountId.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAccountId.setFont(Global.textFont);
 
         jLabel12.setFont(Global.lableFont);
         jLabel12.setText("Price Type");
 
-        cboType.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboType.setFont(Global.textFont);
 
         lblStatus.setText("NEW");
 
@@ -856,7 +971,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Township ");
 
-        cboTownship.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboTownship.setFont(Global.textFont);
         cboTownship.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboTownshipActionPerformed(evt);
@@ -874,12 +989,12 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         jLabel14.setFont(Global.lableFont);
         jLabel14.setText("Pay Method");
 
-        cboPayMethod.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboPayMethod.setFont(Global.textFont);
 
         jLabel15.setFont(Global.lableFont);
         jLabel15.setText("Remark");
 
-        txtRemark.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtRemark.setFont(Global.textFont);
 
         butGCC.setText("Gen-Child-Cus");
         butGCC.addActionListener(new java.awt.event.ActionListener() {
@@ -906,6 +1021,40 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
         });
 
+        cboBusinessType.setFont(Global.textFont);
+
+        jLabel17.setFont(Global.lableFont);
+        jLabel17.setText("Code");
+
+        txtCode.setFont(Global.textFont);
+
+        cboFilterTownship.setFont(Global.textFont);
+        cboFilterTownship.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboFilterTownshipActionPerformed(evt);
+            }
+        });
+
+        cboLocation.setFont(Global.textFont);
+        cboLocation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLocationActionPerformed(evt);
+            }
+        });
+
+        chkFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkFilterActionPerformed(evt);
+            }
+        });
+
+        cboCusGroup.setFont(Global.textFont);
+        cboCusGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboCusGroupActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -913,33 +1062,33 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(txtFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 197, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(butFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboFilterTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(chkFilter)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel7)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel12))
+                        .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 325, Short.MAX_VALUE)
-                            .addComponent(txtCreditDays)
-                            .addComponent(txtCreditLimit)
-                            .addComponent(txtEMail)
-                            .addComponent(txtPhone)
-                            .addComponent(txtName)
-                            .addComponent(txtId)
-                            .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(txtId, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(cboGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butGroup))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel17)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtCode))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel9)
@@ -974,20 +1123,31 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                         .addComponent(butGCC))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel8)
+                            .addComponent(jLabel7)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel12)
                             .addComponent(jLabel16))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(cboGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cboBusinessType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(butGroup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(butBusiness, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(cboBusinessType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(butBusiness))
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                            .addComponent(txtCreditDays)
+                            .addComponent(txtCreditLimit)
+                            .addComponent(txtEMail)
+                            .addComponent(txtPhone)
+                            .addComponent(txtName)
+                            .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel11, jLabel12, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel11, jLabel12, jLabel17, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -997,23 +1157,29 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                     .addComponent(jLabel1)
                     .addComponent(txtId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(butFilter))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(cboFilterTownship, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chkFilter)
+                    .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel17)
+                            .addComponent(txtCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(jLabel8)
                                 .addComponent(butGroup))
                             .addComponent(cboGroup, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(butBusiness)
+                                .addComponent(cboBusinessType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(3, 3, 3)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(butBusiness)
-                                    .addComponent(cboBusinessType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(11, 11, 11)
+                                .addGap(8, 8, 8)
                                 .addComponent(jLabel16)))
                         .addGap(5, 5, 5)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1021,9 +1187,9 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                             .addComponent(jLabel2))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel3))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(7, 7, 7)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
                             .addComponent(txtPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1074,12 +1240,13 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(butGCC)
                             .addComponent(butUploadAll))
-                        .addGap(0, 72, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {butGroup, cboGroup});
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {butGroup, cboBusinessType, cboGroup});
+
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {txtCode, txtId});
 
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1103,44 +1270,46 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     }//GEN-LAST:event_cboGroupItemStateChanged
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
-      if (statusFilter) {
+      /*if (statusFilter) {
           tableModel.setListTrader(dao.findAll("Customer"));
           statusFilter = false;
-      }
+      }*/
 
       if (txtFilter.getText().isEmpty()) {
           sorter.setRowFilter(null);
+      } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+          sorter.setRowFilter(swrf);
       } else {
-          if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-              sorter.setRowFilter(swrf);
-          } else {
-              sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
-          }
+          sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
       }
   }//GEN-LAST:event_txtFilterKeyReleased
 
     private void butGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGroupActionPerformed
-        showDialog("Customer Group Setup");
-        CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
-        BindingUtil.BindCombo(cboGroup, 
-                dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
-        cboGroup.setSelectedItem(cg);
+        try {
+            showDialog("Customer Group Setup");
+            CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
+            BindingUtil.BindCombo(cboGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
+            cboGroup.setSelectedItem(cg);
+        } catch (Exception ex) {
+            log.error("butGroupActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }//GEN-LAST:event_butGroupActionPerformed
 
-  private void butFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFilterActionPerformed
-      CustomerSetupFilterDialog filterDialog = new CustomerSetupFilterDialog(dao);
-
-      if (filterDialog.getStatus()) {
-          filterItem(filterDialog.getFilter());
-      }
-  }//GEN-LAST:event_butFilterActionPerformed
-
   private void butTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTownshipActionPerformed
-      TownshipSetup setup = new TownshipSetup();
-      setup.setVisible(true);
-      Township ts = (Township) cboTownship.getSelectedItem();
-      BindingUtil.BindCombo(cboTownship, dao.findAll("Township"));
-      cboTownship.setSelectedItem(ts);
+      try {
+          TownshipSetup setup = new TownshipSetup();
+          setup.setVisible(true);
+          Township ts = (Township) cboTownship.getSelectedItem();
+          BindingUtil.BindCombo(cboTownship, dao.findAll("Township"));
+          cboTownship.setSelectedItem(ts);
+      } catch (Exception ex) {
+          log.error("butTownshipActionPerformed : " + ex.getMessage());
+      } finally {
+          dao.close();
+      }
   }//GEN-LAST:event_butTownshipActionPerformed
 
     private void butGCCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGCCActionPerformed
@@ -1175,14 +1344,20 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private void butBusinessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBusinessActionPerformed
         // TODO add your handling code here:
         //showDialog("Business Type SetUp");
-        BusinessTypeSetup setup = new BusinessTypeSetup();
-        setup.setSize(800, 600);
-        setup.setTitle("Business Type Setup");
-        setup.setLocationRelativeTo(this);
-        setup.setVisible(true);
-        BusinessType bst = (BusinessType) cboBusinessType.getSelectedItem();
-        BindingUtil.BindCombo(cboBusinessType, dao.findAll("BusinessType"));
-        cboBusinessType.setSelectedItem(bst);
+        try {
+            BusinessTypeSetup setup = new BusinessTypeSetup();
+            setup.setSize(800, 600);
+            setup.setTitle("Business Type Setup");
+            setup.setLocationRelativeTo(this);
+            setup.setVisible(true);
+            BusinessType bst = (BusinessType) cboBusinessType.getSelectedItem();
+            BindingUtil.BindCombo(cboBusinessType, dao.findAll("BusinessType"));
+            cboBusinessType.setSelectedItem(bst);
+        } catch (Exception ex) {
+            log.error("butBusinessActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }//GEN-LAST:event_butBusinessActionPerformed
 
     private void cboTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTownshipActionPerformed
@@ -1213,19 +1388,46 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         // TODO add your handling code here:
     }//GEN-LAST:event_txtFilterKeyTyped
 
+    private void cboFilterTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboFilterTownshipActionPerformed
+        if (!bindStatus) {
+            filterItem();
+        }
+    }//GEN-LAST:event_cboFilterTownshipActionPerformed
+
+    private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
+        if (!bindStatus) {
+            filterItem();
+        }
+    }//GEN-LAST:event_cboLocationActionPerformed
+
+    private void chkFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkFilterActionPerformed
+        if (!bindStatus) {
+            filterItem();
+        }
+    }//GEN-LAST:event_chkFilterActionPerformed
+
+    private void cboCusGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCusGroupActionPerformed
+        if (!bindStatus) {
+            filterItem();
+        }
+    }//GEN-LAST:event_cboCusGroupActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butBusiness;
-    private javax.swing.JButton butFilter;
     private javax.swing.JButton butGCC;
     private javax.swing.JButton butGroup;
     private javax.swing.JButton butTownship;
     private javax.swing.JButton butUploadAll;
     private javax.swing.JComboBox cboBusinessType;
+    private javax.swing.JComboBox<String> cboCusGroup;
+    private javax.swing.JComboBox<String> cboFilterTownship;
     private javax.swing.JComboBox cboGroup;
+    private javax.swing.JComboBox<String> cboLocation;
     private javax.swing.JComboBox cboPayMethod;
     private javax.swing.JComboBox cboTownship;
     private javax.swing.JComboBox cboType;
     private javax.swing.JCheckBox chkActive;
+    private javax.swing.JCheckBox chkFilter;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -1234,6 +1436,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1248,6 +1451,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private javax.swing.JTable tblCustomer;
     private javax.swing.JTextField txtAccountId;
     private javax.swing.JTextArea txtAddress;
+    private javax.swing.JTextField txtCode;
     private javax.swing.JTextField txtCreditDays;
     private javax.swing.JTextField txtCreditLimit;
     private javax.swing.JTextField txtEMail;

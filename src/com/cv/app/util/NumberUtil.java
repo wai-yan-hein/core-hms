@@ -20,39 +20,39 @@ public class NumberUtil {
     public static Long NZeroL(Object number) {
         try {
             if (number == null) {
-                return new Long(0);
+                return 0l;
             } else {
                 return Long.parseLong(number.toString());
             }
         } catch (Exception ex) {
             System.out.println("NumberUtil.NZero : " + ex.getMessage());
-            return new Long(0);
+            return 0l;
         }
     }
 
     public static Double NZero(Object number) {
         try {
             if (number == null) {
-                return new Double(0);
+                return 0d;
             } else {
                 return Double.parseDouble(number.toString().replace(",", ""));
             }
         } catch (Exception ex) {
             System.out.println("NumberUtil.NZero : " + ex.getMessage());
-            return new Double(0);
+            return 0d;
         }
     }
 
     public static Float FloatZero(Object number) {
         try {
             if (number == null) {
-                return new Float(0);
+                return 0f;
             } else {
                 return Float.parseFloat(number.toString().replace(",", ""));
             }
         } catch (NumberFormatException ex) {
             System.out.println("NumberUtil.NZero : " + ex.getMessage());
-            return new Float(0);
+            return 0f;
         }
     }
 
@@ -65,7 +65,7 @@ public class NumberUtil {
     }
 
     public static Integer NZeroInt(Object number) {
-        Integer value = new Integer(0);
+        Integer value = 0;
 
         try {
             value = Integer.parseInt(number.toString());
@@ -76,7 +76,7 @@ public class NumberUtil {
     }
 
     public static Float NZeroFloat(Object number) {
-        Float value = new Float(0);
+        Float value = 0f;
 
         try {
             value = Float.parseFloat(number.toString());
@@ -150,7 +150,7 @@ public class NumberUtil {
                 }
             }
 
-            tmpInt = new Integer(strN);
+            tmpInt = Integer.parseInt(strN);
         } catch (Exception ex) {
             System.out.println("NumberUtil.getNumber : " + ex.getMessage());
         }
@@ -207,7 +207,7 @@ public class NumberUtil {
         hm.put("၈", "8");
         hm.put("၉", "9");
         hm.put(".", ".");
-
+        
         for (int i = 0; i < length; i++) {
             String tmpNum = inValue.substring(i, i + 1);
 
@@ -219,5 +219,25 @@ public class NumberUtil {
         }
 
         return outValue;
+    }
+    
+    public static double roundDouble(double value, int place){
+        if(place < 0){
+            return 0;
+        }else{
+            BigDecimal bd = new BigDecimal(Double.toString(value));
+            bd = bd.setScale(place, RoundingMode.HALF_UP);
+            return bd.doubleValue();
+        }
+    }
+    
+    public static float roundFloat(double value, int place){
+        if(place < 0){
+            return 0;
+        }else{
+            BigDecimal bd = new BigDecimal(Double.toString(value));
+            bd = bd.setScale(place, RoundingMode.HALF_UP);
+            return bd.floatValue();
+        }
     }
 }

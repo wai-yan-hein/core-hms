@@ -39,14 +39,26 @@ public class FeesTemplateSetup extends javax.swing.JDialog {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
-        bindStatus = true;
+        try {
+            BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getTemplate(int id) {
-        List<FeesTemplate> listFeesTemplate = dao.findAll("FeesTemplate", "groupId = " + id);
-        tableModel.setGroupId(id);
-        tableModel.setListFeesTemplate(listFeesTemplate);
+        try {
+            List<FeesTemplate> listFeesTemplate = dao.findAll("FeesTemplate", "groupId = " + id);
+            tableModel.setGroupId(id);
+            tableModel.setListFeesTemplate(listFeesTemplate);
+        } catch (Exception ex) {
+            log.error("getTemplate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void save() {

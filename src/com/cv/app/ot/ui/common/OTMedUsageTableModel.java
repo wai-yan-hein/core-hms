@@ -200,8 +200,14 @@ public class OTMedUsageTableModel extends AbstractTableModel {
     }
 
     private void getMedUsage() {
-        listOTMedUsage = dao.findAll("OTMedUsage", "key.serviceId = " + srvId);
-        addNewRow();
+        try {
+            listOTMedUsage = dao.findAll("OTMedUsage", "key.serviceId = " + srvId);
+            addNewRow();
+        } catch (Exception ex) {
+            log.error("getMedUsage : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void addNewRow() {

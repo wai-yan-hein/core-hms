@@ -53,7 +53,7 @@ public class TraderListTableModel extends AbstractTableModel {
             switch (column) {
                 case 0: //ID
                     if (prifxStatus.equals("Y")) {
-                        return trader.getTraderId().replace("CUS", "").replace("SUP", "");
+                        return trader.getStuCode();
                     } else {
                         return trader.getTraderId();
                     }
@@ -61,7 +61,7 @@ public class TraderListTableModel extends AbstractTableModel {
                     return trader.getTraderName();
                 case 2: //Type
                     String type;
-                    if (trader.getTraderId().contains("CUS")) {
+                    if (trader.getDiscrimator().equals("C")) {
                         type = "Customer";
                     } else {
                         type = "Supplier";

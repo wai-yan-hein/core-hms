@@ -16,22 +16,30 @@ import java.awt.Container;
  */
 public class UtilDialog extends javax.swing.JDialog {
 
-    private String panelName;
-    private SelectionObserver observer;
-    private AbstractDataAccess dao;
-    private String filter;
-
+    private final String panelName;
+    private final SelectionObserver observer;
+    private final AbstractDataAccess dao;
+    //private String filter;
+    private int locationId;
+    
     /**
      * Creates new form UtilDialog
+     * @param parent
+     * @param modal
+     * @param observer
+     * @param panelName
+     * @param dao
+     * @param locationId
      */
     public UtilDialog(java.awt.Frame parent, boolean modal, SelectionObserver observer,
-            String panelName, AbstractDataAccess dao) {
+            String panelName, AbstractDataAccess dao, int locationId) {
         super(parent, panelName, modal);
 
         this.panelName = panelName;
         this.observer = observer;
         this.dao = dao;
-
+        this.locationId = locationId;
+        
         initComponents();
 
         /*Dimension screen = Util1.getScreenSize();
@@ -49,7 +57,7 @@ public class UtilDialog extends javax.swing.JDialog {
         this.panelName = panelName;
         this.observer = observer;
         this.dao = dao;
-        this.filter = filter;
+        //this.filter = filter;
 
         initComponents();
         //setVisible(true);
@@ -69,7 +77,7 @@ public class UtilDialog extends javax.swing.JDialog {
         switch (panelName) {
             case "Customer List":
             case "Supplier List":
-                contentPane.add(new CustomerList(this, observer, dao, panelName));
+                contentPane.add(new CustomerList(this, observer, dao, panelName, locationId));
                 break;
             case "Patient List":
                 contentPane.add(new PatientList(this, observer, dao, panelName));
@@ -82,18 +90,18 @@ public class UtilDialog extends javax.swing.JDialog {
                 }
                 break;
             case "Purchase Voucher Search":
-                if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                //if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                     contentPane.add(new PurchaseVouSearch1(this, observer, dao));
-                } else {
-                    contentPane.add(new PurchaseVouSearch(this, observer, dao));
-                }
+                //} else {*/
+                    //contentPane.add(new PurchaseVouSearch(this, observer, dao));
+                //}
                 break;
             case "Return In Voucher Search":
-                if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-                    contentPane.add(new RetInVouSearch1(this, observer, dao));
-                } else {
+                //if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                //    contentPane.add(new RetInVouSearch1(this, observer, dao));
+                //} else {
                     contentPane.add(new RetInVouSearch(this, observer, dao));
-                }
+                //}
                 break;
             case "Return Out Voucher Search":
                 contentPane.add(new RetOutVouSearch(this, observer, dao));

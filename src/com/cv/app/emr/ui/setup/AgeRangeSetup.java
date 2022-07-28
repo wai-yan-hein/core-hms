@@ -29,7 +29,7 @@ public class AgeRangeSetup extends javax.swing.JDialog {
     private final AbstractDataAccess dao = Global.dao; // Data access object.
     private int selectRow = -1;
     private AgeRange currAR = new AgeRange();
-    
+
     /**
      * Creates new form AgeRange
      */
@@ -40,32 +40,38 @@ public class AgeRangeSetup extends javax.swing.JDialog {
         initTable();
     }
 
-    private void initTable(){
-        arTableModel.setListAR(dao.findAll("AgeRange"));
-        tblAgeRange.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblAgeRange.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblAgeRange.getSelectedRow() >= 0) {
-                    selectRow = tblAgeRange.convertRowIndexToModel(tblAgeRange.getSelectedRow());
-                }
+    private void initTable() {
+        try {
+            arTableModel.setListAR(dao.findAll("AgeRange"));
+            tblAgeRange.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblAgeRange.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblAgeRange.getSelectedRow() >= 0) {
+                        selectRow = tblAgeRange.convertRowIndexToModel(tblAgeRange.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(arTableModel.getAgeRange(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(arTableModel.getAgeRange(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    private void setRecord(AgeRange ar){
+
+    private void setRecord(AgeRange ar) {
         currAR = ar;
         txtAgeRangeDesp.setText(currAR.getAgerDesp());
         txtSortOrder.setText(currAR.getSortOrder().toString());
         lblStatus.setText("EDIT");
     }
-    
-    private void clear(){
+
+    private void clear() {
         currAR = new AgeRange();
         txtAgeRangeDesp.setText(null);
         txtSortOrder.setText(null);
@@ -74,10 +80,10 @@ public class AgeRangeSetup extends javax.swing.JDialog {
         txtAgeRangeDesp.requestFocus();
         System.gc();
     }
-    
-    private boolean isValidEntry(){
+
+    private boolean isValidEntry() {
         boolean status = true;
-        
+
         if (Util1.nullToBlankStr(txtAgeRangeDesp.getText().trim()).equals("")) {
             JOptionPane.showMessageDialog(this, "Description cannot be blank.",
                     "Blank", JOptionPane.ERROR_MESSAGE);
@@ -85,22 +91,22 @@ public class AgeRangeSetup extends javax.swing.JDialog {
             txtAgeRangeDesp.requestFocusInWindow();
         } else {
             currAR.setAgerDesp(txtAgeRangeDesp.getText().trim());
-            if(txtSortOrder.getText().trim().isEmpty()){
+            if (txtSortOrder.getText().trim().isEmpty()) {
                 currAR.setSortOrder(null);
-            }else{
+            } else {
                 currAR.setSortOrder(Integer.parseInt(txtSortOrder.getText()));
             }
         }
         return status;
     }
-    
+
     private void save() {
         if (isValidEntry()) {
             try {
                 dao.save(currAR);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     arTableModel.addAgeRange(currAR);
-                }else{
+                } else {
                     arTableModel.setAgeRange(ERROR, currAR);
                 }
                 clear();
@@ -116,8 +122,8 @@ public class AgeRangeSetup extends javax.swing.JDialog {
             }
         }
     }
-    
-    private void delete(){
+
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -142,7 +148,7 @@ public class AgeRangeSetup extends javax.swing.JDialog {
 
         clear();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

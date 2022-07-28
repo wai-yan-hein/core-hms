@@ -158,10 +158,10 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
 
         if (login.isStatus()) {
             AbstractDataAccess dao = Global.dao;
-            
+
             Global.machineName = Util1.getComputerName();
             System.out.println("Machine Name : " + Global.machineName);
-            
+
             try {
                 dao.open();
                 Global.machineId = dao.getMax("machine_id", "machine_info", "machine_name = '"
@@ -190,12 +190,17 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
             }
 
             //Machine property
-            List<MachineProperty> listMP = dao.findAllHSQL("select o from MachineProperty o where o.key.machineId = "
-                    + Global.machineId);
-            for (MachineProperty mp : listMP) {
-                Global.systemProperties.put(mp.getKey().getPropDesp(), mp.getPropValue());
+            try {
+                List<MachineProperty> listMP = dao.findAllHSQL("select o from MachineProperty o where o.key.machineId = "
+                        + Global.machineId);
+                for (MachineProperty mp : listMP) {
+                    Global.systemProperties.put(mp.getKey().getPropDesp(), mp.getPropValue());
+                }
+            } catch (Exception ex) {
+                log.error("Machine property : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
-            
             //MQ initilization
             String isIntegration = Util1.getPropValue("system.integration");
             if (isIntegration.toUpperCase().equals("Y")) {

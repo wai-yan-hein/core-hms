@@ -54,7 +54,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
     private boolean bindStatus = false;
     private int mouseClick = 2;
     //private final TableRowSorter<TableModel> sorter;
-    
+
     /**
      * Creates new form ExpenseEntry
      */
@@ -67,7 +67,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
         actionMapping();
         //sorter = new TableRowSorter(tblExpense.getModel());
         //tblExpense.setRowSorter(sorter);
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -82,53 +82,59 @@ public class ExpenseEntry extends javax.swing.JPanel {
     }
 
     private void initTable() {
-        if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
-            tblExpense.setCellSelectionEnabled(true);
+        try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblExpense.setCellSelectionEnabled(true);
+            }
+            getExpense();
+
+            tblExpense.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblExpense.getColumnModel().getColumn(0).setPreferredWidth(30);//Date
+            tblExpense.getColumnModel().getColumn(1).setPreferredWidth(350);//Description
+            tblExpense.getColumnModel().getColumn(2).setPreferredWidth(250);//Remark
+            tblExpense.getColumnModel().getColumn(3).setPreferredWidth(100);//Expense Type
+            tblExpense.getColumnModel().getColumn(4).setPreferredWidth(10);//Location
+            tblExpense.getColumnModel().getColumn(5).setPreferredWidth(5);//Lock
+            tblExpense.getColumnModel().getColumn(6).setPreferredWidth(50);//Lock Time
+            tblExpense.getColumnModel().getColumn(7).setPreferredWidth(50);//DR-Amount
+            tblExpense.getColumnModel().getColumn(8).setPreferredWidth(50);//CR-Amount
+            tblExpense.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor());
+            tblExpense.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+            tblExpense.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+            tblExpense.getColumnModel().getColumn(6).setCellRenderer(new TableDateTimeFieldRenderer());
+
+            JComboBox cboExpenseType = new JComboBox();
+            cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 12));
+            BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
+            tblExpense.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboExpenseType));
+
+            JComboBox cboLocation1 = new JComboBox();
+            cboLocation1.setFont(new java.awt.Font("Zawgyi-One", 0, 12));
+            BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
+            tblExpense.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboLocation1));
+
+            tblExpense.getModel().addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    txtTotal.setValue(tableModel.getTotalAmount());
+                    txtDRAmount.setValue(tableModel.getTotalAmountDR());
+                }
+            });
+
+            tblExpense.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblExpense.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    tableModel.setSelectRow(tblExpense.convertRowIndexToModel(tblExpense.getSelectedRow()));
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        getExpense();
-
-        tblExpense.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblExpense.getColumnModel().getColumn(0).setPreferredWidth(30);//Date
-        tblExpense.getColumnModel().getColumn(1).setPreferredWidth(350);//Description
-        tblExpense.getColumnModel().getColumn(2).setPreferredWidth(250);//Remark
-        tblExpense.getColumnModel().getColumn(3).setPreferredWidth(100);//Expense Type
-        tblExpense.getColumnModel().getColumn(4).setPreferredWidth(10);//Location
-        tblExpense.getColumnModel().getColumn(5).setPreferredWidth(5);//Lock
-        tblExpense.getColumnModel().getColumn(6).setPreferredWidth(50);//Lock Time
-        tblExpense.getColumnModel().getColumn(7).setPreferredWidth(50);//DR-Amount
-        tblExpense.getColumnModel().getColumn(8).setPreferredWidth(50);//CR-Amount
-        tblExpense.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor());
-        tblExpense.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
-        tblExpense.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
-        tblExpense.getColumnModel().getColumn(6).setCellRenderer(new TableDateTimeFieldRenderer());
-
-        JComboBox cboExpenseType = new JComboBox();
-        cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 12));
-        BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
-        tblExpense.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboExpenseType));
-
-        JComboBox cboLocation1 = new JComboBox();
-        cboLocation1.setFont(new java.awt.Font("Zawgyi-One", 0, 12));
-        BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
-        tblExpense.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboLocation1));
-
-        tblExpense.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                txtTotal.setValue(tableModel.getTotalAmount());
-                txtDRAmount.setValue(tableModel.getTotalAmountDR());
-            }
-        });
-
-        tblExpense.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblExpense.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                tableModel.setSelectRow(tblExpense.convertRowIndexToModel(tblExpense.getSelectedRow()));
-            }
-        });
     }
 
     private void getExpense() {
@@ -174,7 +180,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
         }
 
         strSql = strSql + " and upp = " + chkUPP.isSelected();
-        
+
         strSql = strSql + " order by date(expnDate)";
 
         try {
@@ -269,12 +275,18 @@ public class ExpenseEntry extends javax.swing.JPanel {
     };
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation,
-                dao.findAllHSQL("select o from Location o order by o.locationName"));
-        BindingUtil.BindComboFilter(cboExpType,
-                dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
-        BindingUtil.BindComboFilter(cboDoctor,
-                dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation,
+                    dao.findAllHSQL("select o from Location o order by o.locationName"));
+            BindingUtil.BindComboFilter(cboExpType,
+                    dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
+            BindingUtil.BindComboFilter(cboDoctor,
+                    dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         bindStatus = true;
     }
 
@@ -357,7 +369,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
                 String compName = Util1.getPropValue("report.company.name");
                 String phoneNo = Util1.getPropValue("report.phone");
                 String address = Util1.getPropValue("report.address");
-                params.put("p_user_id", Global.loginUser.getUserId());
+                params.put("p_user_id", Global.machineId);
                 params.put("compName", compName);
                 params.put("phoneNo", phoneNo);
                 params.put("comAddress", address);

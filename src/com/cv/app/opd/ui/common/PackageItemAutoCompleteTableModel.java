@@ -9,20 +9,29 @@ import com.cv.app.opd.database.view.VUnionItem;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class PackageItemAutoCompleteTableModel extends AbstractTableModel{
-    private final List<VUnionItem> listPI;
+public class PackageItemAutoCompleteTableModel extends AbstractTableModel {
+
+    static Logger log = Logger.getLogger(PackageItemAutoCompleteTableModel.class.getName());
+    private List<VUnionItem> listPI = null;
     private final String[] columnNames = {"Code", "Item Name", "Item Type"};
     private final AbstractDataAccess dao = Global.dao;
-    
-    public PackageItemAutoCompleteTableModel(){
-        listPI = dao.findAllHSQL("select o from VUnionItem o");
+
+    public PackageItemAutoCompleteTableModel() {
+        try {
+            listPI = dao.findAllHSQL("select o from VUnionItem o");
+        } catch (Exception ex) {
+            log.error("PackageItemAutoCompleteTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -40,12 +49,12 @@ public class PackageItemAutoCompleteTableModel extends AbstractTableModel{
 
     @Override
     public Object getValueAt(int row, int column) {
-        if(listPI == null){
+        if (listPI == null) {
             return null;
-        }else if(listPI.isEmpty()){
+        } else if (listPI.isEmpty()) {
             return null;
         }
-        
+
         VUnionItem record = listPI.get(row);
 
         switch (column) {
@@ -73,23 +82,23 @@ public class PackageItemAutoCompleteTableModel extends AbstractTableModel{
     public int getColumnCount() {
         return columnNames.length;
     }
-    
-    public VUnionItem getItem(int index){
+
+    public VUnionItem getItem(int index) {
         VUnionItem vui = null;
-        if(listPI != null){
-            if(!listPI.isEmpty()){
+        if (listPI != null) {
+            if (!listPI.isEmpty()) {
                 vui = listPI.get(index);
             }
         }
         return vui;
     }
-    
-    public int getSize(){
-        if(listPI == null){
+
+    public int getSize() {
+        if (listPI == null) {
             return 0;
-        }else if(listPI.isEmpty()){
+        } else if (listPI.isEmpty()) {
             return 0;
-        }else{
+        } else {
             return listPI.size();
         }
     }

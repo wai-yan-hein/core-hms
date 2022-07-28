@@ -52,13 +52,25 @@ public class MachinePropSetup extends javax.swing.JPanel {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboMachine, dao.findAll("MachineInfo"));
-        new ComBoBoxAutoComplete(cboMachine);
+        try {
+            BindingUtil.BindCombo(cboMachine, dao.findAll("MachineInfo"));
+            new ComBoBoxAutoComplete(cboMachine);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setProperties() {
-        List<MachineProperty> listProperties = dao.findAll("MachineProperty");
-        tableModel.setListMachineProperty(listProperties);
+        try {
+            List<MachineProperty> listProperties = dao.findAll("MachineProperty");
+            tableModel.setListMachineProperty(listProperties);
+        } catch (Exception ex) {
+            log.error("setProperties : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Action actionItemDelete = new AbstractAction() {
@@ -73,7 +85,7 @@ public class MachinePropSetup extends javax.swing.JPanel {
                             "Are you sure to delete?",
                             "Sale item delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblProperty.getCellEditor() != null){
+                    if (tblProperty.getCellEditor() != null) {
                         tblProperty.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {

@@ -563,7 +563,7 @@ public class DCDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             String compName = Util1.getPropValue("report.company.name");
             String phoneNo = Util1.getPropValue("report.phone");
             String address = Util1.getPropValue("report.address");
-            params.put("p_user_id", Global.loginUser.getUserId());
+            params.put("p_user_id", Global.machineId);
             params.put("compName", compName);
             params.put("phoneNo", phoneNo);
             params.put("comAddress", address);

@@ -29,6 +29,7 @@ import com.cv.app.pharmacy.database.view.VSession;
 import com.cv.app.pharmacy.ui.common.SessionTableModel;
 import com.cv.app.pharmacy.ui.common.SessionTotalTableModel;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
+import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -36,7 +37,6 @@ import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Color;
 import java.awt.Component;
-import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -92,17 +92,23 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void getSessionFilter() {
-        List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'Pharmacy'");
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (strSessionFilter.equals("-")) {
-                        strSessionFilter = "'" + sf.getKey().getTranSource() + "'";
-                    } else {
-                        strSessionFilter = strSessionFilter + ",'" + sf.getKey().getTranSource() + "'";
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'Pharmacy'");
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (strSessionFilter.equals("-")) {
+                            strSessionFilter = "'" + sf.getKey().getTranSource() + "'";
+                        } else {
+                            strSessionFilter = strSessionFilter + ",'" + sf.getKey().getTranSource() + "'";
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("getSessionFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -112,48 +118,62 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
-        BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboMachine, dao.findAll("MachineInfo"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboPaidCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboLGroup, dao.findAll("LocationGroup"));
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+        try {
+            BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
+            BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboMachine, dao.findAll("MachineInfo"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboPaidCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboLGroup, dao.findAll("LocationGroup"));
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
 
-        new ComBoBoxAutoComplete(cboUser);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboMachine);
-        new ComBoBoxAutoComplete(cboTranType);
-        new ComBoBoxAutoComplete(cboDelete);
-        new ComBoBoxAutoComplete(cboSource);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboPaidCurrency);
+            new ComBoBoxAutoComplete(cboUser);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboMachine);
+            new ComBoBoxAutoComplete(cboTranType);
+            new ComBoBoxAutoComplete(cboDelete);
+            new ComBoBoxAutoComplete(cboSource);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboPaidCurrency);
 
-        cboUser.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
-        cboMachine.setSelectedIndex(0);
-        cboTranType.setSelectedIndex(0);
-        cboDelete.setSelectedIndex(0);
-        cboSource.setSelectedIndex(0);
-        cboCurrency.setSelectedIndex(0);
-        cboPaidCurrency.setSelectedIndex(0);
+            cboUser.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+            cboMachine.setSelectedIndex(0);
+            cboTranType.setSelectedIndex(0);
+            cboDelete.setSelectedIndex(0);
+            cboSource.setSelectedIndex(0);
+            cboCurrency.setSelectedIndex(0);
+            cboPaidCurrency.setSelectedIndex(0);
 
-        bindStatus = true;
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowSessCheck = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowSessCheck = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private String getHSQL() {
@@ -174,12 +194,17 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void search() {
-        List<VSession> listVS = dao.findAllHSQL(getHSQL());
-        tableModel.setListVSession(listVS);
-        //System.out.println("search : " + listVS.size());
-        //getTotal();
-        applyFilter();
-
+        try {
+            List<VSession> listVS = dao.findAllHSQL(getHSQL());
+            tableModel.setListVSession(listVS);
+            //System.out.println("search : " + listVS.size());
+            //getTotal();
+            applyFilter();
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -202,6 +227,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         tblSession.getColumnModel().getColumn(14).setPreferredWidth(20);//Source
         tblSession.getColumnModel().getColumn(15).setPreferredWidth(20);//Session
         tblSession.getColumnModel().getColumn(16).setPreferredWidth(20);//Bill
+        tblSession.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
 
         tblSessTtl.getColumnModel().getColumn(0).setPreferredWidth(70);//Desp
         tblSessTtl.getColumnModel().getColumn(1).setPreferredWidth(10);//Currency
@@ -288,31 +314,36 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             }
         }
 
-        if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
-            LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
-            List<LocationGroupMapping> listLGM = dao.findAllHSQL(
-                    "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
-            String strLocation = "";
+        try {
+            if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
+                LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
+                List<LocationGroupMapping> listLGM = dao.findAllHSQL(
+                        "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
+                String strLocation = "";
 
-            if (listLGM != null) {
-                for (LocationGroupMapping lgm : listLGM) {
-                    if (strLocation.isEmpty()) {
-                        strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                if (listLGM != null) {
+                    for (LocationGroupMapping lgm : listLGM) {
+                        if (strLocation.isEmpty()) {
+                            strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                        } else {
+                            strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        }
+                    }
+                }
+
+                if (!strLocation.isEmpty()) {
+                    if (strWhere.isEmpty()) {
+                        strWhere = " locationId in (" + strLocation + ")";
                     } else {
-                        strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        strWhere = strWhere + " and locationId in (" + strLocation + ")";
                     }
                 }
             }
-
-            if (!strLocation.isEmpty()) {
-                if (strWhere.isEmpty()) {
-                    strWhere = " locationId in (" + strLocation + ")";
-                } else {
-                    strWhere = strWhere + " and locationId in (" + strLocation + ")";
-                }
-            }
+        } catch (Exception ex) {
+            log.error("location error : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
             CustomerGroup cg = (CustomerGroup) cboCusGroup.getSelectedItem();
 
@@ -456,22 +487,27 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             }
         }
 
-        List<SessionFilter> listSF = dao.findAllHSQL(
-                "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
-                + " and o.rptParameter <> '-' and o.apply = true"
-        );
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (strWhere.isEmpty()) {
-                        strWhere = applySessionFilter(sf.getKey().getTranSource());
-                    } else {
-                        strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL(
+                    "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
+                    + " and o.rptParameter <> '-' and o.apply = true"
+            );
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (strWhere.isEmpty()) {
+                            strWhere = applySessionFilter(sf.getKey().getTranSource());
+                        } else {
+                            strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("session filter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         if (!strWhere.isEmpty()) {
             filterString = filterString + " WHERE " + strWhere;
         }
@@ -669,15 +705,20 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         double ttlExpOut = 0;
 
         HashMap<String, String> hmFilter = new HashMap();
-        List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'PHARTTL'");
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    hmFilter.put(sf.getKey().getTranSource(), sf.getKey().getTranSource());
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'PHARTTL'");
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        hmFilter.put(sf.getKey().getTranSource(), sf.getKey().getTranSource());
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("session filter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         for (VSession vs : listVS) {
             if (vs.getKey().getSource().equals("Sale")) {
                 ttlSVou += NumberUtil.NZero(vs.getVouTotal());
@@ -814,6 +855,10 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                     }
                 } catch (SQLException ex) {
                     log.error("printSessionD : " + ex.getMessage());
+                } catch (Exception ex) {
+                    log.error("calculateTotal : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }
@@ -1223,10 +1268,10 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     private void insertTotalToTamp(List<SessionTtl> listSessionTtl) {
         try {
             dao.execSql("delete from tmp_session_total where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
             for (SessionTtl sttl : listSessionTtl) {
                 TmpSessionTotal tst = new TmpSessionTotal(sttl.getDesc(), sttl.getCurrency(),
-                        sttl.getTtlPaid(), Global.loginUser.getUserId());
+                        sttl.getTtlPaid(), Global.machineId);
                 dao.save(tst);
             }
         } catch (Exception ex) {
@@ -1399,20 +1444,26 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             params.put("prm_send", cboSend.getSelectedItem().toString());
         }
 
-        List<SessionFilter> listSF = dao.findAllHSQL(
-                "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
-                + " and o.rptParameter <> '-' and o.apply = true"
-        );
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (sf.isApply()) {
-                        params.put(sf.getRptParameter(), "@");
-                    } else {
-                        params.put(sf.getRptParameter(), "-");
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL(
+                    "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
+                    + " and o.rptParameter <> '-' and o.apply = true"
+            );
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (sf.isApply()) {
+                            params.put(sf.getRptParameter(), "@");
+                        } else {
+                            params.put(sf.getRptParameter(), "-");
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("session filter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
 
         if (!txtCusId.getText().trim().isEmpty()) {
@@ -1535,6 +1586,10 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
 
             } catch (SQLException ex) {
                 log.error("printSessionD : " + ex.getMessage());
+            } catch (Exception ex) {
+                log.error("printSessionD : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
 
@@ -1647,6 +1702,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         jLabel16 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         cboPatientType = new javax.swing.JComboBox();
+        butCheckPoint = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblSession = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -1927,6 +1983,8 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
 
     cboPatientType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "OPD", "Inpatient" }));
 
+    butCheckPoint.setText("Check Point");
+
     javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
     jPanel2.setLayout(jPanel2Layout);
     jPanel2Layout.setHorizontalGroup(
@@ -1965,7 +2023,9 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                                     .addGap(123, 123, 123)
                                     .addComponent(jLabel15)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(butCheckPoint)
+                                        .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))))
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(butPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2059,12 +2119,17 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(butPrintD)))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jLabel16)
-                .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(jLabel14)
-                .addComponent(cboPatientType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel16)
+                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel14)
+                        .addComponent(cboPatientType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(0, 0, Short.MAX_VALUE))
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(butCheckPoint))))
     );
 
     tblSession.setFont(Global.textFont);
@@ -2362,6 +2427,7 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton butCheckPoint;
     private javax.swing.JButton butClear;
     private javax.swing.JButton butPrint;
     private javax.swing.JButton butPrintD;

@@ -7,6 +7,7 @@ package com.cv.app.pharmacy.ui.util;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.pharmacy.ui.common.DoctorAutoCompleteTableModel;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -51,6 +52,7 @@ public class DoctorAutoCompleter implements KeyListener {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(null);
 
+        table.setRowHeight(23);
         table.setFocusable(false);
         table.getColumnModel().getColumn(0).setPreferredWidth(20);//Code
         table.getColumnModel().getColumn(1).setPreferredWidth(110);//Description
@@ -195,6 +197,8 @@ public class DoctorAutoCompleter implements KeyListener {
         if (si < acTableModel.getSize() - 1) {
             table.setRowSelectionInterval(si + 1, si + 1);
         }
+        Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
+        table.scrollRectToVisible(rect);
     }
 
     /**
@@ -207,6 +211,9 @@ public class DoctorAutoCompleter implements KeyListener {
         if (si > 0) {
             table.setRowSelectionInterval(si - 1, si - 1);
         }
+        
+        Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
+        table.scrollRectToVisible(rect);
     }
 
     public Doctor getSelDoctor() {
@@ -241,6 +248,13 @@ public class DoctorAutoCompleter implements KeyListener {
             sorter.setRowFilter(null);
         } else {
             sorter.setRowFilter(startsWithFilter);
+        }
+        
+        try {
+            if (e.getKeyCode() != KeyEvent.VK_DOWN && e.getKeyCode() != KeyEvent.VK_UP) {
+                table.setRowSelectionInterval(0, 0);
+            }
+        } catch (Exception ex) {
         }
     }
     

@@ -345,6 +345,7 @@ public class WesleyLoginDialog extends javax.swing.JDialog {
                 Global.defaultValue.put("Location", Global.loginUser.getDefLocation());
                 Global.lableFont = new java.awt.Font("Zawgyi-One", 1, 13);
                 Global.textFont = new java.awt.Font("Zawgyi-One", 0, 13);
+                Global.dateFormat = "dd/MM/yyyy";
                 this.dispose();
             }
         }

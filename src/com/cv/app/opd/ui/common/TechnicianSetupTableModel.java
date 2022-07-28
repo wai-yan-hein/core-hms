@@ -88,7 +88,7 @@ public class TechnicianSetupTableModel extends AbstractTableModel {
 
         if (!Util1.getString(value, "-").equals("-")) {
             try {
-                if(record.getTechName() != null){
+                if (record.getTechName() != null) {
                     dao.save(record);
                 }
                 addNewRow();
@@ -152,10 +152,16 @@ public class TechnicianSetupTableModel extends AbstractTableModel {
     }
 
     public void getTechnician() {
-        List<Technician> list = dao.findAllHSQL(
-                "select o from Technician o order by o.techName");
-        setListTech(list);
-        addNewRow();
+        try {
+            List<Technician> list = dao.findAllHSQL(
+                    "select o from Technician o order by o.techName");
+            setListTech(list);
+            addNewRow();
+        } catch (Exception ex) {
+            log.error("getTechnician : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public int getSize() {

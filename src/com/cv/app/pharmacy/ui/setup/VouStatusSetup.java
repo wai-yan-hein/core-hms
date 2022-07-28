@@ -34,6 +34,7 @@ import org.jdesktop.swingbinding.SwingBindings;
  * @author WSwe
  */
 public class VouStatusSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(VouStatusSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao; // Data access object.    
     private List<VouStatus> listVouStatus = ObservableCollections.
@@ -41,6 +42,7 @@ public class VouStatusSetup extends javax.swing.JPanel {
     private BestAppFocusTraversalPolicy focusPolicy;
     private VouStatus currStatus = new VouStatus();
     private int selectedRow = -1;
+
     /**
      * Creates new form VouStatusSetup
      */
@@ -51,7 +53,7 @@ public class VouStatusSetup extends javax.swing.JPanel {
             initTable();
             dao.close();
         } catch (Exception ex) {
-            log.error("VouStatusSetup : " + + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            log.error("VouStatusSetup : " + +ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
 
         applyFocusPolicy();
@@ -73,32 +75,37 @@ public class VouStatusSetup extends javax.swing.JPanel {
     }
 
     private void initTable() {
+        try {
+            listVouStatus = ObservableCollections.observableList(dao.findAll("VouStatus"));
 
-        listVouStatus = ObservableCollections.observableList(dao.findAll("VouStatus"));
+            //Binding table with listCategory using beansbinding library.
+            JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
+                    listVouStatus, tblVouStatus);
+            JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${statusDesp}"));
+            columnBinding.setColumnName("Description");
+            columnBinding.setColumnClass(String.class);
+            columnBinding.setEditable(false);
+            jTableBinding.bind();
 
-        //Binding table with listCategory using beansbinding library.
-        JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
-                listVouStatus, tblVouStatus);
-        JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${statusDesp}"));
-        columnBinding.setColumnName("Description");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        jTableBinding.bind();
+            //Define table selection model to single row selection.
+            tblVouStatus.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblVouStatus.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    int row = tblVouStatus.getSelectedRow();
 
-        //Define table selection model to single row selection.
-        tblVouStatus.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblVouStatus.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        int row = tblVouStatus.getSelectedRow();
-
-                        if (row != -1) {
-                            setCurrStatus(listVouStatus.get(tblVouStatus.convertRowIndexToModel(row)));
-                        }
+                    if (row != -1) {
+                        setCurrStatus(listVouStatus.get(tblVouStatus.convertRowIndexToModel(row)));
                     }
-                });
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {
@@ -142,10 +149,10 @@ public class VouStatusSetup extends javax.swing.JPanel {
         return status;
     }
 
-    private void delete(){
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
-                int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), 
+                int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                         "Are you sure to delete?",
                         "Vou-Status Delete", JOptionPane.YES_NO_OPTION);
 
@@ -166,6 +173,7 @@ public class VouStatusSetup extends javax.swing.JPanel {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

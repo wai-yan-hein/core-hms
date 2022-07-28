@@ -117,6 +117,7 @@ public class BookingTableModel extends AbstractTableModel {
         VBooking booking = listBooking.get(row);
         switch (column) {
             case 2: //Reg No.
+                try {
                 if (value != null) {
                     String regNo = value.toString();
                     Patient pt = (Patient) dao.find(Patient.class, regNo);
@@ -130,7 +131,12 @@ public class BookingTableModel extends AbstractTableModel {
                         booking.setBkActive(Boolean.TRUE);
                     }
                 }
-                break;
+            } catch (Exception ex) {
+                log.error("setValueAt : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case 7: //W/L
                 Boolean tmpVal = (Boolean) value;
                 if (tmpVal && Util1.getNullTo(booking.getRegNo(), null) == null) {
@@ -232,9 +238,12 @@ public class BookingTableModel extends AbstractTableModel {
     }
 
     private void updateBooking(Integer serNo, String doctorId, Date date) {
-        listBk = dao.findAllHSQL("select o from Booking o where o.bkSerialNo > " + serNo + " and o.doctor.doctorId ='" + doctorId + "' and o.bkDate ='" + DateUtil.toDateStr(date, "yyyy-MM-dd") + "' ");
-        for (Booking bList : listBk) {
-            try {
+        try {
+            listBk = dao.findAllHSQL("select o from Booking o where o.bkSerialNo > " 
+                    + serNo + " and o.doctor.doctorId ='" + doctorId + "' and o.bkDate ='" 
+                    + DateUtil.toDateStr(date, "yyyy-MM-dd") + "' ");
+            for (Booking bList : listBk) {
+
                 updateBK.setBookingId(bList.getBookingId());
                 updateBK.setBkDate(bList.getBkDate());
                 updateBK.setRegNo(bList.getRegNo());
@@ -245,10 +254,11 @@ public class BookingTableModel extends AbstractTableModel {
                 updateBK.setDoctor(bList.getDoctor());
                 dao.save(updateBK);
 
-            } catch (Exception ex) {
-                log.info("ERROR :" + ex.getMessage());
             }
-
+        } catch (Exception ex) {
+            log.info("ERROR :" + ex.getMessage());
+        }finally{
+            dao.close();
         }
     }
 
@@ -267,6 +277,5 @@ public class BookingTableModel extends AbstractTableModel {
         }
 
     }
-    
-    
+
 }

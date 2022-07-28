@@ -6,6 +6,7 @@ package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.TransferDetailHis;
 import com.cv.app.pharmacy.database.helper.Stock;
@@ -44,7 +45,11 @@ public class TransferTableModel1 extends AbstractTableModel {
     private final SelectionObserver observer;
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
     private String cusType = null;
-
+    private int maxUniqueId = 0;
+    private String deletedList;
+    private StockList stockList;
+    private Location location;
+    
     public TransferTableModel1(List<TransferDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo, SelectionObserver observer) {
         this.listDetail = listDetail;
@@ -438,6 +443,15 @@ public class TransferTableModel1 extends AbstractTableModel {
     public void delete(int row) {
         if (listDetail != null) {
             if (!listDetail.isEmpty()) {
+                TransferDetailHis record = listDetail.get(row);
+                if (record.getTranDetailId() != null) {
+                    if (deletedList == null) {
+                        deletedList = "'" + record.getTranDetailId() + "'";
+                    } else {
+                        deletedList = deletedList + ",'" + record.getTranDetailId() + "'";
+                    }
+                }
+
                 if (listDetail.size() > row) {
                     listDetail.remove(row);
                 }
@@ -491,33 +505,34 @@ public class TransferTableModel1 extends AbstractTableModel {
 
     public boolean isValidEntry() {
         boolean status = true;
-        int row = 0;
-
+        int row = maxUniqueId;
+        int dataCnt = 0;
         if (listDetail != null) {
             for (TransferDetailHis record : listDetail) {
-                if (row < listDetail.size() - 1) {
-                    if (record.getMedicineId().getMedId() != null) {
-                        if (NumberUtil.NZero(record.getQty()) <= 0) {
-                            JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
-                                    "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
-                            status = false;
-                        } else {
+                if (record.getMedicineId().getMedId() != null) {
+                    dataCnt++;
+                    if (NumberUtil.NZero(record.getQty()) <= 0) {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
+                                "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
+                        status = false;
+                    } else {
+                        if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
                             record.setUniqueId(row + 1);
+                            row++;
                         }
-
-                        row++;
                     }
                 }
             }
         }
 
-        if (row == 0) {
+        if (dataCnt == 0) {
             JOptionPane.showMessageDialog(Util1.getParent(), "No transfer record.",
                     "No data.", JOptionPane.ERROR_MESSAGE);
             status = false;
         }
 
-        parent.setRowSelectionInterval(row, row);
+        maxUniqueId = row;
+        parent.setRowSelectionInterval(0, 0);
 
         return status;
     }
@@ -525,6 +540,13 @@ public class TransferTableModel1 extends AbstractTableModel {
     public void setListDetail(List<TransferDetailHis> listDetail) {
         this.listDetail = listDetail;
 
+        if (listDetail != null) {
+            if (!listDetail.isEmpty()) {
+                TransferDetailHis tmpD = listDetail.get(listDetail.size() - 1);
+                maxUniqueId = tmpD.getUniqueId();
+            }
+        }
+        
         if (!hasEmptyRow()) {
             addEmptyRow();
         }
@@ -630,5 +652,37 @@ public class TransferTableModel1 extends AbstractTableModel {
         String strSql = "SELECT * FROM com.cv.app.pharmacy.database.entity.TransferDetailHis"
                 + " WHERE medicineId.medId IS NOT NULL";
         return JoSQLUtil.getResult(strSql, listDetail);
+    }
+    
+    public String getDeleteSql() {
+        String strSQL = null;
+
+        if (deletedList != null) {
+            strSQL = "delete from transfer_detail_his where tran_detail_id in ("
+                    + deletedList + ")";
+            deletedList = null;
+        }
+
+        return strSQL;
+    }
+    
+    public void clear() {
+        maxUniqueId = 0;
+    }
+
+    public StockList getStockList() {
+        return stockList;
+    }
+
+    public void setStockList(StockList stockList) {
+        this.stockList = stockList;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
     }
 }

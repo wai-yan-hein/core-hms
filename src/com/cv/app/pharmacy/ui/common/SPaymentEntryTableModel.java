@@ -239,12 +239,6 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 vp.setIsFullPaid(false);
                 return;
             }
-            /*if (cboPayment.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Please select payment type.",
-                        "Invalid Payment Type.", JOptionPane.ERROR_MESSAGE);
-                vp.setIsFullPaid(false);
-                return;
-            }*/
             Date vouTranDate = vp.getPayDate();
             Date lockDate = PharmacyUtil.getLockDate(dao);
             if (vouTranDate.before(lockDate) || vouTranDate.equals(lockDate)) {
@@ -254,47 +248,48 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 return;
             }
 
-            TraderPayHis tph = new TraderPayHis();
-            vp.setRemark("FullPaid");
-            if (vp.getPayDate() == null) {
-                vp.setPayDate(new Date());
-            }
-            vp.setUserId(Global.loginUser.getUserId());
-            tph.setPayDate(vp.getPayDate());
-            List<Trader> cus = dao.findAllHSQL("select o from Trader o where o.traderId='" + vp.getTraderId() + "'");
-            if (!cus.isEmpty()) {
-                tph.setTrader(cus.get(0));
-            }
-            tph.setRemark(vp.getRemark());
-            tph.setPaidAmtC(vp.getCurrentPaid());
-            tph.setDiscount(vp.getCurrentDiscount());
-            //String appCurr = Util1.getPropValue("system.app.currency");
-            String appCurr = vp.getCurrency();
-            List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='" + appCurr + "'");
-            tph.setCurrency(curr.get(0));
-            //tph.setCurrency(curr.getCurrencyCode());
-            tph.setExRate(1.0);
-            tph.setPaidAmtP(vp.getCurrentPaid());
-            // Object user = dao.find(Appuser.class, vp.getUserId());
-            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-            tph.setCreatedBy(user.get(0));
-            tph.setPayOption("Cash");
-            tph.setParentCurr(tph.getCurrency());
-            tph.setPayDt(vp.getPayDate());
-            TraderPayAccount h = (TraderPayAccount) cboPayment.getSelectedItem();
-            tph.setPayAccount(h);
-            PaymentVou pv = new PaymentVou();
-            pv.setBalance(vp.getVouBalance());
-            pv.setVouNo(vp.getVouNo());
-            pv.setVouPaid(vp.getCurrentPaid());
-            pv.setVouBal(vp.getCurrentPaid());
-            pv.setVouDate(vp.getTranDate());
-            pv.setDiscount(vp.getDiscount());
-            pv.setVouType("Purchase");
-            List<PaymentVou> listPV = new ArrayList();
-            listPV.add(pv);
-            tph.setListDetail(listPV);
             try {
+                TraderPayHis tph = new TraderPayHis();
+                vp.setRemark("FullPaid");
+                if (vp.getPayDate() == null) {
+                    vp.setPayDate(new Date());
+                }
+                vp.setUserId(Global.loginUser.getUserId());
+                tph.setPayDate(vp.getPayDate());
+                List<Trader> cus = dao.findAllHSQL("select o from Trader o where o.traderId='" + vp.getTraderId() + "'");
+                if (!cus.isEmpty()) {
+                    tph.setTrader(cus.get(0));
+                }
+                tph.setRemark(vp.getRemark());
+                tph.setPaidAmtC(vp.getCurrentPaid());
+                tph.setDiscount(vp.getCurrentDiscount());
+                //String appCurr = Util1.getPropValue("system.app.currency");
+                String appCurr = vp.getCurrency();
+                List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='" + appCurr + "'");
+                tph.setCurrency(curr.get(0));
+                //tph.setCurrency(curr.getCurrencyCode());
+                tph.setExRate(1.0);
+                tph.setPaidAmtP(vp.getCurrentPaid());
+                // Object user = dao.find(Appuser.class, vp.getUserId());
+                List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+                tph.setCreatedBy(user.get(0));
+                tph.setPayOption("Cash");
+                tph.setParentCurr(tph.getCurrency());
+                tph.setPayDt(vp.getPayDate());
+                TraderPayAccount h = (TraderPayAccount) cboPayment.getSelectedItem();
+                tph.setPayAccount(h);
+                PaymentVou pv = new PaymentVou();
+                pv.setBalance(vp.getVouBalance());
+                pv.setVouNo(vp.getVouNo());
+                pv.setVouPaid(vp.getCurrentPaid());
+                pv.setVouBal(vp.getCurrentPaid());
+                pv.setVouDate(vp.getTranDate());
+                pv.setDiscount(vp.getDiscount());
+                pv.setVouType("Purchase");
+                List<PaymentVou> listPV = new ArrayList();
+                listPV.add(pv);
+                tph.setListDetail(listPV);
+
                 dao.save(tph);
                 uploadToAccount(tph);
             } catch (Exception e) {

@@ -13,6 +13,7 @@ import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -20,8 +21,9 @@ import com.cv.app.util.Util1;
  */
 public class FillByPercentDialog extends javax.swing.JDialog {
 
+    static Logger log = Logger.getLogger(FillByPercentDialog.class.getName());
     boolean status = false;
-    
+
     /**
      * Creates new form FillByPercentDialog
      */
@@ -34,46 +36,53 @@ public class FillByPercentDialog extends javax.swing.JDialog {
 
     private void initCombo() {
         AbstractDataAccess dao = Global.dao;
-        BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
-        BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
+        try {
+            BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
 
-        new ComBoBoxAutoComplete(cboItemType);
-        new ComBoBoxAutoComplete(cboCategory);
-        new ComBoBoxAutoComplete(cboBrand);
+            new ComBoBoxAutoComplete(cboItemType);
+            new ComBoBoxAutoComplete(cboCategory);
+            new ComBoBoxAutoComplete(cboBrand);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    public boolean isSelected(){
+
+    public boolean isSelected() {
         return status;
     }
-    
-    public String getItemType(){
-        if(cboItemType.getSelectedItem() instanceof ItemType){
-            return ((ItemType)cboItemType.getSelectedItem()).getItemTypeCode();
-        }else{
+
+    public String getItemType() {
+        if (cboItemType.getSelectedItem() instanceof ItemType) {
+            return ((ItemType) cboItemType.getSelectedItem()).getItemTypeCode();
+        } else {
             return null;
         }
     }
-    
-    public int getCategory(){
-        if(cboCategory.getSelectedItem() instanceof Category){
-            return ((Category)cboCategory.getSelectedItem()).getCatId();
-        }else{
+
+    public int getCategory() {
+        if (cboCategory.getSelectedItem() instanceof Category) {
+            return ((Category) cboCategory.getSelectedItem()).getCatId();
+        } else {
             return 0;
         }
     }
-    
-    public int getBrand(){
-        if(cboBrand.getSelectedItem() instanceof ItemBrand){
-            return ((ItemBrand)cboBrand.getSelectedItem()).getBrandId();
-        }else{
+
+    public int getBrand() {
+        if (cboBrand.getSelectedItem() instanceof ItemBrand) {
+            return ((ItemBrand) cboBrand.getSelectedItem()).getBrandId();
+        } else {
             return 0;
         }
     }
-    
-    public double getPercent(){
+
+    public double getPercent() {
         return NumberUtil.NZero(txtPercent.getText());
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

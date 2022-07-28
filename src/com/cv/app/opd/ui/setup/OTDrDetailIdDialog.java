@@ -16,6 +16,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -23,9 +24,10 @@ import javax.swing.KeyStroke;
  */
 public class OTDrDetailIdDialog extends javax.swing.JDialog {
 
+    static Logger log = Logger.getLogger(OTDrDetailIdDialog.class.getName());
     private OTDrDetailSetupModel tableModel = new OTDrDetailSetupModel();
     private final AbstractDataAccess dao = Global.dao;
-    
+
     /**
      * Creates new form DCDrDetailIdDialog
      */
@@ -57,12 +59,19 @@ public class OTDrDetailIdDialog extends javax.swing.JDialog {
         }
     };
 
-    private void initTable(){
-        List<VOTDrDetailId> list = dao.findAll("VOTDrDetailId");
-        tableModel.setList(list);
-        tblDrId.getColumnModel().getColumn(0).setCellEditor(
-                new OTTableCellEditor(dao));
+    private void initTable() {
+        try {
+            List<VOTDrDetailId> list = dao.findAll("VOTDrDetailId");
+            tableModel.setList(list);
+            tblDrId.getColumnModel().getColumn(0).setCellEditor(
+                    new OTTableCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

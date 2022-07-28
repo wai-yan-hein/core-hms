@@ -33,6 +33,7 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -40,27 +41,33 @@ import javax.swing.text.JTextComponent;
  */
 public class CurrencyAutoCompleter implements KeyListener {
 
+    static Logger log = Logger.getLogger(CurrencyAutoCompleter.class.getName());
     private final JTable table = new JTable();
     private final JPopupMenu popup = new JPopupMenu();
     private JTextComponent textComp;
     private static final String AUTOCOMPLETER = "AUTOCOMPLETER"; //NOI18N
     public AbstractCellEditor editor;
     private final TableRowSorter<TableModel> sorter;
-    private final List<Currency> list;
+    private List<Currency> list = null;
     private final CurrencyTableModel model;
     private Currency selItem;
     private final AbstractDataAccess dao = Global.dao;
-    
+
     public CurrencyAutoCompleter(JTextComponent comp, AbstractCellEditor editor) {
         this.textComp = comp;
         this.editor = editor;
         textComp.putClientProperty(AUTOCOMPLETER, this);
         table.setRowHeight(23);
-
-        list = dao.findAllHSQL("select o from Currency o order by o.currencyName");
-
         model = new CurrencyTableModel();
-        model.setListCurrency(list);
+
+        try {
+            list = dao.findAllHSQL("select o from Currency o order by o.currencyName");
+            model.setListCurrency(list);
+        } catch (Exception ex) {
+            log.error("CurrencyAutoCompleter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         table.setModel(model);
         sorter = new TableRowSorter(table.getModel());
         table.setRowSorter(sorter);
@@ -313,8 +320,8 @@ public class CurrencyAutoCompleter implements KeyListener {
             editor.stopCellEditing();
         }
     };
-    
-    public Currency getSelectedItem(){
+
+    public Currency getSelectedItem() {
         return selItem;
     }
 }

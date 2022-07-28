@@ -101,11 +101,11 @@ public class SystemMigration extends javax.swing.JPanel {
     private HashMap<String, TraderType> hmTraderType;
 
     //private HashMap<Integer, String> hmDoctor;
-    private final Currency curr = (Currency) dao.find(Currency.class, "MMK");
-    private final VouStatus vs = (VouStatus) dao.find(VouStatus.class, 1);
-    private final ChargeType ct = (ChargeType) dao.find(ChargeType.class, 1);
-    private final AdjType atP = (AdjType) dao.find(AdjType.class, "+");
-    private final AdjType atM = (AdjType) dao.find(AdjType.class, "-");
+    private Currency curr;
+    private VouStatus vs;
+    private ChargeType ct;
+    private AdjType atP;
+    private AdjType atM;
     private Connection con;
     private GenVouNoImpl vouEngine;
 
@@ -114,14 +114,25 @@ public class SystemMigration extends javax.swing.JPanel {
      */
     public SystemMigration() {
         initComponents();
+        try {
+            curr = (Currency) dao.find(Currency.class, "MMK");
+            vs = (VouStatus) dao.find(VouStatus.class, 1);
+            ct = (ChargeType) dao.find(ChargeType.class, 1);
+            atP = (AdjType) dao.find(AdjType.class, "+");
+            atM = (AdjType) dao.find(AdjType.class, "-");
+        } catch (Exception ex) {
+            log.error("SystemMigration : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         initData();
     }
 
     private void initData() {
-        txtDbSid.setText("DSL");
-        txtPassword.setText("DSL");
-        txtServerName.setText("server");
-        txtUser.setText("DSL");
+        txtDbSid.setText("RSC");
+        txtPassword.setText("RSC");
+        txtServerName.setText("192.168.1.5");
+        txtUser.setText("RSC");
         butProcess.setEnabled(false);
         butConnect.setEnabled(false);
         cboDataToProcess.setEnabled(false);
@@ -189,46 +200,65 @@ public class SystemMigration extends javax.swing.JPanel {
     }
 
     private void initBillTo() {
-        hmBillTo = new HashMap();
-        hmBillTo.put(303, (PaymentType) dao.find(PaymentType.class, 2));
-        hmBillTo.put(341, (PaymentType) dao.find(PaymentType.class, 3));
-        hmBillTo.put(282, (PaymentType) dao.find(PaymentType.class, 4));
-        hmBillTo.put(322, (PaymentType) dao.find(PaymentType.class, 5));
+        try {
+            hmBillTo = new HashMap();
+            hmBillTo.put(303, (PaymentType) dao.find(PaymentType.class, 2));
+            hmBillTo.put(341, (PaymentType) dao.find(PaymentType.class, 3));
+            hmBillTo.put(282, (PaymentType) dao.find(PaymentType.class, 4));
+            hmBillTo.put(322, (PaymentType) dao.find(PaymentType.class, 5));
+        } catch (Exception ex) {
+            log.error("initBillTo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void intTraderType() {
-        hmTraderType = new HashMap();
-        hmTraderType.put("A", (TraderType) dao.find(TraderType.class, 2));
-        hmTraderType.put("B", (TraderType) dao.find(TraderType.class, 3));
-        hmTraderType.put("C", (TraderType) dao.find(TraderType.class, 4));
-        hmTraderType.put("N", (TraderType) dao.find(TraderType.class, 1));
+        try {
+            hmTraderType = new HashMap();
+            hmTraderType.put("A", (TraderType) dao.find(TraderType.class, 2));
+            hmTraderType.put("B", (TraderType) dao.find(TraderType.class, 3));
+            hmTraderType.put("C", (TraderType) dao.find(TraderType.class, 4));
+            hmTraderType.put("N", (TraderType) dao.find(TraderType.class, 1));
+        } catch (Exception ex) {
+            log.error("intTraderType : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initLocation() {
-        hmLocation = new HashMap();
-        hmLocation.put(1, (Location) dao.find(Location.class, 1));
-        hmLocation.put(2, (Location) dao.find(Location.class, 2));
-        hmLocation.put(6, (Location) dao.find(Location.class, 3));
-        hmLocation.put(7, (Location) dao.find(Location.class, 4));
-        hmLocation.put(8, (Location) dao.find(Location.class, 5));
-        hmLocation.put(3, (Location) dao.find(Location.class, 6));
-        hmLocation.put(5, (Location) dao.find(Location.class, 7));
-        hmLocation.put(9, (Location) dao.find(Location.class, 8));
-        hmLocation.put(10, (Location) dao.find(Location.class, 9));
-        hmLocation.put(11, (Location) dao.find(Location.class, 10));
-        hmLocation.put(12, (Location) dao.find(Location.class, 11));
-        hmLocation.put(13, (Location) dao.find(Location.class, 12));
-        hmLocation.put(19, (Location) dao.find(Location.class, 13));
-        hmLocation.put(21, (Location) dao.find(Location.class, 14));
-        hmLocation.put(22, (Location) dao.find(Location.class, 15));
-        hmLocation.put(26, (Location) dao.find(Location.class, 16));
-        hmLocation.put(30, (Location) dao.find(Location.class, 17));
+        try {
+            hmLocation = new HashMap();
+            hmLocation.put(1, (Location) dao.find(Location.class, 1));
+            hmLocation.put(2, (Location) dao.find(Location.class, 2));
+            hmLocation.put(6, (Location) dao.find(Location.class, 3));
+            hmLocation.put(7, (Location) dao.find(Location.class, 4));
+            hmLocation.put(8, (Location) dao.find(Location.class, 5));
+            hmLocation.put(3, (Location) dao.find(Location.class, 6));
+            hmLocation.put(5, (Location) dao.find(Location.class, 7));
+            hmLocation.put(9, (Location) dao.find(Location.class, 8));
+            hmLocation.put(10, (Location) dao.find(Location.class, 9));
+            hmLocation.put(11, (Location) dao.find(Location.class, 10));
+            hmLocation.put(12, (Location) dao.find(Location.class, 11));
+            hmLocation.put(13, (Location) dao.find(Location.class, 12));
+            hmLocation.put(19, (Location) dao.find(Location.class, 13));
+            hmLocation.put(21, (Location) dao.find(Location.class, 14));
+            hmLocation.put(22, (Location) dao.find(Location.class, 15));
+            hmLocation.put(26, (Location) dao.find(Location.class, 16));
+            hmLocation.put(30, (Location) dao.find(Location.class, 17));
+        } catch (Exception ex) {
+            log.error("initLocation : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initUser() {
-        hmUser = new HashMap();
-        hmUser.put(1, (Appuser) dao.find(Appuser.class, "1.0"));
-        /*hmUser.put(21, (Appuser) dao.find(Appuser.class, "013"));
+        try {
+            hmUser = new HashMap();
+            hmUser.put(1, (Appuser) dao.find(Appuser.class, "1.0"));
+            /*hmUser.put(21, (Appuser) dao.find(Appuser.class, "013"));
         hmUser.put(39, (Appuser) dao.find(Appuser.class, "014"));
         hmUser.put(17, (Appuser) dao.find(Appuser.class, "2.0"));
         hmUser.put(37, (Appuser) dao.find(Appuser.class, "001"));
@@ -240,6 +270,11 @@ public class SystemMigration extends javax.swing.JPanel {
         hmUser.put(6, (Appuser) dao.find(Appuser.class, "006"));
         hmUser.put(10, (Appuser) dao.find(Appuser.class, "007"));
         hmUser.put(3, (Appuser) dao.find(Appuser.class, "019"));*/
+        } catch (Exception ex) {
+            log.error("initUser : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initSession() {
@@ -250,10 +285,16 @@ public class SystemMigration extends javax.swing.JPanel {
     }
 
     private void initResultType() {
-        hmRType = new HashMap();
-        hmRType.put(-1, (OPDResultType) dao.find(OPDResultType.class, -1));
-        hmRType.put(0, (OPDResultType) dao.find(OPDResultType.class, 0));
-        hmRType.put(2, (OPDResultType) dao.find(OPDResultType.class, 2));
+        try {
+            hmRType = new HashMap();
+            hmRType.put(-1, (OPDResultType) dao.find(OPDResultType.class, -1));
+            hmRType.put(0, (OPDResultType) dao.find(OPDResultType.class, 0));
+            hmRType.put(2, (OPDResultType) dao.find(OPDResultType.class, 2));
+        } catch (Exception ex) {
+            log.error("initResultType : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String getSql(String type) {
@@ -421,36 +462,39 @@ public class SystemMigration extends javax.swing.JPanel {
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(txaQuery.getText());
-
+            int id = 0;
             while (rs.next()) {
-                if (dao.getRowCount("select count(doctor_name) from doctor where doctor_name='" + getZawgyiText(rs.getString("DOCTOR_NAME")) + "'") == 0) {
-                    Doctor obj = new Doctor();
-                    obj.setDoctorId(rs.getString("DOCTOR_ID"));
-                    obj.setDoctorName(getZawgyiText(rs.getString("DOCTOR_NAME")));
-                    str = rs.getString("DOCTOR_ID");
-                    obj.setActive(true);
-                    if (rs.getString("SEX") != null) {
-                        Gender gd = (Gender) dao.find(Gender.class, rs.getString("SEX"));
-                        obj.setGenderId(gd);
-                    }
-                    List<Speciality> listSpec = dao.findAllHSQL(
-                            "select o from Speciality o where o.desp = '" + rs.getString("SPECIAL") + "'");
-                    if (listSpec != null) {
-                        if (!listSpec.isEmpty()) {
-                            obj.setSpeciality(listSpec.get(0));
-                        }
-                    }
-
-                    List<Initial> listIna = dao.findAllHSQL(
-                            "select o from Initial o where o.initialName = '" + rs.getString("INITIAL_NAME") + "'");
-                    if (listIna != null) {
-                        if (!listIna.isEmpty()) {
-                            obj.setInitialID(listIna.get(0));
-                        }
-                    }
-
-                    dao.save(obj);
+                //if (dao.getRowCount("select count(doctor_name) from doctor where doctor_name='" + getZawgyiText(rs.getString("DOCTOR_NAME")) + "'") == 0) {
+                Doctor obj = new Doctor();
+                //obj.setDoctorId(rs.getString("DOCTOR_ID"));
+                String drId = String.format("%03d", id);
+                obj.setDoctorId(drId);
+                obj.setDoctorName(getZawgyiText(rs.getString("DOCTOR_NAME")));
+                str = rs.getString("DOCTOR_ID");
+                obj.setActive(true);
+                if (rs.getString("SEX") != null) {
+                    Gender gd = (Gender) dao.find(Gender.class, rs.getString("SEX"));
+                    obj.setGenderId(gd);
                 }
+                List<Speciality> listSpec = dao.findAllHSQL(
+                        "select o from Speciality o where o.desp = '" + rs.getString("SPECIAL") + "'");
+                if (listSpec != null) {
+                    if (!listSpec.isEmpty()) {
+                        obj.setSpeciality(listSpec.get(0));
+                    }
+                }
+
+                List<Initial> listIna = dao.findAllHSQL(
+                        "select o from Initial o where o.initialName = '" + rs.getString("INITIAL_NAME") + "'");
+                if (listIna != null) {
+                    if (!listIna.isEmpty()) {
+                        obj.setInitialID(listIna.get(0));
+                    }
+                }
+
+                dao.save(obj);
+                id++;
+                //}
             }
 
             rs.close();
@@ -798,7 +842,7 @@ public class SystemMigration extends javax.swing.JPanel {
                         Statement stmtCus = con.createStatement();
                         ResultSet rsCus = stmtCus.executeQuery(strSql);
                         rsCus.next();
-                        
+
                         Customer cus = new Customer();
                         String strCG = rsCus.getString("G_CODE");
                         CustomerGroup cg = (CustomerGroup) dao.find(CustomerGroup.class, strCG);
@@ -837,7 +881,7 @@ public class SystemMigration extends javax.swing.JPanel {
                         } catch (Exception ex) {
                             log.error(ex.getMessage());
                         }
-                        
+
                         rsCus.close();
                     }
                 }
@@ -1282,8 +1326,11 @@ public class SystemMigration extends javax.swing.JPanel {
             Integer ttlErrRecords = 0;
 
             while (rs.next()) {
-                rs.setFetchSize(30000);
+                //rs.setFetchSize(30000);
                 try {
+                    if (rs.getString("U_PREG_NO").equals("131634")) {
+                        log.info("Error");
+                    }
                     Patient p = new Patient();
                     p.setAddress(getZawgyiText(rs.getString("ADDRESS")));
                     p.setAge(rs.getInt("AGE"));
@@ -1311,7 +1358,7 @@ public class SystemMigration extends javax.swing.JPanel {
                     txaSuccessData.append(rs.getString("U_PREG_NO") + "@" + rs.getString("PATIENT_NAME") + "\n");
                     log.info(ttlSuccRecords + " : " + rs.getString("U_PREG_NO") + "@" + rs.getString("PATIENT_NAME"));
                 } catch (Exception ex) {
-                    log.error("Insert error : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                    log.error("Insert error : " + ex);
                     ttlErrRecords++;
                     lblErrorDataTtl.setText(ttlErrRecords.toString());
                     txaErrorData.append(rs.getString("U_PREG_NO") + "@" + rs.getString("PATIENT_NAME") + "\n");
@@ -1819,42 +1866,47 @@ public class SystemMigration extends javax.swing.JPanel {
     }
 
     private void processItemSetupData() {
-        String strSql = "select o from Medicine o";
-        List<Medicine> listMed = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select o from Medicine o";
+            List<Medicine> listMed = dao.findAllHSQL(strSql);
 
-        for (Medicine med : listMed) {
-            try {
-                List<RelationGroup> listRG = med.getRelationGroupId();
-                for (int i = 0; i < listRG.size(); i++) {
-                    RelationGroup rg = listRG.get(i);
-                    Statement stmt = con.createStatement();
-                    String oraSql = "SELECT MP.PUR_PRICE, MP.UNIT_SHORT, MP.SALE_PRICE, MP.WS_PRICE1\n"
-                            + "FROM MEDICINE MED, MEDICINE_PRICE MP\n"
-                            + "WHERE MED.MED_ID = MP.MEDICINE_ID "
-                            + "AND MED.SHORT_CODE = '" + med.getMedId() + "' "
-                            //+ "AND MP.UNIT_SHORT = '" + getUnitCodeToOracle(rg.getUnitId().getItemUnitCode()) + "'";
-                            + "AND MP.UNIT_SHORT = '" + rg.getUnitId().getItemUnitCode() + "'";
-                    ResultSet rs = stmt.executeQuery(oraSql);
+            for (Medicine med : listMed) {
+                try {
+                    List<RelationGroup> listRG = med.getRelationGroupId();
+                    for (int i = 0; i < listRG.size(); i++) {
+                        RelationGroup rg = listRG.get(i);
+                        Statement stmt = con.createStatement();
+                        String oraSql = "SELECT MP.PUR_PRICE, MP.UNIT_SHORT, MP.SALE_PRICE, MP.WS_PRICE1\n"
+                                + "FROM MEDICINE MED, MEDICINE_PRICE MP\n"
+                                + "WHERE MED.MED_ID = MP.MEDICINE_ID "
+                                + "AND MED.SHORT_CODE = '" + med.getMedId() + "' "
+                                //+ "AND MP.UNIT_SHORT = '" + getUnitCodeToOracle(rg.getUnitId().getItemUnitCode()) + "'";
+                                + "AND MP.UNIT_SHORT = '" + rg.getUnitId().getItemUnitCode() + "'";
+                        ResultSet rs = stmt.executeQuery(oraSql);
 
-                    /*if (rs.next()) {
+                        /*if (rs.next()) {
                         med.setPurPrice(rs.getDouble("PUR_PRICE"));
                         med.setPurUnit(rg.getUnitId());
                         med.getRelationGroupId().get(0).setSalePrice(rs.getDouble("SALE_PRICE"));
                         dao.save(med);
                     }*/
-                    if (rs.next()) {
-                        rg.setSalePriceA(rs.getDouble("WS_PRICE1"));
+                        if (rs.next()) {
+                            rg.setSalePriceA(rs.getDouble("WS_PRICE1"));
+                        }
+                        rs.close();
+                        stmt.close();
+                        //i = listRG.size();
                     }
-                    rs.close();
-                    stmt.close();
-                    //i = listRG.size();
+                    dao.save(med);
+                } catch (Exception ex) {
+                    log.error("processItemSetupData : " + ex.getStackTrace()[0].getLineNumber() + " - " + med.getMedId() + "@" + med.getMedName() + ex);
                 }
-                dao.save(med);
-            } catch (Exception ex) {
-                log.error("processItemSetupData : " + ex.getStackTrace()[0].getLineNumber() + " - " + med.getMedId() + "@" + med.getMedName() + ex);
             }
+        } catch (Exception ex) {
+            log.error("processItemSetupData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         /*dao.execSql("update transfer_detail_his tdh join medicine med on tdh.med_id = med.med_id\n"
                 + "set tran_price = ifnull(med.pur_price,0), tdh.amount = tdh.tran_qty * ifnull(med.pur_price,0)");*/
     }
@@ -1934,7 +1986,7 @@ public class SystemMigration extends javax.swing.JPanel {
         try {
             try (Statement stmt = con.createStatement()) {
                 ResultSet rs = stmt.executeQuery(txaQuery.getText());
-                
+
                 while (rs.next()) {
                     String medId = rs.getString("SHORT_CODE");
                     Medicine tmpMed = (Medicine) dao.find(Medicine.class, medId);
@@ -1948,13 +2000,14 @@ public class SystemMigration extends javax.swing.JPanel {
                         System.out.println("aaa");
                         }*/
                         String medDesp = getZawgyiText(rs.getString("MED_DESP"));
+                        //String medDesp = rs.getString("MED_DESP");
                         mc.setMedName(medDesp);
                         mc.setActive(rs.getBoolean("ACTIVE"));
                         mc.setRelStr(getZawgyiText(rs.getString("RELATION_STR")));
-                        
+
                         ItemType it = (ItemType) dao.find(ItemType.class, rs.getString("DRUG_TYPE_ID"));
                         mc.setMedTypeId(it);
-                        
+
                         List<ItemBrand> listIB = dao.findAllHSQL(
                                 "select o from ItemBrand o where o.migId = " + rs.getInt("MANUFACTURER_ID"));
                         if (listIB != null) {
@@ -1962,7 +2015,7 @@ public class SystemMigration extends javax.swing.JPanel {
                                 mc.setBrand(listIB.get(0));
                             }
                         }
-                        
+
                         List<Category> listCAT = dao.findAllHSQL(
                                 "select o from Category o where o.migId = " + rs.getInt("CHEMICAL_ID"));
                         if (listCAT != null) {
@@ -1970,16 +2023,16 @@ public class SystemMigration extends javax.swing.JPanel {
                                 mc.setCatId(listCAT.get(0));
                             }
                         }
-                        
+
                         Statement sDetail = con.createStatement();
                         ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
                                 + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
                                 + " ORDER BY QTY_IN_SMALLEST DESC");
-                        
+
                         List<RelationGroup> listRG = new ArrayList();
                         int uniqueId = 1;
                         float prvQty = 0;
-                        
+
                         while (rs1.next()) {
                             RelationGroup rg = new RelationGroup();
                             rg.setRelUniqueId(uniqueId);
@@ -1994,17 +2047,17 @@ public class SystemMigration extends javax.swing.JPanel {
                                 rg.setUnitQty(prvQty / rg.getSmallestQty());
                             }
                             prvQty = rg.getSmallestQty();
-                            
+
                             ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, rs1.getString("UNIT_SHORT"));
                             rg.setUnitId(iu);
                             listRG.add(rg);
-                            
+
                             uniqueId++;
                         }
-                        
+
                         rs1.close();
                         sDetail.close();
-                        
+
                         mc.setRelationGroupId(listRG);
                         mc.setActive(true);
                         try {
@@ -2017,7 +2070,7 @@ public class SystemMigration extends javax.swing.JPanel {
                         }
                     }
                 }
-                
+
                 rs.close();
             }
         } catch (Exception ex) {
@@ -2027,40 +2080,61 @@ public class SystemMigration extends javax.swing.JPanel {
     }
 
     private void processItemPriceUpdate() {
+        String medId = "";
         try {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(txaQuery.getText());
             if (rs != null) {
+                Statement sDetail = con.createStatement();
+                int count = 0;
                 while (rs.next()) {
-                    String medId = rs.getString("SHORT_CODE");
+                    medId = rs.getString("SHORT_CODE");
                     Medicine tmpMed = (Medicine) dao.find(Medicine.class, medId);
-                    if (tmpMed.getRelationGroupId().size() > 0) {
-                        tmpMed.setRelationGroupId(tmpMed.getRelationGroupId());
-                    }
+                    if (tmpMed != null) {
 
-                    HashMap<String, RelationGroup> priceList = new HashMap();
-                    List<RelationGroup> listRG = tmpMed.getRelationGroupId();
-                    for (RelationGroup rg : listRG) {
-                        priceList.put(rg.getUnitId().getItemUnitCode(), rg);
-                    }
+                        if (tmpMed.getRelationGroupId().size() > 0) {
+                            tmpMed.setRelationGroupId(tmpMed.getRelationGroupId());
+                        }
+                        HashMap<String, RelationGroup> priceList = new HashMap();
+                        try {
+                            if (medId.equals("201011")) {
+                                log.info("201011");
+                            }
 
-                    Statement sDetail = con.createStatement();
-                    ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
-                            + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
-                            + " ORDER BY QTY_IN_SMALLEST DESC");
-                    while (rs1.next()) {
-                        RelationGroup rg = priceList.get(rs1.getString("UNIT_SHORT"));
-                        rg.setSalePrice(rs1.getDouble("SALE_PRICE"));
-                        rg.setSalePriceA(rs1.getDouble("WS_PRICE1"));
-                        rg.setSalePriceB(rs1.getDouble("WS_PRICE2"));
-                        rg.setSalePriceC(rs1.getDouble("WS_PRICE3"));
+                            List<RelationGroup> listRG = tmpMed.getRelationGroupId();
+                            for (RelationGroup rg : listRG) {
+                                if (rg.getUnitId() != null) {
+                                    priceList.put(rg.getUnitId().getItemUnitCode(), rg);
+                                }
+                            }
+                        } catch (Exception ex) {
+                            log.error("med : " + medId);
+                        }
+                        try (ResultSet rs1 = sDetail.executeQuery("SELECT UNIT_SHORT, QTY_IN_SMALLEST, PUR_PRICE, SALE_PRICE, WS_PRICE1, WS_PRICE2, WS_PRICE3 \n"
+                                + "FROM MEDICINE_PRICE WHERE MEDICINE_ID = " + rs.getString("MED_ID")
+                                + " ORDER BY QTY_IN_SMALLEST DESC")) {
+                            while (rs1.next()) {
+                                try {
+                                    RelationGroup rg = priceList.get(rs1.getString("UNIT_SHORT"));
+                                    rg.setSalePrice(rs1.getDouble("SALE_PRICE"));
+                                    rg.setSalePriceA(rs1.getDouble("WS_PRICE1"));
+                                    rg.setSalePriceB(rs1.getDouble("WS_PRICE2"));
+                                    rg.setSalePriceC(rs1.getDouble("WS_PRICE3"));
+                                } catch (Exception ex) {
+                                    log.error("processItemPriceUpdate : " + medId + " : " + ex.getLocalizedMessage());
+                                }
+                            }
+                        }
+                        dao.save(tmpMed);
+                        count++;
+                    } else {
+                        log.error("processItemPriceUpdate : new medicine : " + medId);
                     }
-
-                    dao.save(tmpMed);
                 }
+                log.info("count : " + count + " Finished.");
             }
         } catch (Exception ex) {
-            log.error("processItemPriceUpdate : " + ex.toString());
+            log.error("processItemPriceUpdate : " + medId + ex.toString());
         }
     }
 
@@ -2437,27 +2511,38 @@ public class SystemMigration extends javax.swing.JPanel {
     }
 
     private Trader getSupplier(int migId) {
-        String strSql = "select o from Trader o where o.migId = " + migId;
-        List<Trader> listSUP = dao.findAllHSQL(strSql);
         Trader trader = null;
-
-        if (listSUP != null) {
-            if (!listSUP.isEmpty()) {
-                trader = listSUP.get(0);
+        try {
+            String strSql = "select o from Trader o where o.migId = " + migId;
+            List<Trader> listSUP = dao.findAllHSQL(strSql);
+            if (listSUP != null) {
+                if (!listSUP.isEmpty()) {
+                    trader = listSUP.get(0);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getSupplier : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
 
         return trader;
     }
 
     private Service getOPDService(int migId) {
-        List<Service> listSVC = dao.findAllHSQL("select o from Service o where o.migId = "
-                + migId);
         Service svc = null;
-        if (listSVC != null) {
-            if (!listSVC.isEmpty()) {
-                svc = listSVC.get(0);
+        try {
+            List<Service> listSVC = dao.findAllHSQL("select o from Service o where o.migId = "
+                    + migId);
+            if (listSVC != null) {
+                if (!listSVC.isEmpty()) {
+                    svc = listSVC.get(0);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getOPDService : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return svc;
     }

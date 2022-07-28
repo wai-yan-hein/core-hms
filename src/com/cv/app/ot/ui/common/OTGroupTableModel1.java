@@ -209,12 +209,18 @@ public class OTGroupTableModel1 extends AbstractTableModel {
     }
 
     public void getOTGroup() {
-        listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.groupName");
-        if (listOTG == null) {
-            listOTG = new ArrayList();
+        try {
+            listOTG = dao.findAllHSQL("select o from OTProcedureGroup o order by o.groupName");
+            if (listOTG == null) {
+                listOTG = new ArrayList();
+            }
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getOTGroup : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        addNewRow();
-        fireTableDataChanged();
     }
 
     private void addNewRow() {

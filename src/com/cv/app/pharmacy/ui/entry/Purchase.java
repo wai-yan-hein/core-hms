@@ -210,29 +210,35 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
-        List<PurHis> listPH = dao.findAllHSQL(
-                "select o from PurHis o where o.purInvId = '" + txtVouNo.getText() + "'");
-        if (listPH != null) {
-            if (!listPH.isEmpty()) {
-                vouEngine.updateVouNo();
-                vouNo = vouEngine.getVouNo();
-                txtVouNo.setText(vouNo);
-                listPH = null;
-                listPH = dao.findAllHSQL(
-                        "select o from PurHis o where o.purInvId = '" + txtVouNo.getText() + "'");
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
+            List<PurHis> listPH = dao.findAllHSQL(
+                    "select o from PurHis o where o.purInvId = '" + txtVouNo.getText() + "'");
+            if (listPH != null) {
+                if (!listPH.isEmpty()) {
+                    vouEngine.updateVouNo();
+                    vouNo = vouEngine.getVouNo();
+                    txtVouNo.setText(vouNo);
+                    listPH = null;
+                    listPH = dao.findAllHSQL(
+                            "select o from PurHis o where o.purInvId = '" + txtVouNo.getText() + "'");
 
-                if (listPH != null) {
-                    if (!listPH.isEmpty()) {
-                        log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
-                                + txtPurDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate purchase vou no. Exit the program and try again.",
-                                "Purchase Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
+                    if (listPH != null) {
+                        if (!listPH.isEmpty()) {
+                            log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
+                                    + txtPurDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate purchase vou no. Exit the program and try again.",
+                                    "Purchase Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(1);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -280,29 +286,43 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        bindStatus = true;
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboLocation, getLocationFilter());
-        BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            bindStatus = true;
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPayment, this);
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboVouStatus, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
-        bindStatus = false;
+            new ComBoBoxAutoComplete(cboPayment, this);
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboVouStatus, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+            bindStatus = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowPur = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowPur = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        
+        return null;
     }
 
     // <editor-fold defaultstate="collapsed" desc="actionMapping">
@@ -641,69 +661,75 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
     // <editor-fold defaultstate="collapsed" desc="initPurTable">
     private void initPurTable() {
-        if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
-            tblPurchase.setCellSelectionEnabled(true);
-        }
-        tblPurchase.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblPurchase.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
-        tblPurchase.getColumnModel().getColumn(1).setPreferredWidth(150);//Medicine Name
-        tblPurchase.getColumnModel().getColumn(2).setPreferredWidth(50);//Relstr
-        /*if(Util1.getPropValue("system.purchase.item.expense").equals("Y")){
+        try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblPurchase.setCellSelectionEnabled(true);
+            }
+            tblPurchase.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblPurchase.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
+            tblPurchase.getColumnModel().getColumn(1).setPreferredWidth(150);//Medicine Name
+            tblPurchase.getColumnModel().getColumn(2).setPreferredWidth(50);//Relstr
+            /*if(Util1.getPropValue("system.purchase.item.expense").equals("Y")){
             
          }else{*/
-        tblPurchase.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
-        tblPurchase.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
-        //}
-        tblPurchase.getColumnModel().getColumn(4).setPreferredWidth(40);//Qty
-        tblPurchase.getColumnModel().getColumn(5).setPreferredWidth(30);//Unit
-        tblPurchase.getColumnModel().getColumn(6).setPreferredWidth(60);//Pur price
-        tblPurchase.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount1
-        tblPurchase.getColumnModel().getColumn(8).setPreferredWidth(50);//Discount2
-        tblPurchase.getColumnModel().getColumn(9).setPreferredWidth(30);//FOC
-        tblPurchase.getColumnModel().getColumn(10).setPreferredWidth(30);//FOC Unit
-        tblPurchase.getColumnModel().getColumn(11).setPreferredWidth(50);//Expense
-        tblPurchase.getColumnModel().getColumn(12).setPreferredWidth(50);//Unit cost
-        tblPurchase.getColumnModel().getColumn(13).setPreferredWidth(15);//Charge Type
-        tblPurchase.getColumnModel().getColumn(14).setPreferredWidth(70);//Amount
+            tblPurchase.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
+            tblPurchase.getColumnModel().getColumn(3).setCellRenderer(new TableDateFieldRenderer());
+            //}
+            tblPurchase.getColumnModel().getColumn(4).setPreferredWidth(40);//Qty
+            tblPurchase.getColumnModel().getColumn(5).setPreferredWidth(30);//Unit
+            tblPurchase.getColumnModel().getColumn(6).setPreferredWidth(60);//Pur price
+            tblPurchase.getColumnModel().getColumn(7).setPreferredWidth(20);//Discount1
+            tblPurchase.getColumnModel().getColumn(8).setPreferredWidth(50);//Discount2
+            tblPurchase.getColumnModel().getColumn(9).setPreferredWidth(30);//FOC
+            tblPurchase.getColumnModel().getColumn(10).setPreferredWidth(30);//FOC Unit
+            tblPurchase.getColumnModel().getColumn(11).setPreferredWidth(50);//Expense
+            tblPurchase.getColumnModel().getColumn(12).setPreferredWidth(50);//Unit cost
+            tblPurchase.getColumnModel().getColumn(13).setPreferredWidth(15);//Charge Type
+            tblPurchase.getColumnModel().getColumn(14).setPreferredWidth(70);//Amount
 
-        addPurTableModelListener();
+            addPurTableModelListener();
 
-        //Change JTable cell editor
-        tblPurchase.getColumnModel().getColumn(0).setCellEditor(codeCellEditor);
-        tblPurchase.getColumnModel().getColumn(5).setCellEditor(
-                new Purchase.PurchaseTableUnitCellEditor());
-        tblPurchase.getColumnModel().getColumn(10).setCellEditor(
-                new Purchase.PurchaseTableUnitCellEditor());
-        tblPurchase.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor());
-        tblPurchase.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor());
-        tblPurchase.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
-        tblPurchase.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor());
-        tblPurchase.getColumnModel().getColumn(9).setCellEditor(new BestTableCellEditor());
+            //Change JTable cell editor
+            tblPurchase.getColumnModel().getColumn(0).setCellEditor(codeCellEditor);
+            tblPurchase.getColumnModel().getColumn(5).setCellEditor(
+                    new Purchase.PurchaseTableUnitCellEditor());
+            tblPurchase.getColumnModel().getColumn(10).setCellEditor(
+                    new Purchase.PurchaseTableUnitCellEditor());
+            tblPurchase.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor());
+            tblPurchase.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor());
+            tblPurchase.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
+            tblPurchase.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor());
+            tblPurchase.getColumnModel().getColumn(9).setCellEditor(new BestTableCellEditor());
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        tblPurchase.getColumnModel().getColumn(13).setCellEditor(new DefaultCellEditor(cboChargeType));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            tblPurchase.getColumnModel().getColumn(13).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-        if (Util1.getPropValue("system.purchase.detail.location").equals("Y")) {
-            JComboBox cboLocationCell = new JComboBox();
-            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
-            tblPurchase.getColumnModel().getColumn(15).setCellEditor(new DefaultCellEditor(cboLocationCell));
-            purTableModel.setLocation((Location) cboLocation.getSelectedItem());
-            tblPurchase.getColumnModel().getColumn(15).setPreferredWidth(50);//Location
-        } else {
-            tblPurchase.getColumnModel().getColumn(15).setPreferredWidth(0);//Location
-            tblPurchase.getColumnModel().getColumn(15).setMaxWidth(0);
-            tblPurchase.getColumnModel().getColumn(15).setMaxWidth(0);
-        }
-
-        tblPurchase.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblPurchase.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
-            if (tblPurchase.getSelectedRow() < purTableModel.getRowCount()) {
-                lblBrandName.setText(purTableModel.getBrandName(tblPurchase.getSelectedRow()));
-                lblBrandName.setText(purTableModel.getRemark(tblPurchase.getSelectedRow()));
+            if (Util1.getPropValue("system.purchase.detail.location").equals("Y")) {
+                JComboBox cboLocationCell = new JComboBox();
+                BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+                tblPurchase.getColumnModel().getColumn(15).setCellEditor(new DefaultCellEditor(cboLocationCell));
+                purTableModel.setLocation((Location) cboLocation.getSelectedItem());
+                tblPurchase.getColumnModel().getColumn(15).setPreferredWidth(50);//Location
+            } else {
+                tblPurchase.getColumnModel().getColumn(15).setPreferredWidth(0);//Location
+                tblPurchase.getColumnModel().getColumn(15).setMaxWidth(0);
+                tblPurchase.getColumnModel().getColumn(15).setMaxWidth(0);
             }
-        });
+
+            tblPurchase.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblPurchase.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                if (tblPurchase.getSelectedRow() < purTableModel.getRowCount()) {
+                    lblBrandName.setText(purTableModel.getBrandName(tblPurchase.getSelectedRow()));
+                    lblBrandName.setText(purTableModel.getRemark(tblPurchase.getSelectedRow()));
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initPurTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="addPurTableModelListener">
@@ -946,6 +972,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
                     }
+                    log.info("before deleteDetail");
                     deleteDetail();
                     updateVouTotal(currPurVou.getPurInvId());
                     //For upload to account
@@ -978,7 +1005,8 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         } catch (Exception ex) {
 
         }
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Purchase Voucher Search", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Purchase Voucher Search", dao, -1);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -1004,7 +1032,37 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
             if (yes_no == 0) {
                 currPurVou.setDeleted(true);
                 currPurVou.setIntgUpdStatus(null);
-                save();
+                
+                try {
+                    Date d = new Date();
+                    dao.execProc("bkpur",
+                            currPurVou.getPurInvId(),
+                            DateUtil.toDateTimeStrMYSQL(d),
+                            Global.loginUser.getUserId(),
+                            Global.machineId,
+                            currPurVou.getVouTotal().toString(),
+                            currPurVou.getDiscount().toString(),
+                            currPurVou.getPaid().toString(),
+                            currPurVou.getBalance().toString());
+                } catch (Exception ex) {
+                    log.error("bkpur : " + ex.getStackTrace()[0].getLineNumber() + " - " + currPurVou.getPurInvId() + " - " + ex);
+                } finally {
+                    dao.close();
+                }
+                
+                String vouNo = currPurVou.getPurInvId();
+                try {
+                    dao.execSql("update pur_his set deleted = true, intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                    //For upload to account
+                    uploadToAccount(currPurVou);
+                    newForm();
+                } catch (Exception ex) {
+                    log.error("delete error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                
+                //save();
             }
         }
     }
@@ -1185,7 +1243,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     BarcodeFilter bf = new BarcodeFilter();
 
                     bf.setItemId(pdh.getMedId().getMedId());
-                    bf.setUserId(Global.loginUser.getUserId());
+                    bf.setUserId(Global.machineId);
                     listBarcodeFilter.add(bf);
                 }
             }
@@ -1193,7 +1251,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
         try {
             String strSQL = "delete from tmp_barcode_filter where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
 
             dao.execSql(strSQL);
             dao.saveBatch(listBarcodeFilter);
@@ -1203,7 +1261,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     + Util1.getPropValue("report.folder.path")
                     + "rptBarCode";
 
-            params.put("user_id", Global.loginUser.getUserId());
+            params.put("user_id", Global.machineId);
             params.put("compName", Util1.getPropValue("report.company.name"));
 
             ReportUtil.viewReport(reportPath, params, dao.getConnection());
@@ -1397,12 +1455,16 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     private void assignDefaultValue() {
         Object tmpObj;
 
-        //tmpObj = Util1.getDefaultValue("Trader");
-        tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.supplier"));
-        if (tmpObj != null) {
-            selected("CustomerList", tmpObj);
+        try {
+            tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.supplier"));
+            if (tmpObj != null) {
+                selected("CustomerList", tmpObj);
+            }
+        } catch (Exception ex) {
+            log.error("assignDefaultValue : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         tmpObj = Util1.getDefaultValue("Currency");
         if (tmpObj != null) {
             cboCurrency.setSelectedItem(tmpObj);
@@ -1442,25 +1504,31 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     public void getMedInfo(String medCode) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1535,22 +1603,27 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
     // <editor-fold defaultstate="collapsed" desc="initExpenseTable">
     private void initExpenseTable() {
-        if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
-            tblExpense.setCellSelectionEnabled(true);
+        try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblExpense.setCellSelectionEnabled(true);
+            }
+            //Adjust column width
+            tblExpense.getColumnModel().getColumn(0).setPreferredWidth(50); //Expense Date
+            tblExpense.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+            tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
+            tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amount
+
+            addExpenseTableModelListener();
+
+            JComboBox cboExpenseType = new JComboBox();
+            cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
+            BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
+            tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
+        } catch (Exception ex) {
+            log.error("initExpenseTable : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        //Adjust column width
-        tblExpense.getColumnModel().getColumn(0).setPreferredWidth(50); //Expense Date
-        tblExpense.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
-        tblExpense.getColumnModel().getColumn(1).setPreferredWidth(150);//Expense Type
-        tblExpense.getColumnModel().getColumn(2).setPreferredWidth(60);//Amount
-
-        addExpenseTableModelListener();
-
-        JComboBox cboExpenseType = new JComboBox();
-        cboExpenseType.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
-        BindingUtil.BindCombo(cboExpenseType, dao.findAll("ExpenseType"));
-        tblExpense.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboExpenseType));
-
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="addExpenseTableModelListener">
@@ -1564,7 +1637,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     //Need to add action for updating table
                     switch (column) {
                         case 2: //Amount
-                            Double expTotal = new Double(0);
+                            Double expTotal = 0d;
 
                             for (PurchaseExpense exp : listExpense) {
                                 expTotal += NumberUtil.NZero(exp.getExpAmount());
@@ -1607,7 +1680,8 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Supplier List", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Supplier List", dao, -1);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -1710,14 +1784,13 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         if (strTodayDateTime != null) {
             if (!strTodayDateTime.isEmpty()) {
                 String strTrdOpt;
-                Trader1 t1 = (Trader1) dao.find(Trader1.class, currPurVou.getCustomerId().getTraderId());
-                if (t1.getDiscriminator().equals("S")) {
-                    strTrdOpt = "SUP";
-                } else {
-                    strTrdOpt = "CUS";
-                }
-
                 try {
+                    Trader1 t1 = (Trader1) dao.find(Trader1.class, currPurVou.getCustomerId().getTraderId());
+                    if (t1.getDiscriminator().equals("S")) {
+                        strTrdOpt = "SUP";
+                    } else {
+                        strTrdOpt = "CUS";
+                    }
                     Currency curr = (Currency) cboCurrency.getSelectedItem();
                     ResultSet resultSet = dao.getPro("trader_last_balance",
                             currPurVou.getCustomerId().getTraderId(), strTrdOpt,
@@ -1740,7 +1813,11 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                         }
                     }
                 } catch (SQLException ex) {
-                    log.error(ex.toString());
+                    log.error("getTraderLastBalance : " + ex.toString());
+                } catch (Exception ex1) {
+                    log.error("getTraderLastBalance1 : " + ex1.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }

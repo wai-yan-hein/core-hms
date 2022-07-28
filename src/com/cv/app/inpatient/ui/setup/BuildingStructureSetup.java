@@ -53,26 +53,30 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
     private BuildingStructure selStructure;
 
     @Override
-    public void newForm(){
+    public void newForm() {
         selStructure = new BuildingStructure();
         txtCode.setText(null);
         txtDescription.setText(null);
         cboFacilityType.setSelectedItem(null);
         cboStructureType.setSelectedItem(null);
     }
-    
+
     @Override
-    public void history(){}
-    
+    public void history() {
+    }
+
     @Override
-    public void delete(){}
-    
+    public void delete() {
+    }
+
     @Override
-    public void deleteCopy(){}
-    
+    public void deleteCopy() {
+    }
+
     @Override
-    public void print(){}
-    
+    public void print() {
+    }
+
     /**
      * Creates new form GroupingSetup
      */
@@ -85,13 +89,19 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboStructureType,
-                dao.findAllHSQL("select o from BuildingStructurType o order by o.typeDesp"));
-        BindingUtil.BindCombo(cboFacilityType,
-                dao.findAllHSQL("select o from FacilityType o order by o.typeDesp"));
+        try {
+            BindingUtil.BindCombo(cboStructureType,
+                    dao.findAllHSQL("select o from BuildingStructurType o order by o.typeDesp"));
+            BindingUtil.BindCombo(cboFacilityType,
+                    dao.findAllHSQL("select o from FacilityType o order by o.typeDesp"));
 
-        new ComBoBoxAutoComplete(cboStructureType, this);
-        new ComBoBoxAutoComplete(cboFacilityType, this);
+            new ComBoBoxAutoComplete(cboStructureType, this);
+            new ComBoBoxAutoComplete(cboFacilityType, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTree() {
@@ -192,6 +202,7 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
         // Either there was no selection, or the root was selected.
         //toolkit.beep();
     }
+
     private void removeGrouping(int groupId) {
         try {
             String strSqlDelete = "delete from building_sturcture where id = " + groupId;
@@ -311,13 +322,19 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
     }
 
     private void createTreeNode(int parentGroupId, DefaultMutableTreeNode treeRoot) {
-        List<BuildingStructure> listItemGroup = dao.findAllHSQL(
-                "from BuildingStructure as o where o.parent =" + parentGroupId);
+        try {
+            List<BuildingStructure> listItemGroup = dao.findAllHSQL(
+                    "from BuildingStructure as o where o.parent =" + parentGroupId);
 
-        for (BuildingStructure ig : listItemGroup) {
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(ig);
-            treeRoot.add(child);
-            createTreeNode(ig.getId(), child);
+            for (BuildingStructure ig : listItemGroup) {
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(ig);
+                treeRoot.add(child);
+                createTreeNode(ig.getId(), child);
+            }
+        } catch (Exception ex) {
+            log.error("createTreeNode : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -391,7 +408,7 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
 
             try {
                 dao.save(selStructure);
-                
+
                 DefaultMutableTreeNode node;
                 TreePath parentPath = treGrouping.getSelectionPath();
                 node = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
@@ -399,7 +416,7 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
                 if (node != null) {
                     node.setUserObject(selStructure);
                 }
-                
+
                 newForm();
             } catch (Exception ex) {
                 log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);

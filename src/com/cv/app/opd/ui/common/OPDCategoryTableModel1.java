@@ -277,11 +277,16 @@ public class OPDCategoryTableModel1 extends AbstractTableModel {
     }
 
     private void getCategory() {
-        //listOPDCategory = dao.findAll("OPDCategory", "groupId = " + groupId);
-        listOPDCategory = dao.findAllHSQL(
-                "select o from OPDCategory o where o.groupId = " + groupId + " order by o.catName");
-        addNewRow();
-        fireTableDataChanged();
+        try {
+            listOPDCategory = dao.findAllHSQL(
+                    "select o from OPDCategory o where o.groupId = " + groupId + " order by o.catName");
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getCategory : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

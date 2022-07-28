@@ -29,12 +29,14 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class OPDGroupSetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(OPDGroupSetup.class.getName());
     private OPDGroupTableModel tableModel = new OPDGroupTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
     private int selectRow = -1;
     private BestAppFocusTraversalPolicy focusPolicy;
     private OPDGroup currOPDGroup = new OPDGroup();
+
     /**
      * Creates new form OPDGroupSetup
      */
@@ -50,21 +52,27 @@ public class OPDGroupSetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListOPDGroup(dao.findAll("OPDGroup"));
-        tblGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblGroup.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblGroup.getSelectedRow() >= 0) {
-                    selectRow = tblGroup.convertRowIndexToModel(tblGroup.getSelectedRow());
-                }
+        try {
+            tableModel.setListOPDGroup(dao.findAll("OPDGroup"));
+            tblGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblGroup.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblGroup.getSelectedRow() >= 0) {
+                        selectRow = tblGroup.convertRowIndexToModel(tblGroup.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getOPDGroup(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getOPDGroup(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setRecord(OPDGroup oPDGroup) {
@@ -124,9 +132,9 @@ public class OPDGroupSetup extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currOPDGroup);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addOPDGroup(currOPDGroup);
-                }else{
+                } else {
                     tableModel.setOPDGroup(selectRow, currOPDGroup);
                 }
                 clear();
@@ -142,6 +150,7 @@ public class OPDGroupSetup extends javax.swing.JDialog {
             }
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -66,7 +66,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
     }
 
     private void initTable() {
-        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.loginUser.getUserId() + "'");
+        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
         tblReaderEntry.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         tblReaderEntry.getColumnModel().getColumn(0).setPreferredWidth(40);//Date
@@ -105,15 +105,21 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboService,
-                dao.findAllHSQL("select o from Service o where o.status = true order by o.serviceName"));
-        BindingUtil.BindComboFilter(cboOPDCG,
-                dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
+        try {
+            BindingUtil.BindCombo(cboService,
+                    dao.findAllHSQL("select o from Service o where o.status = true order by o.serviceName"));
+            BindingUtil.BindComboFilter(cboOPDCG,
+                    dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
 
-        cboService.setSelectedItem(null);
+            cboService.setSelectedItem(null);
 
-        new ComBoBoxAutoComplete(cboService, this);
-        new ComBoBoxAutoComplete(cboOPDCG, this);
+            new ComBoBoxAutoComplete(cboService, this);
+            new ComBoBoxAutoComplete(cboOPDCG, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getPatient() {
@@ -166,7 +172,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String compName = Util1.getPropValue("report.company.name");
         String phoneNo = Util1.getPropValue("report.phone");
         String address = Util1.getPropValue("report.address");
-        params.put("p_user_id", Global.loginUser.getUserId());
+        params.put("p_user_id", Global.machineId);
         params.put("compName", compName);
         params.put("phoneNo", phoneNo);
         params.put("comAddress", address);
@@ -191,7 +197,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String compName = Util1.getPropValue("report.company.name");
         String phoneNo = Util1.getPropValue("report.phone");
         String address = Util1.getPropValue("report.address");
-        params.put("p_user_id", Global.loginUser.getUserId());
+        params.put("p_user_id", Global.machineId);
         params.put("compName", compName);
         params.put("phoneNo", phoneNo);
         params.put("comAddress", address);
@@ -200,7 +206,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         params.put("reg_no", regNo);
         params.put("name", name);
         params.put("admission", admission);
-        
+
         try {
             dao.close();
             ReportUtil.viewReport(reportPath, params, dao.getConnection());

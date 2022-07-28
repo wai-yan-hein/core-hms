@@ -10,6 +10,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.LocationTraderMapping;
 import com.cv.app.pharmacy.database.entity.LocationTraderMappingKey;
 import com.cv.app.pharmacy.database.view.VLocationTraderMapping;
+import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -25,6 +26,7 @@ public class LocationSupplierMappingTableModel extends AbstractTableModel {
     private List<VLocationTraderMapping> listVILM = new ArrayList();
     private final String[] columnNames = {"Group Id", "Group Name", "Code", "Name", "Active"};
     private final AbstractDataAccess dao = Global.dao;
+    private String prefix = Util1.getPropValue("system.sale.emitted.prifix");
 
     @Override
     public int getRowCount() {
@@ -75,7 +77,11 @@ public class LocationSupplierMappingTableModel extends AbstractTableModel {
                 case 1: //Group Name
                     return record.getGroupName();
                 case 2: //Code
-                    return record.getKey().getTraderId();
+                    if (prefix.equals("Y")) {
+                        return record.getStuNo();
+                    } else {
+                        return record.getKey().getTraderId();
+                    }
                 case 3: //Name
                     return record.getTraderName();
                 case 4: //Map Status
@@ -153,12 +159,12 @@ public class LocationSupplierMappingTableModel extends AbstractTableModel {
         }
     }
 
-    public void selectAll(){
-        if(listVILM != null){
-            if(!listVILM.isEmpty()){
+    public void selectAll() {
+        if (listVILM != null) {
+            if (!listVILM.isEmpty()) {
                 int index = 0;
-                for(VLocationTraderMapping ilm : listVILM){
-                    if(!ilm.getMapStatus()){
+                for (VLocationTraderMapping ilm : listVILM) {
+                    if (!ilm.getMapStatus()) {
                         ilm.setMapStatus(Boolean.TRUE);
                         saveMapping(ilm);
                         fireTableCellUpdated(index, 4);
@@ -168,15 +174,15 @@ public class LocationSupplierMappingTableModel extends AbstractTableModel {
             }
         }
     }
-    
-    public void unSelectAll(){
-        if(listVILM != null){
-            if(!listVILM.isEmpty()){
+
+    public void unSelectAll() {
+        if (listVILM != null) {
+            if (!listVILM.isEmpty()) {
                 int index = 0;
-                for(VLocationTraderMapping ilm : listVILM){
-                    if(ilm.getMapStatus()){
+                for (VLocationTraderMapping ilm : listVILM) {
+                    if (ilm.getMapStatus()) {
                         ilm.setMapStatus(Boolean.FALSE);
-                        deleteMapping(ilm.getKey().getTraderId(),ilm.getKey().getLocationId());
+                        deleteMapping(ilm.getKey().getTraderId(), ilm.getKey().getLocationId());
                         fireTableCellUpdated(index, 4);
                         index++;
                     }

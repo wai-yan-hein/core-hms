@@ -35,6 +35,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class LabMachineSetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(LabMachineSetup.class.getName());
     private final LabMachineTableModel tableModel = new LabMachineTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
@@ -43,7 +44,7 @@ public class LabMachineSetup extends javax.swing.JDialog {
     private BestAppFocusTraversalPolicy focusPolicy;
     private TableRowSorter<TableModel> sorter;
     private TitledBorder tb = BorderFactory.createTitledBorder("NEW");
-    
+
     /**
      * Creates new form CitySetup
      */
@@ -65,26 +66,31 @@ public class LabMachineSetup extends javax.swing.JDialog {
 
         setLocation(x, y);
         setVisible(true);*/
-        
-        
+
     }
 
     private void initTable() {
-        tableModel.setListCity(dao.findAll("LabMachine"));
-        tblLMName.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblLMName.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblLMName.getSelectedRow() >= 0) {
-                    selectRow = tblLMName.convertRowIndexToModel(tblLMName.getSelectedRow());
-                }
+        try {
+            tableModel.setListCity(dao.findAll("LabMachine"));
+            tblLMName.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblLMName.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblLMName.getSelectedRow() >= 0) {
+                        selectRow = tblLMName.convertRowIndexToModel(tblLMName.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getLabMachine(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getLabMachine(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setRecord(LabMachine labmachine) {
@@ -149,9 +155,9 @@ public class LabMachineSetup extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currLabMachine);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addLabMachine(currLabMachine);
-                }else{
+                } else {
                     tableModel.setLabMachine(selectRow, currLabMachine);
                 }
                 clear();
@@ -168,10 +174,10 @@ public class LabMachineSetup extends javax.swing.JDialog {
         }
     }
 
-    private void delete(){
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
-                int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), 
+                int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                         "Are you sure to delete " + txtLabMachineName.getText() + "?",
                         "Delete", JOptionPane.YES_NO_OPTION);
 
@@ -194,6 +200,7 @@ public class LabMachineSetup extends javax.swing.JDialog {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -342,7 +349,7 @@ public class LabMachineSetup extends javax.swing.JDialog {
     }//GEN-LAST:event_butSaveActionPerformed
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
-    if (txtFilter.getText().length() == 0) {
+      if (txtFilter.getText().length() == 0) {
           sorter.setRowFilter(null);
       } else {
           sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));

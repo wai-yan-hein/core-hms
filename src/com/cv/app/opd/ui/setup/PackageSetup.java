@@ -47,6 +47,7 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
     private final PackageTotalTableModel pTotalTableModel = new PackageTotalTableModel();
     private final TableRowSorter<TableModel> sorter;
     private final PackageItemCellEditor cellEditor = new PackageItemCellEditor();
+
     /**
      * Creates new form PackageSetup
      */
@@ -69,11 +70,11 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         log.info("propertyChange : " + evt.getPropertyName());
-        if(evt.getPropertyName().equals("change")){
+        if (evt.getPropertyName().equals("change")) {
             assignTotal();
         }
     }
-    
+
     private void setPackage(ClinicPackage cPackage) {
         try {
             this.currPackage = cPackage;
@@ -122,11 +123,16 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
                 }
             }
         });
-        List<ClinicPackage> listCP = dao.findAllHSQL(
-                "select o from ClinicPackage o"
-        );
-        cpTableModel.setListCP(listCP);
-
+        try {
+            List<ClinicPackage> listCP = dao.findAllHSQL(
+                    "select o from ClinicPackage o"
+            );
+            cpTableModel.setListCP(listCP);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblPackageDetail.getColumnModel().getColumn(0).setPreferredWidth(30);//Item Option
         tblPackageDetail.getColumnModel().getColumn(1).setPreferredWidth(200);//Description
         tblPackageDetail.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
@@ -147,7 +153,7 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
         );
         cpdTableModel.setParent(tblPackageDetail);
         cpdTableModel.addPropertyChangeListener(this);
-        
+
         tblPackageTotal.getColumnModel().getColumn(0).setPreferredWidth(30);//Item Option
         tblPackageTotal.getColumnModel().getColumn(1).setPreferredWidth(200);//Group Name
         tblPackageTotal.getColumnModel().getColumn(2).setPreferredWidth(50);//Sale Total
@@ -213,7 +219,7 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
 
             if (tblPackageDetail.getSelectedRow() >= 0) {
                 try {
-                    if(tblPackageDetail.getCellEditor() != null){
+                    if (tblPackageDetail.getCellEditor() != null) {
                         tblPackageDetail.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -232,11 +238,17 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
     }
 
     private void assignTotal() {
-        List<VClinicPackageTotal> listVCPT = dao.findAllHSQL(
-                "select o from VClinicPackageTotal o where o.pkgId = "
-                + currPackage.getId().toString() + " order by o.itemOption, o.typeName"
-        );
-        pTotalTableModel.setListTTL(listVCPT);
+        try {
+            List<VClinicPackageTotal> listVCPT = dao.findAllHSQL(
+                    "select o from VClinicPackageTotal o where o.pkgId = "
+                    + currPackage.getId().toString() + " order by o.itemOption, o.typeName"
+            );
+            pTotalTableModel.setListTTL(listVCPT);
+        } catch (Exception ex) {
+            log.error("assignTotal : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /**
@@ -452,7 +464,7 @@ public class PackageSetup extends javax.swing.JPanel implements PropertyChangeLi
     }//GEN-LAST:event_butClearActionPerformed
 
     private void cboPackageTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPackageTypeActionPerformed
-        
+
     }//GEN-LAST:event_cboPackageTypeActionPerformed
 
 

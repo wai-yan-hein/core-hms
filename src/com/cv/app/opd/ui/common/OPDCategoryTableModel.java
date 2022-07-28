@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -19,6 +20,7 @@ import javax.swing.table.AbstractTableModel;
  */
 public class OPDCategoryTableModel extends AbstractTableModel {
 
+    static Logger log = Logger.getLogger(OPDCategoryTableModel.class.getName());
     private List<OPDCategory> listOPDCategory = new ArrayList();
     private final String[] columnNames = {"Code", "Description"};
     private final AbstractDataAccess dao;
@@ -63,7 +65,7 @@ public class OPDCategoryTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Code
-                if(value != null){
+                if (value != null) {
                     record.setUserCode(value.toString());
                 }
                 break;
@@ -148,11 +150,16 @@ public class OPDCategoryTableModel extends AbstractTableModel {
     }
 
     private void getCategory() {
-        //listOPDCategory = dao.findAll("OPDCategory", "groupId = " + groupId);
-        listOPDCategory = dao.findAllHSQL(
-                "select o from OPDCategory o where o.groupId = " + groupId + " order by o.userCode");
-        addNewRow();
-        fireTableDataChanged();
+        try {
+            listOPDCategory = dao.findAllHSQL(
+                    "select o from OPDCategory o where o.groupId = " + groupId + " order by o.userCode");
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getCategory : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

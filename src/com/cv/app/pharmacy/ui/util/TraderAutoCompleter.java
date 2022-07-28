@@ -7,6 +7,7 @@ package com.cv.app.pharmacy.ui.util;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.ui.common.TraderAutoCompleteTableModel;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -27,6 +28,7 @@ import org.apache.log4j.Logger;
  * @author winswe
  */
 public class TraderAutoCompleter implements KeyListener {
+
     static Logger log = Logger.getLogger(TraderAutoCompleter.class.getName());
     private JTable table = new JTable();
     private JPopupMenu popup = new JPopupMenu();
@@ -196,6 +198,8 @@ public class TraderAutoCompleter implements KeyListener {
         if (si < acTableModel.getSize() - 1) {
             table.setRowSelectionInterval(si + 1, si + 1);
         }
+        Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
+        table.scrollRectToVisible(rect);
     }
 
     /**
@@ -208,6 +212,8 @@ public class TraderAutoCompleter implements KeyListener {
         if (si > 0) {
             table.setRowSelectionInterval(si - 1, si - 1);
         }
+        Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
+        table.scrollRectToVisible(rect);
     }
 
     public Trader getSelTrader() {
@@ -237,14 +243,21 @@ public class TraderAutoCompleter implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         String filter = textComp.getText();
-        
+
         if (filter.length() == 0) {
             sorter.setRowFilter(null);
         } else {
             sorter.setRowFilter(startsWithFilter);
         }
+
+        try {
+            if (e.getKeyCode() != KeyEvent.VK_DOWN && e.getKeyCode() != KeyEvent.VK_UP) {
+                table.setRowSelectionInterval(0, 0);
+            }
+        } catch (Exception ex) {
+        }
     }
-    
+
     private RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {
         @Override
         public boolean include(RowFilter.Entry<? extends Object, ? extends Object> entry) {
@@ -254,7 +267,7 @@ public class TraderAutoCompleter implements KeyListener {
                     return true;
                 }
             }
-            
+
             return false;
         }
     };

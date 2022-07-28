@@ -98,29 +98,29 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public Object find(Class type, Serializable id) {
+    public Object find(Class type, Serializable id) throws Exception{
         Object obj = null;
 
-        try {
+        //try {
             if (!id.equals("")) {
                 open();
                 tran = session.beginTransaction();
                 obj = session.get(type, id);
                 //tran.commit();
             }
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("find1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-        }
+        }*/
 
         return obj;
     }
 
     @Override
-    public Object find(String entityName, String filter) {
+    public Object find(String entityName, String filter) throws Exception{
         Object obj = null;
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
-        try {
+        //try {
             open();
             tran = session.beginTransaction();
             Query query = session.createQuery(strSQL);
@@ -129,32 +129,32 @@ public class BestDataAccess implements AbstractDataAccess {
             if (!list.isEmpty()) {
                 obj = list.get(0);
             }
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("find2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return obj;
     }
 
     @Override
-    public List findAll(String entityName) {
+    public List findAll(String entityName) throws Exception{
         List lists = null;
 
-        try {
+        //try {
             open();
             tran = session.beginTransaction();
             Query query = session.createQuery("from " + entityName);
             lists = query.list();
             //tran.commit();
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("findAll1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return lists;
     }
 
     @Override
-    public List findAll(String entityName, Object obj) {
+    public List findAll(String entityName, Object obj) throws Exception{
         List list = findAll(entityName);
         list.add(0, obj);
 
@@ -162,7 +162,7 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAll(String entityName, String filter) {
+    public List findAll(String entityName, String filter) throws Exception{
         List lists = null;
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
@@ -180,18 +180,18 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAllHSQL(String strHSQL) {
+    public List findAllHSQL(String strHSQL) throws Exception{
         List lists = null;
 
-        try {
+        //try {
             open();
             tran = session.beginTransaction();
             Query query = session.createQuery(strHSQL);
             lists = query.list();
             //tran.commit();
-        } catch (Exception ex) {
-            log.error("findAllHSQL1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        //} catch (Exception ex) {
+        //    log.error("findAllHSQL1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+        //}
 
         return lists;
     }
@@ -236,11 +236,11 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public ResultSet getPro(String procName, List parameters) {
+    public ResultSet getPro(String procName, List parameters) throws Exception{
         String strSQL = "{call " + procName + "(";
         ResultSet resultSet = null;
 
-        try {
+        //try {
             String tmpStr = "";
             for (Object obj : parameters) {
                 if (tmpStr.isEmpty()) {
@@ -268,19 +268,19 @@ public class BestDataAccess implements AbstractDataAccess {
 
             resultSet = ((CallableStatement) statement).executeQuery();
             tran.commit();
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("getPro1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return resultSet;
     }
 
     @Override
-    public ResultSet getPro(String procName, String... parameters) {
+    public ResultSet getPro(String procName, String... parameters) throws Exception {
         String strSQL = "{call " + procName + "(";
         ResultSet resultSet = null;
 
-        try {
+        //try {
             String tmpStr = "";
             for (int i = 0; i < parameters.length; i++) {
                 if (tmpStr.isEmpty()) {
@@ -307,9 +307,9 @@ public class BestDataAccess implements AbstractDataAccess {
             }
             resultSet = ((CallableStatement) statement).executeQuery();
             tran.commit();
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("getPro2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return resultSet;
     }

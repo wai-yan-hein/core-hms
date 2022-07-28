@@ -25,7 +25,7 @@ public class InpServiceTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(InpServiceTableModel.class.getName());
     private List<InpService> listInpService = new ArrayList();
-    private final String[] columnNames = {"Code", "Description", "Fees", "Hospital", 
+    private final String[] columnNames = {"Code", "Description", "Fees", "Hospital",
         "Nurse", "Tech", "MO", "Active", "CFS"};
     private final AbstractDataAccess dao;
     private int catId;
@@ -207,11 +207,11 @@ public class InpServiceTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-        
-        try{
+
+        try {
             fireTableCellUpdated(row, column);
-        }catch(Exception ex){
-            
+        } catch (Exception ex) {
+
         }
     }
 
@@ -279,11 +279,17 @@ public class InpServiceTableModel extends AbstractTableModel {
     }
 
     private void getInpService() {
-        //listInpService = dao.findAll("InpService", "catId = " + catId);
-        listInpService = dao.findAllHSQL(
-                "select o from InpService o where o.catId = " + catId + " order by o.serviceName");
-        addNewRow();
-        fireTableDataChanged();
+        try {
+            //listInpService = dao.findAll("InpService", "catId = " + catId);
+            listInpService = dao.findAllHSQL(
+                    "select o from InpService o where o.catId = " + catId + " order by o.serviceName");
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getInpService : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

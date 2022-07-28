@@ -113,7 +113,7 @@ public class SkyBluer extends PlasticTheme {
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         Object[] uiDefaults =
-            { PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY, new Integer(30), };
+            { PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY, 30, };
         table.putDefaults(uiDefaults);
     }
 

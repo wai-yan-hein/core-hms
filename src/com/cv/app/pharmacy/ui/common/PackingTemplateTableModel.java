@@ -208,7 +208,7 @@ public class PackingTemplateTableModel extends AbstractTableModel {
                 smallestQty = smallestQty / unitQty;
                 packingTemplate.setSmallestQty(smallestQty);
             } else {
-                packingTemplate.setSmallestQty(new Float(1));
+                packingTemplate.setSmallestQty(1f);
             }
 
             packingTemplate.setUniqueId(i + 1);

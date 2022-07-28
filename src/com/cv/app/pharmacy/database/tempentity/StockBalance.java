@@ -19,6 +19,7 @@ public class StockBalance implements java.io.Serializable{
     private StockBalanceKey key;
     private Integer balance;
     private String qtyStr;
+    private String purUnit;
     
     @EmbeddedId
     public StockBalanceKey getKey() {
@@ -45,5 +46,14 @@ public class StockBalance implements java.io.Serializable{
 
     public void setQtyStr(String qtyStr) {
         this.qtyStr = qtyStr;
+    }
+
+    @Column(name="pur_unit", length=15)
+    public String getPurUnit() {
+        return purUnit;
+    }
+
+    public void setPurUnit(String purUnit) {
+        this.purUnit = purUnit;
     }
 }

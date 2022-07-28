@@ -25,6 +25,7 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,9 +56,15 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         assignDate();
         initCombo();
         initTable();
-        ptCash = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
-        cboPayment.setSelectedItem(ptCash);
+        try {
+            ptCash = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
+            cboPayment.setSelectedItem(ptCash);
+        } catch (Exception ex) {
+            log.error("SessionCheckOPD : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void assignDate() {
@@ -66,22 +73,28 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
+        try {
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
 
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboUser);
-        new ComBoBoxAutoComplete(cboTranType);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboUser);
+            new ComBoBoxAutoComplete(cboTranType);
 
-        cboSession.setSelectedIndex(0);
-        cboCurrency.setSelectedIndex(0);
-        cboPayment.setSelectedIndex(0);
-        cboUser.setSelectedIndex(0);
-        cboTranType.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+            cboCurrency.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboUser.setSelectedIndex(0);
+            cboTranType.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -169,14 +182,12 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     strWhere = " payType = " + tmpIntValue;
                     sqlFilter = "payment_type_id = " + tmpIntValue;
                 }
+            } else if (tmpIntValue == 1) {//For cash
+                strWhere = strWhere + " and paid <> 0";
+                sqlFilter = sqlFilter + " and paid <> 0";
             } else {
-                if (tmpIntValue == 1) {//For cash
-                    strWhere = strWhere + " and paid <> 0";
-                    sqlFilter = sqlFilter + " and paid <> 0";
-                } else {
-                    strWhere = strWhere + " and payType = " + tmpIntValue;
-                    sqlFilter = sqlFilter + " and payment_type_id = " + tmpIntValue;
-                }
+                strWhere = strWhere + " and payType = " + tmpIntValue;
+                sqlFilter = sqlFilter + " and payment_type_id = " + tmpIntValue;
             }
         }
 
@@ -190,14 +201,14 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             }
         }
 
-        if(!txtPtName.getText().trim().isEmpty()){
-            if(strWhere.isEmpty()){
+        if (!txtPtName.getText().trim().isEmpty()) {
+            if (strWhere.isEmpty()) {
                 strWhere = " ptName like '%" + txtPtName.getText() + "%'";
-            }else{
+            } else {
                 strWhere = strWhere + " and ptName like '%" + txtPtName.getText() + "%'";
             }
         }
-        
+
         if (!txtDrNo.getText().trim().isEmpty()) {
             if (strWhere.isEmpty()) {
                 strWhere = " drId = '" + txtDrNo.getText().trim() + "'";
@@ -243,7 +254,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         //Calculate total in sql
         int session = getSessionFilter();
 
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         String strSql = "insert into tmp_clinic_session_check(user_id,\n"
                 + "  tran_option,curr_id,ttl_v,ttl_dics,ttl_tax,\n"
                 + "  ttl_paid,ttl_deposite,ttl_credit)\n"
@@ -272,118 +283,119 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     "delete from tmp_clinic_session_check where user_id = '" + userId + "'",
                     strSql
             );
+
+            //=========================================================
+            String appCurr = Util1.getPropValue("system.app.currency");
+            //Substract group
+            if (tranType.equals("OPD") || tranType.equals("All")) {
+                List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGOPD'");
+                SessionFilter sf = null;
+                if (listSF != null) {
+                    if (!listSF.isEmpty()) {
+                        sf = listSF.get(0);
+                    }
+                }
+                if (sf != null) {
+                    String strGroupId = sf.getRptParameter();
+                    if (!strGroupId.equals("-")) {
+                        String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
+                                + "select '" + Global.machineId + "','SUBGOPD' tran_option, ifnull(currency_id,'"
+                                + appCurr + "'), sum(amount)*-1\n"
+                                + "from v_opd\n"
+                                + "where date(opd_date) between '"
+                                + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
+                                + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
+
+                        if (session != 0) {
+                            strOpd = strOpd + " and session_id = " + session;
+                        }
+
+                        if (!strSUBGFilter.isEmpty()) {
+                            strOpd = strOpd + " and " + strSUBGFilter;
+                        }
+
+                        try {
+                            dao.execSql(strOpd);
+                        } catch (Exception ex) {
+                            log.error("getFilterString SUBGOPD : " + ex.getMessage());
+                        }
+                    }
+                }
+            }
+
+            if (tranType.equals("OT") || tranType.equals("All")) {
+                List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGOT'");
+                SessionFilter sf = null;
+                if (listSF != null) {
+                    if (!listSF.isEmpty()) {
+                        sf = listSF.get(0);
+                    }
+                }
+                if (sf != null) {
+                    String strGroupId = sf.getRptParameter();
+                    if (!strGroupId.equals("-")) {
+                        String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
+                                + "select '" + Global.machineId + "','SUBGOT' tran_option, ifnull(currency_id,'"
+                                + appCurr + "'), sum(amount)*-1\n"
+                                + "from v_ot\n"
+                                + "where date(ot_date) between '"
+                                + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
+                                + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
+
+                        if (session != 0) {
+                            strOpd = strOpd + " and session_id = " + session;
+                        }
+
+                        if (!strSUBGFilter.isEmpty()) {
+                            strOpd = strOpd + " and " + strSUBGFilter;
+                        }
+
+                        try {
+                            dao.execSql(strOpd);
+                        } catch (Exception ex) {
+                            log.error("getFilterString SUBGOT : " + ex.getMessage());
+                        }
+                    }
+                }
+            }
+
+            if (tranType.equals("DC") || tranType.equals("All")) {
+                List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGDC'");
+                SessionFilter sf = null;
+                if (listSF != null) {
+                    if (!listSF.isEmpty()) {
+                        sf = listSF.get(0);
+                    }
+                }
+                if (sf != null) {
+                    String strGroupId = sf.getRptParameter();
+                    if (!strGroupId.equals("-")) {
+                        String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
+                                + "select '" + Global.machineId + "','SUBGDC' tran_option, ifnull(currency_id,'"
+                                + appCurr + "'), sum(amount)*-1\n"
+                                + "from v_dc\n"
+                                + "where date(dc_date) between '"
+                                + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
+                                + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
+
+                        if (session != 0) {
+                            strOpd = strOpd + " and session_id = " + session;
+                        }
+
+                        if (!strSUBGFilter.isEmpty()) {
+                            strOpd = strOpd + " and " + strSUBGFilter;
+                        }
+
+                        try {
+                            dao.execSql(strOpd);
+                        } catch (Exception ex) {
+                            log.error("getFilterString SUBGDC : " + ex.getMessage());
+                        }
+                    }
+                }
+            }
         } catch (Exception ex) {
             log.error("getFilterString : " + ex.getMessage());
-        }
-        //=========================================================
-        String appCurr = Util1.getPropValue("system.app.currency");
-        //Substract group
-        if (tranType.equals("OPD") || tranType.equals("All")) {
-            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGOPD'");
-            SessionFilter sf = null;
-            if (listSF != null) {
-                if (!listSF.isEmpty()) {
-                    sf = listSF.get(0);
-                }
-            }
-            if (sf != null) {
-                String strGroupId = sf.getRptParameter();
-                if (!strGroupId.equals("-")) {
-                    String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
-                            + "select '" + Global.loginUser.getUserId() + "','SUBGOPD' tran_option, ifnull(currency_id,'" 
-                            + appCurr + "'), sum(amount)*-1\n"
-                            + "from v_opd\n"
-                            + "where date(opd_date) between '"
-                            + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
-                            + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-
-                    if (session != 0) {
-                        strOpd = strOpd + " and session_id = " + session;
-                    }
-
-                    if (!strSUBGFilter.isEmpty()) {
-                        strOpd = strOpd + " and " + strSUBGFilter;
-                    }
-
-                    try {
-                        dao.execSql(strOpd);
-                    } catch (Exception ex) {
-                        log.error("getFilterString SUBGOPD : " + ex.getMessage());
-                    }
-                }
-            }
-        }
-
-        if (tranType.equals("OT") || tranType.equals("All")) {
-            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGOT'");
-            SessionFilter sf = null;
-            if (listSF != null) {
-                if (!listSF.isEmpty()) {
-                    sf = listSF.get(0);
-                }
-            }
-            if (sf != null) {
-                String strGroupId = sf.getRptParameter();
-                if (!strGroupId.equals("-")) {
-                    String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
-                            + "select '" + Global.loginUser.getUserId() + "','SUBGOT' tran_option, ifnull(currency_id,'" 
-                            + appCurr + "'), sum(amount)*-1\n"
-                            + "from v_ot\n"
-                            + "where date(ot_date) between '"
-                            + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
-                            + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-
-                    if (session != 0) {
-                        strOpd = strOpd + " and session_id = " + session;
-                    }
-
-                    if (!strSUBGFilter.isEmpty()) {
-                        strOpd = strOpd + " and " + strSUBGFilter;
-                    }
-
-                    try {
-                        dao.execSql(strOpd);
-                    } catch (Exception ex) {
-                        log.error("getFilterString SUBGOT : " + ex.getMessage());
-                    }
-                }
-            }
-        }
-
-        if (tranType.equals("DC") || tranType.equals("All")) {
-            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'SUBGDC'");
-            SessionFilter sf = null;
-            if (listSF != null) {
-                if (!listSF.isEmpty()) {
-                    sf = listSF.get(0);
-                }
-            }
-            if (sf != null) {
-                String strGroupId = sf.getRptParameter();
-                if (!strGroupId.equals("-")) {
-                    String strOpd = "insert into tmp_clinic_session_check(user_id, tran_option, curr_id, ttl_paid)\n"
-                            + "select '" + Global.loginUser.getUserId() + "','SUBGDC' tran_option, ifnull(currency_id,'" 
-                            + appCurr + "'), sum(amount)*-1\n"
-                            + "from v_dc\n"
-                            + "where date(dc_date) between '"
-                            + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
-                            + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-
-                    if (session != 0) {
-                        strOpd = strOpd + " and session_id = " + session;
-                    }
-
-                    if (!strSUBGFilter.isEmpty()) {
-                        strOpd = strOpd + " and " + strSUBGFilter;
-                    }
-
-                    try {
-                        dao.execSql(strOpd);
-                    } catch (Exception ex) {
-                        log.error("getFilterString SUBGDC : " + ex.getMessage());
-                    }
-                }
-            }
         }
         //=========================================================
 
@@ -395,6 +407,8 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     }
 
     private void applyFilter() {
+        String fromDate = DateUtil.toDateStrMYSQL(txtFrom.getText());
+        String toDate = DateUtil.toDateStrMYSQL(txtTo.getText());
         String joFilter = getFilterString();
         tableSCModel.applyFilter(joFilter);
         List<SessionTtl> listTtl = new ArrayList();
@@ -402,7 +416,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             String strSql = "select vstc.*\n"
                     + "from v_sess_ttl_clinic vstc, session_filter sf\n"
                     + "where vstc.tran_option = sf.tran_source\n"
-                    + "and vstc.user_id = '" + Global.loginUser.getUserId()
+                    + "and vstc.user_id = '" + Global.machineId
                     + "' and sf.program_id in ('CLINICTTL', 'SUBGDC', 'SUBGOPD', 'SUBGOT')\n"
                     + "order by sf.sort_order";
             ResultSet rs = dao.execSQL(strSql);
@@ -416,18 +430,46 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     ));
                 }
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("applyFilter : " + ex.getMessage());
         }
-
+        listTtl.addAll(getBillPayment(fromDate, toDate));
         sTableModel.setListSessionTtl(listTtl);
         System.gc();
         //getTotal();
     }
 
+    private List<SessionTtl> getBillPayment(String fromDate, String toDate) {
+        List<SessionTtl> values = new ArrayList<>();
+        String sql = "select sum(pay_amt) amt,currency_id\n"
+                + "from opd_patient_bill_payment\n"
+                + "where date(pay_date) between '" + fromDate + "' and '" + toDate + "'\n"
+                + "group by currency_id";
+        ResultSet rs = dao.execSQL(sql);
+        if (rs != null) {
+            try {
+                while (rs.next()) {
+                    values.add(new SessionTtl(
+                            "Total Bill Payment",
+                            rs.getString("currency_id"),
+                            rs.getDouble("amt")));
+                }
+            } catch (SQLException ex) {
+                log.error(String.format("getBillPayment: %s", ex.getMessage()));
+            }
+        }
+        return values;
+    }
+
     private void search() {
-        tableSCModel.setListVSessionClinic(dao.findAllHSQL(getHSQL()));
-        applyFilter();
+        try {
+            tableSCModel.setListVSessionClinic(dao.findAllHSQL(getHSQL()));
+            applyFilter();
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void getTotal() {
@@ -1122,7 +1164,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         params.put("session_paymentname", sessionPaymentName);
         params.put("session_paymentid", sessionPaymentId);
         params.put("user", Global.loginUser.getUserShortName());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("pt_id", sessionPtId);
         params.put("dr_id", sessionDrId);
         params.put("tran_option", cboTranType.getSelectedItem().toString());

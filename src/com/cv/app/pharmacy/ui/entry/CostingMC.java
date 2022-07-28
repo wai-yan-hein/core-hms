@@ -100,7 +100,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
         tmpExrTableModel.addEmptyRow();
 
         String strSql = "delete from tmp_ex_rate where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         try {
             dao.deleteSQL(strSql);
         } catch (Exception ex) {
@@ -189,15 +189,20 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
                              strLoc = "and c.location = " + location.getLocationId().toString();
                              }
                              }*/
+                    try {
+                        String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
+                                + itemId + "' and c.userId = '" + Global.machineId + "'"
+                                + " and c.costFor = 'Opening' ";
 
-                    String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
-                            + itemId + "' and c.userId = '" + Global.loginUser.getUserId() + "'"
-                            + " and c.costFor = 'Opening' ";
+                        List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
 
-                    List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
-
-                    lblDescription.setText(sc.getMedName());
-                    modelSCDT.setListStockCostingDetail(listCostDetail);
+                        lblDescription.setText(sc.getMedName());
+                        modelSCDT.setListStockCostingDetail(listCostDetail);
+                    } catch (Exception ex) {
+                        log.error("valueChanged : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                 } else {
                     modelSCDT.removeAll();
                     lblDescription.setText(null);
@@ -207,60 +212,60 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void calculate() {
-        String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                + Global.loginUser.getUserId() + "'";
-        String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                + Global.loginUser.getUserId() + "'";
-        String strMethod = cboMethod.getSelectedItem().toString();
+        try {
+            String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
+                    + Global.machineId + "'";
+            String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
+                    + Global.machineId + "'";
+            String strMethod = cboMethod.getSelectedItem().toString();
 
-        dao.execSql(deleteTmpData1, deleteTmpData2);
-        dao.commit();
-        dao.close();
-        insertStockFilterCode();
+            dao.execSql(deleteTmpData1, deleteTmpData2);
+            dao.commit();
+            dao.close();
+            insertStockFilterCode();
 
-        dao.execProc("gen_cost_balance",
-                DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
-                Global.loginUser.getUserId());
+            dao.execProc("gen_cost_balance",
+                    DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
+                    Global.machineId);
 
-        String strLocation;
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            Location location = (Location) cboLocation.getSelectedItem();
-            strLocation = location.getLocationId().toString();
-        } else {
-            strLocation = "0";
-        }
-
-        Currency currency = (Currency) cboCurrency.getSelectedItem();
-        String strCurr = "MMK";
-        if (currency != null) {
-            strCurr = currency.getCurrencyCode();
-        }
-
-        List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        boolean localCost = false;
-        if (listEXR != null) {
-            if (!listEXR.isEmpty()) {
-                localCost = true;
+            String strLocation;
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                Location location = (Location) cboLocation.getSelectedItem();
+                strLocation = location.getLocationId().toString();
+            } else {
+                strLocation = "0";
             }
-        }
 
-        if (localCost) {
-            calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                    Global.loginUser.getUserId(), strMethod, strCurr);
-        } else {
-            try {
+            Currency currency = (Currency) cboCurrency.getSelectedItem();
+            String strCurr = "MMK";
+            if (currency != null) {
+                strCurr = currency.getCurrencyCode();
+            }
+
+            boolean localCost = false;
+
+            List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
+                    + Global.machineId + "'");
+            if (listEXR != null) {
+                if (!listEXR.isEmpty()) {
+                    localCost = true;
+                }
+            }
+
+            if (localCost) {
+                calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        Global.machineId, strMethod, strCurr);
+            } else {
                 dao.execProc("insert_cost_detail_mc",
                         "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                        Global.loginUser.getUserId(), strMethod, strCurr);
+                        Global.machineId, strMethod, strCurr);
                 dao.commit();
-            } catch (Exception ex) {
-                log.error("insert_cost_detail_mc : " + ex.toString());
-            } finally {
-                dao.close();
             }
+        } catch (Exception ex) {
+            log.error("insert_cost_detail_mc : " + ex.toString());
+        } finally {
+            dao.close();
         }
-
         calculateLocation();
         applyFilter();
     }
@@ -364,19 +369,17 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
                         if (curr.equals(currId)) {
                             scd.setExrSmallCost(rs.getDouble("smallest_cost"));
                             scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                        } else if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
+                            double exRate = rs.getDouble("ex_rate");
+                            double ttlStock = scd.getCostQty();
+                            double smlCost = rs.getDouble("smallest_cost");
+                            double amount = ttlStock * smlCost * exRate;
+                            scd.setExrSmallCost(smlCost * exRate);
+                            //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                            scd.setExrTtlCost(amount);
                         } else {
-                            if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
-                                double exRate = rs.getDouble("ex_rate");
-                                double ttlStock = scd.getCostQty();
-                                double smlCost = rs.getDouble("smallest_cost");
-                                double amount = ttlStock * smlCost * exRate;
-                                scd.setExrSmallCost(smlCost * exRate);
-                                //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                                scd.setExrTtlCost(amount);
-                            } else {
-                                scd.setExrSmallCost(0.0);
-                                scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                            }
+                            scd.setExrSmallCost(0.0);
+                            scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
                         }
 
                         dao.save(scd);
@@ -433,7 +436,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
             strLocation = location.getLocationId().toString();
         }
 
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
                 + userId + "'");
         dao.execSql("update tmp_stock_costing set location_id = null, "
@@ -455,33 +458,38 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void applyFilter() {
-        String strHSQL = getHSQL();
-        List<VStockCosting> listStockCosting = dao.findAllHSQL(strHSQL);
-        dao.commit();
-        costingTableMode.setListStockCosting(listStockCosting);
+        try {
+            String strHSQL = getHSQL();
+            List<VStockCosting> listStockCosting = dao.findAllHSQL(strHSQL);
+            dao.commit();
+            costingTableMode.setListStockCosting(listStockCosting);
 
-        String strLocation = "0";
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            Location location = (Location) cboLocation.getSelectedItem();
-            strLocation = location.getLocationId().toString();
+            String strLocation = "0";
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                Location location = (Location) cboLocation.getSelectedItem();
+                strLocation = location.getLocationId().toString();
+            }
+
+            double totalCost = 0;
+            double totalLocCost = 0;
+
+            for (VStockCosting sc : listStockCosting) {
+                totalCost += NumberUtil.NZero(sc.getTtlCost());
+                totalLocCost += NumberUtil.NZero(sc.getLocTtlCost());
+            }
+
+            txtTotalCost.setValue(totalCost);
+            txtLocationCost.setValue(totalLocCost);
+        } catch (Exception ex) {
+            log.error("applyFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        double totalCost = 0;
-        double totalLocCost = 0;
-
-        for (VStockCosting sc : listStockCosting) {
-            totalCost += NumberUtil.NZero(sc.getTtlCost());
-            totalLocCost += NumberUtil.NZero(sc.getLocTtlCost());
-        }
-
-        txtTotalCost.setValue(totalCost);
-        txtLocationCost.setValue(totalLocCost);
-        dao.close();
     }
 
     private String getHSQL() {
         String strHSQL = "select c from VStockCosting c where c.userId = '"
-                + Global.loginUser.getUserId() + "' and c.tranOption = 'Opening'";
+                + Global.machineId + "' and c.tranOption = 'Opening'";
 
         if (chkMinus.isSelected()) {
             strHSQL = strHSQL + " and c.balQty < 0";
@@ -492,19 +500,25 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
 
         if (cboCustomGroup.getSelectedItem() instanceof ItemGroup) {
             ItemGroup itemGroup = (ItemGroup) cboCustomGroup.getSelectedItem();
-            List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
-                    "group_id = " + itemGroup.getGroupId());
-            String tmpItemList = "";
+            try {
+                List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
+                        "group_id = " + itemGroup.getGroupId());
+                String tmpItemList = "";
 
-            for (ItemGroupDetail igd : listItemGroupDetail) {
-                if (tmpItemList.isEmpty()) {
-                    tmpItemList = "'" + igd.getItem().getMedId() + "'";
-                } else {
-                    tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                for (ItemGroupDetail igd : listItemGroupDetail) {
+                    if (tmpItemList.isEmpty()) {
+                        tmpItemList = "'" + igd.getItem().getMedId() + "'";
+                    } else {
+                        tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                    }
                 }
-            }
 
-            strHSQL = strHSQL + " and c.medId in (" + tmpItemList + ")";
+                strHSQL = strHSQL + " and c.medId in (" + tmpItemList + ")";
+            } catch (Exception ex) {
+                log.error("getHSQL : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -563,24 +577,29 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
 
     private void initCombo() {
         isInit = true;
-        BindingUtil.BindComboFilter(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
-        BindingUtil.BindComboFilter(cboBrand, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
-        BindingUtil.BindComboFilter(cboCustomGroup, dao.findAllHSQL("select o from ItemGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
-        BindingUtil.BindComboFilter(cboLocG, dao.findAllHSQL("select o from LocationGroup o order by o.groupName"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAllHSQL("select o from Currency o order by o.currencyCode"));
-        String currCode = Util1.getPropValue("system.app.currency");
-        if (!currCode.isEmpty()) {
-            Currency homeCurrency = (Currency) dao.find(Currency.class, currCode);
-            cboCurrency.setSelectedItem(homeCurrency);
+        try {
+            BindingUtil.BindComboFilter(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
+            BindingUtil.BindComboFilter(cboBrand, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+            BindingUtil.BindComboFilter(cboCustomGroup, dao.findAllHSQL("select o from ItemGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+            BindingUtil.BindComboFilter(cboLocG, dao.findAllHSQL("select o from LocationGroup o order by o.groupName"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAllHSQL("select o from Currency o order by o.currencyCode"));
+            String currCode = Util1.getPropValue("system.app.currency");
+            if (!currCode.isEmpty()) {
+                Currency homeCurrency = (Currency) dao.find(Currency.class, currCode);
+                cboCurrency.setSelectedItem(homeCurrency);
+            }
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrand, this);
+            new ComBoBoxAutoComplete(cboCustomGroup, this);
+            new ComBoBoxAutoComplete(cboLocation, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrand, this);
-        new ComBoBoxAutoComplete(cboCustomGroup, this);
-        new ComBoBoxAutoComplete(cboLocation, this);
-
         isInit = false;
     }
 
@@ -615,9 +634,9 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
 
     private void insertStockFilterCode() {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(txtCostDate.getText()) + "'";
@@ -657,7 +676,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
             if (codeTableModel.getListCodeFilter().size() > 1) {
                 strSQL = strSQL + " and m.med_id in (select item_code from "
                         + "tmp_item_code_filter where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             }
         }
 
@@ -682,7 +701,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
 
         params.put("compName", compName);
         params.put("data_date", txtCostDate.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("method", cboMethod.getSelectedItem().toString());
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -761,7 +780,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
 
     private void deleteTmpData() {
         String strSql1 = "delete from tmp_item_code_filter where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         dao.execSql(strSql1);
     }
@@ -1442,7 +1461,7 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
     private void butExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butExcelActionPerformed
         try {
             GenExcel excel = new CostingExcel(dao, "costing.xls");
-            excel.setUserId(Global.loginUser.getUserId());
+            excel.setUserId(Global.machineId);
             excel.setItemType(getItemType());
             excel.setBrandId(getBrand().toString());
             excel.setCategoryId(getCategory().toString());
@@ -1468,16 +1487,22 @@ public class CostingMC extends javax.swing.JPanel implements SelectionObserver, 
     }//GEN-LAST:event_butSendToAccActionPerformed
 
     private void cboLocGActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocGActionPerformed
-        if (cboLocG.getSelectedItem() instanceof LocationGroup) {
-            LocationGroup lg = (LocationGroup) cboLocG.getSelectedItem();
-            String strSQL = "select o from Location o where o.locationId in "
-                    + "(select lg.key.location.locationId from LocationGroupMapping lg where lg.key.groupId = "
-                    + lg.getId() + ") order by o.locationName";
+        try {
+            if (cboLocG.getSelectedItem() instanceof LocationGroup) {
+                LocationGroup lg = (LocationGroup) cboLocG.getSelectedItem();
+                String strSQL = "select o from Location o where o.locationId in "
+                        + "(select lg.key.location.locationId from LocationGroupMapping lg where lg.key.groupId = "
+                        + lg.getId() + ") order by o.locationName";
 
-            BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL(strSQL));
-        } else {
-            BindingUtil.BindComboFilter(cboLocation,
-                    dao.findAllHSQL("select o from Location o order by o.locationName"));
+                BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL(strSQL));
+            } else {
+                BindingUtil.BindComboFilter(cboLocation,
+                        dao.findAllHSQL("select o from Location o order by o.locationName"));
+            }
+        } catch (Exception ex) {
+            log.error("cboLocGActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }//GEN-LAST:event_cboLocGActionPerformed
 

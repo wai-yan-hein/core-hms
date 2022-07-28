@@ -65,6 +65,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
     private Object prvLocation;
     private Object prvPymet;
     private int mouseClick = 2;
+    private String searchTraderId = "-";
 
     /**
      * Creates new form Payment
@@ -105,69 +106,81 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        Object tmpObj;
-        if (Util1.getPropValue("system.login.default.value").equals("Y")) {
-            tmpObj = Global.loginLocation;
-        } else {
-            tmpObj = Util1.getDefaultValue("Location");
-        }
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            BindingUtil.BindCombo(cboLocation, getLocationFilter());
-            cboLocation.setSelectedItem(tmpObj);
-            int index = cboLocation.getSelectedIndex();
-            if (index == -1) {
-                if (cboLocation.getItemCount() > 0) {
-                    cboLocation.setSelectedIndex(0);
-                }
+        try {
+            Object tmpObj;
+            if (Util1.getPropValue("system.login.default.value").equals("Y")) {
+                tmpObj = Global.loginLocation;
+            } else {
+                tmpObj = Util1.getDefaultValue("Location");
             }
-
-            BindingUtil.BindCombo(cboLocation1, getLocationFilter());
-            cboLocation1.setSelectedItem(tmpObj);
-            index = cboLocation.getSelectedIndex();
-            if (index == -1) {
-                if (cboLocation1.getItemCount() > 0) {
-                    cboLocation1.setSelectedIndex(0);
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                BindingUtil.BindCombo(cboLocation, getLocationFilter());
+                cboLocation.setSelectedItem(tmpObj);
+                int index = cboLocation.getSelectedIndex();
+                if (index == -1) {
+                    if (cboLocation.getItemCount() > 0) {
+                        cboLocation.setSelectedIndex(0);
+                    }
                 }
+
+                BindingUtil.BindCombo(cboLocation1, getLocationFilter());
+                cboLocation1.setSelectedItem(tmpObj);
+                index = cboLocation.getSelectedIndex();
+                if (index == -1) {
+                    if (cboLocation1.getItemCount() > 0) {
+                        cboLocation1.setSelectedIndex(0);
+                    }
+                }
+            } else {
+                BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
+                BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
+                        new Location(0, "All")));
+                cboLocation.setSelectedIndex(0);
             }
-        } else {
-            BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
-            BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
-                    new Location(0, "All")));
-            cboLocation.setSelectedIndex(0);
+            BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
+                    new Appuser("000", "All")));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindCombo(cboCurrencySearch, dao.findAll("Currency",
+                    new Currency("000", "All")));
+            BindingUtil.BindCombo(cboPCurrency, dao.findAll("Currency"));
+            BindingUtil.BindCombo(cboAccount,
+                    dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
+
+            cboUser.setSelectedIndex(0);
+            cboCurrencySearch.setSelectedIndex(0);
+
+            new ComBoBoxAutoComplete(cboLocation1);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboUser);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboCurrencySearch);
+            new ComBoBoxAutoComplete(cboPCurrency);
+            new ComBoBoxAutoComplete(cboAccount);
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
-                new Appuser("000", "All")));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindCombo(cboCurrencySearch, dao.findAll("Currency",
-                new Currency("000", "All")));
-        BindingUtil.BindCombo(cboPCurrency, dao.findAll("Currency"));
-        BindingUtil.BindCombo(cboAccount,
-                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
-
-        cboUser.setSelectedIndex(0);
-        cboCurrencySearch.setSelectedIndex(0);
-
-        new ComBoBoxAutoComplete(cboLocation1);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboUser);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboCurrencySearch);
-        new ComBoBoxAutoComplete(cboPCurrency);
-        new ComBoBoxAutoComplete(cboAccount);
-        cboAccount.setSelectedIndex(0);
-        bindStatus = true;
     }// </editor-fold>
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowCusPayVou = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowCusPayVou = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        return null;
     }
 
     @Override
@@ -180,40 +193,62 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     case "cus1":
                         Trader searchTrader = (Trader) selectObj;
 
-                        txtCusCode.setText(searchTrader.getTraderId());
+                        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                            txtCusCode.setText(searchTrader.getStuCode());
+                        } else {
+                            txtCusCode.setText(searchTrader.getTraderId());
+                        }
                         txtCusName.setText(searchTrader.getTraderName());
+                        searchTraderId = searchTrader.getTraderId();
                         break;
                     case "cus2":
                         //clearPayment();
                         paymentTrader = (Trader) selectObj;
-                        txtCusCode1.setText(paymentTrader.getTraderId());
+                        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                            txtCusCode1.setText(paymentTrader.getStuCode());
+                        } else {
+                            txtCusCode1.setText(paymentTrader.getTraderId());
+                        }
+
                         txtCusName1.setText(paymentTrader.getTraderName());
                         currencyChange();
                         break;
                 }
                 break;
             case "PayHis":
-                lblStatus.setText("EDIT");
-                traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class,
-                        ((VTraderPayment) selectObj).getPayId());
-                tblPaidVouListModel.removeList();
-                listVou.addAll(traderPayHis.getListDetail());
-                cboLocation1.setSelectedItem(traderPayHis.getLocation());
-                cboPayOpt.setSelectedItem(traderPayHis.getPayOption());
-                cboCurrency.setSelectedItem(traderPayHis.getCurrency());
-                cboPCurrency.setSelectedItem(traderPayHis.getParentCurr());
-                txtPayDate.setValue(DateUtil.toDateStr(traderPayHis.getPayDate()));
-                txtCusCode1.setText(traderPayHis.getTrader().getTraderId());
-                txtCusName1.setText(traderPayHis.getTrader().getTraderName());
-                txtRemark1.setText(traderPayHis.getRemark());
-                txtPaidC.setValue(traderPayHis.getPaidAmtC());
-                txtDiscount.setValue(traderPayHis.getDiscount());
-                txtExRate.setValue(traderPayHis.getExRate());
-                txtPaidP.setValue(traderPayHis.getPaidAmtP());
-                cboAccount.setSelectedItem(traderPayHis.getPayAccount());
-                tblPaidVouListModel.setListVou(listVou);
-                dao.close();
-                lock();
+                try {
+                    lblStatus.setText("EDIT");
+                    traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class,
+                            ((VTraderPayment) selectObj).getPayId());
+                    tblPaidVouListModel.removeList();
+                    listVou.addAll(traderPayHis.getListDetail());
+                    cboLocation1.setSelectedItem(traderPayHis.getLocation());
+                    cboPayOpt.setSelectedItem(traderPayHis.getPayOption());
+                    cboCurrency.setSelectedItem(traderPayHis.getCurrency());
+                    cboPCurrency.setSelectedItem(traderPayHis.getParentCurr());
+                    txtPayDate.setValue(DateUtil.toDateStr(traderPayHis.getPayDate()));
+                    paymentTrader = traderPayHis.getTrader();
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode1.setText(paymentTrader.getStuCode());
+                    } else {
+                        txtCusCode1.setText(paymentTrader.getTraderId());
+                    }
+                    //txtCusCode1.setText(traderPayHis.getTrader().getTraderId());
+                    txtCusName1.setText(traderPayHis.getTrader().getTraderName());
+                    txtRemark1.setText(traderPayHis.getRemark());
+                    txtPaidC.setValue(traderPayHis.getPaidAmtC());
+                    txtDiscount.setValue(traderPayHis.getDiscount());
+                    txtExRate.setValue(traderPayHis.getExRate());
+                    txtPaidP.setValue(traderPayHis.getPaidAmtP());
+                    cboAccount.setSelectedItem(traderPayHis.getPayAccount());
+                    tblPaidVouListModel.setListVou(listVou);
+                    dao.close();
+                    lock();
+                } catch (Exception ex) {
+                    log.error("selected : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
                 break;
         }
     }
@@ -260,10 +295,17 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         txtReturnIn.setValue(null);
         txtPaidC.setValue(null);
         txtDiscount.setValue(null);
-        Currency defaultCurrency = (Currency) dao.find(Currency.class,
-                Util1.getPropValue("system.app.currency"));
-        cboCurrency.setSelectedItem(defaultCurrency);
-        cboPCurrency.setSelectedItem(defaultCurrency);
+        try {
+            Currency defaultCurrency = (Currency) dao.find(Currency.class,
+                    Util1.getPropValue("system.app.currency"));
+            cboCurrency.setSelectedItem(defaultCurrency);
+            cboPCurrency.setSelectedItem(defaultCurrency);
+        } catch (Exception ex) {
+            log.error("clear : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
         cboAccount.setSelectedItem(null);
         txtExRate.setValue(null);
         txtPaidP.setValue(null);
@@ -358,10 +400,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         } else if (!tblPaidVouListModel.isValidEntry()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "You must fill total pay amount in voucher.",
                     "Invalid Vou Paid Amount.", JOptionPane.ERROR_MESSAGE);
-            status = false;
-        } else if (cboAccount.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Select Payment Type.",
-                    "Invalid Vou Type.", JOptionPane.ERROR_MESSAGE);
             status = false;
         } else {
             traderPayHis.setPayDate(DateUtil.toDateTime(txtPayDate.getText()));
@@ -462,7 +500,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         txtCusCode.setText(null);
         txtCusName.setText(null);
         txtRemark.setText(null);
-
+        searchTraderId = "-";
         cboUser.setSelectedIndex(0);
         cboLocation.setSelectedIndex(0);
         cboCurrencySearch.setSelectedIndex(0);
@@ -494,8 +532,8 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtTo.getText()) + "' and p.deleted = false ";
 
-        if (txtCusCode.getText() != null && !txtCusCode.getText().isEmpty()) {
-            strSql = strSql + " and p.traderId = '" + txtCusCode.getText() + "'";
+        if (searchTraderId != null && !searchTraderId.equals("-")) {
+            strSql = strSql + " and p.traderId = '" + searchTraderId + "'";
         }
 
         if (((Location) cboLocation.getSelectedItem()).getLocationId() != 0) {
@@ -815,7 +853,8 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 if (resultSet != null) {
                     while (resultSet.next()) {
                         txtLastPaidDate.setValue(resultSet.getDate("VAR_LAST_PAY_DATE"));
-                        txtPrvBalance.setValue(resultSet.getDouble("VAR_LAST_BALANCE") + resultSet.getDouble("VAR_RE_RETIN"));
+                        //txtPrvBalance.setValue(resultSet.getDouble("VAR_LAST_BALANCE") + resultSet.getDouble("VAR_RE_RETIN"));
+                        txtPrvBalance.setValue(resultSet.getDouble("VAR_LAST_BALANCE"));
                         txtRePurchase.setValue(resultSet.getDouble("VAR_RE_PUR"));
                         txtReturnIn.setValue(resultSet.getDouble("VAR_RE_RETIN"));
                         strOpDate = resultSet.getString("VAR_OP_DATE");
@@ -830,10 +869,12 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                  "", opBalance));
                  }*/
                 //if (paymentTrader.getPayMethod().getMethodId() == 1) {
-                resultSet = dao.getPro("GET_UNPAID_VOU", paymentTrader.getTraderId(),
+                String traderCode = paymentTrader.getTraderId();
+                String payDate = DateUtil.toDateStrMYSQL(txtPayDate.getText());
+                resultSet = dao.getPro("GET_UNPAID_VOU", traderCode,
                         strTrdOpt, strOpDate,
                         //DateUtil.getTodayDateStrMYSQL(),
-                        DateUtil.toDateTimeStrMYSQL(DateUtil.toDateTime(txtPayDate.getText())),
+                        payDate,
                         appCurr, "1900-01-01", "1900-01-01");
                 if (resultSet != null) {
                     while (resultSet.next()) {
@@ -853,14 +894,16 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
                 calculateAmount();
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("paymentInfo : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } catch (Exception ex){
+            log.error("paymentInfo : " + ex.getMessage());
         } finally {
             try {
                 if (resultSet != null) {
                     resultSet.close();
                 }
-            } catch (Exception ex1) {
+            } catch (SQLException ex1) {
 
             }
             dao.closeStatment();
@@ -1790,7 +1833,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
           if (cus == null) {
               txtCusCode.setText(null);
               txtCusName.setText(null);
-
+              searchTraderId = "-";
               JOptionPane.showMessageDialog(Util1.getParent(),
                       "Invalid customer code.",
                       "Trader Code", JOptionPane.ERROR_MESSAGE);

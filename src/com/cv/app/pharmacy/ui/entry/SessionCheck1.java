@@ -8,6 +8,7 @@ import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
+import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -28,6 +29,7 @@ import com.cv.app.pharmacy.database.view.VMarchant;
 import com.cv.app.pharmacy.database.view.VSession;
 import com.cv.app.pharmacy.ui.common.SessionTableModel1;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
+import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -90,17 +92,23 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
     }
 
     private void getSessionFilter() {
-        List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'Pharmacy'");
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (strSessionFilter.equals("-")) {
-                        strSessionFilter = "'" + sf.getKey().getTranSource() + "'";
-                    } else {
-                        strSessionFilter = strSessionFilter + ",'" + sf.getKey().getTranSource() + "'";
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'Pharmacy'");
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (strSessionFilter.equals("-")) {
+                            strSessionFilter = "'" + sf.getKey().getTranSource() + "'";
+                        } else {
+                            strSessionFilter = strSessionFilter + ",'" + sf.getKey().getTranSource() + "'";
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("getSessionFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -110,48 +118,64 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
-        BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboMachine, dao.findAll("MachineInfo"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboPaidCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboLGroup, dao.findAll("LocationGroup"));
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+        try {
+            BindingUtil.BindComboFilter(cboUser, dao.findAll("Appuser"));
+            BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboMachine, dao.findAll("MachineInfo"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboPaidCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboLGroup, dao.findAll("LocationGroup"));
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+            BindingUtil.BindComboFilter(cboSaleMan,
+                    dao.findAllHSQL("select o from Doctor o order by o.doctorName"));
 
-        new ComBoBoxAutoComplete(cboUser);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboMachine);
-        new ComBoBoxAutoComplete(cboTranType);
-        new ComBoBoxAutoComplete(cboDelete);
-        new ComBoBoxAutoComplete(cboSource);
-        new ComBoBoxAutoComplete(cboCurrency);
-        new ComBoBoxAutoComplete(cboPaidCurrency);
+            new ComBoBoxAutoComplete(cboUser);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboMachine);
+            new ComBoBoxAutoComplete(cboTranType);
+            new ComBoBoxAutoComplete(cboDelete);
+            new ComBoBoxAutoComplete(cboSource);
+            new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboPaidCurrency);
 
-        cboUser.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
-        cboMachine.setSelectedIndex(0);
-        cboTranType.setSelectedIndex(0);
-        cboDelete.setSelectedIndex(0);
-        cboSource.setSelectedIndex(0);
-        cboCurrency.setSelectedIndex(0);
-        cboPaidCurrency.setSelectedIndex(0);
+            cboUser.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+            cboMachine.setSelectedIndex(0);
+            cboTranType.setSelectedIndex(0);
+            cboDelete.setSelectedIndex(0);
+            cboSource.setSelectedIndex(0);
+            cboCurrency.setSelectedIndex(0);
+            cboPaidCurrency.setSelectedIndex(0);
 
-        bindStatus = true;
+            bindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowSessCheck = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowSessCheck = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private String getHSQL() {
@@ -204,29 +228,35 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
-            LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
-            List<LocationGroupMapping> listLGM = dao.findAllHSQL(
-                    "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
-            String strLocation = "";
+        try {
+            if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
+                LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
+                List<LocationGroupMapping> listLGM = dao.findAllHSQL(
+                        "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
+                String strLocation = "";
 
-            if (listLGM != null) {
-                for (LocationGroupMapping lgm : listLGM) {
-                    if (strLocation.isEmpty()) {
-                        strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                if (listLGM != null) {
+                    for (LocationGroupMapping lgm : listLGM) {
+                        if (strLocation.isEmpty()) {
+                            strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                        } else {
+                            strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        }
+                    }
+                }
+
+                if (!strLocation.isEmpty()) {
+                    if (strWhere.isEmpty()) {
+                        strWhere = " s.locationId in (" + strLocation + ")";
                     } else {
-                        strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        strWhere = strWhere + " and s.locationId in (" + strLocation + ")";
                     }
                 }
             }
-
-            if (!strLocation.isEmpty()) {
-                if (strWhere.isEmpty()) {
-                    strWhere = " s.locationId in (" + strLocation + ")";
-                } else {
-                    strWhere = strWhere + " and s.locationId in (" + strLocation + ")";
-                }
-            }
+        } catch (Exception ex) {
+            log.error("LocationGroupMapping : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
 
         if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
@@ -239,23 +269,13 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        String ptType = cboPatientType.getSelectedItem().toString();
-        if (!ptType.equals("All")) {
-            switch (ptType) {
-                case "OPD":
-                    if (strWhere.isEmpty()) {
-                        strWhere = "s.admissionNo is null";
-                    } else {
-                        strWhere = strWhere + " and s.admissionNo is null";
-                    }
-                    break;
-                case "Inpatient":
-                    if (strWhere.isEmpty()) {
-                        strWhere = "s.admissionNo is not null";
-                    } else {
-                        strWhere = strWhere + " and s.admissionNo is not null";
-                    }
-                    break;
+        if (cboSaleMan.getSelectedItem() instanceof Doctor) {
+            Doctor saleMan = (Doctor) cboSaleMan.getSelectedItem();
+
+            if (strWhere.isEmpty()) {
+                strWhere = " s.doctorId = '" + saleMan.getDoctorId() + "'";
+            } else {
+                strWhere = strWhere + " and s.doctorId = '" + saleMan.getDoctorId() + "'";
             }
         }
 
@@ -372,32 +392,42 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        List<SessionFilter> listSF = dao.findAllHSQL(
-                "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
-                + " and o.rptParameter <> '-' and o.apply = true"
-        );
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (strWhere.isEmpty()) {
-                        strWhere = applySessionFilter(sf.getKey().getTranSource());
-                    } else {
-                        strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL(
+                    "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
+                    + " and o.rptParameter <> '-' and o.apply = true"
+            );
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (strWhere.isEmpty()) {
+                            strWhere = applySessionFilter(sf.getKey().getTranSource());
+                        } else {
+                            strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("session filter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         return strWhere;
     }
 
     private void search() {
-        List<VSession> listVS = dao.findAllHSQL(getHSQL());
-        tableModel.setListVSession(listVS);
-        System.out.println("search : " + listVS.size());
-        //getTotal();
-        applyFilter();
-
+        try {
+            List<VSession> listVS = dao.findAllHSQL(getHSQL());
+            tableModel.setListVSession(listVS);
+            System.out.println("search : " + listVS.size());
+            //getTotal();
+            applyFilter();
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -413,6 +443,7 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         tblSession.getColumnModel().getColumn(7).setPreferredWidth(30);//Balance
         tblSession.getColumnModel().getColumn(8).setPreferredWidth(5);//User
         tblSession.getColumnModel().getColumn(9).setPreferredWidth(10);//Source
+        tblSession.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
     }
 
     private void initTotalTable() {
@@ -495,31 +526,36 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
-            LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
-            List<LocationGroupMapping> listLGM = dao.findAllHSQL(
-                    "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
-            String strLocation = "";
+        try {
+            if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
+                LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
+                List<LocationGroupMapping> listLGM = dao.findAllHSQL(
+                        "select o from LocationGroupMapping o where o.key.groupId = " + lg.getId().toString());
+                String strLocation = "";
 
-            if (listLGM != null) {
-                for (LocationGroupMapping lgm : listLGM) {
-                    if (strLocation.isEmpty()) {
-                        strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                if (listLGM != null) {
+                    for (LocationGroupMapping lgm : listLGM) {
+                        if (strLocation.isEmpty()) {
+                            strLocation = lgm.getKey().getLocation().getLocationId().toString();
+                        } else {
+                            strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        }
+                    }
+                }
+
+                if (!strLocation.isEmpty()) {
+                    if (strWhere.isEmpty()) {
+                        strWhere = " locationId in (" + strLocation + ")";
                     } else {
-                        strLocation = strLocation + "," + lgm.getKey().getLocation().getLocationId().toString();
+                        strWhere = strWhere + " and locationId in (" + strLocation + ")";
                     }
                 }
             }
-
-            if (!strLocation.isEmpty()) {
-                if (strWhere.isEmpty()) {
-                    strWhere = " locationId in (" + strLocation + ")";
-                } else {
-                    strWhere = strWhere + " and locationId in (" + strLocation + ")";
-                }
-            }
+        } catch (Exception ex) {
+            log.error("LocationGroupMapping : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
             CustomerGroup cg = (CustomerGroup) cboCusGroup.getSelectedItem();
 
@@ -530,7 +566,7 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        String ptType = cboPatientType.getSelectedItem().toString();
+        String ptType = cboSaleMan.getSelectedItem().toString();
         if (!ptType.equals("All")) {
             switch (ptType) {
                 case "OPD":
@@ -663,22 +699,27 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             }
         }
 
-        List<SessionFilter> listSF = dao.findAllHSQL(
-                "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
-                + " and o.rptParameter <> '-' and o.apply = true"
-        );
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (strWhere.isEmpty()) {
-                        strWhere = applySessionFilter(sf.getKey().getTranSource());
-                    } else {
-                        strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL(
+                    "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
+                    + " and o.rptParameter <> '-' and o.apply = true"
+            );
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (strWhere.isEmpty()) {
+                            strWhere = applySessionFilter(sf.getKey().getTranSource());
+                        } else {
+                            strWhere = strWhere + " and " + applySessionFilter(sf.getKey().getTranSource());
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("SessionFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         if (!strWhere.isEmpty()) {
             filterString = filterString + " WHERE " + strWhere;
         }
@@ -890,18 +931,34 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         double ttlExpOut = 0;
         double ttlTranfSale = 0;
         double ttlTranfPurchase = 0;
-        
+
         HashMap<String, String> hmFilter = new HashMap();
-        List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'PHARTTL'");
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    hmFilter.put(sf.getKey().getTranSource(), sf.getKey().getTranSource());
+        String retailCusId = Util1.getPropValue("system.default.customer");
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'PHARTTL'");
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        hmFilter.put(sf.getKey().getTranSource(), sf.getKey().getTranSource());
+                    }
                 }
             }
-        }
 
-        String retailCusId = Util1.getPropValue("system.default.customer");
+            String prefix = Util1.getPropValue("system.sale.emitted.prifix");
+            if (prefix.equals("Y")) {
+                List<Trader> listT = dao.findAllHSQL("select o from Trader o where o.stuCode = '" + retailCusId + "'");
+                if (listT != null) {
+                    if (!listT.isEmpty()) {
+                        retailCusId = listT.get(0).getTraderId();
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("calculateTotal : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+        log.info("session retailCusId : " + retailCusId);
 
         for (VSession vs : listVS) {
             switch (vs.getKey().getSource()) {
@@ -971,348 +1028,44 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         }
 
         double ttlCFFees = 0;
-        /*if (!cboDelete.getSelectedItem().equals("Deleted")) {
-            String sessionId = "0";
-            if (cboSession.getSelectedItem() instanceof Session) {
-                Session session = (Session) cboSession.getSelectedItem();
-                sessionId = session.getSessionId().toString();
-            }
-
-            String userId = "-";
-            if (cboUser.getSelectedItem() instanceof Appuser) {
-                Appuser user = (Appuser) cboUser.getSelectedItem();
-                userId = user.getUserId();
-            }
-
-            String machineId = "-1";
-            if (cboMachine.getSelectedItem() instanceof MachineInfo) {
-                MachineInfo machine = (MachineInfo) cboMachine.getSelectedItem();
-                machineId = machine.getMachineId().toString();
-            }
-
-            String locationId = "-1";
-            if (cboLocation.getSelectedItem() instanceof Location) {
-                Location location = (Location) cboLocation.getSelectedItem();
-                locationId = location.getLocationId().toString();
-            }
-
-            String locationGroupId = "-1";
-            if (cboLGroup.getSelectedItem() instanceof LocationGroup) {
-                LocationGroup lg = (LocationGroup) cboLGroup.getSelectedItem();
-                locationGroupId = lg.getId().toString();
-            }
-
-            String cusGroup = "-";
-            if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
-                CustomerGroup cg = (CustomerGroup) cboCusGroup.getSelectedItem();
-                cusGroup = cg.getGroupId();
-            }
-
-            String tranType = cboTranType.getSelectedItem().toString();
-            if (tranType.equals("All")) {
-                tranType = "-";
-            }
-
-            String isDeleted = "false";
-            if (!cboDelete.getSelectedItem().toString().equals("All")) {
-                String strDelete = cboDelete.getSelectedItem().toString();
-                if (strDelete.equals("Deleted")) {
-                    isDeleted = "true";
-                }
-            }
-
-            String sendStatus = "-";
-            if (!cboSend.getSelectedItem().toString().equals("All")) {
-                sendStatus = cboSend.getSelectedItem().toString();
-            }
-
-            String source = "-";
-            if (!cboSource.getSelectedItem().toString().equals("All")) {
-                source = cboSource.getSelectedItem().toString();
-            }
-
-            String currency = "-";
-            if (cboCurrency.getSelectedItem() instanceof Currency) {
-                Currency curr = (Currency) cboCurrency.getSelectedItem();
-                currency = curr.getCurrencyCode();
-            }
-
-            String cusId = "-";
-            if (!txtCusId.getText().trim().isEmpty()) {
-                cusId = txtCusId.getText().trim();
-            }
-
-            String paidCurr = "-";
-            if (cboPaidCurrency.getSelectedItem() instanceof Currency) {
-                Currency curr = (Currency) cboPaidCurrency.getSelectedItem();
-                paidCurr = curr.getCurrencyCode();
-            }
-
-            String ptType = cboPatientType.getSelectedItem().toString();
-            if (ptType.equals("All")) {
-                ptType = "-";
-            }
-
-            if (hmFilter.containsKey("Total CF Fees")) {
-                try {
-                    ResultSet resultSet = dao.getPro("get_doctor_fee",
-                            DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                            DateUtil.toDateStrMYSQL(txtTo.getText()),
-                            sessionId, userId, machineId, locationId,
-                            locationGroupId, cusGroup, tranType,
-                            isDeleted, sendStatus, source,
-                            currency, cusId, paidCurr, ptType
-                    );
-                    if (resultSet != null) {
-                        resultSet.next();
-                        ttlCFFees = resultSet.getDouble("samount");
-                    }
-                } catch (SQLException ex) {
-                    log.error("printSessionD : " + ex.getMessage());
-                }
-            }
-        }*/
 
         ttlCashIn = ttlSCash + ttlRoCash + ttlSEI + ttlCusPaid + ttlExpIn + ttlSRCash;
         ttlCashOut = ttlPCash + ttlRiCash + ttlSEO + ttlPE + ttlSupPaid + ttlExpOut
                 + ttlCFFees + ttlRRiCash;
         netCash = ttlCashIn - ttlCashOut;
 
-        //String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-        //List<SessionTtl> listTtl = new ArrayList();
         txtWholeSaleTotal.setValue(ttlSVou);
-        /*if (ttlSVou != 0) {
-            if (hmFilter.containsKey("Total Sale")) {
-                listTtl.add(new SessionTtl("Total Sale", currency, ttlSVou));
-            } else if (hmFilter.containsKey("Whole Sale Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Total", currency, ttlSVou));
-            }
-        }*/
-
         txtWholeSalePaid.setValue(ttlSCash);
-        /*if (ttlSCash != 0) {
-            if (hmFilter.containsKey("Total Cash Sale")) {
-                listTtl.add(new SessionTtl("Total Cash Sale", currency, ttlSCash));
-            } else if (hmFilter.containsKey("Whole Sale Cash Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Cash Total", currency, ttlSCash));
-            }
-        }*/
-
         txtWholeSaleDisc.setValue(ttlSDisc);
-        /*if (ttlSDisc != 0) {
-            if (hmFilter.containsKey("Total Sale Discount")) {
-                listTtl.add(new SessionTtl("Total Sale Discount", currency, ttlSDisc));
-            } else if (hmFilter.containsKey("Whole Sale Discount Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Discount Total", currency, ttlSDisc));
-            }
-        }*/
-
         txtWholeSaleBalance.setValue(ttlSBal);
-        /*if (ttlSBal != 0) {
-            if (hmFilter.containsKey("Total Sale Balance")) {
-                listTtl.add(new SessionTtl("Total Sale Balance", currency, ttlSBal));
-            } else if (hmFilter.containsKey("Whole Sale Balance Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Balance Total", currency, ttlSBal));
-            }
-        }*/
 
- /*if (ttlSTax != 0) {
-            if (hmFilter.containsKey("Total Sale Tax")) {
-                listTtl.add(new SessionTtl("Total Sale Tax", currency, ttlSTax));
-            }
-        }
-
-        if (ttlSEI != 0) {
-            if (hmFilter.containsKey("Total Sale Exp-In")) {
-                listTtl.add(new SessionTtl("Total Sale Exp-In", currency, ttlSEI));
-            }
-        }
-
-        if (ttlSEO != 0) {
-            if (hmFilter.containsKey("Total Sale Exp-Out")) {
-                listTtl.add(new SessionTtl("Total Sale Exp-Out", currency, ttlSEO));
-            }
-        }*/
-        //Retail Sale
         txtRetailSaleTotal.setValue(ttlSRVou);
-        /*if (ttlSRVou != 0) {
-            if (hmFilter.containsKey("Retail Sale Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Total", currency, ttlSRVou));
-            }
-        }*/
         txtRetailPaid.setValue(ttlSRCash);
-        /*if (ttlSRCash != 0) {
-            if (hmFilter.containsKey("Retail Sale Cash Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Cash Total", currency, ttlSRCash));
-            }
-        }*/
         txtRetailDisc.setValue(ttlSRDisc);
-        /*if (ttlSRDisc != 0) {
-            if (hmFilter.containsKey("Retail Sale Discount Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Discount Total", currency, ttlSRDisc));
-            }
-        }*/
         txtRetailBalance.setValue(ttlSRBal);
-        /*if (ttlSRBal != 0) {
-            if (hmFilter.containsKey("Retail Sale Balance Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Balance Total", currency, ttlSRBal));
-            }
-        }*/
 
         txtPurchaseTotal.setValue(ttlPVou);
-        /*if (ttlPVou != 0) {
-            if (hmFilter.containsKey("Total Purchase")) {
-                listTtl.add(new SessionTtl("Total Purchase", currency, ttlPVou));
-            }
-        }*/
         txtPurPaid.setValue(ttlPCash);
-        /*if (ttlPCash != 0) {
-            if (hmFilter.containsKey("Total Purchase Cash")) {
-                listTtl.add(new SessionTtl("Total Purchase Cash", currency, ttlPCash));
-            }
-        }*/
         txtPurDiscount.setValue(ttlPDisc);
-        /*if (ttlPDisc != 0) {
-            if (hmFilter.containsKey("Total Purchase Discount")) {
-                listTtl.add(new SessionTtl("Total Purchase Discount", currency, ttlPDisc));
-            }
-        }*/
         txtPurBalance.setValue(ttlPBal);
-        /*if (ttlPBal != 0) {
-            if (hmFilter.containsKey("Total Purchase Balance")) {
-                listTtl.add(new SessionTtl("Total Purchase Balance", currency, ttlPBal));
-            }
-        }*/
 
- /*if (ttlPTax != 0) {
-            if (hmFilter.containsKey("Total Purchase Tax")) {
-                listTtl.add(new SessionTtl("Total Purchase Tax", currency, ttlPTax));
-            }
-        }*/
+        txtReturnInTotal.setValue(ttlRRiVou);
+        txtReturnInPaid.setValue(ttlRRiCash);
+        txtReturnInBalance.setValue(ttlRRiBal);
 
- /*if (ttlPE != 0) {
-            if (hmFilter.containsKey("Total Purchase Exp")) {
-                listTtl.add(new SessionTtl("Total Purchase Exp", currency, ttlPE));
-            }
-        }*/
-        txtReturnInTotal.setValue(ttlRiVou + ttlRRiVou);
-        /*if (ttlRiVou != 0) {
-            if (hmFilter.containsKey("Total Return In")) {
-                listTtl.add(new SessionTtl("Total Return In", currency, ttlRiVou));
-            } else if (hmFilter.containsKey("Whole Sale Return In Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Return In Total", currency, ttlRiVou));
-            }
-        }*/
-        txtReturnInPaid.setValue(ttlRiCash + ttlRRiCash);
-        /*if (ttlRiCash != 0) {
-            if (hmFilter.containsKey("Total Cash Return In")) {
-                listTtl.add(new SessionTtl("Total Cash Return In", currency, ttlRiCash * -1));
-            } else if (hmFilter.containsKey("Whole Sale Cash Return In Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Cash Return In Total", currency, ttlRiCash * -1));
-            }
-        }*/
-        txtReturnInBalance.setValue(ttlRiBal + ttlRRiBal);
-        /*if (ttlRiBal != 0) {
-            if (hmFilter.containsKey("Total Return In Balance")) {
-                listTtl.add(new SessionTtl("Total Return In Balance", currency, ttlRiBal));
-            } else if (hmFilter.containsKey("Whole Sale Return In Balance Total")) {
-                listTtl.add(new SessionTtl("Whole Sale Return In Balance Total", currency, ttlRiBal));
-            }
-        }*/
+        txtReturnInTotalW.setValue(ttlRiVou);
+        txtReturnInPaidW.setValue(ttlRiCash);
+        txtReturnInBalanceW.setValue(ttlRiBal);
 
- /*if (ttlRRiVou != 0) {
-            if (hmFilter.containsKey("Retail Sale Return In Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Return In Total", currency, ttlRRiVou));
-            }
-        }
-
-        if (ttlRRiCash != 0) {
-            if (hmFilter.containsKey("Retail Sale Return In Cash Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Return In Cash Total", currency, ttlRRiCash));
-            }
-        }
-
-        if (ttlRRiBal != 0) {
-            if (hmFilter.containsKey("Retail Sale Return In Balance Total")) {
-                listTtl.add(new SessionTtl("Retail Sale Return In Balance Total", currency, ttlRRiBal));
-            }
-        }*/
         txtReturnOutTotal.setValue(ttlRoVou);
-        /*if (ttlRoVou != 0) {
-            if (hmFilter.containsKey("Total Return Out")) {
-                listTtl.add(new SessionTtl("Total Return Out", currency, ttlRoVou));
-            }
-        }*/
         txtRetOutPaid.setValue(ttlRoCash);
-        /*if (ttlRoCash != 0) {
-            if (hmFilter.containsKey("Total Return Out Cash")) {
-                listTtl.add(new SessionTtl("Total Return Out Cash", currency, ttlRoCash));
-            }
-        }*/
         txtRetOutBal.setValue(ttlRoBal);
-        /*if (ttlRoBal != 0) {
-            if (hmFilter.containsKey("Total Return Out Balance")) {
-                listTtl.add(new SessionTtl("Total Return Out Balance", currency, ttlRoBal));
-            }
-        }*/
+
         txtCusPay.setValue(ttlCusPaid);
-        /*if (ttlCusPaid != 0) {
-            if (hmFilter.containsKey("Total Cus Paid")) {
-                listTtl.add(new SessionTtl("Total Cus Paid", currency, ttlCusPaid));
-            }
-        }*/
+        txtSupPay.setValue(ttlSupPaid);
 
- /*if (ttlSupPaid != 0) {
-            if (hmFilter.containsKey("Total Sup Paid")) {
-                listTtl.add(new SessionTtl("Total Sup Paid", currency, ttlSupPaid));
-            }
-        }
-
-        if (ttlExpIn != 0) {
-            if (hmFilter.containsKey("Total General Exp-In")) {
-                listTtl.add(new SessionTtl("Total General Exp-In", currency, ttlExpIn));
-            }
-        }
-
-        if (ttlExpOut != 0) {
-            if (hmFilter.containsKey("Total General Exp-Out")) {
-                listTtl.add(new SessionTtl("Total General Exp-Out", currency, ttlExpOut));
-            }
-        }
-
-        if (ttlCashIn != 0) {
-            if (hmFilter.containsKey("Total Cash In")) {
-                listTtl.add(new SessionTtl("Total Cash In", currency, ttlCashIn));
-            }
-        }
-
-        if (ttlCashOut != 0) {
-            if (hmFilter.containsKey("Total Cash Out")) {
-                listTtl.add(new SessionTtl("Total Cash Out", currency, ttlCashOut));
-            }
-        }
-
-        if (ttlCFFees != 0) {
-            if (hmFilter.containsKey("Total CF Fees")) {
-                listTtl.add(new SessionTtl("Total CF Fees", currency, ttlCFFees * -1));
-            }
-        }*/
         txtTotalCashIn.setValue(netCash);
-        /*if (netCash != 0) {
-            if (hmFilter.containsKey("Net Cash")) {
-                listTtl.add(new SessionTtl("Net Cash", currency, netCash));
-            }
-        }*/
 
-        //sTableModel.setListSessionTtl(listTtl);
-
-        /*ttlTable.setValueAt(ttlVou, 0, 4);
-         ttlTable.setValueAt(ttlPaid, 0, 6);
-         ttlTable.setValueAt(ttlDiscount, 0, 8);
-         ttlTable.setValueAt(ttlBalance, 0, 9);
-         ttlTable.setValueAt(ttlExpense, 0, 10);
-         ttlTable.setValueAt(ttlTaxAmt, 0, 11);*/
-        
         txtTranfSale.setValue(ttlTranfSale);
         txtTranfPurchase.setValue(ttlTranfPurchase);
     }
@@ -1542,10 +1295,10 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
     private void insertTotalToTamp(List<SessionTtl> listSessionTtl) {
         try {
             dao.execSql("delete from tmp_session_total where user_id = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
             for (SessionTtl sttl : listSessionTtl) {
                 TmpSessionTotal tst = new TmpSessionTotal(sttl.getDesc(), sttl.getCurrency(),
-                        sttl.getTtlPaid(), Global.loginUser.getUserId());
+                        sttl.getTtlPaid(), Global.machineId);
                 dao.save(tst);
             }
         } catch (Exception ex) {
@@ -1718,22 +1471,27 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             params.put("prm_send", cboSend.getSelectedItem().toString());
         }
 
-        List<SessionFilter> listSF = dao.findAllHSQL(
-                "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
-                + " and o.rptParameter <> '-' and o.apply = true"
-        );
-        if (listSF != null) {
-            if (!listSF.isEmpty()) {
-                for (SessionFilter sf : listSF) {
-                    if (sf.isApply()) {
-                        params.put(sf.getRptParameter(), "@");
-                    } else {
-                        params.put(sf.getRptParameter(), "-");
+        try {
+            List<SessionFilter> listSF = dao.findAllHSQL(
+                    "select o from SessionFilter o where o.key.progId = 'PHARFILTER'"
+                    + " and o.rptParameter <> '-' and o.apply = true"
+            );
+            if (listSF != null) {
+                if (!listSF.isEmpty()) {
+                    for (SessionFilter sf : listSF) {
+                        if (sf.isApply()) {
+                            params.put(sf.getRptParameter(), "@");
+                        } else {
+                            params.put(sf.getRptParameter(), "-");
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("SessionFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         if (!txtCusId.getText().trim().isEmpty()) {
             params.put("prm_cus_id", txtCusId.getText().trim());
         } else {
@@ -1747,7 +1505,7 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
             params.put("prm_tran_type", cboTranType.getSelectedItem().toString());
         }
 
-        String patientType = cboPatientType.getSelectedItem().toString();
+        String patientType = cboSaleMan.getSelectedItem().toString();
         if (patientType.equals("All")) {
             patientType = "-";
         }
@@ -1854,6 +1612,10 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
 
             } catch (SQLException ex) {
                 log.error("printSessionD : " + ex.getMessage());
+            } catch (Exception ex) {
+                log.error("printSessionD : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
 
@@ -1930,6 +1692,10 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         txtTranfPurchase.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
 
+    private void saveAudit() {
+
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1980,7 +1746,8 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         cboCusGroup = new javax.swing.JComboBox();
         jLabel16 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
-        cboPatientType = new javax.swing.JComboBox();
+        cboSaleMan = new javax.swing.JComboBox();
+        butSaveAudit = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblSession = new javax.swing.JTable();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -2023,8 +1790,6 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         txtRetOutPaid = new javax.swing.JFormattedTextField();
         jLabel35 = new javax.swing.JLabel();
         txtRetOutBal = new javax.swing.JFormattedTextField();
-        jLabel36 = new javax.swing.JLabel();
-        txtCusPay = new javax.swing.JFormattedTextField();
         jLabel37 = new javax.swing.JLabel();
         txtTotalCashIn = new javax.swing.JFormattedTextField();
         jSeparator1 = new javax.swing.JSeparator();
@@ -2038,6 +1803,18 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         jLabel39 = new javax.swing.JLabel();
         txtTranfSale = new javax.swing.JFormattedTextField();
         txtTranfPurchase = new javax.swing.JFormattedTextField();
+        jSeparator8 = new javax.swing.JSeparator();
+        jLabel40 = new javax.swing.JLabel();
+        txtReturnInTotalW = new javax.swing.JFormattedTextField();
+        jLabel41 = new javax.swing.JLabel();
+        txtReturnInPaidW = new javax.swing.JFormattedTextField();
+        jLabel42 = new javax.swing.JLabel();
+        txtReturnInBalanceW = new javax.swing.JFormattedTextField();
+        jLabel43 = new javax.swing.JLabel();
+        txtSupPay = new javax.swing.JFormattedTextField();
+        jSeparator9 = new javax.swing.JSeparator();
+        jLabel36 = new javax.swing.JLabel();
+        txtCusPay = new javax.swing.JFormattedTextField();
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Search"));
 
@@ -2120,7 +1897,7 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butClear)
                     .addComponent(butSearch))
@@ -2310,9 +2087,11 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     jLabel16.setText("Cus-Group ");
 
     jLabel14.setFont(Global.lableFont);
-    jLabel14.setText("Patient Type ");
+    jLabel14.setText("Sale Man");
 
-    cboPatientType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "OPD", "Inpatient" }));
+    cboSaleMan.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "OPD", "Inpatient" }));
+
+    butSaveAudit.setText("Save Audit");
 
     javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
     jPanel2.setLayout(jPanel2Layout);
@@ -2339,62 +2118,58 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(jPanel2Layout.createSequentialGroup()
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(jPanel2Layout.createSequentialGroup()
-                                    .addComponent(cboCondition, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(txtInvTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(cboPaidCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanel2Layout.createSequentialGroup()
-                                    .addGap(123, 123, 123)
-                                    .addComponent(jLabel15)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(cboCondition, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(butPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(butPrintD, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(txtInvTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(cboDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboTranType, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(butSaveAudit)
                         .addGroup(jPanel2Layout.createSequentialGroup()
-                            .addComponent(cboDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel10)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(cboSource, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(cboSend, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel2Layout.createSequentialGroup()
                             .addComponent(jLabel12)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(butToAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(jPanel2Layout.createSequentialGroup()
-                            .addComponent(cboTranType, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jLabel10)
+                            .addComponent(cboPaidCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(cboSource, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(butPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                            .addComponent(jLabel15)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(cboSend, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(butPrintD, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel11)
-                        .addComponent(jLabel16))
+                    .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(jPanel2Layout.createSequentialGroup()
-                            .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jLabel14)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(cboPatientType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(jPanel2Layout.createSequentialGroup()
-                            .addComponent(txtCusId, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 258, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                    .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(jLabel14)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(cboSaleMan, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addComponent(jLabel11)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(txtCusId, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 258, javax.swing.GroupLayout.PREFERRED_SIZE)))
             .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
 
     jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboLocation, cboMachine, cboUser});
 
-    jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel4, jLabel5, jLabel6});
+    jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel16, jLabel4, jLabel5, jLabel6});
 
     jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel12, jLabel13, jLabel15, jLabel7, jLabel8, jLabel9});
 
@@ -2433,25 +2208,23 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                     .addComponent(jLabel10)
                     .addComponent(cboSource, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cboSend, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addGap(9, 9, 9)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel11)
-                        .addComponent(txtCusId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel15)
-                        .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGroup(jPanel2Layout.createSequentialGroup()
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(butPrintD)))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addGap(7, 7, 7)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jLabel16)
-                .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(jLabel14)
-                .addComponent(cboPatientType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(jLabel11)
+                .addComponent(txtCusId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel15)
+                .addComponent(cboLGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(butPrintD))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel14)
+                    .addComponent(cboSaleMan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(butSaveAudit))
+            .addGap(0, 22, Short.MAX_VALUE))
     );
 
     tblSession.setFont(Global.textFont);
@@ -2464,213 +2237,313 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
 
     jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Total"));
 
+    jLabel17.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel17.setText("Whole Sale Total : ");
 
     txtWholeSaleTotal.setEditable(false);
     txtWholeSaleTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtWholeSaleTotal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel18.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel18.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel18.setText("Discount : ");
 
     txtWholeSaleDisc.setEditable(false);
     txtWholeSaleDisc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtWholeSaleDisc.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel19.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel19.setText("Paid : ");
 
     txtWholeSalePaid.setEditable(false);
     txtWholeSalePaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtWholeSalePaid.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel20.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel20.setText("Balance : ");
 
     txtWholeSaleBalance.setEditable(false);
     txtWholeSaleBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtWholeSaleBalance.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel21.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel21.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel21.setText("Retail Sale Total : ");
 
     txtRetailSaleTotal.setEditable(false);
     txtRetailSaleTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetailSaleTotal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel22.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel22.setText("Discount : ");
 
     txtRetailDisc.setEditable(false);
     txtRetailDisc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetailDisc.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel23.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel23.setText("Paid : ");
 
     txtRetailPaid.setEditable(false);
     txtRetailPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetailPaid.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel24.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel24.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel24.setText("Balance : ");
 
     txtRetailBalance.setEditable(false);
     txtRetailBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetailBalance.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel25.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel25.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    jLabel25.setText("Return In Total : ");
+    jLabel25.setText(" Retail Sale Return In : ");
 
     txtReturnInTotal.setEditable(false);
     txtReturnInTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInTotal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel26.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel26.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel26.setText("Paid : ");
 
     txtReturnInPaid.setEditable(false);
     txtReturnInPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInPaid.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel27.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel27.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel27.setText("Balance : ");
 
     txtReturnInBalance.setEditable(false);
     txtReturnInBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInBalance.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel28.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel28.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel28.setText("Purchase Total : ");
 
     txtPurchaseTotal.setEditable(false);
     txtPurchaseTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtPurchaseTotal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel29.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel29.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel29.setText("Discount : ");
 
     txtPurDiscount.setEditable(false);
     txtPurDiscount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtPurDiscount.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel30.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel30.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel30.setText("Paid : ");
 
     txtPurPaid.setEditable(false);
     txtPurPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtPurPaid.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel31.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel31.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel31.setText("Balance : ");
 
     txtPurBalance.setEditable(false);
     txtPurBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtPurBalance.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel32.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel32.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel32.setText("Return Out Total : ");
 
     txtReturnOutTotal.setEditable(false);
     txtReturnOutTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnOutTotal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel33.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel33.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel33.setText("Discount : ");
 
     txtRetOutDisc.setEditable(false);
     txtRetOutDisc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetOutDisc.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel34.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel34.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel34.setText("Paid : ");
 
     txtRetOutPaid.setEditable(false);
     txtRetOutPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetOutPaid.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel35.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel35.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel35.setText("Balance : ");
 
     txtRetOutBal.setEditable(false);
     txtRetOutBal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtRetOutBal.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
-    jLabel36.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-    jLabel36.setText("Customer Pay : ");
-
-    txtCusPay.setEditable(false);
-    txtCusPay.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-
+    jLabel37.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel37.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel37.setText("Total Cash In : ");
 
     txtTotalCashIn.setEditable(false);
     txtTotalCashIn.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtTotalCashIn.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
+    jLabel38.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel38.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel38.setText("Tranf-Sale : ");
 
+    jLabel39.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
     jLabel39.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
     jLabel39.setText("Tranf-Purchase : ");
 
     txtTranfSale.setEditable(false);
     txtTranfSale.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtTranfSale.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
     txtTranfPurchase.setEditable(false);
     txtTranfPurchase.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtTranfPurchase.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+
+    jLabel40.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel40.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel40.setText("Whole Sale Return In : ");
+
+    txtReturnInTotalW.setEditable(false);
+    txtReturnInTotalW.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInTotalW.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+
+    jLabel41.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel41.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel41.setText("Paid : ");
+
+    txtReturnInPaidW.setEditable(false);
+    txtReturnInPaidW.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInPaidW.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+
+    jLabel42.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel42.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel42.setText("Balance : ");
+
+    txtReturnInBalanceW.setEditable(false);
+    txtReturnInBalanceW.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtReturnInBalanceW.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+
+    jLabel43.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel43.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel43.setText("Supplier Pay : ");
+
+    txtSupPay.setEditable(false);
+    txtSupPay.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtSupPay.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+
+    jLabel36.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
+    jLabel36.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+    jLabel36.setText("Customer Pay : ");
+
+    txtCusPay.setEditable(false);
+    txtCusPay.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+    txtCusPay.setFont(new java.awt.Font("Tahoma", 0, 13)); // NOI18N
 
     javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
     jPanel3.setLayout(jPanel3Layout);
     jPanel3Layout.setHorizontalGroup(
         jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
         .addGroup(jPanel3Layout.createSequentialGroup()
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(jLabel20, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel19, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel18, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 91, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.TRAILING)
-                .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING)
-                .addComponent(jSeparator3)
-                .addComponent(jSeparator4)
-                .addComponent(jSeparator5)
-                .addGroup(jPanel3Layout.createSequentialGroup()
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, 276, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jSeparator7, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(0, 0, Short.MAX_VALUE))
-                .addGroup(jPanel3Layout.createSequentialGroup()
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jLabel39, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel38, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel37, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel36, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel35, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel34, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel33, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel32, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel31, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel30, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel29, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel28, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel27, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel26, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel25, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel24, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel23, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel22, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel21, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel20, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel19, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel18, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel17, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(txtWholeSaleTotal)
-                        .addComponent(txtWholeSaleDisc)
-                        .addComponent(txtWholeSalePaid)
-                        .addComponent(txtWholeSaleBalance)
-                        .addComponent(txtRetailSaleTotal)
-                        .addComponent(txtRetailDisc)
-                        .addComponent(txtRetailPaid)
-                        .addComponent(txtRetailBalance)
-                        .addComponent(txtReturnInTotal)
-                        .addComponent(txtReturnInPaid)
-                        .addComponent(txtReturnInBalance)
-                        .addComponent(txtPurchaseTotal)
-                        .addComponent(txtPurDiscount)
-                        .addComponent(txtPurPaid)
-                        .addComponent(txtPurBalance)
-                        .addComponent(txtReturnOutTotal)
-                        .addComponent(txtRetOutDisc)
-                        .addComponent(txtRetOutPaid)
-                        .addComponent(txtRetOutBal)
-                        .addComponent(txtCusPay)
-                        .addComponent(txtTotalCashIn)
-                        .addComponent(txtTranfSale)
-                        .addComponent(txtTranfPurchase))))
-            .addContainerGap())
+                .addComponent(txtWholeSaleTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtWholeSaleDisc, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtWholeSalePaid, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtWholeSaleBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)))
+        .addComponent(jSeparator2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addComponent(jSeparator3, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addComponent(jSeparator4, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addComponent(jSeparator5, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addGroup(jPanel3Layout.createSequentialGroup()
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(jLabel35, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel34, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel33, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel32, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel31, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel30, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel29, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel28, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel27, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel26, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel25, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel24, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel23, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel22, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel21, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(txtRetailSaleTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetailDisc, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetailPaid, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetailBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtReturnInTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtReturnInPaid, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtReturnInBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtPurchaseTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtPurDiscount, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtPurPaid, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtPurBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtReturnOutTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetOutDisc, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetOutPaid, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtRetOutBal, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)))
+        .addComponent(jSeparator8, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addGroup(jPanel3Layout.createSequentialGroup()
+            .addGap(3, 3, 3)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jLabel40, javax.swing.GroupLayout.Alignment.TRAILING)
+                .addComponent(jLabel41, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel42, javax.swing.GroupLayout.Alignment.TRAILING))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(txtReturnInTotalW, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+                .addComponent(txtReturnInPaidW, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
+                .addComponent(txtReturnInBalanceW, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)))
+        .addGroup(jPanel3Layout.createSequentialGroup()
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(jLabel39, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel38, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel37, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(txtTotalCashIn, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtTranfSale, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(txtTranfPurchase, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)))
+        .addComponent(jSeparator6, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addComponent(jSeparator7, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addGroup(jPanel3Layout.createSequentialGroup()
+            .addComponent(jLabel43)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(txtSupPay, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE))
+        .addComponent(jSeparator9, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+        .addGroup(jPanel3Layout.createSequentialGroup()
+            .addComponent(jLabel36, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(txtCusPay))
     );
 
-    jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jSeparator6, jSeparator7});
+    jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel17, jLabel18, jLabel19, jLabel20, jLabel21, jLabel22, jLabel23, jLabel24, jLabel25, jLabel26, jLabel27, jLabel28, jLabel29, jLabel30, jLabel31, jLabel32, jLabel33, jLabel34, jLabel35, jLabel36, jLabel37, jLabel38, jLabel39, jLabel40, jLabel41, jLabel42, jLabel43});
 
     jPanel3Layout.setVerticalGroup(
         jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2693,7 +2566,21 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                 .addComponent(txtWholeSaleBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(1, 1, 1)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel40)
+                .addComponent(txtReturnInTotalW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel41)
+                .addComponent(txtReturnInPaidW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel42)
+                .addComponent(txtReturnInBalanceW, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(jSeparator8, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel21)
                 .addComponent(txtRetailSaleTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2761,13 +2648,19 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                 .addComponent(txtRetOutBal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(jSeparator5, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(1, 1, 1)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel36)
                 .addComponent(txtCusPay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(jSeparator6, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(1, 1, 1)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jLabel43)
+                .addComponent(txtSupPay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(jSeparator9, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel37)
                 .addComponent(txtTotalCashIn, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2781,7 +2674,7 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jLabel39)
                 .addComponent(txtTranfPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addContainerGap(9, Short.MAX_VALUE))
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
 
     jScrollPane3.setViewportView(jPanel3);
@@ -2792,14 +2685,14 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
             .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                .addComponent(jScrollPane1)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 588, Short.MAX_VALUE)))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 398, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 603, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 345, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addContainerGap())
     );
     layout.setVerticalGroup(
@@ -3068,6 +2961,7 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private javax.swing.JButton butClear;
     private javax.swing.JButton butPrint;
     private javax.swing.JButton butPrintD;
+    private javax.swing.JButton butSaveAudit;
     private javax.swing.JButton butSearch;
     private javax.swing.JButton butToAcc;
     private javax.swing.JComboBox cboCondition;
@@ -3078,7 +2972,7 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private javax.swing.JComboBox cboLocation;
     private javax.swing.JComboBox cboMachine;
     private javax.swing.JComboBox cboPaidCurrency;
-    private javax.swing.JComboBox cboPatientType;
+    private javax.swing.JComboBox cboSaleMan;
     private javax.swing.JComboBox cboSend;
     private javax.swing.JComboBox cboSession;
     private javax.swing.JComboBox cboSource;
@@ -3118,6 +3012,10 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private javax.swing.JLabel jLabel38;
     private javax.swing.JLabel jLabel39;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel40;
+    private javax.swing.JLabel jLabel41;
+    private javax.swing.JLabel jLabel42;
+    private javax.swing.JLabel jLabel43;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
@@ -3135,6 +3033,8 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private javax.swing.JSeparator jSeparator5;
     private javax.swing.JSeparator jSeparator6;
     private javax.swing.JSeparator jSeparator7;
+    private javax.swing.JSeparator jSeparator8;
+    private javax.swing.JSeparator jSeparator9;
     private javax.swing.JTable tblSession;
     private javax.swing.JTextField txtCusId;
     private javax.swing.JTextField txtCusName;
@@ -3153,9 +3053,13 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     private javax.swing.JFormattedTextField txtRetailPaid;
     private javax.swing.JFormattedTextField txtRetailSaleTotal;
     private javax.swing.JFormattedTextField txtReturnInBalance;
+    private javax.swing.JFormattedTextField txtReturnInBalanceW;
     private javax.swing.JFormattedTextField txtReturnInPaid;
+    private javax.swing.JFormattedTextField txtReturnInPaidW;
     private javax.swing.JFormattedTextField txtReturnInTotal;
+    private javax.swing.JFormattedTextField txtReturnInTotalW;
     private javax.swing.JFormattedTextField txtReturnOutTotal;
+    private javax.swing.JFormattedTextField txtSupPay;
     private javax.swing.JFormattedTextField txtTo;
     private javax.swing.JFormattedTextField txtTotalCashIn;
     private javax.swing.JFormattedTextField txtTranfPurchase;

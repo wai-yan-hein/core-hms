@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * PackingTemplateSetup.java
  *
  * Created on May 6, 2012, 8:58:57 AM
@@ -51,9 +51,10 @@ import org.jdesktop.swingbinding.SwingBindings;
  * @author winswe
  */
 public class PackingTemplateSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(PackingTemplateSetup.class.getName());
-    private java.util.List<PackingTemplate> listPackingTemplate =
-            new java.util.ArrayList();
+    private java.util.List<PackingTemplate> listPackingTemplate
+            = new java.util.ArrayList();
     private JComboBox cboUnit = new JComboBox();
     private PackingTemplate currPackingTemplate = new PackingTemplate();
     private final AbstractDataAccess dao = Global.dao;
@@ -115,7 +116,13 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboUnit, dao.findAll("ItemUnit"));
+        try {
+            BindingUtil.BindCombo(cboUnit, dao.findAll("ItemUnit"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {
@@ -160,7 +167,7 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblRelation.getCellEditor() != null){
+                if (tblRelation.getCellEditor() != null) {
                     tblRelation.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -195,13 +202,13 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
 
     public void stopCellEditing(JTable table) {
         try {
-            if(table.getCellEditor() != null){
+            if (table.getCellEditor() != null) {
                 table.getCellEditor().stopCellEditing();
             }
         } catch (Exception ex) {
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -337,8 +344,8 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
             stopCellEditing(tblRelation);
             if (tableModel.isValidEntry()) {
                 currPackingTemplate.setRelStr(txtRelationString.getText());
-                List<PackingTemplateDetail> listDetail =
-                        tableModel.getListTemplate();
+                List<PackingTemplateDetail> listDetail
+                        = tableModel.getListTemplate();
                 currPackingTemplate.setLstPackingTemplateDetail(listDetail);
 
                 dao.save(currPackingTemplate);
@@ -373,12 +380,18 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
     }//GEN-LAST:event_butDeleteActionPerformed
 
     private void initTableRelation() {
-        tblRelation.setModel(tableModel);
-        addTableModelListener();
-        tblRelation.getColumnModel().getColumn(0).setCellEditor(
-                new BestTableCellEditor());
-        tblRelation.getColumnModel().getColumn(1).setCellEditor(
-                new TableUnitCellEditor(dao.findAll("ItemUnit")));
+        try {
+            tblRelation.setModel(tableModel);
+            addTableModelListener();
+            tblRelation.getColumnModel().getColumn(0).setCellEditor(
+                    new BestTableCellEditor());
+            tblRelation.getColumnModel().getColumn(1).setCellEditor(
+                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
+        } catch (Exception ex) {
+            log.error("initTableRelation : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addTableModelListener() {
@@ -391,28 +404,34 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
     }
 
     private void initTableTemplate() {
-        listPackingTemplate = ObservableCollections.observableList(dao.findAll("PackingTemplate"));
+        try {
+            listPackingTemplate = ObservableCollections.observableList(dao.findAll("PackingTemplate"));
 
-        JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
-                listPackingTemplate, tblTemplate);
-        ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${relStr}"));
-        columnBinding.setColumnName("Relation String");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        System.out.println("Before bind.");
-        jTableBinding.bind();
+            JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
+                    listPackingTemplate, tblTemplate);
+            ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${relStr}"));
+            columnBinding.setColumnName("Relation String");
+            columnBinding.setColumnClass(String.class);
+            columnBinding.setEditable(false);
+            System.out.println("Before bind.");
+            jTableBinding.bind();
 
-        tblTemplate.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblTemplate.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        int row = tblTemplate.getSelectedRow();
-                        if (row >= 0) {
-                            setCurrPackingTemplate(listPackingTemplate.get(tblTemplate.convertRowIndexToModel(row)));
-                        }
+            tblTemplate.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblTemplate.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    int row = tblTemplate.getSelectedRow();
+                    if (row >= 0) {
+                        setCurrPackingTemplate(listPackingTemplate.get(tblTemplate.convertRowIndexToModel(row)));
                     }
-                });
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTableTemplate : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;

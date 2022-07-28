@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalanceSummary" pageWidth="595" pageHeight="850" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
 	<property name="ireport.zoom" value="1.0514816984441842"/>
 	<property name="ireport.x" value="0"/>
@@ -25,9 +24,9 @@
 	<parameter name="prm_from" class="java.lang.String"/>
 	<parameter name="prm_to" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select bal.trader_id, bal.currency_id, bal.cus_type, vcs.trader_name,
+		<![CDATA[select if(ifnull(vcs.sys_p,'-')='Y', vcs.stu_no, bal.trader_id) as trader_id, bal.currency_id, bal.cus_type, vcs.trader_name,
 		   sum(bal.opening) opening,
-           sum(bal.sale_amt) sale_amt, sum(bal.pur_amt) pur_amt, ifnull(sum(ifnull(bal.ret_in_amt,0)),0) ret_in_amt, 
+           sum(bal.sale_amt) sale_amt, sum(bal.pur_amt) pur_amt, ifnull(sum(ifnull(bal.ret_in_amt,0)),0) ret_in_amt,
 		   sum(bal.ret_out_amt) ret_out_amt, sum(bal.pay_amt) pay_amt,
           sum(bal.opening+bal.pur_amt+bal.ret_in_amt+bal.sale_amt+bal.ret_out_amt+bal.pay_amt) balance
       from (select un.trader_id, un.currency_id, un.tran_date tran_date,
@@ -46,7 +45,7 @@
                            end as amount,
                            ttbf.curr_id currency_id, vcs.discriminator, 2 as sort_order
                       from tmp_trader_bal_date ttbf, v_cs vcs
-                     where ttbf.trader_id = vcs.trader_id and ttbf.user_id = $P{user_id} 
+                     where ttbf.trader_id = vcs.trader_id and ttbf.user_id = $P{user_id}
 					 union all
                     select sh.cus_id trader_id, sh.sale_date tran_date, 'Sale' tran_option,
                            case vcs.discriminator when 'C' then sum(ifnull(sh.balance,0))
@@ -72,7 +71,7 @@
                      union all
 					select th.sup_id, th.tran_date, 'Purchase' tran_option,
 						   sum(ifnull(vou_total,0)) amount, 'MMK' currency_id, vcs.discriminator, 2 as sort_order
-					  from transfer_his th, tmp_trader_bal_filter ttbf, v_cs vcs 
+					  from transfer_his th, tmp_trader_bal_filter ttbf, v_cs vcs
 				     where th.deleted = false and th.tran_date between $P{prm_from} and  $P{prm_to}
 					   and 'MMK' = ttbf.currency
 					   and th.sup_id = ttbf.trader_id and ttbf.trader_id = vcs.trader_id

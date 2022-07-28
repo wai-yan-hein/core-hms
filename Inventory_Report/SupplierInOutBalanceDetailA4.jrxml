@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalanceSummary" pageWidth="595" pageHeight="850" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
 	<property name="ireport.zoom" value="1.0514816984441842"/>
 	<property name="ireport.x" value="0"/>
@@ -24,7 +23,7 @@
 	<parameter name="compName" class="java.lang.String"/>
 	<parameter name="prm_currency" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select tcio.trader_id, v_cs.trader_name, tcio.currency_id, tcio.tran_date, tcio.opening,tcio.sale_amt, tcio.pur_amt, tcio.ret_in_amt, tcio.ret_out_amt, tcio.pay_amt, tcio.balance,curr.cur_name,
+		<![CDATA[select if(ifnull(v_cs.sys_p,'-')='Y', v_cs.stu_no, tcio.trader_id) as trader_id, v_cs.trader_name, tcio.currency_id, tcio.tran_date, tcio.opening,tcio.sale_amt, tcio.pur_amt, tcio.ret_in_amt, tcio.ret_out_amt, tcio.pay_amt, tcio.balance,curr.cur_name,
 (tcio.pur_amt+tcio.ret_in_amt) out_total,
 (tcio.sale_amt+tcio.ret_out_amt) in_total, tcio.trader_type,tcio.vou_no
 from tmp_cus_in_out1 tcio, v_cs, currency curr

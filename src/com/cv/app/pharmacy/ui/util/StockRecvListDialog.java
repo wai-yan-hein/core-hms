@@ -52,7 +52,7 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form StockRecvListDialog
      */
@@ -75,17 +75,17 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
         addSelectionListenerVoucher();
 
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
             }
         }
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -95,7 +95,13 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -114,7 +120,7 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblCodeFilter.getCellEditor() != null){
+                if (tblCodeFilter.getCellEditor() != null) {
                     tblCodeFilter.getCellEditor().stopCellEditing();
                 }
                 //No entering medCode, only press F3
@@ -126,7 +132,7 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
                     log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
                 }
             } catch (Exception ex) {
-                
+
             }
         }
     };
@@ -224,7 +230,7 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
                 + "join location l on sh.location_id = l.location_id \n"
                 + "where sh.receive_date between '" + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtTo.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFrom.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtTo.getText()));
 
@@ -298,7 +304,7 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
 
         return listVS;
     }
-    
+
     private void addSelectionListenerVoucher() {
         //Define table selection model to single row selection.
         tblRecvList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -331,26 +337,32 @@ public class StockRecvListDialog extends javax.swing.JDialog implements Selectio
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockRecvSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockRecvSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("StockRecvSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("StockRecvSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFrom.setText(DateUtil.getTodayDateStr());
-            txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFrom.setText(DateUtil.getTodayDateStr());
+                txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                txtRemark.setText(vouFilter.getRemark());
             }
-
-            txtRemark.setText(vouFilter.getRemark());
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

@@ -40,8 +40,14 @@ public class UserPropSetup extends javax.swing.JPanel {
     }
 
     private void setProperties() {
-        List<UserProperty> listProperties = dao.findAll("UserProperty");
-        tableModel.setListUserProperty(listProperties);
+        try {
+            List<UserProperty> listProperties = dao.findAll("UserProperty");
+            tableModel.setListUserProperty(listProperties);
+        } catch (Exception ex) {
+            log.error("setProperties : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Action actionItemDelete = new AbstractAction() {

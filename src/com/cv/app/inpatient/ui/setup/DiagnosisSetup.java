@@ -34,6 +34,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class DiagnosisSetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(DiagnosisSetup.class.getName());
     private final DiagnosisTableModel tableModel = new DiagnosisTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
@@ -41,7 +42,7 @@ public class DiagnosisSetup extends javax.swing.JDialog {
     private Diagnosis currDiag = new Diagnosis();
     private BestAppFocusTraversalPolicy focusPolicy;
     private TableRowSorter<TableModel> sorter;
-    
+
     /**
      * Creates new form CitySetup
      */
@@ -55,7 +56,7 @@ public class DiagnosisSetup extends javax.swing.JDialog {
         sorter = new TableRowSorter(tblCity.getModel());
         tblCity.setRowSorter(sorter);
         lblStatus.setText("NEW");
-        
+
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
         int y = (screen.height - this.getHeight()) / 2;
@@ -65,21 +66,27 @@ public class DiagnosisSetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListDiag(dao.findAll("Diagnosis"));
-        tblCity.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblCity.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblCity.getSelectedRow() >= 0) {
-                    selectRow = tblCity.convertRowIndexToModel(tblCity.getSelectedRow());
-                }
+        try {
+            tableModel.setListDiag(dao.findAll("Diagnosis"));
+            tblCity.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblCity.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblCity.getSelectedRow() >= 0) {
+                        selectRow = tblCity.convertRowIndexToModel(tblCity.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getDiagnosis(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getDiagnosis(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.equals("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setRecord(Diagnosis diagnosis) {
@@ -151,9 +158,9 @@ public class DiagnosisSetup extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currDiag);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addDiag(currDiag);
-                }else{
+                } else {
                     tableModel.setDiagnosis(selectRow, currDiag);
                 }
                 clear();
@@ -170,7 +177,7 @@ public class DiagnosisSetup extends javax.swing.JDialog {
         }
     }
 
-    private void delete(){
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -195,6 +202,7 @@ public class DiagnosisSetup extends javax.swing.JDialog {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

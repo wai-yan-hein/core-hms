@@ -137,7 +137,7 @@ public class ExperienceRoyale extends DesertBluer {
                 "ScrollBar.thumbHighlight",
                 getPrimaryControlHighlight(),
                 PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY,
-                new Integer(22),
+                22,
                 };
         table.putDefaults(uiDefaults);
     }

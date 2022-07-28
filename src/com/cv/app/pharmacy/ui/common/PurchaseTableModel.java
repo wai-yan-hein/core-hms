@@ -44,7 +44,7 @@ public class PurchaseTableModel extends AbstractTableModel {
     private final AbstractDataAccess dao;
     private final MedicineUP medUp;
     private final MedInfo medInfo;
-    private final ChargeType defaultChargeType;
+    private ChargeType defaultChargeType;
     private String deletedList;
     private Location location;
     private JLabel lblItemBrand;
@@ -67,7 +67,13 @@ public class PurchaseTableModel extends AbstractTableModel {
         this.dao = dao;
         this.medUp = medUp;
         this.medInfo = medInfo;
-        defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        try {
+            defaultChargeType = (ChargeType) dao.find(ChargeType.class, 1);
+        } catch (Exception ex) {
+            log.error("PurchaseTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable parent) {
@@ -138,12 +144,10 @@ public class PurchaseTableModel extends AbstractTableModel {
                         } else {
                             return record.getMedId().getShortName();
                         }
+                    } else if (record.getMedId() == null) {
+                        return null;
                     } else {
-                        if (record.getMedId() == null) {
-                            return null;
-                        } else {
-                            return record.getMedId().getMedId();
-                        }
+                        return record.getMedId().getMedId();
                     }
                 case 1: //Medicine Name
                     if (record.getMedId() == null) {
@@ -282,26 +286,22 @@ public class PurchaseTableModel extends AbstractTableModel {
                 case 7: //Discount1
                     if (value == null) {
                         record.setDiscount1(null);
+                    } else if (value.toString().trim().isEmpty()) {
+                        record.setDiscount1(null);
                     } else {
-                        if (value.toString().trim().isEmpty()) {
-                            record.setDiscount1(null);
-                        } else {
-                            String tmpDiscStr = NumberUtil.getEngNumber(value.toString().trim());
-                            record.setDiscount1(Double.valueOf(tmpDiscStr));
-                        }
+                        String tmpDiscStr = NumberUtil.getEngNumber(value.toString().trim());
+                        record.setDiscount1(Double.valueOf(tmpDiscStr));
                     }
                     //parent.setColumnSelectionInterval(8, 8);
                     break;
                 case 8: //Discount2
                     if (value == null) {
                         record.setDiscount2(null);
+                    } else if (value.toString().trim().isEmpty()) {
+                        record.setDiscount2(null);
                     } else {
-                        if (value.toString().trim().isEmpty()) {
-                            record.setDiscount2(null);
-                        } else {
-                            String tmpDiscStr = NumberUtil.getEngNumber(value.toString().trim());
-                            record.setDiscount2(Double.valueOf(tmpDiscStr));
-                        }
+                        String tmpDiscStr = NumberUtil.getEngNumber(value.toString().trim());
+                        record.setDiscount2(Double.valueOf(tmpDiscStr));
                     }
                     //parent.setRowSelectionInterval(row + 1, row + 1);
                     //parent.setColumnSelectionInterval(9, 9);
@@ -309,12 +309,12 @@ public class PurchaseTableModel extends AbstractTableModel {
                 case 9: //FOC
                     if (value == null) {
                         record.setFocQty(null);
-                        record.setFocSmallestQty(new Float(0));
+                        record.setFocSmallestQty(0f);
                     } else {
                         String tmpFocStr = NumberUtil.getEngNumber(value.toString().trim());
                         if (NumberUtil.NZeroFloat(tmpFocStr) == 0) {
                             record.setFocQty(null);
-                            record.setFocSmallestQty(new Float(0));
+                            record.setFocSmallestQty(0f);
                         } else {
                             record.setFocQty(Float.valueOf(tmpFocStr));
                         }
@@ -550,7 +550,7 @@ public class PurchaseTableModel extends AbstractTableModel {
             if (pdh.getChargeId() != null) {
                 chargeType = pdh.getChargeId().getChargeTypeId();
             }
-            
+
             if (chargeType == 2) {
                 pdh.setUnitCost(NumberUtil.NZero(pdh.getPrice())
                         + NumberUtil.NZero(pdh.getItemExpense()));
@@ -604,11 +604,9 @@ public class PurchaseTableModel extends AbstractTableModel {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Price must be positive value.",
                             "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
                     status = false;
-                } else {
-                    if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                        record.setUniqueId(row + 1);
-                        row++;
-                    }
+                } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                    record.setUniqueId(row + 1);
+                    row++;
                 }
             }
         }
@@ -619,6 +617,7 @@ public class PurchaseTableModel extends AbstractTableModel {
             status = false;
         }
 
+        maxUniqueId = row;
         parent.setRowSelectionInterval(0, 0);
 
         return status;
@@ -787,11 +786,10 @@ public class PurchaseTableModel extends AbstractTableModel {
 
     private void setPurCost(PurDetailHis record) {
         String medId = record.getMedId().getMedId();
-
-        HashMap<String, ItemUnit> hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
         double smallestCost = 0;
 
         try {
+            HashMap<String, ItemUnit> hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
             String strLatestPur = "select vp.med_id, pur_unit,((ifnull(pur_unit_cost,0)*ifnull(pur_qty,0))/ifnull(pur_smallest_qty,1)) smallest_cost,"
                     + "pur_price, pur_unit_cost from v_purchase vp, (select med_id, "
                     + "max(pur_date) pur_date from v_purchase where deleted = false "

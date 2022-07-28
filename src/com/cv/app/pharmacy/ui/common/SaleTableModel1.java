@@ -47,7 +47,7 @@ public class SaleTableModel1 extends AbstractTableModel {
     static Logger log = Logger.getLogger(SaleTableModel1.class.getName());
     private List<SaleDetailHis> listDetail;
     private String[] columnNames = {"Code", "Description", "Relation-Str",
-        "Exp-Date", "Qty", "Cost", "Sale Price", "Discount", "FOC",
+        "Qty", "Cost", "Sale Price", "Discount", "FOC",
         "Amount", "Difference", "STK-Balance"};
     private JTable parent;
     private AbstractDataAccess dao;
@@ -133,23 +133,23 @@ public class SaleTableModel1 extends AbstractTableModel {
                 return false;
             case 2: //Relation-Str
                 return false;
-            case 3: //Exp-Date
+            /*case 3: //Exp-Date
+                return record.getMedId().getMedId() != null;*/
+            case 3: //Qty
                 return record.getMedId().getMedId() != null;
-            case 4: //Qty
-                return record.getMedId().getMedId() != null;
-            case 5: //Cost Price
+            case 4: //Cost Price
                 return false;
-            case 6: //Sale Price
+            case 5: //Sale Price
                 return Util1.hashPrivilege("SalePriceChange");
-            case 7: //Discount
+            case 6: //Discount
                 return record.getMedId().getMedId() != null;
-            case 8: //FOC
+            case 7: //FOC
                 return record.getMedId().getMedId() != null;
-            case 9: //Amount
+            case 8: //Amount
                 return false;
-            case 10: //Difference
+            case 9: //Difference
                 return NumberUtil.NZero(record.getDifference()) < 0;
-            case 11: //Balance
+            case 10: //Balance
                 return false;
             default:
                 return false;
@@ -165,24 +165,24 @@ public class SaleTableModel1 extends AbstractTableModel {
                 return String.class;
             case 2: //Relation-Str
                 return String.class;
-            case 3: //Exp-Date
+            /*case 3: //Exp-Date
                 //return Date.class;
+                return String.class;*/
+            case 3: //Qty
                 return String.class;
-            case 4: //Qty
+            case 4: //Cost Price
+                return Double.class;
+            case 5: //Sale Price
+                return Double.class;
+            case 6: //Discount
+                return Double.class;
+            case 7: //FOC
                 return String.class;
-            case 5: //Cost Price
+            case 8: //Amount
                 return Double.class;
-            case 6: //Sale Price
+            case 9: //Difference
                 return Double.class;
-            case 7: //Discount
-                return Double.class;
-            case 8: //FOC
-                return String.class;
-            case 9: //Amount
-                return Double.class;
-            case 10: //Difference
-                return Double.class;
-            case 11: //Balance
+            case 10: //Balance
                 return String.class;
             default:
                 return Object.class;
@@ -227,31 +227,31 @@ public class SaleTableModel1 extends AbstractTableModel {
                 } else {
                     return record.getMedId().getRelStr();
                 }
-            case 3: //Exp-Date
-                return DateUtil.toDateStr(record.getExpireDate());
-            case 4: //Qty
+            /*case 3: //Exp-Date
+                return DateUtil.toDateStr(record.getExpireDate());*/
+            case 3: //Qty
                 if (record.getUnitId() != null) {
                     return String.format("%.0f", record.getQuantity()) + " " + record.getUnitId();
                 } else {
                     return record.getQuantity();
                 }
-            case 5: //Cost Price
+            case 4: //Cost Price
                 return record.getCostPrice();
-            case 6: //Sale Price
+            case 5: //Sale Price
                 return record.getPrice();
-            case 7: //Discount
+            case 6: //Discount
                 return record.getDiscount();
-            case 8: //FOC
+            case 7: //FOC
                 if (record.getFocUnit() != null) {
                     return String.format("%.0f", record.getFocQty()) + " " + record.getFocUnit();
                 } else {
                     return record.getFocQty();
                 }
-            case 9: //Amount
+            case 8: //Amount
                 return record.getAmount();
-            case 10: //
+            case 9: //
                 return record.getDifference();
-            case 11: //Balance
+            case 10: //Balance
                 return record.getBalQtyInString();
             default:
                 return new Object();
@@ -310,14 +310,14 @@ public class SaleTableModel1 extends AbstractTableModel {
                 case 2: //Relation-Str
                     //record.getMedId().setRelStr((String) value);
                     break;
-                case 3: //Exp-Date
+                /*case 3: //Exp-Date
                     if (value != null) {
                         record.setExpireDate(DateUtil.toDate(value, "dd/MM/yyyy"));
                     } else {
                         record.setExpireDate(null);
                     }
-                    break;
-                case 4: //Qty
+                    break;*/
+                case 3: //Qty
                     float qty = NumberUtil.NZeroFloat(value);
                     record.setQuantity(qty);
                     parent.setColumnSelectionInterval(5, 5);
@@ -427,9 +427,9 @@ public class SaleTableModel1 extends AbstractTableModel {
                     //fireTableCellUpdated(row, 12);
                     break;
 
-                case 5: //Cost Price
+                case 4: //Cost Price
                     break;
-                case 6: //Sale Price
+                case 5: //Sale Price
                     if (Util1.getPropValue("system.sale.price.choose").equals("Y")) {
                         String medId = listDetail.get(parent.getSelectedRow()).getMedId().getMedId();
                         String key = medId + "-" + medUp.getUnitList(medId).get(0).getItemUnitCode();
@@ -463,17 +463,17 @@ public class SaleTableModel1 extends AbstractTableModel {
                                 break;
                             default:
                                 //need to delete that row
-                                parent.setColumnSelectionInterval(7, 7);
+                                parent.setColumnSelectionInterval(6, 6);
                                 //delete(row);
                                 break;
                         }
                     }
                     break;
-                case 7: //Discount
+                case 6: //Discount
                     record.setDiscount(NumberUtil.NZero(value));
                     //parent.setColumnSelectionInterval(8, 8);
                     break;
-                case 8: //FOC
+                case 7: //FOC
                     record.setFocQty(NumberUtil.NZeroFloat(value));
 
                     String medId1 = listDetail.get(parent.getSelectedRow()).getMedId().getMedId();
@@ -504,12 +504,12 @@ public class SaleTableModel1 extends AbstractTableModel {
                     parent.setRowSelectionInterval(row + 1, row + 1);
                     parent.setColumnSelectionInterval(0, 0);
                     break;
-                case 9: //Amount
+                case 8: //Amount
                     //record.setAmount(Double.valueOf(value.toString()));
                     break;
-                case 10: //Difference
+                case 9: //Difference
                     break;
-                case 11: //Balance
+                case 10: //Balance
                     break;
                 default:
                     System.out.println("invalid index");
@@ -622,7 +622,7 @@ public class SaleTableModel1 extends AbstractTableModel {
 
             record.setUnitId(iu);
             record.setPrice(medUp.getPrice(key, getCusType(), NumberUtil.NZeroInt(record.getQuantity())));
-            record.setQuantity(new Float(1));
+            record.setQuantity(1f);
             record.setAmount(NumberUtil.NZero(record.getPrice()) * record.getQuantity());
             record.setSaleSmallestQty(record.getQuantity() * medUp.getQtyInSmallest(key));
         } else {
@@ -685,7 +685,7 @@ public class SaleTableModel1 extends AbstractTableModel {
                                                     + stock.getFocUnit().getItemUnitCode();
                                             sdh.setFocSmallestQty(stock.getFocUnitQty() * medUp.getQtyInSmallest(key));
                                         } else {
-                                            sdh.setFocSmallestQty(new Float(0));
+                                            sdh.setFocSmallestQty(0f);
                                         }
                                         calculateAmount(index);
 
@@ -712,7 +712,7 @@ public class SaleTableModel1 extends AbstractTableModel {
                                                 + stock.getFocUnit().getItemUnitCode();
                                         sdh.setFocSmallestQty(stock.getFocUnitQty() * medUp.getQtyInSmallest(key));
                                     } else {
-                                        sdh.setFocSmallestQty(new Float(0));
+                                        sdh.setFocSmallestQty(0f);
                                     }
                                     /*key = sdh.getMedId().getMedId() + "-"
                                      + stock.getFocUnit().getItemUnitCode();
@@ -790,7 +790,7 @@ public class SaleTableModel1 extends AbstractTableModel {
          * }
          */
         if (!Util1.getPropValue("system.sale.barcode").equals("Y")) {
-            parent.setColumnSelectionInterval(4, 4);
+            parent.setColumnSelectionInterval(3, 3);
         } else if (pos + 1 < listDetail.size()) {
             parent.setRowSelectionInterval(pos + 1, pos + 1);
         }
@@ -926,8 +926,10 @@ public class SaleTableModel1 extends AbstractTableModel {
         }
 
         int row = maxUniqueId;
+        int recordCnt = 0;
         for (SaleDetailHis record : listDetail) {
             if (record.getMedId().getMedId() != null) {
+                recordCnt++;
                 if (NumberUtil.NZero(record.getQuantity()) <= 0
                         && NumberUtil.NZero(record.getFocQty()) <= 0) {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
@@ -945,22 +947,21 @@ public class SaleTableModel1 extends AbstractTableModel {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Profit lost.",
                             "You Cannot Save.", JOptionPane.ERROR_MESSAGE);
                     status = false;
-                } else {
-                    if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                        record.setUniqueId(row + 1);
-                        row++;
-                    }
+                } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                    record.setUniqueId(row + 1);
+                    row++;
                 }
             }
         }
 
-        if (row == 0) {
+        if (recordCnt == 0) {
             JOptionPane.showMessageDialog(Util1.getParent(), "No sale record.",
                     "No data.", JOptionPane.ERROR_MESSAGE);
             status = false;
         }
 
         parent.setRowSelectionInterval(0, 0);
+        maxUniqueId = row;
 
         return status;
     }
@@ -990,12 +991,15 @@ public class SaleTableModel1 extends AbstractTableModel {
             if (listDetail != null) {
                 for (SaleDetailHis sdh : listDetail) {
                     if (row != (listDetail.size() - 1)) {
-                        if (sdh.getMedId() != null && sdh.getUniqueId() != null) {
+                        if (sdh.getMedId() != null //&& sdh.getUniqueId() != null
+                                ) {
+                            medUp.add(sdh.getMedId());
                             String key = sdh.getMedId().getMedId() + "-"
                                     + sdh.getUnitId().getItemUnitCode();
                             double salePrice = NumberUtil.NZero(medUp.getPrice(key, cusType,
                                     NumberUtil.NZeroInt(sdh.getQuantity())));
-                            setValueAt(salePrice, row, 6);
+                            log.info("salePrice : " + salePrice);
+                            setValueAt(salePrice, row, 5);
                         }
                     }
                     row++;
@@ -1021,7 +1025,7 @@ public class SaleTableModel1 extends AbstractTableModel {
 
     public String getDeleteSql() {
         String strSQL = null;
-
+        log.info("deletedList : " + deletedList);
         if (deletedList != null) {
             strSQL = "delete from sale_detail_his where sale_detail_id in ("
                     + deletedList + ")";
@@ -1105,16 +1109,22 @@ public class SaleTableModel1 extends AbstractTableModel {
         String itemId = "";
 
         if (purImeiNo.getKey() != null) {
-            itemId = purImeiNo.getKey().getItemId();
-            medicine = (Medicine) dao.find("Medicine", "med_id = '"
-                    + itemId + "'");
-            medUp.add(medicine);
+            try {
+                itemId = purImeiNo.getKey().getItemId();
+                medicine = (Medicine) dao.find("Medicine", "med_id = '"
+                        + itemId + "'");
+                medUp.add(medicine);
 
-            record.getMedId().setMedId(itemId);
-            record.getMedId().setMedName(medicine.getMedName());
-            record.setImei1(purImeiNo.getKey().getImei1());
-            record.setImei2(purImeiNo.getImei2());
-            record.setSdNo(purImeiNo.getSdNo());
+                record.getMedId().setMedId(itemId);
+                record.getMedId().setMedName(medicine.getMedName());
+                record.setImei1(purImeiNo.getKey().getImei1());
+                record.setImei2(purImeiNo.getImei2());
+                record.setSdNo(purImeiNo.getSdNo());
+            } catch (Exception ex) {
+                log.error("setPurIMEINo : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
         if (Util1.getPropValue("system.sale.detail.location").equals("Y")) {
             record.setLocation(location);
@@ -1127,7 +1137,7 @@ public class SaleTableModel1 extends AbstractTableModel {
 
         record.setUnitId(iu);
         record.setPrice(medUp.getPrice(key, getCusType(), NumberUtil.NZeroInt(record.getQuantity())));
-        record.setQuantity(new Float(1));
+        record.setQuantity(0f);
         record.setAmount(NumberUtil.NZero(record.getPrice()) * record.getQuantity());
         record.setSaleSmallestQty(record.getQuantity() * medUp.getQtyInSmallest(key));
 
@@ -1138,7 +1148,7 @@ public class SaleTableModel1 extends AbstractTableModel {
         fireTableCellUpdated(pos, 0);
 
         if (!Util1.getPropValue("system.sale.barcode").equals("Y")) {
-            parent.setColumnSelectionInterval(4, 4);
+            parent.setColumnSelectionInterval(3, 3);
         } else if (pos + 1 < listDetail.size()) {
             parent.setRowSelectionInterval(pos + 1, pos + 1);
         }
@@ -1156,7 +1166,7 @@ public class SaleTableModel1 extends AbstractTableModel {
         String medId = record.getMedId().getMedId();
         try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
-                    location.getLocationId().toString(), medId, Global.loginUser.getUserId());
+                    location.getLocationId().toString(), medId, Global.machineId);
             if (resultSet != null) {
                 float balance = 0f;
                 while (resultSet.next()) {

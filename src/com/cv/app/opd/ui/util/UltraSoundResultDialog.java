@@ -34,55 +34,61 @@ public class UltraSoundResultDialog extends javax.swing.JDialog {
         getData(record);
     }
 
-    private void intiRadio(){
+    private void intiRadio() {
         radLiverSizeElarged.setActionCommand("Elarged");
         radLiverSizeNormal.setActionCommand("Normal");
         radLiverSizeReduced.setActionCommand("Reduced");
-        
+
         radLiverMarginIrregular.setActionCommand("Irregular");
         radLiverMarginSmooth.setActionCommand("Smooth");
-        
+
         radLiverEchogenicityIncrease.setActionCommand("Increase");
         radLiverEchogenicityNormal.setActionCommand("Normal");
         radLiverEchogenicityReduced.setActionCommand("Reduced");
-        
+
         radThrombusAbsent.setActionCommand("Absent");
         radThrombusPresent.setActionCommand("Present");
     }
-    
+
     private void getData(VOpd record) {
-        if (record != null) {
-            String key = record.getKey().getVouNo() + "-" + record.getKey().getOpdDetailId()
-                    + "-" + record.getPatientId() + "-" + record.getKey().getServiceId();
-            invResult = (InvestigationResult) dao.find(InvestigationResult.class, key);
-            if (invResult != null) {
-                setLiverSize(invResult.getLiverSize());
-                setLiverMargin(invResult.getLiverMargin());
-                setLiverEchogenicity(invResult.getLiverEchogenicity());
-                txtSOL.setText(invResult.getSol());
-                txtDiameter.setText(invResult.getPortalVeinDiameter());
-                setThrombus(invResult.getPortalVeinThrombus());
-                txtGBSize.setText(invResult.getGbSize());
-                txtContent.setText(invResult.getGbContent());
-                txtWail.setText(invResult.getGbWail());
-                txtCBD.setText(invResult.getCbd());
-                txtIntrahepaticDucts.setText(invResult.getIntrahepaticDucts());
-                txtPancreas.setText(invResult.getPancreas());
-                txtSpleen.setText(invResult.getSpleen());
-                txtKidneyR.setText(invResult.getKidneyR());
-                txtKidneyL.setText(invResult.getKidneyL());
-                txtBladder.setText(invResult.getBladder());
-                txtProstate.setText(invResult.getProstate());
-                txtUterus.setText(invResult.getUterus());
-                txtOvary.setText(invResult.getOvary());
-                txtAscites.setText(invResult.getAscites());
-                txtLymphNode.setText(invResult.getLymphNode());
-                txtOthers.setText(invResult.getOthers());
-                txtImpression.setText(invResult.getImpression());
-            } else {
-                invResult = new InvestigationResult();
-                invResult.setKeyField(key);
+        try {
+            if (record != null) {
+                String key = record.getKey().getVouNo() + "-" + record.getKey().getOpdDetailId()
+                        + "-" + record.getPatientId() + "-" + record.getKey().getServiceId();
+                invResult = (InvestigationResult) dao.find(InvestigationResult.class, key);
+                if (invResult != null) {
+                    setLiverSize(invResult.getLiverSize());
+                    setLiverMargin(invResult.getLiverMargin());
+                    setLiverEchogenicity(invResult.getLiverEchogenicity());
+                    txtSOL.setText(invResult.getSol());
+                    txtDiameter.setText(invResult.getPortalVeinDiameter());
+                    setThrombus(invResult.getPortalVeinThrombus());
+                    txtGBSize.setText(invResult.getGbSize());
+                    txtContent.setText(invResult.getGbContent());
+                    txtWail.setText(invResult.getGbWail());
+                    txtCBD.setText(invResult.getCbd());
+                    txtIntrahepaticDucts.setText(invResult.getIntrahepaticDucts());
+                    txtPancreas.setText(invResult.getPancreas());
+                    txtSpleen.setText(invResult.getSpleen());
+                    txtKidneyR.setText(invResult.getKidneyR());
+                    txtKidneyL.setText(invResult.getKidneyL());
+                    txtBladder.setText(invResult.getBladder());
+                    txtProstate.setText(invResult.getProstate());
+                    txtUterus.setText(invResult.getUterus());
+                    txtOvary.setText(invResult.getOvary());
+                    txtAscites.setText(invResult.getAscites());
+                    txtLymphNode.setText(invResult.getLymphNode());
+                    txtOthers.setText(invResult.getOthers());
+                    txtImpression.setText(invResult.getImpression());
+                } else {
+                    invResult = new InvestigationResult();
+                    invResult.setKeyField(key);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

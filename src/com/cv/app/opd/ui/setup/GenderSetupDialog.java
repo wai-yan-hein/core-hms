@@ -29,13 +29,14 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author wswe
  */
 public class GenderSetupDialog extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(GenderSetupDialog.class.getName());
     private AbstractDataAccess dao;
     private GenderTableModel tableModel = new GenderTableModel();
     private int selectRow = -1;
     private Gender currGender = new Gender();
     private BestAppFocusTraversalPolicy focusPolicy;
-    
+
     /**
      * Creates new form InitialSetupDialog
      */
@@ -51,23 +52,29 @@ public class GenderSetupDialog extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListGender(dao.findAll("Gender"));
-        tblGenderl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblGenderl.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblGenderl.getSelectedRow() >= 0) {
-                    selectRow = tblGenderl.convertRowIndexToModel(tblGenderl.getSelectedRow());
-                }
+        try {
+            tableModel.setListGender(dao.findAll("Gender"));
+            tblGenderl.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblGenderl.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblGenderl.getSelectedRow() >= 0) {
+                        selectRow = tblGenderl.convertRowIndexToModel(tblGenderl.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getGender(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getGender(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void setRecord(Gender gender) {
         currGender = gender;
         txtDesp.setText(gender.getDescription());
@@ -75,7 +82,7 @@ public class GenderSetupDialog extends javax.swing.JDialog {
         txtGenderId.setEditable(false);
         lblStatus.setText("EDIT");
     }
-    
+
     private void applyFocusPolicy() {
         @SuppressWarnings("UseOfObsoleteCollectionType")
         Vector<Component> focusOrder = new Vector();
@@ -84,7 +91,7 @@ public class GenderSetupDialog extends javax.swing.JDialog {
         focusOrder.add(txtDesp);
         focusOrder.add(butSave);
         focusOrder.add(butClear);
-        
+
         focusPolicy = new BestAppFocusTraversalPolicy(focusOrder);
     }
 
@@ -118,7 +125,7 @@ public class GenderSetupDialog extends javax.swing.JDialog {
     private boolean isValidEntry() {
         boolean status = true;
 
-        if(Util1.nullToBlankStr(txtGenderId.getText()).equals("")){
+        if (Util1.nullToBlankStr(txtGenderId.getText()).equals("")) {
             JOptionPane.showMessageDialog(this, "ID must not be blank.",
                     "Blank", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -128,7 +135,7 @@ public class GenderSetupDialog extends javax.swing.JDialog {
                     "Blank", JOptionPane.ERROR_MESSAGE);
             status = false;
             txtDesp.requestFocusInWindow();
-        } else if(txtGenderId.getText().length() > 2){
+        } else if (txtGenderId.getText().length() > 2) {
             JOptionPane.showMessageDialog(this, "Character length cannot more then 2.",
                     "Gender ID length", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -145,9 +152,9 @@ public class GenderSetupDialog extends javax.swing.JDialog {
         if (isValidEntry()) {
             try {
                 dao.save(currGender);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addGender(currGender);
-                }else{
+                } else {
                     tableModel.setGender(selectRow, currGender);
                 }
                 clear();
@@ -163,7 +170,7 @@ public class GenderSetupDialog extends javax.swing.JDialog {
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

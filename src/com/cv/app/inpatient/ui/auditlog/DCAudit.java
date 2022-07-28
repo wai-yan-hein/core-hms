@@ -70,12 +70,12 @@ public class DCAudit extends javax.swing.JPanel implements SelectionObserver {
                 + "left join session sess on bdh.session_id = sess.session_id\n"
                 + "where date(dc_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'";
-        
-        if(!txtVouNo.getText().trim().isEmpty()){
+
+        if (!txtVouNo.getText().trim().isEmpty()) {
             strSql = strSql + " and bdh.dc_inv_id = '" + txtVouNo.getText().trim() + "' ";
         }
-        
-        if(!txtPatientNo.getText().trim().isEmpty()){
+
+        if (!txtPatientNo.getText().trim().isEmpty()) {
             strSql = strSql + " and bdh.patient_id = '" + txtPatientNo.getText().trim() + "'";
         }
         strSql = strSql + " order by bdh.dc_inv_id, bdh.bk_date";
@@ -120,23 +120,23 @@ public class DCAudit extends javax.swing.JPanel implements SelectionObserver {
         tblAuditList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblAuditList.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (e.getValueIsAdjusting()) {
-                            if (tblAuditList.getSelectedRow() < model.getRowCount()) {
-                                int selRow = tblAuditList.convertRowIndexToModel(tblAuditList.getSelectedRow());
-                                SaleAuditLog sal = model.getSaleAuditLog(selRow);
-                                //log.info("valueChanged : " + e.getValueIsAdjusting() + " - " + sal.getBkId());
-                                if (sal != null) {
-                                    getDcData(sal);
-                                    rv.selected("DCVouList", dcHis);
-                                } else {
-                                    rv.newForm();
-                                }
-                            }
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    if (tblAuditList.getSelectedRow() < model.getRowCount()) {
+                        int selRow = tblAuditList.convertRowIndexToModel(tblAuditList.getSelectedRow());
+                        SaleAuditLog sal = model.getSaleAuditLog(selRow);
+                        //log.info("valueChanged : " + e.getValueIsAdjusting() + " - " + sal.getBkId());
+                        if (sal != null) {
+                            getDcData(sal);
+                            rv.selected("DCVouList", dcHis);
+                        } else {
+                            rv.newForm();
                         }
                     }
-                });
+                }
+            }
+        });
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DCAudit extends javax.swing.JPanel implements SelectionObserver {
              MarchantSearch dialog = new MarchantSearch(dao, this);
              break;*/
             default:
-                UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+                UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao, -1);
                 break;
         }
     }
@@ -254,25 +254,25 @@ public class DCAudit extends javax.swing.JPanel implements SelectionObserver {
                         if (isNeedDetail(serviceId)) {
                             Integer detailId = rsSD.getInt("dc_detail_id");
                             ResultSet rsDR = dao.execSQL(
-                                    "select j.dr_fee_id, ddf.doctor_id, ddf.dr_fee\n" +
-                                    "from dc_details_his j, dc_doctor_fee ddf\n" +
-                                    "where j.dc_detail_id = ddf.dc_detail_id and j.dc_detail_id = " + detailId.toString()
+                                    "select j.dr_fee_id, ddf.doctor_id, ddf.dr_fee\n"
+                                    + "from dc_details_his j, dc_doctor_fee ddf\n"
+                                    + "where j.dc_detail_id = ddf.dc_detail_id and j.dc_detail_id = " + detailId.toString()
                             );
-                            if(rsDR != null){
+                            if (rsDR != null) {
                                 List<DCDoctorFee> listDCDF = new ArrayList();
-                                while(rsDR.next()){
+                                while (rsDR.next()) {
                                     DCDoctorFee dcdf = new DCDoctorFee();
-                                    Doctor dr = (Doctor)dao.find(Doctor.class, rsDR.getString("doctor_id"));
+                                    Doctor dr = (Doctor) dao.find(Doctor.class, rsDR.getString("doctor_id"));
                                     dcdf.setDoctor(dr);
                                     dcdf.setDrFee(rsDR.getDouble("dr_fee"));
-                                    
+
                                     listDCDF.add(dcdf);
                                 }
                                 ddh.setListDCDF(listDCDF);
                                 rsDR.close();
                             }
                         }
-                        
+
                         listDDH.add(ddh);
                     }
                     dcHis.setListOPDDetailHis(listDDH);
@@ -289,12 +289,18 @@ public class DCAudit extends javax.swing.JPanel implements SelectionObserver {
 
     private boolean isNeedDetail(int serviceId) {
         boolean status = false;
-        List<DrDetailId> listDDI = dao.findAllHSQL(
-                "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
-        if (listDDI != null) {
-            if (!listDDI.isEmpty()) {
-                status = true;
+        try {
+            List<DrDetailId> listDDI = dao.findAllHSQL(
+                    "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
+            if (listDDI != null) {
+                if (!listDDI.isEmpty()) {
+                    status = true;
+                }
             }
+        } catch (Exception ex) {
+            log.error("isNeedDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return status;
     }

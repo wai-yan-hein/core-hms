@@ -3,7 +3,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="saleVouA4" pageWidth="421" pageHeight="595" columnWidth="391" leftMargin="15" rightMargin="15" topMargin="15" bottomMargin="15" uuid="b198a994-9fac-484e-9023-fe4befe62525">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="128"/>
+	<property name="ireport.y" value="0"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="comp_address" class="java.lang.String"/>
@@ -23,196 +23,188 @@
 	<parameter name="vou_balance" class="java.lang.Double"/>
 	<parameter name="p_machine_id" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select vs.sale_inv_id, vs.sale_date, vs.trader_name, vs.med_name item_name, med.med_rel_str, vs.sale_qty qty, vs.item_unit, vs.sale_price, vs.sale_amount, vs.vou_total, 
-vs.discount,vs.remark, vs.payment_type_id, vs.paid_amount, vs.sale_exp_total, vs.balance, ts.township_name, pt.payment_type_name, vs.cus_id,
+		<![CDATA[select vs.sale_inv_id, vs.sale_date, vs.trader_name, vs.med_name item_name, med.med_rel_str, vs.sale_qty qty, vs.item_unit, vs.sale_price, vs.sale_amount, vs.vou_total,
+vs.discount,vs.remark, vs.payment_type_id, vs.paid_amount, vs.sale_exp_total, vs.balance, ts.township_name, pt.payment_type_name, vs.cus_id, tr.stu_no,
 concat(vs.sale_qty,vs.item_unit) qty1, if(ifnull(vs.foc_qty,'-')='-','',concat(vs.foc_qty,vs.foc_unit)) foc_qty, vs.due_date, vs.item_discount,
 d.doctor_name
 from v_sale vs join medicine med on vs.med_id = med.med_id join trader t on vs.cus_id = t.trader_id
 left join township ts on t.township = ts.township_id join payment_type pt on vs.payment_type_id = pt.payment_type_id
 left join doctor d on vs.doctor_id = d.doctor_id
+left join trader tr on vs.cus_id = tr.trader_id
 where vs.sale_inv_id = $P{inv_id}]]>
 	</queryString>
-	<field name="sale_inv_id" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="sale_date" class="java.sql.Timestamp">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="trader_name" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
+	<field name="sale_inv_id" class="java.lang.String"/>
+	<field name="sale_date" class="java.sql.Timestamp"/>
+	<field name="trader_name" class="java.lang.String"/>
 	<field name="item_name" class="java.lang.String"/>
 	<field name="med_rel_str" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="qty" class="java.lang.Integer"/>
-	<field name="item_unit" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="sale_price" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="sale_amount" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="vou_total" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="discount" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="remark" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="payment_type_id" class="java.lang.Integer">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="paid_amount" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="sale_exp_total" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="balance" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
+	<field name="qty" class="java.lang.Float"/>
+	<field name="item_unit" class="java.lang.String"/>
+	<field name="sale_price" class="java.lang.Double"/>
+	<field name="sale_amount" class="java.lang.Double"/>
+	<field name="vou_total" class="java.lang.Double"/>
+	<field name="discount" class="java.lang.Double"/>
+	<field name="remark" class="java.lang.String"/>
+	<field name="payment_type_id" class="java.lang.Integer"/>
+	<field name="paid_amount" class="java.lang.Double"/>
+	<field name="sale_exp_total" class="java.lang.Double"/>
+	<field name="balance" class="java.lang.Double"/>
 	<field name="township_name" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
 	<field name="payment_type_name" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="cus_id" class="java.lang.String">
+	<field name="cus_id" class="java.lang.String"/>
+	<field name="stu_no" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
 	<field name="qty1" class="java.lang.String"/>
-	<field name="foc_qty" class="java.lang.String"/>
+	<field name="foc_qty" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<field name="due_date" class="java.sql.Date"/>
-	<field name="item_discount" class="java.lang.Float"/>
-	<field name="doctor_name" class="java.lang.String"/>
+	<field name="item_discount" class="java.lang.Double"/>
+	<field name="doctor_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="89" splitType="Stretch">
+		<band height="108" splitType="Stretch">
 			<staticText>
-				<reportElement x="263" y="47" width="53" height="19" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2"/>
+				<reportElement x="263" y="68" width="53" height="19" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[Invoice No. : ]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="1" y="24" width="189" height="20" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
+				<reportElement x="90" y="24" width="200" height="20" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comp_address}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="190" y="24" width="201" height="20" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
+				<reportElement x="75" y="44" width="237" height="20" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phone}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="329" y="68" width="60" height="19" uuid="0062cd9c-9cc9-4262-ac8a-85fcb7ce6628"/>
+				<reportElement x="329" y="89" width="60" height="19" uuid="0062cd9c-9cc9-4262-ac8a-85fcb7ce6628"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sale_date}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="316" y="47" width="80" height="19" uuid="a5e95390-4741-4554-a822-28d428866afd"/>
+				<reportElement x="316" y="68" width="80" height="19" uuid="a5e95390-4741-4554-a822-28d428866afd"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sale_inv_id}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="291" y="68" width="36" height="19" uuid="d3827418-43c8-4e46-b9e5-d800029613c6"/>
+				<reportElement x="291" y="89" width="36" height="19" uuid="d3827418-43c8-4e46-b9e5-d800029613c6"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[Date : ]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="1" y="0" width="390" height="24" uuid="a0790f1d-070f-4c97-919a-f6d20d9db651"/>
+				<reportElement x="134" y="0" width="100" height="24" uuid="a0790f1d-070f-4c97-919a-f6d20d9db651"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="11" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comp_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="53" y="47" width="88" height="19" uuid="3f2e8649-06c3-40e6-924e-38bd1fef6db6"/>
+				<reportElement x="53" y="68" width="88" height="19" uuid="3f2e8649-06c3-40e6-924e-38bd1fef6db6"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{cus_id}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{stu_no}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="0" y="46" width="46" height="19" uuid="8822005f-32eb-4b10-8036-378d83b39bc5"/>
+				<reportElement x="0" y="67" width="46" height="19" uuid="8822005f-32eb-4b10-8036-378d83b39bc5"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[Cus No.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="67" width="46" height="19" uuid="8db18313-0198-408d-8e8d-abbba8f3acaa"/>
+				<reportElement x="0" y="88" width="46" height="19" uuid="8db18313-0198-408d-8e8d-abbba8f3acaa"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[Customer]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="46" y="46" width="4" height="19" uuid="e2a57bb0-0ebe-4b43-8481-08d47ad11cc7"/>
+				<reportElement x="46" y="67" width="4" height="19" uuid="e2a57bb0-0ebe-4b43-8481-08d47ad11cc7"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="48" y="46" width="4" height="19" forecolor="#FFFFFF" uuid="59ad1fd8-e78b-4512-9599-0e24a0e7a7da"/>
+				<reportElement x="48" y="67" width="4" height="19" forecolor="#FFFFFF" uuid="59ad1fd8-e78b-4512-9599-0e24a0e7a7da"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="46" y="67" width="4" height="19" uuid="f1cc8287-92f9-4bb8-af87-39dcbfa2ddf1"/>
+				<reportElement x="46" y="88" width="4" height="19" uuid="f1cc8287-92f9-4bb8-af87-39dcbfa2ddf1"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="53" y="68" width="185" height="19" uuid="c40ce77f-81b1-43ad-965d-9209bb48a74e"/>
+				<reportElement x="53" y="89" width="185" height="19" uuid="c40ce77f-81b1-43ad-965d-9209bb48a74e"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{trader_name}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="1" y="44" width="390" height="1" forecolor="#000000" uuid="494006ce-2535-48cd-bb56-f02519328000"/>
+				<reportElement x="1" y="65" width="390" height="1" forecolor="#000000" uuid="494006ce-2535-48cd-bb56-f02519328000"/>
 				<graphicElement>
 					<pen lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
 			<staticText>
-				<reportElement positionType="Float" x="140" y="47" width="50" height="19" uuid="50dc2b7c-4bfd-41e1-8abc-1da4ebf1f155"/>
+				<reportElement positionType="Float" x="140" y="68" width="50" height="19" uuid="50dc2b7c-4bfd-41e1-8abc-1da4ebf1f155"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[Due Date : ]]></text>
 			</staticText>
 			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
-				<reportElement positionType="Float" x="190" y="47" width="56" height="19" uuid="3b2c79d3-2573-466d-af51-a48ca5d52bdd"/>
+				<reportElement positionType="Float" x="190" y="68" width="56" height="19" uuid="3b2c79d3-2573-466d-af51-a48ca5d52bdd"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{due_date}]]></textFieldExpression>
 			</textField>
+			<image>
+				<reportElement x="99" y="0" width="33" height="22" uuid="cae287d2-60b2-4e2f-9167-b84a47316f70"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/KSE.jpg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement x="236" y="0" width="33" height="22" uuid="2467f07e-3f93-4a5a-aebb-1912c387e794"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/KSE.jpg"]]></imageExpression>
+			</image>
+			<image>
+				<reportElement x="57" y="47" width="17" height="14" uuid="0d96acd6-d3d9-4ab2-8edc-44e3fab68b1f"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/phone2.jpeg"]]></imageExpression>
+			</image>
 		</band>
 	</title>
 	<pageHeader>
@@ -345,7 +337,7 @@ where vs.sale_inv_id = $P{inv_id}]]>
 				<textFieldExpression><![CDATA[$F{item_name}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="201" y="1" width="35" height="16" uuid="311ce54c-48a9-407a-8aab-4d6941d250d9"/>
+				<reportElement x="201" y="1" width="34" height="16" uuid="311ce54c-48a9-407a-8aab-4d6941d250d9"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
@@ -481,7 +473,7 @@ where vs.sale_inv_id = $P{inv_id}]]>
 		</band>
 	</pageFooter>
 	<summary>
-		<band height="143" splitType="Stretch">
+		<band height="155" splitType="Stretch">
 			<staticText>
 				<reportElement x="273" y="0" width="56" height="16" uuid="775e12bb-cd5a-482e-8b83-6ed3e05de57f"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -567,20 +559,20 @@ where vs.sale_inv_id = $P{inv_id}]]>
 				<text><![CDATA[Tin Moe Khaing  - KPAY-AC  (09402240250)]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="309" y="95" width="80" height="16" uuid="7a07b394-f821-4205-88bf-2433bf306781"/>
+				<reportElement positionType="Float" x="309" y="112" width="80" height="16" uuid="7a07b394-f821-4205-88bf-2433bf306781"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<text><![CDATA[ပစၥည္းလက္ခံသူ]]></text>
 			</staticText>
 			<line>
-				<reportElement positionType="Float" x="309" y="137" width="80" height="1" uuid="814307a8-1ed2-453c-a6dc-1485d0395cea"/>
+				<reportElement positionType="Float" x="309" y="154" width="80" height="1" uuid="814307a8-1ed2-453c-a6dc-1485d0395cea"/>
 				<graphicElement>
 					<pen lineWidth="0.5" lineStyle="Dashed"/>
 				</graphicElement>
 			</line>
 			<subreport>
-				<reportElement x="201" y="68" width="188" height="17" uuid="45667bf7-d89c-473b-8782-d8c5df7a4ade"/>
+				<reportElement x="201" y="85" width="188" height="17" uuid="45667bf7-d89c-473b-8782-d8c5df7a4ade"/>
 				<subreportParameter name="user_id">
 					<subreportParameterExpression><![CDATA[$P{user_id}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -591,13 +583,13 @@ where vs.sale_inv_id = $P{inv_id}]]>
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "rptWholeSale_Star_subreport1.jasper"]]></subreportExpression>
 			</subreport>
 			<line>
-				<reportElement x="0" y="65" width="390" height="1" uuid="4efbcfc6-cf07-4e4d-a8e1-006d47b1cff1"/>
+				<reportElement x="0" y="82" width="390" height="1" uuid="4efbcfc6-cf07-4e4d-a8e1-006d47b1cff1"/>
 			</line>
 			<line>
-				<reportElement positionType="Float" x="0" y="88" width="390" height="1" uuid="7f656621-065a-4bc2-ad84-3ec46e04a24c"/>
+				<reportElement positionType="Float" x="0" y="105" width="390" height="1" uuid="7f656621-065a-4bc2-ad84-3ec46e04a24c"/>
 			</line>
 			<subreport>
-				<reportElement positionType="Float" x="-1" y="88" width="203" height="16" uuid="b7bb79da-153b-4db4-bb64-7f67985b678f"/>
+				<reportElement positionType="Float" x="-1" y="105" width="203" height="16" uuid="b7bb79da-153b-4db4-bb64-7f67985b678f"/>
 				<subreportParameter name="user_id">
 					<subreportParameterExpression><![CDATA[$P{user_id}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -605,19 +597,26 @@ where vs.sale_inv_id = $P{inv_id}]]>
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "rptWholeSale_subreport2.jasper"]]></subreportExpression>
 			</subreport>
 			<staticText>
-				<reportElement x="0" y="69" width="40" height="15" uuid="44207d1b-24a8-4320-a3be-fa67fbbc3d50"/>
+				<reportElement x="0" y="86" width="40" height="15" uuid="44207d1b-24a8-4320-a3be-fa67fbbc3d50"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<text><![CDATA[Order By : ]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement x="41" y="69" width="117" height="16" uuid="18ebac7d-84a7-4bc6-a591-5dcc1215c741"/>
+				<reportElement x="41" y="86" width="117" height="16" uuid="18ebac7d-84a7-4bc6-a591-5dcc1215c741"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{doctor_name}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="0" y="65" width="290" height="16" uuid="623d5cf9-9e95-431c-bbaa-318116152f3f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<text><![CDATA[KBZ Special  -AC  ( 31613704802036301 )]]></text>
+			</staticText>
 		</band>
 	</summary>
 </jasperReport>

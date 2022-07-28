@@ -21,7 +21,6 @@ import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
 import com.cv.app.pharmacy.ui.common.PurVouSearchTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
-import static com.cv.app.pharmacy.ui.util.SaleVouSearch.log;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -54,7 +53,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
     private TableRowSorter<TableModel> sorter;
     private VouFilter vouFilter;
     private int mouseClick = 2;
-    
+
     /**
      * Creates new form PurchaseVouSearch
      */
@@ -83,7 +82,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
         actionMapping();
         initTableVoucher();
         addSelectionListenerVoucher();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -95,7 +94,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
                 }
             }
         }
-        
+
         txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
 
@@ -118,36 +117,53 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
     }
 
     private void getCustomerList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Supplier List", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Supplier List", dao, locationId);
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
-        BindingUtil.BindComboFilter(cboVStatus, dao.findAll("VouStatus"));
+        try {
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+            BindingUtil.BindComboFilter(cboVStatus, dao.findAll("VouStatus"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboSession);
-        new ComBoBoxAutoComplete(cboCusGroup);
-        new ComBoBoxAutoComplete(cboVStatus);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboSession);
+            new ComBoBoxAutoComplete(cboCusGroup);
+            new ComBoBoxAutoComplete(cboVStatus);
 
-        cboPayment.setSelectedIndex(0);
-        cboLocation.setSelectedIndex(0);
-        cboSession.setSelectedIndex(0);
-        cboCusGroup.setSelectedIndex(0);
-        cboVStatus.setSelectedIndex(0);
+            cboPayment.setSelectedIndex(0);
+            cboLocation.setSelectedIndex(0);
+            cboSession.setSelectedIndex(0);
+            cboCusGroup.setSelectedIndex(0);
+            cboVStatus.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableMedicine() {
-        List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
-                "key.tranOption = 'PurSearch' and key.userId = '"
-                + Global.loginUser.getUserId() + "'");
-        tblMedicineModel.setListCodeFilter(listMedicine);
+        try {
+            List<VouCodeFilter> listMedicine = dao.findAll("VouCodeFilter",
+                    "key.tranOption = 'PurSearch' and key.userId = '"
+                    + Global.machineId + "'");
+            tblMedicineModel.setListCodeFilter(listMedicine);
+        } catch (Exception ex) {
+            log.error("initTableMedicine : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblMedicineModel.addEmptyRow();
         tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
@@ -186,7 +202,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblMedicine.getCellEditor() != null){
+                if (tblMedicine.getCellEditor() != null) {
                     tblMedicine.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -199,15 +215,21 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
 
     // <editor-fold defaultstate="collapsed" desc="getMedInfo">
     public void getMedInfo(String medCode) {
-        Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
-                + medCode + "' and active = true");
+        try {
+            Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
+                    + medCode + "' and active = true");
 
-        if (medicine != null) {
-            selected("MedicineList", medicine);
-        } else {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                    "Invalid.", JOptionPane.ERROR_MESSAGE);
-            //getMedList(medCode);
+            if (medicine != null) {
+                selected("MedicineList", medicine);
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                        "Invalid.", JOptionPane.ERROR_MESSAGE);
+                //getMedList(medCode);
+            }
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }// </editor-fold>
 
@@ -270,7 +292,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
                 + "left join trader tr on sh.cus_id = tr.trader_id "
                 + "where sh.pur_date between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
 
@@ -317,7 +339,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
         if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
             CustomerGroup cusGroup = (CustomerGroup) cboCusGroup.getSelectedItem();
             strSql = strSql + " and tr.group_id = '"
-                        + cusGroup.getGroupId() + "'";
+                    + cusGroup.getGroupId() + "'";
         } else {
             vouFilter.setCusGroup(null);
         }
@@ -401,7 +423,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
 
         return listVS;
     }
-    
+
     private void search() {
         purVouTableModel.setListPurHis(getSearchVoucher());
         txtTotalAmount.setValue(purVouTableModel.getTotal());
@@ -425,60 +447,66 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
     private void getPrvFilter() {
         VouFilter tmpFilter;
         String propValue = Util1.getPropValue("system.search.filter.history");
-        if (propValue.equals("M")) {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
-                    + " and key.userId = '" + Global.machineId + "'");
-        } else {
-            tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
-                    + " and key.userId = '" + Global.loginUser.getUserId() + "'");
-        }
-
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("PurVouSearch");
+        try {
             if (propValue.equals("M")) {
-                vouFilter.getKey().setUserId(Global.machineId);
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             } else {
-                vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+                tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PurVouSearch'"
+                        + " and key.userId = '" + Global.machineId + "'");
             }
 
-            txtFromDate.setText(DateUtil.getTodayDateStr());
-            txtToDate.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("PurVouSearch");
+                if (propValue.equals("M")) {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                } else {
+                    vouFilter.getKey().setUserId(Global.machineId);
+                }
 
-            if (vouFilter.getTrader() != null) {
-                txtCusCode.setText(vouFilter.getTrader().getTraderId());
-                txtCusName.setText(vouFilter.getTrader().getTraderName());
+                txtFromDate.setText(DateUtil.getTodayDateStr());
+                txtToDate.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+
+                if (vouFilter.getTrader() != null) {
+                    txtCusCode.setText(vouFilter.getTrader().getTraderId());
+                    txtCusName.setText(vouFilter.getTrader().getTraderName());
+                }
+
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                if (vouFilter.getSession() != null) {
+                    cboSession.setSelectedItem(vouFilter.getSession());
+                }
+
+                if (vouFilter.getPaymentType() != null) {
+                    cboPayment.setSelectedItem(vouFilter.getPaymentType());
+                }
+
+                txtVouNo.setText(vouFilter.getVouNo());
+
+                if (vouFilter.getCusGroup() != null) {
+                    cboCusGroup.setSelectedItem(vouFilter.getCusGroup());
+                }
+
+                if (vouFilter.getVouStatus() != null) {
+                    cboVStatus.setSelectedItem(vouFilter.getVouStatus());
+                }
+
+                if (vouFilter.getRemark() != null) {
+                    txtRemark.setText(vouFilter.getRemark());
+                }
             }
-
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
-            }
-
-            if (vouFilter.getSession() != null) {
-                cboSession.setSelectedItem(vouFilter.getSession());
-            }
-
-            if (vouFilter.getPaymentType() != null) {
-                cboPayment.setSelectedItem(vouFilter.getPaymentType());
-            }
-
-            txtVouNo.setText(vouFilter.getVouNo());
-
-            if (vouFilter.getCusGroup() != null) {
-                cboCusGroup.setSelectedItem(vouFilter.getCusGroup());
-            }
-
-            if (vouFilter.getVouStatus() != null) {
-                cboVStatus.setSelectedItem(vouFilter.getVouStatus());
-            }
-
-            if (vouFilter.getRemark() != null) {
-                txtRemark.setText(vouFilter.getRemark());
-            }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.toString());
+        } finally {
+            dao.close();
         }
     }
 
@@ -517,7 +545,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
                     }
                 }
             } else {*/
-                cus = (Trader) dao.find(Trader.class, traderId);
+            cus = (Trader) dao.find(Trader.class, traderId);
             //}
         } catch (Exception ex) {
             log.error("getTrader : " + ex.toString());
@@ -626,6 +654,11 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
         jLabel4.setText("Location");
 
         cboLocation.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cboLocation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLocationActionPerformed(evt);
+            }
+        });
 
         jLabel5.setFont(Global.lableFont);
         jLabel5.setText("Session");
@@ -866,7 +899,7 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
             txtCusName.setText(null);
         } else {
             Trader trader = getTrader(txtCusCode.getText().trim());
-            if(trader != null){
+            if (trader != null) {
                 txtCusCode.setText(trader.getTraderId());
                 txtCusName.setText(trader.getTraderName());
             }
@@ -900,9 +933,17 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
     }//GEN-LAST:event_butSelectActionPerformed
 
     private void butPromoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPromoActionPerformed
-        // TODO add your handling code here:
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Purchase Promo Search", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Purchase Promo Search", dao, locationId);
     }//GEN-LAST:event_butPromoActionPerformed
+
+    private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboLocationActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butPromo;

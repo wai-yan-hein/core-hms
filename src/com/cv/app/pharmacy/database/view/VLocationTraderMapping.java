@@ -38,7 +38,9 @@ public class VLocationTraderMapping implements java.io.Serializable {
     private String groupName;
     private String townshipName;
     private Boolean mapStatus;
-
+    private String stuNo;
+    //private String sysP;
+    
     @EmbeddedId
     public LocationTraderMappingKey getKey() {
         return key;
@@ -209,5 +211,23 @@ public class VLocationTraderMapping implements java.io.Serializable {
     public void setMapStatus(Boolean mapStatus) {
         this.mapStatus = mapStatus;
     }
+
+    @Column(name="stu_no")
+    public String getStuNo() {
+        return stuNo;
+    }
+
+    public void setStuNo(String stuNo) {
+        this.stuNo = stuNo;
+    }
+
+    /*@Column(name="sys_p")
+    public String getSysP() {
+        return sysP;
+    }
+
+    public void setSysP(String sysP) {
+        this.sysP = sysP;
+    }*/
     
 }

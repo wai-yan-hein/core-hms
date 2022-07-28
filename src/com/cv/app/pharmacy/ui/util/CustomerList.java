@@ -43,6 +43,7 @@ public class CustomerList extends javax.swing.JPanel {
     private TraderListTableModel tableModel = new TraderListTableModel();
     private String title;
     private StartWithRowFilter filter;
+    private int locationId = -1;
 
     /**
      * Creates new form CustomerList
@@ -64,14 +65,14 @@ public class CustomerList extends javax.swing.JPanel {
     }
 
     public CustomerList(Object parent, SelectionObserver observer, AbstractDataAccess dao,
-            String title) {
+            String title, int locationId) {
         initComponents();
 
         this.parent = parent;
         this.observer = observer;
         this.dao = dao;
         this.title = title;
-
+        this.locationId = locationId;
         filter = new StartWithRowFilter(txtFilter);
 
         try {
@@ -124,36 +125,68 @@ public class CustomerList extends javax.swing.JPanel {
     }
 
     private void getData() {
-        List<Trader> listTrader;
+        try {
+            List<Trader> listTrader;
 
-        if (title.contains("Supplier") && !chkOption.isSelected() ||
-                (title.contains("Customer") && chkOption.isSelected())) {
-            listTrader = dao.findAll("Supplier", "Active = true");
-        } else if (title.contains("Customer") && !chkOption.isSelected()) {
-            if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-                String strSql;
-                /*(if (locationId != -1) {
-                    strSql = "select o from Trader o where "
-                            + "o.active = true and o.traderId in (select a.key.traderId "
-                            + "from LocationTraderMapping a where a.key.locationId = "
-                            + locationId + ") order by o.traderName";
-                } else {*/
-                    strSql = "select o from Trader o where "
-                            + "o.active = true and o.traderId in (select a.key.traderId "
-                            + "from LocationTraderMapping a where a.key.locationId in ("
-                            + "select a.key.locationId from UserLocationMapping a "
-                            + "where a.key.userId = '" + Global.loginUser.getUserId()
-                            + "' and a.isAllowSessCheck = true)) order by o.traderName";
-                //}
-                listTrader = dao.findAllHSQL(strSql);
+            if ((title.contains("Supplier") && !chkOption.isSelected())
+                    || (title.contains("Customer") && chkOption.isSelected())) {
+                log.info("Sup1");
+                log.info(("locationId : " + locationId));
+                if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                    String strSql;
+                    if (locationId != -1) {
+                        strSql = "select o from Trader o where "
+                                + "o.active = true and o.traderId in (select a.key.traderId "
+                                + "from LocationTraderMapping a where a.key.locationId = "
+                                + locationId + ") and o.discrimator = 'S' order by o.traderName";
+                    } else {
+                        strSql = "select o from Trader o where "
+                                + "o.active = true and o.traderId in (select a.key.traderId "
+                                + "from LocationTraderMapping a where a.key.locationId in ("
+                                + "select a.key.locationId from UserLocationMapping a "
+                                + "where a.key.userId = '" + Global.loginUser.getUserId()
+                                + "' and a.isAllowSessCheck = true)) and o.discrimator = 'S' order by o.traderName";
+                    }
+                    log.info("strSql : " + strSql);
+                    listTrader = dao.findAllHSQL(strSql);
+                } else {
+                    listTrader = dao.findAll("Supplier", "Active = true");
+                }
+            } else if ((title.contains("Customer") && !chkOption.isSelected())
+                    || (title.contains("Supplier") && chkOption.isSelected())) {
+                log.info("Cus");
+                log.info(("Customer locationId : " + locationId));
+                if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
+                    String strSql;
+                    if (locationId != -1) {
+                        strSql = "select o from Trader o where "
+                                + "o.active = true and o.traderId in (select a.key.traderId "
+                                + "from LocationTraderMapping a where a.key.locationId = "
+                                + locationId + ") and o.discrimator = 'C' order by o.traderName";
+                    } else {
+                        strSql = "select o from Trader o where "
+                                + "o.active = true and o.traderId in (select a.key.traderId "
+                                + "from LocationTraderMapping a where a.key.locationId in ("
+                                + "select a.key.locationId from UserLocationMapping a "
+                                + "where a.key.userId = '" + Global.loginUser.getUserId()
+                                + "' and a.isAllowSessCheck = true)) and o.discrimator = 'C' order by o.traderName";
+                    }
+                    log.info("strSql : " + strSql);
+                    listTrader = dao.findAllHSQL(strSql);
+                } else {
+                    listTrader = dao.findAll("Customer", "Active = true");
+                }
             } else {
-                listTrader = dao.findAll("Customer", "Active = true");
+                log.info("Trader");
+                listTrader = dao.findAll("Trader", "Active = true");
             }
-        } else {
-            listTrader = dao.findAll("Trader", "Active = true");
-        }
 
-        tableModel.setListTrader(listTrader);
+            tableModel.setListTrader(listTrader);
+        } catch (Exception ex) {
+            log.error("getData : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {
@@ -166,7 +199,7 @@ public class CustomerList extends javax.swing.JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblCustomer.getCellEditor() != null){
+                if (tblCustomer.getCellEditor() != null) {
                     tblCustomer.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -230,8 +263,18 @@ public class CustomerList extends javax.swing.JPanel {
     };
 
     private void filterItem(String strFilter) {
-        tableModel.setListTrader(dao.findAll("Trader", strFilter));
-        //statusFilter = true;
+        try {
+            tableModel.setListTrader(dao.findAll("Trader", strFilter));
+            //statusFilter = true;
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    public void setLocationId(int locationId) {
+        this.locationId = locationId;
     }
 
     /**

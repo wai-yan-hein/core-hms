@@ -11,7 +11,6 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
-import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
@@ -211,8 +210,14 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
     }
 
     private void getMedUsage() {
-        listOPDMedUsage = dao.findAll("OPDMedUsage", "key.service = " + srvId);
-        addNewRow();
+        try {
+            listOPDMedUsage = dao.findAll("OPDMedUsage", "key.service = " + srvId);
+            addNewRow();
+        } catch (Exception ex) {
+            log.error("getMedUsage : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void addNewRow() {
@@ -251,25 +256,23 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
             try {
                 dao.open();
                 dao.beginTran();
-                sql = "delete from opd_med_usage where service_id = '" + record.getKey().getService() + "' and med_id='"+ record.getKey().getMed().getMedId() +"'";
+                sql = "delete from opd_med_usage where service_id = '" + record.getKey().getService() + "' and med_id='" + record.getKey().getMed().getMedId() + "'";
                 dao.deleteSQL(sql);
             } catch (Exception e) {
                 dao.rollBack();
-            }
-            finally{
+            } finally {
                 dao.close();
             }
         }
 
         listOPDMedUsage.remove(row);
 
-        
         fireTableRowsDeleted(row, row);
-        
+
         addNewRow();
     }
 
-   /* public boolean hasEmptyRow() {
+    /* public boolean hasEmptyRow() {
         if (listOPDMedUsage.isEmpty()) {
             return false;
         }

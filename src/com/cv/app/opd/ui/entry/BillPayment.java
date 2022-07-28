@@ -68,10 +68,10 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         }
         try {
             List<PatientBillPayment> listPBP = tblBillPaymentTableModel.getSavePBP();
-            if(txtAdmissionNo.getText() != null){
-                if(!txtAdmissionNo.getText().trim().isEmpty()){
+            if (txtAdmissionNo.getText() != null) {
+                if (!txtAdmissionNo.getText().trim().isEmpty()) {
                     String admissionNo = txtAdmissionNo.getText().trim();
-                    for(PatientBillPayment pbp : listPBP){
+                    for (PatientBillPayment pbp : listPBP) {
                         pbp.setAdmissionNo(admissionNo);
                     }
                 }
@@ -126,12 +126,12 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         }
         params.put("prm_compName", compName);
 
-        if(txtSPtName.getText().isEmpty()){
+        if (txtSPtName.getText().isEmpty()) {
             params.put("prm_patient_name", "-");
-        }else{
+        } else {
             params.put("prm_patient_name", txtSPtName.getText());
         }
-        
+
         if (cboBillTo.getSelectedItem() instanceof PaymentType) {
             PaymentType ptype = (PaymentType) cboBillTo.getSelectedItem();
             params.put("prm_btype_id", ptype.getPaymentTypeId());
@@ -139,9 +139,9 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             params.put("prm_btype_id", 0);
         }
 
-        if(txtFrom.getText().equals(txtTo.getText())){
+        if (txtFrom.getText().equals(txtTo.getText())) {
             params.put("data_date", txtFrom.getText());
-        }else{
+        } else {
             params.put("data_date", "Between " + txtFrom.getText() + " and " + txtTo.getText());
         }
         params.put("prm_fDate", DateUtil.toDateStrMYSQL(txtFrom.getText()));
@@ -174,7 +174,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                         try ( //dao.open();
                                 ResultSet resultSet = dao.getPro("patient_bill_payment",
                                         patient.getRegNo(), DateUtil.toDateStrMYSQL(txtPayDate.getText()), appCurr,
-                                        Global.loginUser.getUserId())) {
+                                        Global.machineId)) {
                             while (resultSet.next()) {
                                 double bal = resultSet.getDouble("balance");
                                 if (bal != 0) {
@@ -287,7 +287,13 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboBillTo, dao.findAll("PaymentType"));
+        try {
+            BindingUtil.BindComboFilter(cboBillTo, dao.findAll("PaymentType"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void search() {
@@ -332,18 +338,24 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             strFilter = "select o from VPatientBillPayment o where " + strFilter;
         }
 
-        List<VPatientBillPayment> listVPBP = dao.findAllHSQL(strFilter);
-        if (listVPBP != null) {
-            Double ttlPaid = 0.0;
-            for (VPatientBillPayment vpbp : listVPBP) {
-                ttlPaid += vpbp.getPayAmt();
-            }
+        try {
+            List<VPatientBillPayment> listVPBP = dao.findAllHSQL(strFilter);
+            if (listVPBP != null) {
+                Double ttlPaid = 0.0;
+                for (VPatientBillPayment vpbp : listVPBP) {
+                    ttlPaid += vpbp.getPayAmt();
+                }
 
-            txtSTotalPaid.setValue(ttlPaid);
-            tblBillPaymentSearchTableModel.setListVPBP(listVPBP);
-        } else {
-            txtSTotalPaid.setValue(0.0);
-            tblBillPaymentSearchTableModel.setListVPBP(new ArrayList());
+                txtSTotalPaid.setValue(ttlPaid);
+                tblBillPaymentSearchTableModel.setListVPBP(listVPBP);
+            } else {
+                txtSTotalPaid.setValue(0.0);
+                tblBillPaymentSearchTableModel.setListVPBP(new ArrayList());
+            }
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

@@ -8,11 +8,8 @@ import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.view.VMedicine1;
 import com.cv.app.pharmacy.ui.util.ItemAutoCompleter;
-import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.Util1;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -24,7 +21,6 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.Timer;
 import javax.swing.table.TableCellEditor;
 import org.apache.log4j.Logger;
 
@@ -45,7 +41,7 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
     private final FocusAdapter fa = new FocusAdapter() {
         @Override
         public void focusGained(java.awt.event.FocusEvent evt) {
-            JTextField jtf = (JTextField)evt.getSource();
+            JTextField jtf = (JTextField) evt.getSource();
             jtf.setCaretPosition(jtf.getText().length());
         }
 
@@ -54,12 +50,12 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
             //stopCellEditing();
         }
     };
-    
+
     public SaleTableCodeCellEditor(final AbstractDataAccess dao) {
         this.dao = dao;
         //if (Global.listItem == null) {
         //    log.info("Global.listItem is null.");
-            getItem();
+        getItem();
         //}
     }
 
@@ -103,7 +99,7 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
             jtf.selectAll();
         }
         log.info("Code Editor Before listItem.");
-        List listItem;
+        List listItem = null;
         String strBrandFilter = Util1.getPropValue("system.pharmacy.bran.filter");
         String strShowAllGroup = Util1.getPropValue("system.pharmacy.no.filter.group");
         /*if (cusGroup != null && strBrandFilter.equals("Y")) {
@@ -117,7 +113,7 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
         } else {
             listItem = Global.listItem;
         }*/
-        
+
         if (cusGroup != null && strBrandFilter.equals("Y")) {
             if (cusGroup.equals(strShowAllGroup) || strShowAllGroup.equals("-")) {
                 listItem = Global.listItem;
@@ -137,13 +133,19 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
                             + " where a.mapStatus = true and a.key.locationId = " + locationId.toString() + ") "
                             + "order by o.medName";
                 }
-                listItem = dao.findAllHSQL(strSql);
+                try {
+                    listItem = dao.findAllHSQL(strSql);
+                } catch (Exception ex) {
+                    log.error("getTableCellEditorComponent : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
             }
         } else {
             getItem();
             listItem = Global.listItem;
         }
-        
+
         log.info("Code Editor Before ItemAutoCompleter.");
         completer = new ItemAutoCompleter(jtf, listItem, this);
         log.info("Editor List : " + listItem.size());
@@ -199,7 +201,7 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
 
     public void setLocationId(Integer locationId) {
         this.locationId = locationId;
-        if (strCodeFilter.equals("Y")){
+        if (strCodeFilter.equals("Y")) {
             getItem();
         }
     }
@@ -222,9 +224,9 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
             if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
                 Global.listItem = dao.findAllHSQL(
                         "select o from VMedicine1 o where o.active = true and o.medTypeId in "
-                                + "(select a.key.itemType.itemTypeCode from ItemTypeMapping a"
-                                + " where a.key.groupId = " + Global.loginUser.getUserRole().getRoleId() 
-                                + ") order by o.medName");
+                        + "(select a.key.itemType.itemTypeCode from ItemTypeMapping a"
+                        + " where a.key.groupId = " + Global.loginUser.getUserRole().getRoleId()
+                        + ") order by o.medName");
             } else {
                 if (strCodeFilter.equals("Y")) {
                     Global.listItem = dao.findAllHSQL(
@@ -238,7 +240,7 @@ public class SaleTableCodeCellEditor extends AbstractCellEditor implements Table
             log.info("end : " + new Date());
         } catch (Exception ex) {
             log.error("SaleTableCodeCellEditor : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
     }

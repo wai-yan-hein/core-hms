@@ -262,56 +262,62 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
     }
 
     private void copyVoucher(String invNo) {
-        DCHis tmpVou = (DCHis) dao.find(DCHis.class, invNo);
+        try {
+            DCHis tmpVou = (DCHis) dao.find(DCHis.class, invNo);
 
-        currVou = new DCHis();
-        BeanUtils.copyProperties(tmpVou, currVou);
-        List<DCDetailHis> listDetail = new ArrayList();
-        List<DCDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
+            currVou = new DCHis();
+            BeanUtils.copyProperties(tmpVou, currVou);
+            List<DCDetailHis> listDetail = new ArrayList();
+            List<DCDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
 
-        for (DCDetailHis detail : listDetailTmp) {
-            DCDetailHis tmpDetail = new DCDetailHis();
-            BeanUtils.copyProperties(detail, tmpDetail);
-            tmpDetail.setOpdDetailId(null);
-            listDetail.add(tmpDetail);
+            for (DCDetailHis detail : listDetailTmp) {
+                DCDetailHis tmpDetail = new DCDetailHis();
+                BeanUtils.copyProperties(detail, tmpDetail);
+                tmpDetail.setOpdDetailId(null);
+                listDetail.add(tmpDetail);
+            }
+            currVou.setListOPDDetailHis(listDetail);
+            currVou.setDeleted(false);
+
+            if (tmpVou.getListOPDDetailHis().size() > 0) {
+                //tableModel.clear();
+                tableModel.setListOPDDetailHis(listDetail);
+            }
+
+            //txtVouNo.setText(tmpVou.getOpdInvId());
+            lblStatus.setText("NEW");
+            txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
+            cboCurrency.setSelectedItem(tmpVou.getCurrency());
+            cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
+            txtRemark.setText(tmpVou.getRemark());
+            cboDCStatus.setSelectedItem(tmpVou.getDcStatus());
+
+            if (tmpVou.getPatient() != null) {
+                txtPatientNo.setText(tmpVou.getPatient().getRegNo());
+                txtPatientName.setText(tmpVou.getPatient().getPatientName());
+            } else {
+                txtPatientName.setText(tmpVou.getPatientName());
+                txtPatientName.setEditable(true);
+                txtPatientNo.setEditable(false);
+            }
+
+            if (tmpVou.getDoctor() != null) {
+                txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
+                txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
+            }
+
+            txtVouTotal.setValue(tmpVou.getVouTotal());
+            txtDiscP.setValue(tmpVou.getDiscountP());
+            txtDiscA.setValue(tmpVou.getDiscountA());
+            txtTaxP.setValue(tmpVou.getTaxP());
+            txtTaxA.setValue(tmpVou.getTaxA());
+            txtPaid.setValue(tmpVou.getPaid());
+            txtVouBalance.setValue(tmpVou.getVouBalance());
+        } catch (Exception ex) {
+            log.error("copyVoucher : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        currVou.setListOPDDetailHis(listDetail);
-        currVou.setDeleted(false);
-
-        if (tmpVou.getListOPDDetailHis().size() > 0) {
-            //tableModel.clear();
-            tableModel.setListOPDDetailHis(listDetail);
-        }
-
-        //txtVouNo.setText(tmpVou.getOpdInvId());
-        lblStatus.setText("NEW");
-        txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
-        cboCurrency.setSelectedItem(tmpVou.getCurrency());
-        cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
-        txtRemark.setText(tmpVou.getRemark());
-        cboDCStatus.setSelectedItem(tmpVou.getDcStatus());
-
-        if (tmpVou.getPatient() != null) {
-            txtPatientNo.setText(tmpVou.getPatient().getRegNo());
-            txtPatientName.setText(tmpVou.getPatient().getPatientName());
-        } else {
-            txtPatientName.setText(tmpVou.getPatientName());
-            txtPatientName.setEditable(true);
-            txtPatientNo.setEditable(false);
-        }
-
-        if (tmpVou.getDoctor() != null) {
-            txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
-            txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
-        }
-
-        txtVouTotal.setValue(tmpVou.getVouTotal());
-        txtDiscP.setValue(tmpVou.getDiscountP());
-        txtDiscA.setValue(tmpVou.getDiscountA());
-        txtTaxP.setValue(tmpVou.getTaxP());
-        txtTaxA.setValue(tmpVou.getTaxA());
-        txtPaid.setValue(tmpVou.getPaid());
-        txtVouBalance.setValue(tmpVou.getVouBalance());
     }
 
     @Override
@@ -330,31 +336,21 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "DoctorSearch":
+                try {
                 Doctor doctor = (Doctor) selectObj;
                 doctor = (Doctor) dao.find(Doctor.class, doctor.getDoctorId());
-
-                /*if (doctor.getListFees().size() > 0) {
-                 List<DoctorFeesMapping> listFees = doctor.getListFees();
-                 HashMap<Integer, Double> doctFees = new HashMap();
-
-                 for (DoctorFeesMapping dfm : listFees) {
-                 doctFees.put(dfm.getService().getServiceId(), dfm.getFees());
-                 if (tableModel.getTotalRecord() > 0) {
-                 if (dfm.getService() != null) {
-                 tableModel.setDoctorFees(dfm.getService().getServiceId(), dfm.getFees());
-                 }
-                 }
-                 }
-
-                 tableModel.setDoctFees(doctFees);
-                 }*/
                 currVou.setDoctor(doctor);
                 txtDoctorNo.setText(doctor.getDoctorId());
                 txtDoctorName.setText((doctor.getDoctorName()));
                 txtVouTotal.setValue(tableModel.getTotal());
                 calcBalance();
                 tblService.requestFocus();
-                break;
+            } catch (Exception ex) {
+                log.error("selected DoctorSearch : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "PatientSearch":
                 Patient patient = (Patient) selectObj;
                 currVou.setPatient(patient);
@@ -370,22 +366,28 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
                 if (!Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
                     butAdmit.setEnabled(true);
                 } else {
-                    butAdmit.setEnabled(false);
-                    AdmissionKey key = new AdmissionKey();
-                    key.setRegister(patient);
-                    key.setAmsNo(patient.getAdmissionNo());
-                    Ams ams = (Ams) dao.find(Ams.class, key);
-                    if (ams != null) {
-                        lblAdmissionDate.setText(DateUtil.toDateTimeStr(ams.getAmsDate(),
-                                "dd/MM/yyyy HH:mm:ss"));
-                        if (ams.getBuildingStructure() != null) {
-                            txtBedNo.setText(ams.getBuildingStructure().getDescription());
+                    try {
+                        butAdmit.setEnabled(false);
+                        AdmissionKey key = new AdmissionKey();
+                        key.setRegister(patient);
+                        key.setAmsNo(patient.getAdmissionNo());
+                        Ams ams = (Ams) dao.find(Ams.class, key);
+                        if (ams != null) {
+                            lblAdmissionDate.setText(DateUtil.toDateTimeStr(ams.getAmsDate(),
+                                    "dd/MM/yyyy HH:mm:ss"));
+                            if (ams.getBuildingStructure() != null) {
+                                txtBedNo.setText(ams.getBuildingStructure().getDescription());
+                            }
                         }
-                    }
-                    if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
-                        cboPaymentType.setSelectedItem(ptCredit);
-                    } else {
-                        cboPaymentType.setSelectedItem(ptCash);
+                        if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
+                            cboPaymentType.setSelectedItem(ptCredit);
+                        } else {
+                            cboPaymentType.setSelectedItem(ptCash);
+                        }
+                    } catch (Exception ex) {
+                        log.error("selected PatientSearch : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
                 getPatientBill(patient.getRegNo());
@@ -545,17 +547,23 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
                         "DC Vou No", JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             } else {
-                List<DCHis> listOPDH = dao.findAllHSQL(
-                        "select o from DCHis o where o.opdInvId = '" + vouNo + "'");
-                if (listOPDH != null) {
-                    if (!listOPDH.isEmpty()) {
-                        log.error("Duplicate DC voucher error : " + txtVouNo.getText() + " @ "
-                                + txtDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(),
-                                "Duplicate DC vou no. Exit the program and try again.",
-                                "DC Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
+                try {
+                    List<DCHis> listOPDH = dao.findAllHSQL(
+                            "select o from DCHis o where o.opdInvId = '" + vouNo + "'");
+                    if (listOPDH != null) {
+                        if (!listOPDH.isEmpty()) {
+                            log.error("Duplicate DC voucher error : " + txtVouNo.getText() + " @ "
+                                    + txtDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(),
+                                    "Duplicate DC vou no. Exit the program and try again.",
+                                    "DC Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(1);
+                        }
                     }
+                } catch (Exception ex) {
+                    log.error("genVouNo : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         } else {
@@ -649,102 +657,114 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindCombo(cboDCStatus, dao.findAll("DCStatus"));
-        BindingUtil.BindCombo(cboDiagnosis, dao.findAll("Diagnosis"));
-        BindingUtil.BindCombo(cboAgeRange, dao.findAll("AgeRange"));
+        try {
+            BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindCombo(cboDCStatus, dao.findAll("DCStatus"));
+            BindingUtil.BindCombo(cboDiagnosis, dao.findAll("Diagnosis"));
+            BindingUtil.BindCombo(cboAgeRange, dao.findAll("AgeRange"));
 
-        new ComBoBoxAutoComplete(cboPaymentType, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
-        new ComBoBoxAutoComplete(cboDCStatus, this);
-        new ComBoBoxAutoComplete(cboDiagnosis, this);
-        new ComBoBoxAutoComplete(cboAgeRange, this);
+            new ComBoBoxAutoComplete(cboPaymentType, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+            new ComBoBoxAutoComplete(cboDCStatus, this);
+            new ComBoBoxAutoComplete(cboDiagnosis, this);
+            new ComBoBoxAutoComplete(cboAgeRange, this);
 
-        cboDCStatus.setSelectedItem(null);
-        cboDiagnosis.setSelectedItem(null);
-        cboAgeRange.setSelectedItem(null);
+            cboDCStatus.setSelectedItem(null);
+            cboDiagnosis.setSelectedItem(null);
+            cboAgeRange.setSelectedItem(null);
 
-        cboBindStatus = true;
+            cboBindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
-        tblService.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
-        tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
-        tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
-        tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
-        tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
-        tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Amount
+        try {
+            tblService.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
+            tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
+            tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
+            tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
+            tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
+            tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Amount
 
-        //Change JTable cell editor
-        tblService.getColumnModel().getColumn(0).setCellEditor(
-                new DCTableCellEditor(dao));
-        tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
-        tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
+            //Change JTable cell editor
+            tblService.getColumnModel().getColumn(0).setCellEditor(
+                    new DCTableCellEditor(dao));
+            tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+            tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-        tblService.getModel().addTableModelListener(new TableModelListener() {
+            tblService.getModel().addTableModelListener(new TableModelListener() {
 
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                //txtVouTotal.setValue(tableModel.getTotal());
-                String depositeId = Util1.getPropValue("system.dc.deposite.id");
-                String discountId = Util1.getPropValue("system.dc.disc.id");
-                String paidId = Util1.getPropValue("system.dc.paid.id");
-                String refundId = Util1.getPropValue("system.dc.refund.id");
-                List<DCDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-                QueryResults qr;
-                Query q = new Query();
-                String strSql = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis"
-                        + " WHERE service IS NOT NULL "
-                        + "EXECUTE ON ALL sum(amount) AS total";
-                String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                        + "service.serviceId not in (" + depositeId + ","
-                        + discountId + "," + paidId + "," + refundId + ")";
-                try {
-                    q.parse(strSql);
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtVouTotal.setValue(vTotal);
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    //txtVouTotal.setValue(tableModel.getTotal());
+                    String depositeId = Util1.getPropValue("system.dc.deposite.id");
+                    String discountId = Util1.getPropValue("system.dc.disc.id");
+                    String paidId = Util1.getPropValue("system.dc.paid.id");
+                    String refundId = Util1.getPropValue("system.dc.refund.id");
+                    List<DCDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+                    QueryResults qr;
+                    Query q = new Query();
+                    String strSql = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis"
+                            + " WHERE service IS NOT NULL "
+                            + "EXECUTE ON ALL sum(amount) AS total";
+                    String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                            + "service.serviceId not in (" + depositeId + ","
+                            + discountId + "," + paidId + "," + refundId + ")";
+                    try {
+                        q.parse(strSql);
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtVouTotal.setValue(vTotal);
 
-                    strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                            + "service.serviceId in (" + depositeId + "," + paidId + ")";
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtPaid.setValue(vTotalPaid);
+                        strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                                + "service.serviceId in (" + depositeId + "," + paidId + ")";
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtPaid.setValue(vTotalPaid);
 
-                    strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                            + "service.serviceId in (" + discountId + ")";
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtDiscA.setValue(vTotalDiscount);
-                } catch (QueryParseException qpe) {
-                    log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
-                } catch (QueryExecutionException | NumberFormatException ex) {
-                    log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
+                        strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                                + "service.serviceId in (" + discountId + ")";
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtDiscA.setValue(vTotalDiscount);
+                    } catch (QueryParseException qpe) {
+                        log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
+                    } catch (QueryExecutionException | NumberFormatException ex) {
+                        log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
+                    }
+                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                    calcBalance();
                 }
-                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                calcBalance();
-            }
-        });
+            });
 
-        tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblService.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+            tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblService.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-            }
-        });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
+                }
+            });
 
-        tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
-        tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
+            tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {
@@ -1023,9 +1043,9 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {
@@ -1060,9 +1080,9 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
         try {
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     totalBalance += bal;
@@ -1079,12 +1099,18 @@ public class DCEntryRestoreView extends javax.swing.JPanel implements FormAction
 
     private boolean isNeedDetail(int serviceId) {
         boolean status = false;
-        List<DrDetailId> listDDI = dao.findAllHSQL(
-                "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
-        if (listDDI != null) {
-            if (!listDDI.isEmpty()) {
-                status = true;
+        try {
+            List<DrDetailId> listDDI = dao.findAllHSQL(
+                    "select o from DrDetailId o where o.key.option = 'DC' and o.key.serviceId = " + serviceId);
+            if (listDDI != null) {
+                if (!listDDI.isEmpty()) {
+                    status = true;
+                }
             }
+        } catch (Exception ex) {
+            log.error("isNeedDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return status;
     }

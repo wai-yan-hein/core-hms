@@ -122,13 +122,19 @@ public class ItemSetupLocationItemMappingTableModel extends AbstractTableModel {
 
     public void setMedId(String medId) {
         this.medId = medId;
-        if (!medId.equals("-")) {
-            String strSql = "select o from VLocationItemMapping o where (o.key.itemId = '"
-                    + medId + "' or o.key.itemId = '-')";
-            List<VLocationItemMapping> tmpListVLIM = dao.findAllHSQL(strSql);
-            setListVLIM(tmpListVLIM);
-        } else {
-            setListVLIM(new ArrayList());
+        try {
+            if (!medId.equals("-")) {
+                String strSql = "select o from VLocationItemMapping o where (o.key.itemId = '"
+                        + medId + "' or o.key.itemId = '-')";
+                List<VLocationItemMapping> tmpListVLIM = dao.findAllHSQL(strSql);
+                setListVLIM(tmpListVLIM);
+            } else {
+                setListVLIM(new ArrayList());
+            }
+        } catch (Exception ex) {
+            log.error("setMedId : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

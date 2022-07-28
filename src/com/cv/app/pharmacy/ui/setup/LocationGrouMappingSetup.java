@@ -60,9 +60,15 @@ public class LocationGrouMappingSetup extends javax.swing.JDialog {
                 lgmTableModel.setListLGM(new ArrayList());
             } else {
                 lblStatus.setText("EDIT");
-                List<LocationGroupMapping> listLGM = dao.findAllHSQL(
-                        "select o from LocationGroupMapping o where o.key.groupId = " + groupId);
-                lgmTableModel.setListLGM(listLGM);
+                try {
+                    List<LocationGroupMapping> listLGM = dao.findAllHSQL(
+                            "select o from LocationGroupMapping o where o.key.groupId = " + groupId);
+                    lgmTableModel.setListLGM(listLGM);
+                } catch (Exception ex) {
+                    log.error("setLocationGroup : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
             }
         }
     }
@@ -109,37 +115,43 @@ public class LocationGrouMappingSetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        //tblLocationGroup.getColumnModel().getColumn(0)
-        List<LocationGroup> listLG = dao.findAll("LocationGroup");
-        lgTableModel.setListLG(listLG);
+        try {
+            //tblLocationGroup.getColumnModel().getColumn(0)
+            List<LocationGroup> listLG = dao.findAll("LocationGroup");
+            lgTableModel.setListLG(listLG);
 
-        JComboBox cboLocationCell = new JComboBox();
-        cboLocationCell.setFont(Global.textFont); // NOI18N
-        BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
-        tblMapping.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cboLocationCell));
+            JComboBox cboLocationCell = new JComboBox();
+            cboLocationCell.setFont(Global.textFont); // NOI18N
+            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+            tblMapping.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cboLocationCell));
 
-        tblLocationGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblLocationGroup.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (!e.getValueIsAdjusting()) {
-                            return;
-                        }
-                        try {
-                            if (tblLocationGroup.getSelectedRow() != -1) {
-                                int selectedRow = tblLocationGroup.convertRowIndexToModel(tblLocationGroup.getSelectedRow());
-
-                                if (selectedRow != -1) {
-                                    setLocationGroup(lgTableModel.getLocationGroup(selectedRow));
-                                }
-                            }
-                        } catch (Exception ex) {
-                            log.error("initTable-->valueChanged : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-                        }
+            tblLocationGroup.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblLocationGroup.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (!e.getValueIsAdjusting()) {
+                        return;
                     }
-                });
+                    try {
+                        if (tblLocationGroup.getSelectedRow() != -1) {
+                            int selectedRow = tblLocationGroup.convertRowIndexToModel(tblLocationGroup.getSelectedRow());
+
+                            if (selectedRow != -1) {
+                                setLocationGroup(lgTableModel.getLocationGroup(selectedRow));
+                            }
+                        }
+                    } catch (Exception ex) {
+                        log.error("initTable-->valueChanged : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /**

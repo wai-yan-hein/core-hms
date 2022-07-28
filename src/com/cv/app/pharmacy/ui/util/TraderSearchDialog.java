@@ -105,9 +105,9 @@ public class TraderSearchDialog extends javax.swing.JDialog {
         List<Trader> listTrader;
 
         try {
-            
-            if ((title.contains("Customer") && chkOption.isSelected()) ||
-                    (title.contains("Supplier") && !chkOption.isSelected())) {
+
+            if ((title.contains("Customer") && chkOption.isSelected())
+                    || (title.contains("Supplier") && !chkOption.isSelected())) {
                 if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                     String strSql;
                     if (locationId != -1) {
@@ -129,8 +129,8 @@ public class TraderSearchDialog extends javax.swing.JDialog {
                             "select o from Supplier o where o.active = true order by o.traderName");
                 }
                 //listTrader = dao.findAll("Supplier", "Active = true");
-            } else if ((title.contains("Customer") && !chkOption.isSelected()) ||
-                    title.contains("Supplier") && chkOption.isSelected()) {
+            } else if ((title.contains("Customer") && !chkOption.isSelected())
+                    || title.contains("Supplier") && chkOption.isSelected()) {
                 if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                     String strSql;
                     if (locationId != -1) {
@@ -191,7 +191,7 @@ public class TraderSearchDialog extends javax.swing.JDialog {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblCustomer.getCellEditor() != null){
+                if (tblCustomer.getCellEditor() != null) {
                     tblCustomer.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -255,8 +255,14 @@ public class TraderSearchDialog extends javax.swing.JDialog {
     };
 
     private void filterItem(String strFilter) {
-        tableModel.setListTrader(dao.findAll("Trader", strFilter));
-        //statusFilter = true;
+        try {
+            tableModel.setListTrader(dao.findAll("Trader", strFilter));
+            //statusFilter = true;
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void closeDialog() {

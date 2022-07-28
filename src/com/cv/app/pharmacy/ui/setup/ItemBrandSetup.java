@@ -36,22 +36,28 @@ public class ItemBrandSetup extends javax.swing.JPanel {
     private BrandTableModel brandTableModel = new BrandTableModel();
     private final AbstractDataAccess dao = Global.dao;
     private int selectedRow = -1;
-    private final TableRowSorter<TableModel> sorter;
-    private final StartWithRowFilter swrf;
+    private TableRowSorter<TableModel> sorter = null;
+    private StartWithRowFilter swrf = null;
 
     /**
      * Creates new form ItemBrandSetup
      */
     public ItemBrandSetup() {
-        initComponents();
-        initTable();
-        getBrandList();
-        swrf = new StartWithRowFilter(txtFilter);
-        sorter = new TableRowSorter(tblBrand.getModel());
-        tblBrand.setRowSorter(sorter);
-        BindingUtil.BindCombo(cboCusGroup, dao.findAll("CustomerGroup"));
-        new ComBoBoxAutoComplete(cboCusGroup);
-        cboCusGroup.setSelectedItem(null);
+        try {
+            initComponents();
+            initTable();
+            getBrandList();
+            swrf = new StartWithRowFilter(txtFilter);
+            sorter = new TableRowSorter(tblBrand.getModel());
+            tblBrand.setRowSorter(sorter);
+            BindingUtil.BindCombo(cboCusGroup, dao.findAll("CustomerGroup"));
+            new ComBoBoxAutoComplete(cboCusGroup);
+            cboCusGroup.setSelectedItem(null);
+        } catch (Exception ex) {
+            log.error("ItemBrandSetup : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void clear() {
@@ -93,8 +99,15 @@ public class ItemBrandSetup extends javax.swing.JPanel {
         txtBrandName.setText(itemBrand.getBrandName());
         lblStatus.setText("EDIT");
         if (currBrand.getCusGroup() != null) {
-            CustomerGroup cg = (CustomerGroup) dao.find(CustomerGroup.class, currBrand.getCusGroup());
-            cboCusGroup.setSelectedItem(cg);
+            try {
+                CustomerGroup cg = (CustomerGroup) dao.find(CustomerGroup.class, currBrand.getCusGroup());
+                cboCusGroup.setSelectedItem(cg);
+            } catch (Exception ex) {
+                cboCusGroup.setSelectedItem(null);
+                log.error("select : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         } else {
             cboCusGroup.setSelectedItem(null);
         }
@@ -331,12 +344,10 @@ public class ItemBrandSetup extends javax.swing.JPanel {
     private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
         if (txtFilter.getText().isEmpty()) {
             sorter.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorter.setRowFilter(swrf);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorter.setRowFilter(swrf);
-            } else {
-                sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
-            }
+            sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
         }
     }//GEN-LAST:event_txtFilterKeyReleased
 

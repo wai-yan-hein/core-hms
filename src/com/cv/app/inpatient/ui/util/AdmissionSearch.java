@@ -22,7 +22,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -67,43 +66,55 @@ public class AdmissionSearch extends javax.swing.JDialog {
 
     private void getPrvFilter() {
         String tranOption = "ADMSearch";
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = '" + tranOption + "'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = '" + tranOption + "'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption(tranOption);
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption(tranOption);
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFrom.setText(DateUtil.getTodayDateStr());
-            txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFrom.setText(DateUtil.getTodayDateStr());
+                txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getRemark() != null) {
-                txtFatherName.setText(vouFilter.getRemark());
-            }
+                if (vouFilter.getRemark() != null) {
+                    txtFatherName.setText(vouFilter.getRemark());
+                }
 
-            if (vouFilter.getPtName() != null) {
-                if (!vouFilter.getPtName().isEmpty()) {
-                    txtName.setText(vouFilter.getPtName());
+                if (vouFilter.getPtName() != null) {
+                    if (!vouFilter.getPtName().isEmpty()) {
+                        txtName.setText(vouFilter.getPtName());
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
-        BindingUtil.BindComboFilter(cboCity, dao.findAll("City"));
-        BindingUtil.BindComboFilter(cboDcStatus, dao.findAll("DCStatus"));
-        
-        new ComBoBoxAutoComplete(cboGender);
-        new ComBoBoxAutoComplete(cboCity);
+        try {
+            BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
+            BindingUtil.BindComboFilter(cboCity, dao.findAll("City"));
+            BindingUtil.BindComboFilter(cboDcStatus, dao.findAll("DCStatus"));
 
-        cboGender.setSelectedIndex(0);
-        cboCity.setSelectedIndex(0);
+            new ComBoBoxAutoComplete(cboGender);
+            new ComBoBoxAutoComplete(cboCity);
+
+            cboGender.setSelectedIndex(0);
+            cboCity.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -118,21 +129,23 @@ public class AdmissionSearch extends javax.swing.JDialog {
         //Define table selection model to single row selection.
         tblPatient.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblPatient.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblPatient.getSelectedRow();
-                    }
-                });
-        
-        List<Ams> listPatient = dao.findAllHSQL("select o from Ams o where o.dcStatus is null");
-        tableModel.setListAms(listPatient);
-        if(listPatient != null){
-            Integer total = listPatient.size();
-            lblTotalRec.setText("Total Records : " + total.toString());
-        }else{
-            lblTotalRec.setText("Total Records : 0");
+        tblPatient.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            selectedRow = tblPatient.getSelectedRow();
+        });
+
+        try {
+            List<Ams> listPatient = dao.findAllHSQL("select o from Ams o where o.dcStatus is null");
+            tableModel.setListAms(listPatient);
+            if (listPatient != null) {
+                Integer total = listPatient.size();
+                lblTotalRec.setText("Total Records : " + total.toString());
+            } else {
+                lblTotalRec.setText("Total Records : 0");
+            }
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -190,11 +203,9 @@ public class AdmissionSearch extends javax.swing.JDialog {
                 vouFilter.setFromDate(null);
                 vouFilter.setToDate(DateUtil.toDate(txtTo.getText()));
             }
-        } else {
-            if (vouFilter != null) {
-                vouFilter.setFromDate(null);
-                vouFilter.setToDate(null);
-            }
+        } else if (vouFilter != null) {
+            vouFilter.setFromDate(null);
+            vouFilter.setToDate(null);
         }
 
         if (cboGender.getSelectedItem() instanceof Gender) {
@@ -226,10 +237,8 @@ public class AdmissionSearch extends javax.swing.JDialog {
             if (vouFilter != null) {
                 vouFilter.setPtName(txtName.getText().trim());
             }
-        } else {
-            if (vouFilter != null) {
-                vouFilter.setPtName(null);
-            }
+        } else if (vouFilter != null) {
+            vouFilter.setPtName(null);
         }
 
         if (txtFatherName.getText() != null && !txtFatherName.getText().isEmpty()) {
@@ -243,37 +252,35 @@ public class AdmissionSearch extends javax.swing.JDialog {
             if (vouFilter != null) {
                 vouFilter.setRemark(txtFatherName.getText().trim());
             }
-        } else {
-            if (vouFilter != null) {
-                vouFilter.setRemark(null);
-            }
+        } else if (vouFilter != null) {
+            vouFilter.setRemark(null);
         }
 
-        if(!txtBedNo.getText().isEmpty()){
-            if(strFilter == null){
+        if (!txtBedNo.getText().isEmpty()) {
+            if (strFilter == null) {
                 strFilter = "o.buildingStructure.description = '" + txtBedNo.getText().trim() + "'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.buildingStructure.description = '" + txtBedNo.getText().trim() + "'";
             }
         }
-        
-        if(cboDcStatus.getSelectedItem() instanceof DCStatus){
-            DCStatus dcs = (DCStatus)cboDcStatus.getSelectedItem();
-            if(strFilter == null){
+
+        if (cboDcStatus.getSelectedItem() instanceof DCStatus) {
+            DCStatus dcs = (DCStatus) cboDcStatus.getSelectedItem();
+            if (strFilter == null) {
                 strFilter = "o.dcStatus.statusId = " + dcs.getStatusId().toString();
-            }else{
+            } else {
                 strFilter = strFilter + " and o.dcStatus.statusId = " + dcs.getStatusId().toString();
             }
         }
-        
-        if(!txtRegNo.getText().isEmpty()){
-            if(strFilter == null){
+
+        if (!txtRegNo.getText().isEmpty()) {
+            if (strFilter == null) {
                 strFilter = "o.key.register.regNo = '" + txtRegNo.getText().trim() + "'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.key.register.regNo = '" + txtRegNo.getText().trim() + "'";
             }
         }
-        
+
         if (strFilter != null) {
             strSql = strSql + " where " + strFilter;
         }
@@ -301,15 +308,15 @@ public class AdmissionSearch extends javax.swing.JDialog {
             } catch (Exception ex) {
                 log.error("search : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
-        }else{
-            try{
+        } else {
+            try {
                 List<Ams> listPatient = dao.findAllHSQL("select o from Ams o where o.dcStatus is null");
                 tableModel.setListAms(listPatient);
-            }catch(Exception ex){
+            } catch (Exception ex) {
                 log.error("search1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
         }
-        
+
         lblTotalRec.setText("Total Records : " + tableModel.getRowCount());
     }
 
@@ -351,7 +358,6 @@ public class AdmissionSearch extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Admission Search");
-        setPreferredSize(new java.awt.Dimension(1100, 600));
 
         tblPatient.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblPatient.setModel(tableModel);

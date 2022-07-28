@@ -338,6 +338,7 @@ public class RetOutTableModel extends AbstractTableModel {
         boolean status = true;
         int row = maxUniqueId;
         int recordCnt = 0;
+        
         if (listDetail != null) {
             for (RetOutDetailHis record : listDetail) {
                 if (record.getMedicineId().getMedId() != null) {
@@ -359,12 +360,13 @@ public class RetOutTableModel extends AbstractTableModel {
         }
 
         if (recordCnt == 0) {
-            JOptionPane.showMessageDialog(Util1.getParent(), "No purchase record.",
+            JOptionPane.showMessageDialog(Util1.getParent(), "No return out record.",
                     "No data.", JOptionPane.ERROR_MESSAGE);
             status = false;
         }
 
-        //parent.setRowSelectionInterval(row, row);
+        maxUniqueId = row;
+        parent.setRowSelectionInterval(0, 0);
         return status;
     }
 

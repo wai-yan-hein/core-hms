@@ -6,6 +6,7 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -15,12 +16,12 @@ import org.apache.log4j.Logger;
  *
  * @author winswe
  */
-public class TraderOpTrListTableModel extends AbstractTableModel{
-    
+public class TraderOpTrListTableModel extends AbstractTableModel {
+
     static Logger log = Logger.getLogger(TraderOpTrListTableModel.class.getName());
     private List<Trader> listTrader = new ArrayList();
     private final String[] columnNames = {"Code", "Name", "Township", "Active"};
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -33,46 +34,50 @@ public class TraderOpTrListTableModel extends AbstractTableModel{
 
     @Override
     public Class getColumnClass(int column) {
-        if(column == 3){
+        if (column == 3) {
             return Boolean.class;
-        }else{
+        } else {
             return String.class;
         }
     }
 
     @Override
     public Object getValueAt(int row, int column) {
-        if(listTrader == null){
+        if (listTrader == null) {
             return null;
         }
-        
-        if(listTrader.isEmpty()){
-            return null;
-        }
-        
-        try{
-        Trader tr = listTrader.get(row);
 
-        switch (column) {
-            case 0: //Code
-                return tr.getTraderId();
-            case 1: //Name
-                return tr.getTraderName();
-            case 2: //Township
-                if(tr.getTownship() == null){
-                    return null;
-                } else {
-                    return tr.getTownship().getTownshipName();
-                }
-            case 3: //Active
-                return tr.getActive();
-            default:
-                return null;
+        if (listTrader.isEmpty()) {
+            return null;
         }
-        }catch(Exception ex){
+
+        try {
+            Trader tr = listTrader.get(row);
+
+            switch (column) {
+                case 0: //Code
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        return tr.getStuCode();
+                    } else {
+                        return tr.getTraderId();
+                    }
+                case 1: //Name
+                    return tr.getTraderName();
+                case 2: //Township
+                    if (tr.getTownship() == null) {
+                        return null;
+                    } else {
+                        return tr.getTownship().getTownshipName();
+                    }
+                case 3: //Active
+                    return tr.getActive();
+                default:
+                    return null;
+            }
+        } catch (Exception ex) {
             log.error("getValueAt : " + ex.getMessage());
         }
-        
+
         return null;
     }
 
@@ -82,7 +87,7 @@ public class TraderOpTrListTableModel extends AbstractTableModel{
 
     @Override
     public int getRowCount() {
-        if(listTrader == null){
+        if (listTrader == null) {
             return 0;
         }
         return listTrader.size();
@@ -101,13 +106,13 @@ public class TraderOpTrListTableModel extends AbstractTableModel{
         this.listTrader = listTrader;
         fireTableDataChanged();
     }
-    
-    public Trader getTrader(int row){
-        if(listTrader == null){
+
+    public Trader getTrader(int row) {
+        if (listTrader == null) {
             return null;
-        }else if(listTrader.isEmpty()){
+        } else if (listTrader.isEmpty()) {
             return null;
-        }else{
+        } else {
             return listTrader.get(row);
         }
     }

@@ -42,16 +42,22 @@ public class PathoAutoCompleter implements KeyListener {
     public AbstractCellEditor editor;
     private TableRowSorter<TableModel> sorter;
     private final AbstractDataAccess dao = Global.dao;
-    
+
     public PathoAutoCompleter(JTextComponent comp,
             AbstractCellEditor editor) {
         this.textComp = comp;
         this.editor = editor;
         textComp.putClientProperty(AUTOCOMPLETER, this);
         textComp.setFont(Global.textFont);
-        List<Pathologiest> listPatho = dao.findAllHSQL(
-                "select o from Pathologiest o where o.active = true order by o.pathologyName");
-        acTableModel = new PathoAutoCompleteTableModel(listPatho);
+        try {
+            List<Pathologiest> listPatho = dao.findAllHSQL(
+                    "select o from Pathologiest o where o.active = true order by o.pathologyName");
+            acTableModel = new PathoAutoCompleteTableModel(listPatho);
+        } catch (Exception ex) {
+            log.error("PathoAutoCompleter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         table.setModel(acTableModel);
         table.setFont(Global.textFont); // NOI18N
         table.setRowHeight(23);
@@ -127,7 +133,7 @@ public class PathoAutoCompleter implements KeyListener {
         popup.setVisible(false);
         editor.stopCellEditing();
     }
-    
+
     private Action acceptAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -228,10 +234,10 @@ public class PathoAutoCompleter implements KeyListener {
         int si = table.getSelectedRow();
 
         if (si < table.getRowCount() - 1) {
-            try{
+            try {
                 table.setRowSelectionInterval(si + 1, si + 1);
-            }catch(Exception ex){
-                
+            } catch (Exception ex) {
+
             }
         }
 
@@ -247,10 +253,10 @@ public class PathoAutoCompleter implements KeyListener {
         int si = table.getSelectedRow();
 
         if (si > 0) {
-            try{
+            try {
                 table.setRowSelectionInterval(si - 1, si - 1);
-            }catch(Exception ex){
-                
+            } catch (Exception ex) {
+
             }
         }
 
@@ -308,7 +314,7 @@ public class PathoAutoCompleter implements KeyListener {
         @Override
         public boolean include(RowFilter.Entry<? extends Object, ? extends Object> entry) {
             //for (int i = entry.getValueCount() - 1; i >= 0; i--) {
-      /*
+            /*
              * if (NumberUtil.isNumber(textComp.getText())) { if
              * (entry.getStringValue(0).toUpperCase().startsWith(
              * textComp.getText().toUpperCase())) { return true; } } else {

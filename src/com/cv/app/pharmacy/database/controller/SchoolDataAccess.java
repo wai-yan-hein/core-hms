@@ -15,6 +15,7 @@ import com.cv.app.pharmacy.database.entity.TraderPayHis;
 import com.cv.app.pharmacy.database.view.VMarchant;
 import com.cv.app.util.Util1;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -22,26 +23,31 @@ import java.util.List;
  */
 public class SchoolDataAccess {
 
+    static Logger log = Logger.getLogger(SchoolDataAccess.class.getName());
     private AbstractDataAccess dao;
 
     public SchoolDataAccess(AbstractDataAccess dao) {
         this.dao = dao;
     }
 
-    public VMarchant getMarchant(String code){
-        String strSql = "select o from VMarchant o where o.personNumber = '" + code + "'";
-        List<VMarchant> listVM = dao.findAllHSQL(strSql);
+    public VMarchant getMarchant(String code) {
         VMarchant vm = null;
-        
-        if(listVM != null){
-            if(!listVM.isEmpty()){
-                vm = listVM.get(0);
+        try {
+            String strSql = "select o from VMarchant o where o.personNumber = '" + code + "'";
+            List<VMarchant> listVM = dao.findAllHSQL(strSql);
+            if (listVM != null) {
+                if (!listVM.isEmpty()) {
+                    vm = listVM.get(0);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getMarchant : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        
         return vm;
     }
-    
+
     public void saveGL(Gl gl) throws Exception {
         dao.save(gl);
     }
@@ -380,7 +386,7 @@ public class SchoolDataAccess {
             }
         }
     }
-    
+
     public void saveReturnOutGl(RetOutHis currVou, String status) throws Exception {
         String sourceAccIdVou = "-";
         String accIdVou = "-";
@@ -469,7 +475,7 @@ public class SchoolDataAccess {
             }
         }
     }
-    
+
     public void saveDamageGl(DamageHis currVou, String status) throws Exception {
         String sourceAccIdVou = "-";
         String accIdVou = "-";
@@ -513,14 +519,14 @@ public class SchoolDataAccess {
                 glVou.setCrAmt(Double.NaN);
                 glVou.setReference(null);
                 glVou.setVouNo(currVou.getDmgVouId());
-                
+
                 glVou.setCompId(compId);
                 glVou.setTranSource("INV-DAMAGE");
                 dao.save(glVou);
             }
         }
     }
-    
+
     public void savePaymentGl(TraderPayHis currVou, String status) throws Exception {
         String sourceAccIdVou = "-";
         String accIdVou = "-";
@@ -564,7 +570,7 @@ public class SchoolDataAccess {
                 glVou.setCrAmt(Double.NaN);
                 glVou.setReference(null);
                 glVou.setVouNo(currVou.getPaymentId().toString());
-                
+
                 glVou.setCompId(compId);
                 glVou.setTranSource("INV-PAYMENT");
                 dao.save(glVou);

@@ -16,15 +16,19 @@ import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.StartWithRowFilter;
+import com.cv.app.inpatient.database.entity.DCHis;
 import com.cv.app.inpatient.ui.common.DCTableCellEditor;
+import com.cv.app.opd.database.entity.OPDHis;
 import com.cv.app.opd.ui.common.DCDoctorFeesMapTableModel;
 import com.cv.app.opd.ui.common.OTDoctorFeesMapTableModel;
 import com.cv.app.opd.ui.common.DoctorFeesMapTableModel;
 import com.cv.app.opd.ui.common.DoctorTableModel;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
 import com.cv.app.opd.ui.util.DoctorSetupFilterDialog;
+import com.cv.app.ot.database.entity.OTHis;
 import com.cv.app.ot.ui.common.OTTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.SaleHis;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.BindingUtil;
@@ -91,14 +95,20 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboInitial, dao.findAll("Initial"));
-        new ComBoBoxAutoComplete(cboInitial);
-        BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
-        new ComBoBoxAutoComplete(cboSex);
-        BindingUtil.BindCombo(cboSpeciality, dao.findAll("Speciality"));
-        new ComBoBoxAutoComplete(cboSpeciality);
-        new ComBoBoxAutoComplete(cboType);
-        cboType.setSelectedItem(null);
+        try {
+            BindingUtil.BindCombo(cboInitial, dao.findAll("Initial"));
+            new ComBoBoxAutoComplete(cboInitial);
+            BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
+            new ComBoBoxAutoComplete(cboSex);
+            BindingUtil.BindCombo(cboSpeciality, dao.findAll("Speciality"));
+            new ComBoBoxAutoComplete(cboSpeciality);
+            new ComBoBoxAutoComplete(cboType);
+            cboType.setSelectedItem(null);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {
@@ -124,27 +134,35 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void initTable() {
-        tableModel.setListDoctor(dao.findAll("Doctor"));
+        try {
+            tableModel.setListDoctor(dao.findAllHSQL(
+                    "select o from Doctor o where o.doctorName"
+            ));
 
-        tblDoctor.getColumnModel().getColumn(0).setPreferredWidth(20);
-        tblDoctor.getColumnModel().getColumn(1).setPreferredWidth(30);
-        tblDoctor.getColumnModel().getColumn(2).setPreferredWidth(150);
-        tblDoctor.getColumnModel().getColumn(3).setPreferredWidth(10);
+            tblDoctor.getColumnModel().getColumn(0).setPreferredWidth(20);
+            tblDoctor.getColumnModel().getColumn(1).setPreferredWidth(30);
+            tblDoctor.getColumnModel().getColumn(2).setPreferredWidth(150);
+            tblDoctor.getColumnModel().getColumn(3).setPreferredWidth(10);
 
-        tblFeesMap.getColumnModel().getColumn(0).setPreferredWidth(150);
-        tblFeesMap.getColumnModel().getColumn(1).setPreferredWidth(50);
-        tblFeesMap.getColumnModel().getColumn(0).setCellEditor(
-                new OPDTableCellEditor(dao));
+            tblFeesMap.getColumnModel().getColumn(0).setPreferredWidth(150);
+            tblFeesMap.getColumnModel().getColumn(1).setPreferredWidth(50);
+            tblFeesMap.getColumnModel().getColumn(0).setCellEditor(
+                    new OPDTableCellEditor(dao));
 
-        tblDC.getColumnModel().getColumn(0).setPreferredWidth(150);
-        tblDC.getColumnModel().getColumn(1).setPreferredWidth(50);
-        tblDC.getColumnModel().getColumn(0).setCellEditor(
-                new DCTableCellEditor(dao));
+            tblDC.getColumnModel().getColumn(0).setPreferredWidth(150);
+            tblDC.getColumnModel().getColumn(1).setPreferredWidth(50);
+            tblDC.getColumnModel().getColumn(0).setCellEditor(
+                    new DCTableCellEditor(dao));
 
-        tblOT.getColumnModel().getColumn(0).setPreferredWidth(150);
-        tblOT.getColumnModel().getColumn(1).setPreferredWidth(50);
-        tblOT.getColumnModel().getColumn(0).setCellEditor(
-                new OTTableCellEditor(dao));
+            tblOT.getColumnModel().getColumn(0).setPreferredWidth(150);
+            tblOT.getColumnModel().getColumn(1).setPreferredWidth(50);
+            tblOT.getColumnModel().getColumn(0).setCellEditor(
+                    new OTTableCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addTableSelection() {
@@ -167,55 +185,60 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void setCurrDoctor(Doctor doctor) {
-        currDoctor = (Doctor) dao.find(Doctor.class, doctor.getDoctorId());
-        String drId = currDoctor.getDoctorId();
+        try {
+            currDoctor = (Doctor) dao.find(Doctor.class, doctor.getDoctorId());
+            String drId = currDoctor.getDoctorId();
 
-        List<DoctorFeesMapping> listDFM = dao.findAllHSQL(
-                "select o from DoctorFeesMapping o where o.drId = '"
-                + drId + "'");
-        currDoctor.setListFees(listDFM);
-        if (listDFM != null) {
-            if (listDFM.size() > 0) {
-                feesMapTableModel.setListDoctorFeesMapping(currDoctor.getListFees());
-            } else {
-                feesMapTableModel.clear();
+            List<DoctorFeesMapping> listDFM = dao.findAllHSQL(
+                    "select o from DoctorFeesMapping o where o.drId = '"
+                    + drId + "'");
+            currDoctor.setListFees(listDFM);
+            if (listDFM != null) {
+                if (listDFM.size() > 0) {
+                    feesMapTableModel.setListDoctorFeesMapping(currDoctor.getListFees());
+                } else {
+                    feesMapTableModel.clear();
+                }
             }
-        }
 
-        List<DoctorFeesMappingDC> listDFMDC = dao.findAllHSQL(
-                "select o from DoctorFeesMappingDC o where o.drId = '"
-                + drId + "'");
-        currDoctor.setListDFMDC(listDFMDC);
-        if (listDFMDC != null) {
-            if (listDFMDC.size() > 0) {
-                dcMapTableModel.setListDoctorFeesMapping(currDoctor.getListDFMDC());
-            } else {
-                dcMapTableModel.clear();
+            List<DoctorFeesMappingDC> listDFMDC = dao.findAllHSQL(
+                    "select o from DoctorFeesMappingDC o where o.drId = '"
+                    + drId + "'");
+            currDoctor.setListDFMDC(listDFMDC);
+            if (listDFMDC != null) {
+                if (listDFMDC.size() > 0) {
+                    dcMapTableModel.setListDoctorFeesMapping(currDoctor.getListDFMDC());
+                } else {
+                    dcMapTableModel.clear();
+                }
             }
-        }
 
-        List<DoctorFeesMappingOT> listDFMOT = dao.findAllHSQL(
-                "select o from DoctorFeesMappingOT o where o.drId = '"
-                + drId + "'");
-        currDoctor.setListDFMOT(listDFMOT);
-        if (listDFMOT != null) {
-            if (listDFMOT.size() > 0) {
-                otMapTableModel.setListDoctorFeesMapping(currDoctor.getListDFMOT());
-            } else {
-                otMapTableModel.clear();
+            List<DoctorFeesMappingOT> listDFMOT = dao.findAllHSQL(
+                    "select o from DoctorFeesMappingOT o where o.drId = '"
+                    + drId + "'");
+            currDoctor.setListDFMOT(listDFMOT);
+            if (listDFMOT != null) {
+                if (listDFMOT.size() > 0) {
+                    otMapTableModel.setListDoctorFeesMapping(currDoctor.getListDFMOT());
+                } else {
+                    otMapTableModel.clear();
+                }
             }
-        }
 
-        txtName.setText(doctor.getDoctorName());
-        txtCode.setText(doctor.getDoctorId());
-        cboInitial.setSelectedItem(currDoctor.getInitialID());
-        cboSex.setSelectedItem(currDoctor.getGenderId());
-        txtNIRC.setText(currDoctor.getLicenseNo());
-        cboSpeciality.setSelectedItem(currDoctor.getSpeciality());
-        chkActive.setSelected(currDoctor.isActive());
-        lblStatus.setText("EDIT");
-        cboType.setSelectedItem(currDoctor.getDrType());
-        dao.close();
+            txtName.setText(doctor.getDoctorName());
+            txtCode.setText(doctor.getDoctorId());
+            cboInitial.setSelectedItem(currDoctor.getInitialID());
+            cboSex.setSelectedItem(currDoctor.getGenderId());
+            txtNIRC.setText(currDoctor.getLicenseNo());
+            cboSpeciality.setSelectedItem(currDoctor.getSpeciality());
+            chkActive.setSelected(currDoctor.isActive());
+            lblStatus.setText("EDIT");
+            cboType.setSelectedItem(currDoctor.getDrType());
+        } catch (Exception ex) {
+            log.error("setCurrDoctor : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private boolean isValidEntry() {
@@ -302,13 +325,13 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                     dfm.setDrId(drId);
                     dao.save1(dfm);
                 }
-                
+
                 List<DoctorFeesMappingDC> listDFMDC = currDoctor.getListDFMDC();
                 for (DoctorFeesMappingDC dfmDC : listDFMDC) {
                     dfmDC.setDrId(drId);
                     dao.save1(dfmDC);
                 }
-                
+
                 List<DoctorFeesMappingOT> listDFMOT = currDoctor.getListDFMOT();
                 for (DoctorFeesMappingOT dfmOT : listDFMOT) {
                     dfmOT.setDrId(drId);
@@ -323,21 +346,21 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                     PharmacyUtil.updateSeq("Doctor", dao);
                 } else {
                     tableModel.setDoctor(selectRow, currDoctor);
-                    
+
                     String deleteList = feesMapTableModel.getDeletedList();
                     if (deleteList != null) {
                         String strSQL = "delete from doctor_fees_map where map_id in ("
                                 + deleteList + ")";
                         dao.execSql(strSQL);
                     }
-                    
+
                     String deleteListDC = dcMapTableModel.getDeletedList();
                     if (deleteList != null) {
                         String strSQL = "delete from doctor_fees_map_dc where map_id in ("
                                 + deleteListDC + ")";
                         dao.execSql(strSQL);
                     }
-                    
+
                     String deleteListOT = otMapTableModel.getDeletedList();
                     if (deleteList != null) {
                         String strSQL = "delete from doctor_fees_map_ot where map_id in ("
@@ -371,6 +394,75 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
 
     @Override
     public void delete() {
+        String drId = txtCode.getText();
+        if (isCanDelete(drId)) {
+            String strSql = "delete from doctor where doctor_id = '" + drId + "'";
+            try {
+                dao.execSql(strSql);
+                tableModel.setListDoctor(dao.findAllHSQL(
+                        "select o from Doctor o where o.doctorName"
+                ));
+            } catch (Exception ex) {
+                log.equals("delete : " + drId + " : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+        }
+    }
+
+    private boolean isCanDelete(String drId) {
+        try {
+            List<SaleHis> listSH = dao.findAllHSQL(
+                    "select o from SaleHis o where o.doctor.doctorId = '" + drId + "'"
+            );
+            if (listSH != null) {
+                if (!listSH.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This doctor have sale record.\n You cannot delete this doctor.",
+                            "Doctor Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
+            List<OPDHis> listOPD = dao.findAllHSQL(
+                    "Select o from OPDHis o where o.doctor.doctorId = '" + drId + "'"
+            );
+            if (listOPD != null) {
+                if (!listOPD.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This doctor have opd record.\n You cannot delete this doctor.",
+                            "Doctor Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
+            List<OTHis> listOT = dao.findAllHSQL(
+                    "Select o from OTHis o where o.doctor.doctorId = '" + drId + "'"
+            );
+            if (listOT != null) {
+                if (!listOT.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This doctor have ot record.\n You cannot delete this doctor.",
+                            "Doctor Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+
+            List<DCHis> listDC = dao.findAllHSQL(
+                    "Select o from DCHis o where o.doctor.doctorId = '" + drId + "'"
+            );
+            if (listOT != null) {
+                if (!listOT.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "This doctor have dc record.\n You cannot delete this doctor.",
+                            "Doctor Delete", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+        } catch (Exception ex) {
+            log.error("isCanDelete : " + ex.getMessage());
+            return false;
+        } finally {
+            dao.close();
+        }
+
+        return true;
     }
 
     @Override
@@ -424,7 +516,7 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
 
                 if (dfm.getService() != null) {
                     try {
-                        if(tblFeesMap.getCellEditor() != null){
+                        if (tblFeesMap.getCellEditor() != null) {
                             tblFeesMap.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -453,11 +545,17 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void filterDoctor(String strFilter) {
-        if (!strFilter.isEmpty()) {
-            tableModel.setListDoctor(dao.findAll("Doctor", strFilter));
-            statusFilter = true;
-        } else {
-            tableModel.setListDoctor(dao.findAll("Doctor"));
+        try {
+            if (!strFilter.isEmpty()) {
+                tableModel.setListDoctor(dao.findAll("Doctor", strFilter));
+                statusFilter = true;
+            } else {
+                tableModel.setListDoctor(dao.findAll("Doctor"));
+            }
+        } catch (Exception ex) {
+            log.error("filterDoctor : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -836,17 +934,29 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }//GEN-LAST:event_butClearActionPerformed
 
     private void butInitialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butInitialActionPerformed
-        showDialog("initial");
-        Initial ini = (Initial) cboInitial.getSelectedItem();
-        BindingUtil.BindCombo(cboInitial, dao.findAll("Initial"));
-        cboInitial.setSelectedItem(ini);
+        try {
+            showDialog("initial");
+            Initial ini = (Initial) cboInitial.getSelectedItem();
+            BindingUtil.BindCombo(cboInitial, dao.findAll("Initial"));
+            cboInitial.setSelectedItem(ini);
+        } catch (Exception ex) {
+            log.error("butInitialActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }//GEN-LAST:event_butInitialActionPerformed
 
     private void butSexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSexActionPerformed
-        showDialog("gender");
-        Gender gen = (Gender) cboSex.getSelectedItem();
-        BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
-        cboSex.setSelectedItem(gen);
+        try {
+            showDialog("gender");
+            Gender gen = (Gender) cboSex.getSelectedItem();
+            BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
+            cboSex.setSelectedItem(gen);
+        } catch (Exception ex) {
+            log.error("butSexActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }//GEN-LAST:event_butSexActionPerformed
 
     private void txtCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCodeActionPerformed
@@ -858,10 +968,16 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     }//GEN-LAST:event_txtNameActionPerformed
 
   private void butSpecialityActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSpecialityActionPerformed
-      SpecialitySetup dialog = new SpecialitySetup();
-      Speciality spec = (Speciality) cboSpeciality.getSelectedItem();
-      BindingUtil.BindCombo(cboSpeciality, dao.findAll("Speciality"));
-      cboSpeciality.setSelectedItem(spec);
+      try {
+          SpecialitySetup dialog = new SpecialitySetup();
+          Speciality spec = (Speciality) cboSpeciality.getSelectedItem();
+          BindingUtil.BindCombo(cboSpeciality, dao.findAll("Speciality"));
+          cboSpeciality.setSelectedItem(spec);
+      } catch (Exception ex) {
+          log.error("butSpecialityActionPerformed : " + ex.getMessage());
+      } finally {
+          dao.close();
+      }
   }//GEN-LAST:event_butSpecialityActionPerformed
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased

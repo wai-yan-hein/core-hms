@@ -46,8 +46,8 @@ public class StockAdjTableModel extends AbstractTableModel {
     private final AbstractDataAccess dao;
     private final MedicineUP medUp;
     private final MedInfo medInfo;
-    private final AdjType defaultAdjType;
-    private final AdjType minusAdjType;
+    private AdjType defaultAdjType;
+    private AdjType minusAdjType;
     private Integer locationId;
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
     private int maxUniqueId = 0;
@@ -60,8 +60,14 @@ public class StockAdjTableModel extends AbstractTableModel {
         this.dao = dao;
         this.medUp = medUp;
         this.medInfo = medInfo;
-        defaultAdjType = (AdjType) dao.find(AdjType.class, "+");
-        minusAdjType = (AdjType) dao.find(AdjType.class, "-");
+        try {
+            defaultAdjType = (AdjType) dao.find(AdjType.class, "+");
+            minusAdjType = (AdjType) dao.find(AdjType.class, "-");
+        } catch (Exception ex) {
+            log.error("StockAdjTableModel : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setParent(JTable parent) {
@@ -75,7 +81,12 @@ public class StockAdjTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return !(column == 1 || column == 2 || column == 9);
+        return !(column == 1 || column == 2
+                || column == 4
+                || column == 6
+                || column == 9
+                || column == 11
+                || column == 13);
     }
 
     @Override
@@ -135,12 +146,10 @@ public class StockAdjTableModel extends AbstractTableModel {
                         } else {
                             return record.getMedicineId().getShortName();
                         }
+                    } else if (record.getMedicineId() == null) {
+                        return null;
                     } else {
-                        if (record.getMedicineId() == null) {
-                            return null;
-                        } else {
-                            return record.getMedicineId().getMedId();
-                        }
+                        return record.getMedicineId().getMedId();
                     }
                 case 1: //Medicine Name
                     if (record.getMedicineId() == null) {
@@ -459,11 +468,9 @@ public class StockAdjTableModel extends AbstractTableModel {
                         JOptionPane.showMessageDialog(Util1.getParent(), "Adjust type must not be null.",
                                 "No Adjust Type.", JOptionPane.ERROR_MESSAGE);
                         status = false;
-                    } else {
-                        if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                            record.setUniqueId(row + 1);
-                            row++;
-                        }
+                    } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                        record.setUniqueId(row + 1);
+                        row++;
                     }
                 }
             }
@@ -520,38 +527,51 @@ public class StockAdjTableModel extends AbstractTableModel {
                 log.error("assignPrice : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
             }
         } else {
-            List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
-                    + Global.loginUser.getUserId() + "'");
             boolean localCost = false;
-            if (listEXR != null) {
-                if (!listEXR.isEmpty()) {
-                    localCost = true;
+            try {
+                List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
+                        + Global.machineId + "'");
+
+                if (listEXR != null) {
+                    if (!listEXR.isEmpty()) {
+                        localCost = true;
+                    }
                 }
+            } catch (Exception ex) {
+                log.error("assignPrice TmpEXRate : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+            } finally {
+                dao.close();
             }
             if (Util1.getPropValue("system.multicurrency").equals("Y")) {
                 if (localCost) {
-                    String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                            + Global.loginUser.getUserId() + "'";
-                    String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                            + Global.loginUser.getUserId() + "'";
-                    String strMethod = "AVG";
-                    String medId = adh.getMedicineId().getMedId();
+                    try {
+                        String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
+                                + Global.machineId + "'";
+                        String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
+                                + Global.machineId + "'";
+                        String strMethod = "AVG";
+                        String medId = adh.getMedicineId().getMedId();
 
-                    dao.execSql(deleteTmpData1, deleteTmpData2);
-                    dao.commit();
-                    dao.close();
-                    insertStockFilterCodeMed(medId);
-                    String tmpDate = DateUtil.getTodayDateStr();
-                    dao.execProc("gen_cost_balance",
-                            DateUtil.toDateStrMYSQL(tmpDate), "Opening",
-                            Global.loginUser.getUserId());
-                    calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(tmpDate),
-                            Global.loginUser.getUserId(), strMethod, currency);
-                    key = medId + "-" + adh.getUnit().getItemUnitCode();
-                    double smallestCost = getSmallestCost(medId);
-                    float smallestQty = medUp.getQtyInSmallest(key);
-                    double unitCost = smallestCost * smallestQty;
-                    adh.setCostPrice(unitCost);
+                        dao.execSql(deleteTmpData1, deleteTmpData2);
+                        dao.commit();
+                        dao.close();
+                        insertStockFilterCodeMed(medId);
+                        String tmpDate = DateUtil.getTodayDateStr();
+                        dao.execProc("gen_cost_balance",
+                                DateUtil.toDateStrMYSQL(tmpDate), "Opening",
+                                Global.machineId);
+                        calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(tmpDate),
+                                Global.machineId, strMethod, currency);
+                        key = medId + "-" + adh.getUnit().getItemUnitCode();
+                        double smallestCost = getSmallestCost(medId);
+                        float smallestQty = medUp.getQtyInSmallest(key);
+                        double unitCost = smallestCost * smallestQty;
+                        adh.setCostPrice(unitCost);
+                    } catch (Exception ex) {
+                        log.error("system.multicurrency : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                 }
             } else {
                 String strSql = "select vp.pur_unit, vp.pur_unit_cost "
@@ -641,7 +661,7 @@ public class StockAdjTableModel extends AbstractTableModel {
         String medId = record.getMedicineId().getMedId();
         try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
-                    locationId.toString(), medId, Global.loginUser.getUserId());
+                    locationId.toString(), medId, Global.machineId);
             if (resultSet != null) {
                 float balance = 0f;
                 while (resultSet.next()) {
@@ -698,7 +718,7 @@ public class StockAdjTableModel extends AbstractTableModel {
 
         listDetail.forEach(sidh -> {
             String currId = sidh.getCurrencyId();
-            if(currId == null){
+            if (currId == null) {
                 currId = "MMK";
             }
             if (currId != null) {
@@ -720,9 +740,9 @@ public class StockAdjTableModel extends AbstractTableModel {
 
     private void insertStockFilterCodeMed(String MedId) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date < '" + DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()) + "'";
@@ -840,19 +860,17 @@ public class StockAdjTableModel extends AbstractTableModel {
                         if (curr.equals(currId)) {
                             scd.setExrSmallCost(rs.getDouble("smallest_cost"));
                             scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                        } else if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
+                            double exRate = rs.getDouble("ex_rate");
+                            double ttlStock = scd.getCostQty();
+                            double smlCost = rs.getDouble("smallest_cost");
+                            double amount = ttlStock * smlCost * exRate;
+                            scd.setExrSmallCost(smlCost * exRate);
+                            //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                            scd.setExrTtlCost(amount);
                         } else {
-                            if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
-                                double exRate = rs.getDouble("ex_rate");
-                                double ttlStock = scd.getCostQty();
-                                double smlCost = rs.getDouble("smallest_cost");
-                                double amount = ttlStock * smlCost * exRate;
-                                scd.setExrSmallCost(smlCost * exRate);
-                                //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                                scd.setExrTtlCost(amount);
-                            } else {
-                                scd.setExrSmallCost(0.0);
-                                scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                            }
+                            scd.setExrSmallCost(0.0);
+                            scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
                         }
 
                         dao.save(scd);
@@ -901,7 +919,7 @@ public class StockAdjTableModel extends AbstractTableModel {
             dao.close();
         }
     }
-    
+
     private double getSmallestCost(String medId) {
         double cost = 0.0;
         List<StockCosting> listStockCosting = null;
@@ -909,7 +927,7 @@ public class StockAdjTableModel extends AbstractTableModel {
         try {
             listStockCosting = dao.findAllHSQL(
                     "select o from StockCosting o where o.key.medicine.medId = '" + medId
-                    + "' and o.key.userId = '" + Global.loginUser.getUserId() + "' "
+                    + "' and o.key.userId = '" + Global.machineId + "' "
                     + "and o.key.tranOption = 'Opening'"
             );
         } catch (Exception ex) {

@@ -113,7 +113,11 @@ public class CustomerSetupGridTableModel extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Code
-                    return record.getTraderId();
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        return record.getStuCode();
+                    } else {
+                        return record.getTraderId();
+                    }
                 case 1: //Customer Name
                     return record.getTraderName();
                 case 2: //Active

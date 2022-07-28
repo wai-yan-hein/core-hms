@@ -5,6 +5,7 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
+import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.Global;
 import com.cv.app.opd.ui.common.*;
 import com.cv.app.common.SelectionObserver;
@@ -21,6 +22,7 @@ import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.jms.MapMessage;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
 
@@ -122,7 +124,8 @@ public class CPaymentEntryTableModel1 extends AbstractTableModel {
             switch (column) {
                 case 0: //Cus-No
                     if (prifxStatus.equals("Y")) {
-                        return record.getTraderId().replace("CUS", "").replace("SUP", "");
+                        //LOGGER.info("traderCode : " + record.getTraderCode());
+                        return record.getTraderCode();
                     } else {
                         return record.getTraderId();
                     }
@@ -219,109 +222,109 @@ public class CPaymentEntryTableModel1 extends AbstractTableModel {
         fireTableCellUpdated(row, 10);
     }
 
-    public void saveAll(){
+    public void saveAll() {
         if (listVP != null) {
-            if(!listVP.isEmpty()){
-                for(VoucherPayment vp : listVP){
-                    if(vp.getCurrentDiscount() != null || vp.getCurrentPaid() != null){
+            if (!listVP.isEmpty()) {
+                for (VoucherPayment vp : listVP) {
+                    if (vp.getCurrentDiscount() != null || vp.getCurrentPaid() != null) {
                         save(vp);
                     }
                 }
             }
         }
     }
-    
+
     private void save(VoucherPayment vp) {
-
-        TraderPayHis tph = new TraderPayHis();
-        vp.setRemark("FullPaid");
-        if (vp.getPayDate() == null) {
-            vp.setPayDate(new Date());
-        }
-        vp.setUserId(Global.loginUser.getUserId());
-        tph.setPayDate(vp.getPayDate());
-        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
-        if (!cus.isEmpty()) {
-            tph.setTrader(cus.get(0));
-        }
-        tph.setRemark(vp.getRemark());
-        tph.setPaidAmtC(vp.getCurrentPaid());
-        tph.setDiscount(vp.getCurrentDiscount());
-        String appCurr = Util1.getPropValue("system.app.currency");
-        List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='" + appCurr + "'");
-        tph.setCurrency(curr.get(0));
-        //tph.setCurrency(curr.getCurrencyCode());
-        tph.setExRate(1.0);
-        tph.setPaidAmtP(vp.getCurrentPaid());
-        // Object user = dao.find(Appuser.class, vp.getUserId());
-        List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-        tph.setCreatedBy(user.get(0));
-        tph.setPayOption("Cash");
-        tph.setParentCurr(tph.getCurrency());
-        tph.setPayDt(vp.getPayDate());
-        PaymentVou pv = new PaymentVou();
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouNo(vp.getVouNo());
-        pv.setVouPaid(vp.getCurrentPaid());
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouDate(vp.getTranDate());
-        pv.setDiscount(vp.getDiscount());
-        pv.setVouType(vp.getVouType());
-        List<PaymentVou> listPV = new ArrayList();
-        listPV.add(pv);
-        tph.setListDetail(listPV);
-
-        Location location = getLocation(tph.getTrader().getTraderId());
-        tph.setLocation(location);
-
         try {
+            TraderPayHis tph = new TraderPayHis();
+            vp.setRemark("FullPaid");
+            if (vp.getPayDate() == null) {
+                vp.setPayDate(new Date());
+            }
+            vp.setUserId(Global.loginUser.getUserId());
+            tph.setPayDate(vp.getPayDate());
+            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
+            if (!cus.isEmpty()) {
+                tph.setTrader(cus.get(0));
+            }
+            tph.setRemark(vp.getRemark());
+            tph.setPaidAmtC(vp.getCurrentPaid());
+            tph.setDiscount(vp.getCurrentDiscount());
+            String appCurr = Util1.getPropValue("system.app.currency");
+            List<Currency> curr = dao.findAllHSQL("Select o from Currency o where o.currencyCode='" + appCurr + "'");
+            tph.setCurrency(curr.get(0));
+            //tph.setCurrency(curr.getCurrencyCode());
+            tph.setExRate(1.0);
+            tph.setPaidAmtP(vp.getCurrentPaid());
+            // Object user = dao.find(Appuser.class, vp.getUserId());
+            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+            tph.setCreatedBy(user.get(0));
+            tph.setPayOption("Cash");
+            tph.setParentCurr(tph.getCurrency());
+            tph.setPayDt(vp.getPayDate());
+            PaymentVou pv = new PaymentVou();
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouNo(vp.getVouNo());
+            pv.setVouPaid(vp.getCurrentPaid());
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouDate(vp.getTranDate());
+            pv.setDiscount(vp.getDiscount());
+            pv.setVouType(vp.getVouType());
+            List<PaymentVou> listPV = new ArrayList();
+            listPV.add(pv);
+            tph.setListDetail(listPV);
+
+            Location location = getLocation(tph.getTrader().getTraderId());
+            tph.setLocation(location);
+
             dao.save(tph);
+            uploadToAccount(tph);
         } catch (Exception e) {
             LOGGER.error("saveTraderpayHis : " + e.getMessage());
         }
+    }
 
-        //  vp.setTranId(tph.getPaymentId());
-        /*  TraderPayHis tph = new TraderPayHis();
-         vp.setRemark("FullPaid");
-         vp.setPayDate(new Date());
-         vp.setUserId(Global.loginUser.getUserId());
-         Customer cus = getByKey(id);
-         tph.setPayDate(vp.getPayDate());
-         tph.setRemark(vp.getRemark());
-         tph.setMachineId(Integer.parseInt(vp.getUserId()));
-         tph.setPaidAmtC(vp.getCurrentPaid());
-         tph.setDiscount(vp.getCurrentDiscount());
-         tph.setExRate(1.0);
-         tph.setPaidAmtP(vp.getCurrentPaid());
-         tph.setPayOption("Cash");
-         tph.setPayDt(vp.getPayDate());
-         /*PaymentVou pv = new PaymentVou();
-         pv.setBalance(vp.getVouBalance());
-         pv.setVouNo(vp.getVouNo());
-         pv.setVouPaid(vp.getCurrentPaid());
-         pv.setBalance(vp.getVouBalance());
-         pv.setVouDate(vp.getTranDate());
-         pv.setDiscount(vp.getDiscount());
-         pv.setVouType("Sale");
-         List<PaymentVou> listPV = new ArrayList();
-         listPV.add(pv);
-         //tph.setListDetail(listPV);
-         try {
-         dao.save(tph);
-         } catch (Exception ex) {
-
-         }*/
+    private void uploadToAccount(TraderPayHis tph) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            if (!Global.mqConnection.isStatus()) {
+                String mqUrl = Util1.getPropValue("system.mqserver.url");
+                Global.mqConnection = new ActiveMQConnection(mqUrl);
+            }
+            if (Global.mqConnection != null) {
+                if (Global.mqConnection.isStatus()) {
+                    try {
+                        ActiveMQConnection mq = Global.mqConnection;
+                        MapMessage msg = mq.getMapMessageTemplate();
+                        msg.setString("program", Global.programId);
+                        msg.setString("entity", "PAYMENT");
+                        msg.setInt("vouNo", tph.getPaymentId());
+                        msg.setString("type", "ADD");
+                        mq.sendMessage(Global.queueName, msg);
+                    } catch (Exception ex) {
+                        LOGGER.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber()
+                                + " - " + tph.getPaymentId() + " - " + ex);
+                    }
+                }
+            }
+        }
     }
 
     private Location getLocation(String traderId) {
         Location location = null;
-        List<Location> listLOC = dao.findAllHSQL("select o from Location o "
-                + "where o.locationId in (select a.key.locationId from "
-                + "LocationTraderMapping a where a.key.traderId = '" + traderId + "')");
-        if (listLOC != null) {
-            if (!listLOC.isEmpty()) {
-                location = listLOC.get(0);
+        try {
+            List<Location> listLOC = dao.findAllHSQL("select o from Location o "
+                    + "where o.locationId in (select a.key.locationId from "
+                    + "LocationTraderMapping a where a.key.traderId = '" + traderId + "')");
+            if (listLOC != null) {
+                if (!listLOC.isEmpty()) {
+                    location = listLOC.get(0);
+                }
             }
+        } catch (Exception ex) {
+            LOGGER.error("getLocation : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return location;
     }

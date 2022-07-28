@@ -129,6 +129,7 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
                     }
                     break;
                 case 2: //Qty
+                    try {
                     if (value == null) {
                         record.setUnitQty(null);
                         record.setItemUnit(null);
@@ -175,7 +176,12 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
                             }
                         }
                     }
-                    break;
+                } catch (Exception ex) {
+                    log.error("setValueAt : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                break;
                 case 3: //Unit
                     break;
                 case 4: //Sale Price
@@ -225,36 +231,58 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
     private void setItem(VUnionItem item, VClinicPackageDetail record) {
         switch (item.getItemOption()) {
             case "PHAR":
+                try {
                 String medId = item.getItemCode();
                 Medicine med = (Medicine) dao.find(Medicine.class, medId);
                 medUp.add(med);
                 record.setSysPrice(null);
                 record.setUnitQty(null);
-                break;
+            } catch (Exception ex) {
+                log.error("setItem : PHAR : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "OPD":
+                try {
                 String opdSrvId = item.getItemCode();
                 Service srv = (Service) dao.find(Service.class, Integer.parseInt(opdSrvId));
                 record.setUnitQty(1f);
                 record.setSysPrice(srv.getFees());
                 record.setQtySmallest(1.0);
-                //record.setSysAmount(record.getUnitQty()*record.getSysPrice());
-                break;
+            } catch (Exception ex) {
+                log.error("setItem : OPD : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "OT":
+                try {
                 String otSrvId = item.getItemCode();
                 OTProcedure otp = (OTProcedure) dao.find(OTProcedure.class, Integer.parseInt(otSrvId));
                 record.setUnitQty(1f);
                 record.setSysPrice(otp.getSrvFees());
                 record.setQtySmallest(1.0);
-                //record.setSysAmount(record.getUnitQty()*record.getSysPrice());
-                break;
+            } catch (Exception ex) {
+                log.error("setItem : OT : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "DC":
+                try {
                 String dcSrvId = item.getItemCode();
                 InpService is = (InpService) dao.find(InpService.class, Integer.parseInt(dcSrvId));
                 record.setUnitQty(1f);
                 record.setSysPrice(is.getFees());
                 record.setQtySmallest(1.0);
                 //record.setSysAmount(record.getUnitQty()*record.getSysPrice());
-                break;
+            } catch (Exception ex) {
+                log.error("setItem : DC : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
         }
 
         record.setItemKey(item.getItemKey());
@@ -356,22 +384,28 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
     }
 
     private ClinicPackageDetail getPackageDetail(VClinicPackageDetail vcp) {
-        ClinicPackageDetail cpd;
-        if (vcp.getId() == null) {
-            cpd = new ClinicPackageDetail();
-        } else {
-            cpd = (ClinicPackageDetail) dao.find(ClinicPackageDetail.class, vcp.getId());
-        }
+        ClinicPackageDetail cpd = null;
+        try {
+            if (vcp.getId() == null) {
+                cpd = new ClinicPackageDetail();
+            } else {
+                cpd = (ClinicPackageDetail) dao.find(ClinicPackageDetail.class, vcp.getId());
+            }
 
-        cpd.setItemKey(vcp.getItemKey());
-        cpd.setItemUnit(vcp.getItemUnit());
-        cpd.setQtySmallest(vcp.getQtySmallest());
-        cpd.setSysAmount(vcp.getSysAmount());
-        cpd.setSysPrice(vcp.getSysPrice());
-        cpd.setUnitQty(vcp.getUnitQty());
-        cpd.setUsrAmount(vcp.getUsrAmount());
-        cpd.setUsrPrice(vcp.getUsrPrice());
-        cpd.setPkgId(pkgId);
+            cpd.setItemKey(vcp.getItemKey());
+            cpd.setItemUnit(vcp.getItemUnit());
+            cpd.setQtySmallest(vcp.getQtySmallest());
+            cpd.setSysAmount(vcp.getSysAmount());
+            cpd.setSysPrice(vcp.getSysPrice());
+            cpd.setUnitQty(vcp.getUnitQty());
+            cpd.setUsrAmount(vcp.getUsrAmount());
+            cpd.setUsrPrice(vcp.getUsrPrice());
+            cpd.setPkgId(pkgId);
+        } catch (Exception ex) {
+            log.error("getPackageDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         return cpd;
     }
 
@@ -382,8 +416,9 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
             status = false;
         } else {
             //if (vcp.getId() != null) {
-                String strSql = "select o from VClinicPackageDetail o where o.pkgId = "
-                        + pkgId + " and o.itemKey = '" + vcp.getItemKey() + "' and o.id <> " + NumberUtil.NZeroL(vcp.getId()).toString();
+            String strSql = "select o from VClinicPackageDetail o where o.pkgId = "
+                    + pkgId + " and o.itemKey = '" + vcp.getItemKey() + "' and o.id <> " + NumberUtil.NZeroL(vcp.getId()).toString();
+            try {
                 List<VClinicPackageDetail> list = dao.findAllHSQL(strSql);
                 if (list != null) {
                     if (!list.isEmpty()) {
@@ -392,6 +427,11 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
                                 "Duplicate", JOptionPane.ERROR_MESSAGE);
                     }
                 }
+            } catch (Exception ex) {
+                log.error("isValidEntry : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
             //}
 
             if (status && vcp.getId() != null) {

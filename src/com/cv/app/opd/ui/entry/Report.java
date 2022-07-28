@@ -35,6 +35,7 @@ import com.cv.app.opd.excel.OPDServiceFeeListExcel;
 import com.cv.app.opd.excel.OtIncomeByDoctorExcel;
 import com.cv.app.opd.excel.OtIncomeByServiceDetailExcel;
 import com.cv.app.opd.excel.PatientBalanceExcel;
+import com.cv.app.opd.excel.PatientSummaryWHOlExcel;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
 import com.cv.app.opd.ui.common.RptOPDServiceFilterTableModel;
 import com.cv.app.ot.database.entity.OTProcedureGroup;
@@ -74,7 +75,7 @@ import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
  * @author WSwe
  */
 public class Report extends javax.swing.JPanel implements SelectionObserver, KeyPropagate {
-    
+
     private final ReportListTableModel tableModel = new ReportListTableModel();
     private final AbstractDataAccess dao = Global.dao;
     static Logger log = Logger.getLogger(Report.class.getName());
@@ -93,60 +94,66 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         actionMapping();
         getReportList();
     }
-    
+
     private void initTextBox() {
         txtFrom.setText(DateUtil.getTodayDateStr());
         txtTo.setText(DateUtil.getTodayDateStr());
     }
-    
+
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindCombo(cboReportType, dao.findAll("Menu",
-                "parent = 76 and menuType.typeId = 5"));
-        BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindComboFilter(cboDoctor,
-                dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName"));
-        BindingUtil.BindComboFilter(cboOPDGroup,
-                dao.findAllHSQL("select o from OPDCategory o order by o.catName"));
-        BindingUtil.BindComboFilter(cboDCGroup,
-                dao.findAllHSQL("select o from InpCategory o order by o.catName"));
-        BindingUtil.BindComboFilter(cboOTGroup,
-                dao.findAllHSQL("select o from OTProcedureGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboCity,
-                dao.findAllHSQL("select o from City o order by o.cityName"));
-        BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
-        BindingUtil.BindComboFilter(cboPtType,
-                dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboOPDCG,
-                dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
-        BindingUtil.BindComboFilter(cboOPDLG,
-                dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
-        BindingUtil.BindComboFilter(cboChargeType, dao.findAll("ChargeType"));
-        BindingUtil.BindComboFilter(cboPayable,
-                dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
-        
-        AutoCompleteDecorator.decorate(cboPtType);
-        AutoCompleteDecorator.decorate(cboSession);
-        AutoCompleteDecorator.decorate(cboPayment);
-        AutoCompleteDecorator.decorate(cboCurrency);
-        AutoCompleteDecorator.decorate(cboReportType);
-        AutoCompleteDecorator.decorate(cboDoctor);
-        AutoCompleteDecorator.decorate(cboOPDGroup);
-        AutoCompleteDecorator.decorate(cboDCGroup);
-        AutoCompleteDecorator.decorate(cboOTGroup);
-        AutoCompleteDecorator.decorate(cboCity);
-        AutoCompleteDecorator.decorate(cboGender);
-        AutoCompleteDecorator.decorate(cboOPDCG);
-        AutoCompleteDecorator.decorate(cboOPDLG);
-        AutoCompleteDecorator.decorate(cboChargeType);
-        AutoCompleteDecorator.decorate(cboPayable);
+        try {
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindCombo(cboReportType, dao.findAll("Menu",
+                    "parent = 76 and menuType.typeId = 5"));
+            BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindComboFilter(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindComboFilter(cboDoctor,
+                    dao.findAllHSQL("select o from Doctor o where o.active = true order by o.doctorName"));
+            BindingUtil.BindComboFilter(cboOPDGroup,
+                    dao.findAllHSQL("select o from OPDCategory o order by o.catName"));
+            BindingUtil.BindComboFilter(cboDCGroup,
+                    dao.findAllHSQL("select o from InpCategory o order by o.catName"));
+            BindingUtil.BindComboFilter(cboOTGroup,
+                    dao.findAllHSQL("select o from OTProcedureGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboCity,
+                    dao.findAllHSQL("select o from City o order by o.cityName"));
+            BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
+            BindingUtil.BindComboFilter(cboPtType,
+                    dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboOPDCG,
+                    dao.findAllHSQL("select o from OPDCusLabGroup o order by o.groupName"));
+            BindingUtil.BindComboFilter(cboOPDLG,
+                    dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
+            BindingUtil.BindComboFilter(cboChargeType, dao.findAll("ChargeType"));
+            BindingUtil.BindComboFilter(cboPayable,
+                    dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
+
+            AutoCompleteDecorator.decorate(cboPtType);
+            AutoCompleteDecorator.decorate(cboSession);
+            AutoCompleteDecorator.decorate(cboPayment);
+            AutoCompleteDecorator.decorate(cboCurrency);
+            AutoCompleteDecorator.decorate(cboReportType);
+            AutoCompleteDecorator.decorate(cboDoctor);
+            AutoCompleteDecorator.decorate(cboOPDGroup);
+            AutoCompleteDecorator.decorate(cboDCGroup);
+            AutoCompleteDecorator.decorate(cboOTGroup);
+            AutoCompleteDecorator.decorate(cboCity);
+            AutoCompleteDecorator.decorate(cboGender);
+            AutoCompleteDecorator.decorate(cboOPDCG);
+            AutoCompleteDecorator.decorate(cboOPDLG);
+            AutoCompleteDecorator.decorate(cboChargeType);
+            AutoCompleteDecorator.decorate(cboPayable);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     @Override
     public void selected(Object source, Object selectObj) {
     }
-    
+
     @Override
     public void keyEvent(KeyEvent e) {
         if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
@@ -157,7 +164,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } else if (e.getKeyCode() == KeyEvent.VK_F10) {
         }
     }
-    
+
     private void initTable() {
         tblService.getColumnModel().getColumn(0).setCellEditor(
                 new OPDTableCellEditor(dao));
@@ -165,14 +172,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         tblService.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblServiceTableModel.setParent(tblService);
         tblServiceTableModel.addEmptyRow();
-        
+
         tblDCService.getColumnModel().getColumn(0).setCellEditor(
                 new DCTableCellEditor(dao));
         tblDCService.getColumnModel().getColumn(0).setPreferredWidth(30);
         tblDCService.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblDCServiceTableModel.setParent(tblDCService);
         tblDCServiceTableModel.addEmptyRow();
-        
+
         tblOTService.getColumnModel().getColumn(0).setCellEditor(
                 new OTTableCellEditor(dao));
         tblOTService.getColumnModel().getColumn(0).setPreferredWidth(30);
@@ -180,7 +187,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         tblOTServiceTableModel.setParent(tblOTService);
         tblOTServiceTableModel.addEmptyRow();
     }
-    
+
     private void actionMapping() {
         tblService.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblService.getActionMap().put("F8-Action", actionOPDServiceFilterDelete);
@@ -189,9 +196,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         tblOTService.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblOTService.getActionMap().put("F8-Action", actionOTServiceFilterDelete);
     }
-    
+
     private final Action actionOPDServiceFilterDelete = new AbstractAction() {
-        
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblService.getSelectedRow() >= 0) {
@@ -205,9 +212,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     };
-    
+
     private final Action actionDCServiceFilterDelete = new AbstractAction() {
-        
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblDCService.getSelectedRow() >= 0) {
@@ -221,9 +228,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     };
-    
+
     private final Action actionOTServiceFilterDelete = new AbstractAction() {
-        
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblOTService.getSelectedRow() >= 0) {
@@ -237,62 +244,68 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     };
-    
+
     private String getHSQL() {
         int parentMenuId = ((Menu) cboReportType.getSelectedItem()).getMenuId();
         String strSql = "select distinct m from Menu m where m.menuId in (";
         String subQuery = "select p.menuId from UserRole ur join ur.privilege p where ur.roleId ="
                 + Global.loginUser.getUserRole().getRoleId() + " and p.allow = true";
-        
+
         strSql = strSql + subQuery + ") and m.parent = " + parentMenuId + " order by m.menuName";
-        
+
         return strSql;
     }
-    
+
     private void getReportList() {
-        List<Menu> listReport = dao.findAllHSQL(getHSQL());
-        tableModel.setListReport(listReport);
+        try {
+            List<Menu> listReport = dao.findAllHSQL(getHSQL());
+            tableModel.setListReport(listReport);
+        } catch (Exception ex) {
+            log.error("getReportList : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private String getCurrencyId() {
         String currencyId;
-        
+
         if (cboCurrency.getSelectedItem() instanceof Currency) {
             Currency curr = (Currency) cboCurrency.getSelectedItem();
             currencyId = curr.getCurrencyCode();
         } else {
             currencyId = "-";
         }
-        
+
         return currencyId;
     }
-    
+
     private Integer getPaymentType() {
         int typeId;
-        
+
         if (cboPayment.getSelectedItem() instanceof PaymentType) {
             PaymentType pt = (PaymentType) cboPayment.getSelectedItem();
             typeId = pt.getPaymentTypeId();
         } else {
             typeId = -1;
         }
-        
+
         return typeId;
     }
-    
+
     private void getPatient() {
         if (txtRegNo.getText() != null && !txtRegNo.getText().isEmpty()) {
             try {
                 Patient pt;
-                
+
                 dao.open();
                 pt = (Patient) dao.find(Patient.class, txtRegNo.getText());
                 dao.close();
-                
+
                 if (pt == null) {
                     txtRegNo.setText(null);
                     txtPtName.setText(null);
-                    
+
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid patient code.",
                             "Patient Code", JOptionPane.ERROR_MESSAGE);
@@ -308,14 +321,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             txtPtName.setText(null);
         }
     }
-    
+
     private void insertOPDFilter() {
         String strSql = "insert into tmp_opd_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.loginUser.getUserId() + "' "
+                + "select service_id, '" + Global.machineId + "' "
                 + "from opd_service \n";
         String strFilter = "";
-        String delSql = "delete from tmp_opd_service_filter where user_id = '" + Global.loginUser.getUserId() + "'";
-        
+        String delSql = "delete from tmp_opd_service_filter where user_id = '" + Global.machineId + "'";
+
         if (cboOPDGroup.getSelectedItem() instanceof OPDCategory) {
             OPDCategory grp = (OPDCategory) cboOPDGroup.getSelectedItem();
             if (strFilter.isEmpty()) {
@@ -324,7 +337,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
             }
         }
-        
+
         if (cboOPDCG.getSelectedItem() instanceof OPDCusLabGroup) {
             OPDCusLabGroup grp = (OPDCusLabGroup) cboOPDCG.getSelectedItem();
             if (strFilter.isEmpty()) {
@@ -335,7 +348,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
             }
         }
-        
+
         String filterService = tblServiceTableModel.getFilterCodeStr();
         if (filterService != null) {
             if (strFilter.isEmpty()) {
@@ -344,7 +357,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and service_id in (" + filterService + ")";
             }
         }
-        
+
         if (cboOPDLG.getSelectedItem() instanceof OPDLabGroup) {
             OPDLabGroup grp = (OPDLabGroup) cboOPDLG.getSelectedItem();
             if (strFilter.isEmpty()) {
@@ -353,21 +366,21 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and cus_group_id = " + grp.getId().toString();
             }
         }
-        
+
         if (!strFilter.isEmpty()) {
             strSql = strSql + " where " + strFilter;
         }
-        
+
         dao.execSql(delSql, strSql);
     }
-    
+
     private void insertDCFilter() {
         String strSql = "insert into tmp_dc_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.loginUser.getUserId() + "' "
+                + "select service_id, '" + Global.machineId + "' "
                 + "from inp_service \n";
         String strFilter = "";
-        String delSql = "delete from tmp_dc_service_filter where user_id = '" + Global.loginUser.getUserId() + "'";
-        
+        String delSql = "delete from tmp_dc_service_filter where user_id = '" + Global.machineId + "'";
+
         if (cboDCGroup.getSelectedItem() instanceof InpCategory) {
             InpCategory grp = (InpCategory) cboDCGroup.getSelectedItem();
             if (strFilter.isEmpty()) {
@@ -376,7 +389,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
             }
         }
-        
+
         String filterService = tblDCServiceTableModel.getFilterCodeStr();
         if (filterService != null) {
             if (strFilter.isEmpty()) {
@@ -385,21 +398,21 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and service_id in (" + filterService + ")";
             }
         }
-        
+
         if (!strFilter.isEmpty()) {
             strSql = strSql + " where " + strFilter;
         }
-        
+
         dao.execSql(delSql, strSql);
     }
-    
+
     private void insertOTFilter() {
         String strSql = "insert into tmp_ot_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.loginUser.getUserId() + "' "
+                + "select service_id, '" + Global.machineId + "' "
                 + "from ot_service \n";
         String strFilter = "";
-        String delSql = "delete from tmp_ot_service_filter where user_id = '" + Global.loginUser.getUserId() + "'";
-        
+        String delSql = "delete from tmp_ot_service_filter where user_id = '" + Global.machineId + "'";
+
         if (cboOTGroup.getSelectedItem() instanceof OTProcedureGroup) {
             OTProcedureGroup grp = (OTProcedureGroup) cboOTGroup.getSelectedItem();
             if (strFilter.isEmpty()) {
@@ -408,7 +421,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and group_id = " + grp.getGroupId().toString();
             }
         }
-        
+
         String filterService = tblOTServiceTableModel.getFilterCodeStr();
         if (filterService != null) {
             if (strFilter.isEmpty()) {
@@ -417,14 +430,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strFilter = strFilter + " and service_id in (" + filterService + ")";
             }
         }
-        
+
         if (!strFilter.isEmpty()) {
             strSql = strSql + " where " + strFilter;
         }
-        
+
         dao.execSql(delSql, strSql);
     }
-    
+
     private void removeOtPaymentService() {
         String strIds = "";
         String depositId = Util1.getPropValue("system.ot.deposite.id");
@@ -435,7 +448,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + depositId;
             }
         }
-        
+
         String discId = Util1.getPropValue("system.ot.disc.id");
         if (!discId.isEmpty() && !discId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -444,7 +457,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + discId;
             }
         }
-        
+
         String paidId = Util1.getPropValue("system.ot.paid.id");
         if (!paidId.isEmpty() && !paidId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -453,7 +466,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + paidId;
             }
         }
-        
+
         String refundId = Util1.getPropValue("system.ot.refund.id");
         if (!refundId.isEmpty() && !refundId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -462,10 +475,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + refundId;
             }
         }
-        
+
         if (!strIds.isEmpty()) {
             String strSql = "delete from tmp_ot_service_filter where user_id = '"
-                    + Global.loginUser.getUserId() + "' and service_id in (" + strIds + ")";
+                    + Global.machineId + "' and service_id in (" + strIds + ")";
             try {
                 dao.execSql(strSql);
             } catch (Exception ex) {
@@ -475,7 +488,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     }
-    
+
     private void removeDCPaymentService() {
         String strIds = "";
         String depositId = Util1.getPropValue("system.dc.deposite.id");
@@ -486,7 +499,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + depositId;
             }
         }
-        
+
         String discId = Util1.getPropValue("system.dc.disc.id");
         if (!discId.isEmpty() && !discId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -495,7 +508,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + discId;
             }
         }
-        
+
         String paidId = Util1.getPropValue("system.dc.paid.id");
         if (!paidId.isEmpty() && !paidId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -504,7 +517,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + paidId;
             }
         }
-        
+
         String refundId = Util1.getPropValue("system.dc.refund.id");
         if (!refundId.isEmpty() && !refundId.equals("-")) {
             if (strIds.isEmpty()) {
@@ -513,10 +526,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 strIds = strIds + "," + refundId;
             }
         }
-        
+
         if (!strIds.isEmpty()) {
             String strSql = "delete from tmp_dc_service_filter where user_id = '"
-                    + Global.loginUser.getUserId() + "' and service_id in (" + strIds + ")";
+                    + Global.machineId + "' and service_id in (" + strIds + ")";
             try {
                 dao.execSql(strSql);
             } catch (Exception ex) {
@@ -526,11 +539,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     }
-    
+
     private Map getParameters() {
         Map<String, Object> params = new HashMap();
-        
-        params.put("user_id", Global.loginUser.getUserId());
+
+        params.put("user_id", Global.machineId);
         params.put("compName", Util1.getPropValue("report.company.name"));
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
@@ -603,22 +616,22 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } else {
             params.put("charge_type", -1);
         }
-        
+
         if (cboPayable.getSelectedItem() instanceof ExpenseType) {
             ExpenseType et = (ExpenseType) cboPayable.getSelectedItem();
             params.put("payable_type", et.getExpenseId());
         } else {
             params.put("payable_type", -1);
         }
-        
+
         params.put("clinic_type", cboType.getSelectedItem().toString());
-        
+
         return params;
     }
-    
+
     private boolean executeProcedure(String report) {
         boolean status = true;
-        
+
         try {
             switch (report) {
                 case "OPDServiceFees":
@@ -681,10 +694,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             JOptionPane.showMessageDialog(Util1.getParent(), "Error in store procedure.",
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
-        
+
         return status;
     }
-    
+
     public void insertMonthFilterDiag(String from, String to, String userId,
             Map<String, Object> params) {
         Date dFrom = DateUtil.toDate(from);
@@ -695,10 +708,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         int toMonth = DateUtil.getDatePart(dTo, "MM");
         String strField = "";
         String strSql = "";
-        
+
         dao.execSql("delete from tmp_month_filter where user_id = '" + userId + "'");
         dao.execSql("delete from tmp_diagnosis_yearly_summary where user_id = '" + userId + "'");
-        
+
         for (int i = 1; i <= 12; i++) {
             if (fromMonth > 12 && fromYear < toYear) {
                 fromMonth = 1;
@@ -706,7 +719,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             } else if (fromMonth > toMonth && fromYear == toYear) {
                 fromYear = toYear + 1;
             }
-            
+
             String ym = fromMonth + "-" + fromYear;
             if (fromYear <= toYear) {
                 params.put("m" + i, ym);
@@ -723,13 +736,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     strSql = strSql + ", 0 as " + "m" + i;
                 }
             }
-            
+
             if (strField.isEmpty()) {
                 strField = "m" + i;
             } else {
                 strField = strField + ",m" + i;
             }
-            
+
             if (fromMonth <= 12 && fromYear <= toYear) {
                 TmpMonthFilter tmf = new TmpMonthFilter(userId,
                         ym, fromMonth, fromYear);
@@ -739,10 +752,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     log.error("insertMonthFilterDiag : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
                 }
             }
-            
+
             fromMonth++;
         }
-        
+
         strSql = "insert into tmp_diagnosis_yearly_summary(user_id,diagnosis_id,age_range_id," + strField + ") "
                 + "select '" + userId + "',d.diagnosis_id, d.age_range_id," + strSql + " "
                 + "from tmp_month_filter tmf left join (select a.diagnosis_id, a.age_range_id, "
@@ -757,19 +770,19 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 + "on tmf.y_m = d.y_m\n"
                 + "where tmf.user_id = '" + userId + "' "
                 + "group by d.diagnosis_id, d.age_range_id";
-        
+
         dao.execSql(strSql);
-        
+
         dao.execSql("update tmp_diagnosis_yearly_summary set total = ifnull(m1,0)+ifnull(m2,0)+ifnull(m3,0)"
                 + "+ifnull(m4,0)+ifnull(m5,0)+ifnull(m6,0)+ifnull(m7,0)+ifnull(m8,0)+ifnull(m9,0)+"
                 + "ifnull(m10,0)+ifnull(m11,0)+ifnull(m12,0)\n"
                 + " where user_id = '" + userId + "'");
     }
-    
+
     private boolean insertPatientFilter() {
         boolean status = true;
         String strFilter = "";
-        
+
         try {
             if (cboPtType.getSelectedItem() instanceof CustomerGroup) {
                 CustomerGroup cg = (CustomerGroup) cboPtType.getSelectedItem();
@@ -779,7 +792,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     strFilter = strFilter + " and pt_type = '" + cg.getGroupId() + "'";
                 }
             }
-            
+
             if (!txtRegNo.getText().trim().isEmpty()) {
                 if (strFilter.isEmpty()) {
                     strFilter = "reg_no = '" + txtRegNo.getText().trim() + "'";
@@ -793,12 +806,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     strFilter = strFilter + " and patient_name like '%" + txtPtName.getText().trim() + "%'";
                 }
             }
-            
+
             if (!strFilter.isEmpty()) {
                 dao.execSql("delete from tmp_patient_filter where user_id = '"
-                        + Global.loginUser.getUserId() + "'");
+                        + Global.machineId + "'");
                 strFilter = "insert into tmp_patient_filter(reg_no, adm_no, user_id) "
-                        + "select reg_no, admission_no,'" + Global.loginUser.getUserId() + "' "
+                        + "select reg_no, admission_no,'" + Global.machineId + "' "
                         + "from patient_detail "
                         + " where " + strFilter;
                 dao.execSql(strFilter);
@@ -812,10 +825,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } finally {
             dao.close();
         }
-        
+
         return status;
     }
-    
+
     private void generateExcel() {
         int index = tblReport.convertRowIndexToModel(tblReport.getSelectedRow());
         if (index >= 0) {
@@ -831,22 +844,22 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             regNo = txtRegNo.getText().trim();
                         }
                         dao.execProc("patient_balance", DateUtil.toDateStrMYSQL(txtTo.getText()),
-                                getCurrencyId(), Global.loginUser.getUserId(), regNo);
+                                getCurrencyId(), Global.machineId, regNo);
                         genExcel = new PatientBalanceExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setCurrencyId(getCurrencyId());
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
                         break;
                     case "DCPatientByDoctor":
                         genExcel = new DcPatientByDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         break;
                     case "OtIncomeByDoctor":
                         genExcel = new OtIncomeByDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -858,7 +871,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "DCIncomeByDoctor":
                         genExcel = new DCIncomeByDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -870,7 +883,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "DCIncomeByServiceWithDoctorDetail":
                         genExcel = new DCIncomeByServiceDetailExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setCurrencyId(getCurrencyId());
@@ -885,10 +898,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         }
                         // genExcel.insertStockFilterCode();
                         break;
-                    
+
                     case "OTIncomeByServiceWithDoctorDetail":
                         genExcel = new OtIncomeByServiceDetailExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setPaymentType(String.valueOf(getPaymentType()));
@@ -902,11 +915,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "OPDServiceFees":
                         insertOPDFilter();
                         genExcel = new OPDServiceFeeListExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         break;
                     case "OPDIncomeByDoctor":
                         genExcel = new OPDIncomeByDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -918,7 +931,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabRefer":
                         genExcel = new LabReferExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -934,7 +947,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabReferWithDoctor":
                         genExcel = new LabReferWithDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -950,7 +963,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabReaderWithDoctor":
                         genExcel = new LabReaderWithDoctorExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -966,7 +979,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabTechWithDoctor":
                         genExcel = new LabTeachWithTechExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -982,7 +995,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabReaderWithDoctorSein":
                         genExcel = new LabReaderWithDoctorSeinExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -998,7 +1011,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabReferDoctorSummarySein":
                         genExcel = new LabReferDoctorSummarySeinExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -1014,7 +1027,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "LabReferWithDoctorSein":
                         genExcel = new LabReferWithDoctorSeinExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -1030,7 +1043,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         break;
                     case "OPDIncomeByServiceWithPatient":
                         genExcel = new OPDIncomeByServiceWithPatientExcel(dao, rptName + ".xls");
-                        genExcel.setUserId(Global.loginUser.getUserId());
+                        genExcel.setUserId(Global.machineId);
                         genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setRegNo(txtRegNo.getText().trim());
@@ -1056,8 +1069,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
                         genExcel.setCity(getCity().toString());
                         break;
+                    case "PatientSummary":
+                        genExcel = new PatientSummaryWHOlExcel(dao, rptName + ".xls");
+                        genExcel.setFromDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
+                        genExcel.setToDate(DateUtil.toDateStrMYSQL(txtTo.getText()));
+                        genExcel.setPaymentType(String.valueOf(getPaymentType()));
+                        break;
                 }
-                
+
                 if (genExcel != null) {
                     genExcel.genExcel();
                 }
@@ -1066,7 +1085,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         }
     }
-    
+
     private Integer getOpdCat() {
         int catId = 0;
         if (cboOPDGroup.getSelectedItem() instanceof OPDCategory) {
@@ -1074,7 +1093,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
         return catId;
     }
-    
+
     private Integer getCity() {
         int cityId = -1;
         if (cboCity.getSelectedItem() instanceof City) {
@@ -1559,7 +1578,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void txtFromMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFromMouseClicked
         if (evt.getClickCount() == 2) {
             String strDate = DateUtil.getDateDialogStr();
-            
+
             if (strDate != null) {
                 txtFrom.setText(strDate);
             }
@@ -1569,7 +1588,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void txtToMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtToMouseClicked
         if (evt.getClickCount() == 2) {
             String strDate = DateUtil.getDateDialogStr();
-            
+
             if (strDate != null) {
                 txtTo.setText(strDate);
             }
@@ -1602,14 +1621,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                  insertOTFilter();
                  break;
                  }*/
-                
+
                 Menu report = tableModel.getSelectedReport(index);
                 if (executeProcedure(report.getMenuClass())) {
                     Map<String, Object> params = getParameters();
                     switch (report.getMenuClass()) {
                         case "DiagnosisMonthly":
                             insertMonthFilterDiag(txtFrom.getText(), txtTo.getText(),
-                                    Global.loginUser.getUserId(), params);
+                                    Global.machineId, params);
                             break;
                         case "PatientBalance":
                         case "CurrentPatientBalance":
@@ -1618,7 +1637,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 regNo = txtRegNo.getText().trim();
                             }
                             dao.execProc("patient_balance", DateUtil.toDateStrMYSQL(txtTo.getText()),
-                                    getCurrencyId(), Global.loginUser.getUserId(), regNo);
+                                    getCurrencyId(), Global.machineId, regNo);
                             String strSQLs = "update tmp_bill_payment tbp, (\n"
                                     + "select dh.patient_id, max(dh.admission_no) admission_no, max(dh.dc_date) dc_date\n"
                                     + "from dc_his dh\n"
@@ -1628,13 +1647,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                     + "and dh.deleted = false\n"
                                     + "group by dh.patient_id) dc\n"
                                     + "set tbp.dc_date = dc.dc_date\n"
-                                    + "where tbp.user_id = '" + Global.loginUser.getUserId()
+                                    + "where tbp.user_id = '" + Global.machineId
                                     + "' and tbp.reg_no = dc.patient_id and tbp.admission_no is null";
                             dao.execSql(strSQLs);
                             break;
                         case "InpatientSummary":
                             dao.execProc("rpt_inp", DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.loginUser.getUserId());
+                                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.machineId);
                             break;
                         case "PatientInOutBalance":
                             String appCurr = Util1.getPropValue("system.app.currency");
@@ -1652,16 +1671,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 dao.execProc("patient_balance_detail", txtRegNo.getText().trim(),
                                         DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                         DateUtil.toDateStrMYSQL(txtTo.getText()),
-                                        appCurr, Global.loginUser.getUserId());
+                                        appCurr, Global.machineId);
                                 double opBalance = 0;
                                 try {
                                     ResultSet rs = dao.execSQL("select tran_date, tran_option, trader_id as reg_no, null as admission_no, curr_id, sum(amount) as ttl_op_amt,\n"
                                             + "			 0 as ttl_amt, 0 as ttl_paid\n"
                                             + "		from tmp_patient_bal_date\n"
-                                            + "	   where user_id = '" + Global.loginUser.getUserId() + "' \n"
+                                            + "	   where user_id = '" + Global.machineId + "' \n"
                                             + "	   group by tran_date, tran_option, trader_id, curr_id");
-                                    if(rs != null){
-                                        if(rs.next()){
+                                    if (rs != null) {
+                                        if (rs.next()) {
                                             opBalance = rs.getDouble("ttl_op_amt");
                                         }
                                     }
@@ -1685,7 +1704,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             removeDCPaymentService();
                             break;
                     }
-                    
+
                     String reportPath = Util1.getAppWorkFolder()
                             + Util1.getPropValue("report.folder.path")
                             + "Clinic/"
@@ -1709,9 +1728,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void butCraftRptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCraftRptActionPerformed
         try {
             dao.execProc("insert_craft_group_rpt", DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.loginUser.getUserId());
+                    DateUtil.toDateStrMYSQL(txtTo.getText()), Global.machineId);
             GenExcel genExcel = new CraftGroupRptExcel(dao, "CraftGroupRpt.xls");
-            genExcel.setUserId(Global.loginUser.getUserId());
+            genExcel.setUserId(Global.machineId);
             genExcel.setFromDate(txtFrom.getText());
             genExcel.setToDate(txtTo.getText());
             genExcel.genExcel();

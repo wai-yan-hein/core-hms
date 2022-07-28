@@ -16,7 +16,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jSplitPane1" pref="1177" max="32767" attributes="0"/>
+          <Component id="jSplitPane1" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -113,7 +113,7 @@
                           <Component id="txtTo" min="-2" pref="100" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="cboPayOption" min="-2" pref="139" max="-2" attributes="0"/>
-                          <EmptySpace pref="30" max="32767" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -371,6 +371,9 @@
                               <Component id="chkOverdue" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="-2" max="-2" attributes="0"/>
                               <Component id="butRefresh" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" max="-2" attributes="0"/>
+                              <Component id="lblRefresh" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="jScrollPane1" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
@@ -403,6 +406,7 @@
                           <Component id="butRefresh" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="cboCusGroup" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="cboLocation" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="lblRefresh" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jScrollPane1" pref="223" max="32767" attributes="0"/>
@@ -538,6 +542,14 @@
                 <Property name="editable" type="boolean" value="false"/>
                 <Property name="horizontalAlignment" type="int" value="4"/>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="lblRefresh">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Refresh"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="lblRefreshActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

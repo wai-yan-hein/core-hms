@@ -94,7 +94,13 @@ public class StockIssueListDialog extends javax.swing.JDialog implements Selecti
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+        try {
+            BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -113,7 +119,7 @@ public class StockIssueListDialog extends javax.swing.JDialog implements Selecti
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblCodeFilter.getCellEditor() != null){
+                if (tblCodeFilter.getCellEditor() != null) {
                     tblCodeFilter.getCellEditor().stopCellEditing();
                 }
                 //No entering medCode, only press F3
@@ -125,7 +131,7 @@ public class StockIssueListDialog extends javax.swing.JDialog implements Selecti
                     log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
                 }
             } catch (Exception ex) {
-                
+
             }
         }
     };
@@ -323,26 +329,32 @@ public class StockIssueListDialog extends javax.swing.JDialog implements Selecti
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockIssueSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'StockIssueSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("StockIssueSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("StockIssueSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            txtFrom.setText(DateUtil.getTodayDateStr());
-            txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                txtFrom.setText(DateUtil.getTodayDateStr());
+                txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getLocation() != null) {
-                cboLocation.setSelectedItem(vouFilter.getLocation());
+                if (vouFilter.getLocation() != null) {
+                    cboLocation.setSelectedItem(vouFilter.getLocation());
+                }
+
+                txtRemark.setText(vouFilter.getRemark());
             }
-
-            txtRemark.setText(vouFilter.getRemark());
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

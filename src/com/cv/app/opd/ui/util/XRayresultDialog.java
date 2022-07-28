@@ -21,9 +21,10 @@ public class XRayresultDialog extends javax.swing.JDialog {
     static Logger log = Logger.getLogger(XRayresultDialog.class.getName());
     private InvestigationResult invResult;
     private final AbstractDataAccess dao = Global.dao;
-    
+
     /**
      * Creates new form XRayresultDialog
+     *
      * @param record
      */
     public XRayresultDialog(VOpd record) {
@@ -33,16 +34,22 @@ public class XRayresultDialog extends javax.swing.JDialog {
     }
 
     private void getData(VOpd record) {
-        if (record != null) {
-            String key = record.getKey().getVouNo() + "-" + record.getKey().getOpdDetailId()
-                    + "-" + record.getPatientId() + "-" + record.getKey().getServiceId();
-            invResult = (InvestigationResult) dao.find(InvestigationResult.class, key);
-            if (invResult != null) {
-                txtXRayResult.setText(invResult.getImpression());
-            } else {
-                invResult = new InvestigationResult();
-                invResult.setKeyField(key);
+        try {
+            if (record != null) {
+                String key = record.getKey().getVouNo() + "-" + record.getKey().getOpdDetailId()
+                        + "-" + record.getPatientId() + "-" + record.getKey().getServiceId();
+                invResult = (InvestigationResult) dao.find(InvestigationResult.class, key);
+                if (invResult != null) {
+                    txtXRayResult.setText(invResult.getImpression());
+                } else {
+                    invResult = new InvestigationResult();
+                    invResult.setKeyField(key);
+                }
             }
+        } catch (Exception ex) {
+            log.error("getData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -57,7 +64,7 @@ public class XRayresultDialog extends javax.swing.JDialog {
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

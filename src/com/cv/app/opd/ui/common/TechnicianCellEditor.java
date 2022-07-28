@@ -18,27 +18,28 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class TechnicianCellEditor extends AbstractCellEditor implements TableCellEditor{
+public class TechnicianCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+    static Logger log = Logger.getLogger(TechnicianCellEditor.class.getName());
     private JComponent component = null;
     private final AbstractDataAccess dao;
     private TechnicianAutoCompleter completer;
-    
-    public TechnicianCellEditor(AbstractDataAccess dao){
+
+    public TechnicianCellEditor(AbstractDataAccess dao) {
         this.dao = dao;
     }
-    
+
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int rowIndex, int vColIndex) {
+            boolean isSelected, int rowIndex, int vColIndex) {
         JTextField jtf = new JTextField();
-        List<Technician> listTech = dao.findAllHSQL(
-            "select o from Technician o where o.active = true order by o.techName");
-        
+
         KeyListener keyListener = new KeyListener() {
             @Override
             public void keyPressed(KeyEvent keyEvent) {
@@ -66,21 +67,29 @@ public class TechnicianCellEditor extends AbstractCellEditor implements TableCel
 
         jtf.addKeyListener(keyListener);
         component = jtf;
-        if(value != null){
+        if (value != null) {
             jtf.setText(value.toString());
             jtf.selectAll();
         }
-        completer = new TechnicianAutoCompleter(jtf, listTech, this);
-        
+
+        try {
+            List<Technician> listTech = dao.findAllHSQL(
+                    "select o from Technician o where o.active = true order by o.techName");
+            completer = new TechnicianAutoCompleter(jtf, listTech, this);
+        } catch (Exception ex) {
+            log.error("getTableCellEditorComponent : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         return component;
     }
-    
+
     @Override
     public Object getCellEditorValue() {
         Technician tech = completer.getTechnician();
         return tech;
     }
-    
+
     @Override
     public boolean isCellEditable(EventObject anEvent) {
         if (anEvent instanceof MouseEvent) {

@@ -361,25 +361,31 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboCity,
-                dao.findAllHSQL("select o from City o order by o.cityName"));
-        AutoCompleteDecorator.decorate(cboCity);
-        //new ComBoBoxAutoComplete(cboCity);
+        try {
+            BindingUtil.BindCombo(cboCity,
+                    dao.findAllHSQL("select o from City o order by o.cityName"));
+            AutoCompleteDecorator.decorate(cboCity);
+            //new ComBoBoxAutoComplete(cboCity);
 
-        BindingUtil.BindCombo(cboGender, dao.findAll("Gender"));
-        AutoCompleteDecorator.decorate(cboGender);
+            BindingUtil.BindCombo(cboGender, dao.findAll("Gender"));
+            AutoCompleteDecorator.decorate(cboGender);
 
-        BindingUtil.BindCombo(cboDoctor, dao.findAllHSQL("select o from Doctor o "
-                + "where o.active = true order by o.doctorName"));
-        AutoCompleteDecorator.decorate(cboDoctor);
+            BindingUtil.BindCombo(cboDoctor, dao.findAllHSQL("select o from Doctor o "
+                    + "where o.active = true order by o.doctorName"));
+            AutoCompleteDecorator.decorate(cboDoctor);
 
-        BindingUtil.BindCombo(cboTownship,
-                dao.findAllHSQL("select o from Township o order by o.townshipName"));
-        AutoCompleteDecorator.decorate(cboTownship);
+            BindingUtil.BindCombo(cboTownship,
+                    dao.findAllHSQL("select o from Township o order by o.townshipName"));
+            AutoCompleteDecorator.decorate(cboTownship);
 
-        BindingUtil.BindCombo(cboType,
-                dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
-        AutoCompleteDecorator.decorate(cboType);
+            BindingUtil.BindCombo(cboType,
+                    dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
+            AutoCompleteDecorator.decorate(cboType);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -398,8 +404,14 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     }
 
     private void dateFilterTable(String date) {
-        bkTableModel.setListBooking(dao.findAllHSQL("select o from VBooking o where o.bkDate = '" + date + "'"));
-        calculateTotalRecord();
+        try {
+            bkTableModel.setListBooking(dao.findAllHSQL("select o from VBooking o where o.bkDate = '" + date + "'"));
+            calculateTotalRecord();
+        } catch (Exception ex) {
+            log.error("dateFilterTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -501,70 +513,75 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     JOptionPane.ERROR_MESSAGE);
             txtNIRC.requestFocusInWindow();
         } else {
-            Patient pt = null;
-            if (txtRegNo.getText().trim().isEmpty()) {
-                currPatient.setRegNo(regNo.getRegNo());
-                pt = (Patient) dao.find(Patient.class, currPatient.getRegNo());
-                String tmpRegNo = currPatient.getRegNo();
-                tmpRegNo = tmpRegNo.replace(regNo.getPeriod(), "");
-                if (tmpRegNo.equals("0")) {
+            try {
+                Patient pt = null;
+                if (txtRegNo.getText().trim().isEmpty()) {
                     currPatient.setRegNo(regNo.getRegNo());
-                    tmpRegNo = currPatient.getRegNo();
+                    pt = (Patient) dao.find(Patient.class, currPatient.getRegNo());
+                    String tmpRegNo = currPatient.getRegNo();
+                    tmpRegNo = tmpRegNo.replace(regNo.getPeriod(), "");
                     if (tmpRegNo.equals("0")) {
-                        log.error("generateRegNo : " + "Registeration number generate to zero.");
-                        JOptionPane.showMessageDialog(Util1.getParent(),
-                                "Error in id generation. Please exit the program and try again", "Duplicate",
-                                JOptionPane.ERROR_MESSAGE);
-                        System.exit(-1);
+                        currPatient.setRegNo(regNo.getRegNo());
+                        tmpRegNo = currPatient.getRegNo();
+                        if (tmpRegNo.equals("0")) {
+                            log.error("generateRegNo : " + "Registeration number generate to zero.");
+                            JOptionPane.showMessageDialog(Util1.getParent(),
+                                    "Error in id generation. Please exit the program and try again", "Duplicate",
+                                    JOptionPane.ERROR_MESSAGE);
+                            System.exit(-1);
+                        }
                     }
+                } else {
+                    currPatient.setRegNo(txtRegNo.getText());
                 }
-            } else {
-                currPatient.setRegNo(txtRegNo.getText());
-            }
 
-            if (txtRegNo.getText().trim().isEmpty()) {
-                if (pt != null) {
-                    log.error("Duplicate Registeration : " + currPatient.getRegNo() + ";" + currPatient.getPatientName());
-                    /*JOptionPane.showMessageDialog(Util1.getParent(),
+                if (txtRegNo.getText().trim().isEmpty()) {
+                    if (pt != null) {
+                        log.error("Duplicate Registeration : " + currPatient.getRegNo() + ";" + currPatient.getPatientName());
+                        /*JOptionPane.showMessageDialog(Util1.getParent(),
                         "Duplicate registeration number. You cannot save.", "Duplicate",
                         JOptionPane.ERROR_MESSAGE);*/
-                    resetRegNo(regNo.getPeriod());
-                    currPatient.setRegNo(regNo.getRegNo());
+                        resetRegNo(regNo.getPeriod());
+                        currPatient.setRegNo(regNo.getRegNo());
+                    }
                 }
-            }
 
-            currPatient.setPatientName(txtName.getText().trim());
-            currPatient.setAddress(txtAddress.getText().trim());
-            currPatient.setContactNo(txtContactNo.getText().trim());
-            currPatient.setCreatedBy(Global.loginUser.getUserId());
-            //currPatient.setRegNo(txtRegNo.getText());
-            currPatient.setRegDate(DateUtil.toDateTime(txtRegDateTime.getText()));
-            currPatient.setFatherName(txtFatherName.getText().trim());
-            if (txtDOB.getText().isEmpty()) {
-                if (!txtAge.getText().isEmpty()) {
-                    currPatient.setDob(getDOB());
+                currPatient.setPatientName(txtName.getText().trim());
+                currPatient.setAddress(txtAddress.getText().trim());
+                currPatient.setContactNo(txtContactNo.getText().trim());
+                currPatient.setCreatedBy(Global.loginUser.getUserId());
+                //currPatient.setRegNo(txtRegNo.getText());
+                currPatient.setRegDate(DateUtil.toDateTime(txtRegDateTime.getText()));
+                currPatient.setFatherName(txtFatherName.getText().trim());
+                if (txtDOB.getText().isEmpty()) {
+                    if (!txtAge.getText().isEmpty()) {
+                        currPatient.setDob(getDOB());
+                    }
+                } else {
+                    currPatient.setDob(DateUtil.toDate(txtDOB.getText(), "dd/MM/yyyy"));
                 }
-            } else {
-                currPatient.setDob(DateUtil.toDate(txtDOB.getText(), "dd/MM/yyyy"));
+                currPatient.setSex((Gender) cboGender.getSelectedItem());
+                currPatient.setNirc(txtNIRC.getText().trim());
+                currPatient.setNationality(txtNationality.getText().trim());
+                currPatient.setCity((City) cboCity.getSelectedItem());
+                currPatient.setReligion(txtReligion.getText().trim());
+                currPatient.setDoctor((Doctor) cboDoctor.getSelectedItem());
+                currPatient.setAge(NumberUtil.NZeroInt(txtAge.getText()));
+                currPatient.setMonth(NumberUtil.NZeroInt(txtMonth.getText()));
+                currPatient.setDay(NumberUtil.NZeroInt(txtDay.getText()));
+                currPatient.setTownship((Township) cboTownship.getSelectedItem());
+                currPatient.setPtType((CustomerGroup) cboType.getSelectedItem());
+                currPatient.setAdmissionNo(txtAdmissionNo.getText().trim());
+                if (!txtBillID.getText().isEmpty()) {
+                    currPatient.setOtId(txtBillID.getText());
+                } else {
+                    currPatient.setOtId(null);
+                }
+            } catch (Exception ex) {
+                log.error("isValidEntry : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
-            currPatient.setSex((Gender) cboGender.getSelectedItem());
-            currPatient.setNirc(txtNIRC.getText().trim());
-            currPatient.setNationality(txtNationality.getText().trim());
-            currPatient.setCity((City) cboCity.getSelectedItem());
-            currPatient.setReligion(txtReligion.getText().trim());
-            currPatient.setDoctor((Doctor) cboDoctor.getSelectedItem());
-            currPatient.setAge(NumberUtil.NZeroInt(txtAge.getText()));
-            currPatient.setMonth(NumberUtil.NZeroInt(txtMonth.getText()));
-            currPatient.setDay(NumberUtil.NZeroInt(txtDay.getText()));
-            currPatient.setTownship((Township) cboTownship.getSelectedItem());
-            currPatient.setPtType((CustomerGroup) cboType.getSelectedItem());
-            currPatient.setAdmissionNo(txtAdmissionNo.getText().trim());
-            if (!txtBillID.getText().isEmpty()) {
-                currPatient.setOtId(txtBillID.getText());
-            } else {
-                currPatient.setOtId(null);
-            }
-
         }
         return status;
     }
@@ -957,7 +974,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     String address = Util1.getPropValue("report.address");
                     String printMode = Util1.getPropValue("report.vou.printer.mode");
                     String printerName = Util1.getPropValue("report.vou.printer");
-                    params.put("p_user_id", Global.loginUser.getUserId());
+                    params.put("p_user_id", Global.machineId);
                     params.put("p_user_short", Global.loginUser.getUserShortName());
                     params.put("compName", compName);
                     params.put("phone", phoneNo);
@@ -1097,6 +1114,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel22 = new javax.swing.JLabel();
         bkPhone = new javax.swing.JFormattedTextField();
         jLabel25 = new javax.swing.JLabel();
+        butRefresh = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblBooking = new javax.swing.JTable();
@@ -1567,6 +1585,13 @@ public final class Registration extends javax.swing.JPanel implements FormAction
 
         jLabel25.setText("Phone");
 
+        butRefresh.setText("Refresh");
+        butRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRefreshActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1595,7 +1620,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(189, 189, 189)
+                                .addGap(86, 86, 86)
+                                .addComponent(butRefresh)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel24)
@@ -1632,7 +1659,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                             .addComponent(jLabel24)
                             .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(butRefresh))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1718,7 +1747,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     .addComponent(jLabel20)
                     .addComponent(doctorFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTotalRecord, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1923,12 +1952,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         // TODO add your handling code here:
         if (doctorFilter.getText().isEmpty()) {
             sorterGroup.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorterGroup.setRowFilter(swrfGroup);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorterGroup.setRowFilter(swrfGroup);
-            } else {
-                sorterGroup.setRowFilter(RowFilter.regexFilter(doctorFilter.getText()));
-            }
+            sorterGroup.setRowFilter(RowFilter.regexFilter(doctorFilter.getText()));
         }
         calculateTotalRecord();
     }//GEN-LAST:event_doctorFilterKeyReleased
@@ -1937,12 +1964,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         // TODO add your handling code here:
         if (dateFilter.getText().isEmpty()) {
             sorterGroup.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorterGroup.setRowFilter(swrfGroup);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorterGroup.setRowFilter(swrfGroup);
-            } else {
-                sorterGroup.setRowFilter(RowFilter.regexFilter(dateFilter.getText()));
-            }
+            sorterGroup.setRowFilter(RowFilter.regexFilter(dateFilter.getText()));
         }
     }//GEN-LAST:event_dateFilterKeyReleased
 
@@ -1990,6 +2015,11 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         }
     }//GEN-LAST:event_tblBookingMouseClicked
 
+    private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed
+        String date = DateUtil.toDateStr(dateFilter.getText(), "yyyy-MM-dd");
+        dateFilterTable(date);
+    }//GEN-LAST:event_butRefreshActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFormattedTextField bkDate;
     private javax.swing.JFormattedTextField bkDoctor;
@@ -1998,6 +2028,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JButton bkSave;
     private javax.swing.JFormattedTextField bkpatientName;
     private javax.swing.JButton butBillID;
+    private javax.swing.JButton butRefresh;
     private javax.swing.JComboBox cboCity;
     private javax.swing.JComboBox cboDoctor;
     private javax.swing.JComboBox cboGender;

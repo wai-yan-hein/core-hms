@@ -46,59 +46,63 @@ public class MedicineUP {
 
     public void add(Medicine med) {
         if (!hasUnit.containsKey(med.getMedId())) {
-            med = (Medicine) dao.find(Medicine.class, med.getMedId());
-            if (med.getRelationGroupId() != null) {
-                if (med.getRelationGroupId().size() > 0) {
-                    med.setRelationGroupId(med.getRelationGroupId());
-                }
-                List<ItemUnit> listItemUnit = new ArrayList();
-                hasRelation.put(med.getMedId(), med.getRelationGroupId());
+            try {
+                med = (Medicine) dao.find(Medicine.class, med.getMedId());
+                if (med.getRelationGroupId() != null) {
+                    if (med.getRelationGroupId().size() > 0) {
+                        med.setRelationGroupId(med.getRelationGroupId());
+                    }
+                    List<ItemUnit> listItemUnit = new ArrayList();
+                    hasRelation.put(med.getMedId(), med.getRelationGroupId());
 
-                for (int i = 0; i < med.getRelationGroupId().size(); i++) {
-                    List<MedPriceList> listPrice = new ArrayList();
-                    RelationGroup relG = med.getRelationGroupId().get(i);
+                    for (int i = 0; i < med.getRelationGroupId().size(); i++) {
+                        List<MedPriceList> listPrice = new ArrayList();
+                        RelationGroup relG = med.getRelationGroupId().get(i);
 
-                    listItemUnit.add(relG.getUnitId());
+                        listItemUnit.add(relG.getUnitId());
 
-                    listPrice.add(new MedPriceList("N", relG.getSalePrice()));
-                    listPrice.add(new MedPriceList("A", relG.getSalePriceA()));
-                    listPrice.add(new MedPriceList("B", relG.getSalePriceB()));
-                    listPrice.add(new MedPriceList("C", relG.getSalePriceC()));
-                    listPrice.add(new MedPriceList("D", relG.getSalePriceD()));
-                    listPrice.add(new MedPriceList("E", relG.getStdCost()));
+                        listPrice.add(new MedPriceList("N", relG.getSalePrice()));
+                        listPrice.add(new MedPriceList("A", relG.getSalePriceA()));
+                        listPrice.add(new MedPriceList("B", relG.getSalePriceB()));
+                        listPrice.add(new MedPriceList("C", relG.getSalePriceC()));
+                        listPrice.add(new MedPriceList("D", relG.getSalePriceD()));
+                        listPrice.add(new MedPriceList("E", relG.getStdCost()));
 
-                    String key = med.getMedId() + "-" + relG.getUnitId().getItemUnitCode();
+                        String key = med.getMedId() + "-" + relG.getUnitId().getItemUnitCode();
 
-                    hasPrice.put(key, listPrice);
-                    hasQtyInSmallest.put(key, relG.getSmallestQty());
-                }
+                        hasPrice.put(key, listPrice);
+                        hasQtyInSmallest.put(key, relG.getSmallestQty());
+                    }
 
-                hasUnit.put(med.getMedId(), listItemUnit);
+                    hasUnit.put(med.getMedId(), listItemUnit);
 
-                //For condition of salePrice between purPrice and purPrice + (20%)
-                String propPriceStatus = Util1.getPropValue("system.sale.priceRange");
+                    //For condition of salePrice between purPrice and purPrice + (20%)
+                    String propPriceStatus = Util1.getPropValue("system.sale.priceRange");
 
-                if (propPriceStatus.toUpperCase().equals("Y")) {
-                    try {
-                        ResultSet rs = dao.getPro("get_latest_pur_price", med.getMedId());
+                    if (propPriceStatus.toUpperCase().equals("Y")) {
+                        try {
+                            ResultSet rs = dao.getPro("get_latest_pur_price", med.getMedId());
 
-                        if (rs != null) {
-                            if (rs.next()) {
-                                LatestPurPrice lpp = new LatestPurPrice();
-                                lpp.setMedId(rs.getString("med_id"));
-                                lpp.setPurPrice(rs.getDouble("pur_price"));
-                                lpp.setUnit(rs.getString("pur_unit"));
+                            if (rs != null) {
+                                if (rs.next()) {
+                                    LatestPurPrice lpp = new LatestPurPrice();
+                                    lpp.setMedId(rs.getString("med_id"));
+                                    lpp.setPurPrice(rs.getDouble("pur_price"));
+                                    lpp.setUnit(rs.getString("pur_unit"));
 
-                                hasLPP.put(med.getMedId(), lpp);
+                                    hasLPP.put(med.getMedId(), lpp);
+                                }
+                                rs.close();
                             }
-                            rs.close();
+                        } catch (SQLException ex) {
+                            log.error("add : " + ex);
+                        } finally {
+                            //dao.close();
                         }
-                    } catch (SQLException ex) {
-                        log.error("add : " + ex);
-                    } finally {
-                        //dao.close();
                     }
                 }
+            } catch (Exception ex) {
+                log.error("add 1 : " + ex.getMessage());
             }
         }
     }
@@ -120,7 +124,7 @@ public class MedicineUP {
     }
 
     public Double getPrice(String key, String priceType, float qty) {
-        Double price = new Double(0);
+        Double price = null;
         List<MedPriceList> priceList = getPriceList(key);
         int index = -1;
 
@@ -165,11 +169,11 @@ public class MedicineUP {
             log.error(ex.toString());
         }
 
-        return price;
+        return NumberUtil.NZero(price);
     }
 
     public Float getQtyInSmallest(String key) {
-        float value = new Float(0);
+        float value = 0f;
 
         try {
             if (!key.equals("")) {

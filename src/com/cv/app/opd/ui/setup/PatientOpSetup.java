@@ -69,12 +69,11 @@ public class PatientOpSetup extends javax.swing.JPanel {
         columnBinding.setColumnClass(String.class);
         columnBinding.setEditable(false);*/
 
-        /* columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${active}"));
+ /* columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${active}"));
         columnBinding.setColumnName("Active");
         columnBinding.setColumnClass(Boolean.class);
         columnBinding.setEditable(false);*/
         //jTableBinding.bind();
-
         //Adjust table column width
         TableColumn column = null;
         column = tblPatient.getColumnModel().getColumn(0);
@@ -102,10 +101,16 @@ public class PatientOpSetup extends javax.swing.JPanel {
                     tblEntryModel.setPatient(selPatient);
                     txtCusCode.setText(selPatient.getRegNo());
                     txtCusName.setText(selPatient.getPatientName());
-                    String strSQL = "select o from PatientOpening o where o.key.patient.regNo = '"
-                            + selPatient.getRegNo() + "'";
-                    List<PatientOpening> prvOP = dao.findAllHSQL(strSQL);
-                    tblLastOpModel.setListOp(prvOP);
+                    try {
+                        String strSQL = "select o from PatientOpening o where o.key.patient.regNo = '"
+                                + selPatient.getRegNo() + "'";
+                        List<PatientOpening> prvOP = dao.findAllHSQL(strSQL);
+                        tblLastOpModel.setListOp(prvOP);
+                    } catch (Exception ex) {
+                        log.error("initTblTrader : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                 }
             }
         }
@@ -113,29 +118,35 @@ public class PatientOpSetup extends javax.swing.JPanel {
     }
 
     private void initTblEntry() {
-        tblEntry.setModel(tblEntryModel);
-        tblEntryModel.addEmptyRow();
+        try {
+            tblEntry.setModel(tblEntryModel);
+            tblEntryModel.addEmptyRow();
 
-        //Adjust table column width
-        TableColumn column = null;
-        column = tblEntry.getColumnModel().getColumn(0);
-        column.setPreferredWidth(50);
+            //Adjust table column width
+            TableColumn column = null;
+            column = tblEntry.getColumnModel().getColumn(0);
+            column.setPreferredWidth(50);
 
-        column = tblEntry.getColumnModel().getColumn(1);
-        column.setPreferredWidth(50);
+            column = tblEntry.getColumnModel().getColumn(1);
+            column.setPreferredWidth(50);
 
-        column = tblEntry.getColumnModel().getColumn(2);
-        column.setPreferredWidth(50);
-        
-        column = tblEntry.getColumnModel().getColumn(3);
-        column.setPreferredWidth(80);
+            column = tblEntry.getColumnModel().getColumn(2);
+            column.setPreferredWidth(50);
 
-        JComboBox cboCurrency = new JComboBox();
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        tblEntry.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboCurrency));
-        JComboBox cboBillType = new JComboBox();
-        BindingUtil.BindCombo(cboBillType, dao.findAll("PaymentType"));
-        tblEntry.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboBillType));
+            column = tblEntry.getColumnModel().getColumn(3);
+            column.setPreferredWidth(80);
+
+            JComboBox cboCurrency = new JComboBox();
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            tblEntry.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboCurrency));
+            JComboBox cboBillType = new JComboBox();
+            BindingUtil.BindCombo(cboBillType, dao.findAll("PaymentType"));
+            tblEntry.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboBillType));
+        } catch (Exception ex) {
+            log.error("initTblEntry : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTblLastOp() {
@@ -218,35 +229,41 @@ public class PatientOpSetup extends javax.swing.JPanel {
         }
     };
 
-    private void search(){
-        String strFilter =  "";
-        
-        if(!txtRegNo.getText().trim().isEmpty()){
-            if(strFilter.isEmpty()){
+    private void search() {
+        String strFilter = "";
+
+        if (!txtRegNo.getText().trim().isEmpty()) {
+            if (strFilter.isEmpty()) {
                 strFilter = "o.regNo = '" + txtRegNo.getText().trim() + "'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.regNo = '" + txtRegNo.getText().trim() + "'";
             }
         }
-        
-        if(!txtFilter.getText().trim().isEmpty()){
-            if(strFilter.isEmpty()){
+
+        if (!txtFilter.getText().trim().isEmpty()) {
+            if (strFilter.isEmpty()) {
                 strFilter = "o.patientName like '%" + txtFilter.getText().trim() + "%'";
-            }else{
+            } else {
                 strFilter = strFilter + " and o.patientName like '%" + txtFilter.getText().trim() + "%'";
             }
         }
-        
-        if(strFilter.isEmpty()){
+
+        if (strFilter.isEmpty()) {
             strFilter = "select o from Patient o";
-        }else{
+        } else {
             strFilter = "select o from Patient o where " + strFilter;
         }
-        
-        listPatient = dao.findAllHSQL(strFilter);
-        tblPatientTableModel.setListPatient(listPatient);
+
+        try {
+            listPatient = dao.findAllHSQL(strFilter);
+            tblPatientTableModel.setListPatient(listPatient);
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

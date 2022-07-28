@@ -126,4 +126,10 @@ public class AmountLinkTableModel extends AbstractTableModel {
         }
         return ttlAmt;
     }
+    
+    public void clear(){
+        listTAL = new ArrayList();
+        fireTableDataChanged();
+        System.gc();
+    }
 }

@@ -138,7 +138,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         tmpExrTableModel.addEmptyRow();
 
         String strSql = "delete from tmp_ex_rate where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         try {
             dao.deleteSQL(strSql);
         } catch (Exception ex) {
@@ -149,21 +149,27 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
-        List<AdjHis> listAH = dao.findAllHSQL(
-                "select o from AdjHis o where o.adjVouId = '" + txtVouNo.getText() + "'"
-        );
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
+            List<AdjHis> listAH = dao.findAllHSQL(
+                    "select o from AdjHis o where o.adjVouId = '" + txtVouNo.getText() + "'"
+            );
 
-        if (listAH != null) {
-            if (!listAH.isEmpty()) {
-                log.error("Duplicate adjust vour error : " + txtVouNo.getText() + " @ "
-                        + txtAdjDate.getText());
-                JOptionPane.showMessageDialog(Util1.getParent(),
-                        "Duplicate return out vou no. Exit the program and try again.",
-                        "Adjust Vou No", JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
+            if (listAH != null) {
+                if (!listAH.isEmpty()) {
+                    log.error("Duplicate adjust vour error : " + txtVouNo.getText() + " @ "
+                            + txtAdjDate.getText());
+                    JOptionPane.showMessageDialog(Util1.getParent(),
+                            "Duplicate return out vou no. Exit the program and try again.",
+                            "Adjust Vou No", JOptionPane.ERROR_MESSAGE);
+                    System.exit(1);
+                }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -187,35 +193,49 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         tmpExrTableModel.clear();
         tmpExrTableModel.addEmptyRow();
         deleteExRateTmp();
-        
+
         System.gc();
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        isBind = true;
-        BindingUtil.BindCombo(cboLocation, getLocationFilter());
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            if (cboLocation.getItemCount() > 0) {
-                cboLocation.setSelectedIndex(0);
+        try {
+            isBind = true;
+            BindingUtil.BindCombo(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                if (cboLocation.getItemCount() > 0) {
+                    cboLocation.setSelectedIndex(0);
+                }
             }
+            new ComBoBoxAutoComplete(cboLocation, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
+            isBind = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        new ComBoBoxAutoComplete(cboLocation, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
-        isBind = false;
     }// </editor-fold>
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowAdj = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowAdj = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     // <editor-fold defaultstate="collapsed" desc="actionMapping">
@@ -291,25 +311,31 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     public void getMedInfo(String medCode) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -348,21 +374,26 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     lblStatus.setText("EDIT");
                 }
 
+                log.info("selected : AdjVouList : 1");
                 txtVouNo.setText(currAdjust.getAdjVouId());
                 txtAdjDate.setText(DateUtil.toDateStr(currAdjust.getAdjDate()));
                 txtRemark.setText(currAdjust.getRemark());
                 cboLocation.setSelectedItem(currAdjust.getLocation());
                 //txtTotalAmount.setValue(currAdjust.getAmount());
-                Currency curr = (Currency) dao.find(Currency.class, currAdjust.getCurrencyId());
-                cboCurrency.setSelectedItem(curr);
+                if (currAdjust.getCurrencyId() != null) {
+                    Currency curr = (Currency) dao.find(Currency.class, currAdjust.getCurrencyId());
+                    cboCurrency.setSelectedItem(curr);
+                }
+                log.info("selected : AdjVouList : a");
                 listDetail = dao.findAllHSQL(
                         "select o from AdjDetailHis o where o.vouNo = '"
                         + currAdjust.getAdjVouId() + "' order by o.uniqueId");
+                log.info("selected : AdjVouList : 2");
                 currAdjust.setListDetail(listDetail);
                 /*if (currAdjust.getListDetail().size() > 0) {
                         listDetail = currAdjust.getListDetail();
                     }*/
-
+                log.info("selected : AdjVouList : 3");
                 for (AdjDetailHis adh : listDetail) {
                     medUp.add(adh.getMedicineId());
                 }
@@ -371,9 +402,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 adjTableModel.setCurrency(appCurr);
                 //For exchange rate
                 cttlModel.setList(adjTableModel.getCurrTotal());
+                log.info("selected : AdjVouList : 4");
                 deleteExRateTmp();
                 insertExRateToTemp(currAdjust.getAdjVouId());
+                log.info("selected : AdjVouList : 5");
                 getExRate();
+                log.info("selected : AdjVouList : 6");
                 dao.close();
             } catch (Exception ex) {
                 log.error("adjVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -419,60 +453,66 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
     // <editor-fold defaultstate="collapsed" desc="initAdjTable">
     private void initAdjTable() {
-        if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
-            tblAdjDetail.setCellSelectionEnabled(true);
-        }
-        tblAdjDetail.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblAdjDetail.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
-        tblAdjDetail.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
-        tblAdjDetail.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
-        tblAdjDetail.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
-        tblAdjDetail.getColumnModel().getColumn(4).setPreferredWidth(50);//Sys-Bal
-        tblAdjDetail.getColumnModel().getColumn(5).setPreferredWidth(50);//Usr-Balance
-        tblAdjDetail.getColumnModel().getColumn(6).setPreferredWidth(30);//Usr-Unit
-        tblAdjDetail.getColumnModel().getColumn(7).setPreferredWidth(10);//Currency
-        tblAdjDetail.getColumnModel().getColumn(8).setPreferredWidth(20);//Adj Qty
-        tblAdjDetail.getColumnModel().getColumn(9).setPreferredWidth(20);//Unit
-        tblAdjDetail.getColumnModel().getColumn(10).setPreferredWidth(30);//Type
-        tblAdjDetail.getColumnModel().getColumn(11).setPreferredWidth(30);//Balance
-        tblAdjDetail.getColumnModel().getColumn(12).setPreferredWidth(40);//Cost Price
-        tblAdjDetail.getColumnModel().getColumn(13).setPreferredWidth(40);//Amount
-
-        tblAdjDetail.getColumnModel().getColumn(0).setCellEditor(
-                new SaleTableCodeCellEditor(dao));
-        tblAdjDetail.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor(this));
-        tblAdjDetail.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor(this));
-        tblAdjDetail.getColumnModel().getColumn(7).setCellEditor(new CurrencyEditor());
-        tblAdjDetail.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
-        JComboBox cboAdjType = new JComboBox();
-        BindingUtil.BindCombo(cboAdjType, dao.findAll("AdjType"));
-        tblAdjDetail.getColumnModel().getColumn(10).setCellEditor(
-                new DefaultCellEditor(cboAdjType));
-        tblAdjDetail.getColumnModel().getColumn(11).setCellEditor(new BestTableCellEditor(this));
-
-        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-        tblAdjDetail.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
-        tblAdjDetail.getColumnModel().getColumn(11).setCellRenderer(rightRenderer);
-
-        tblAdjDetail.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                //txtTotalAmount.setValue(adjTableModel.getTotalAmount());
-                cttlModel.setList(adjTableModel.getCurrTotal());
+        try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblAdjDetail.setCellSelectionEnabled(true);
             }
-        });
+            tblAdjDetail.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblAdjDetail.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
+            tblAdjDetail.getColumnModel().getColumn(1).setPreferredWidth(300);//Medicine Name
+            tblAdjDetail.getColumnModel().getColumn(2).setPreferredWidth(60);//Relstr
+            tblAdjDetail.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
+            tblAdjDetail.getColumnModel().getColumn(4).setPreferredWidth(50);//Sys-Bal
+            tblAdjDetail.getColumnModel().getColumn(5).setPreferredWidth(50);//Usr-Balance
+            tblAdjDetail.getColumnModel().getColumn(6).setPreferredWidth(30);//Usr-Unit
+            tblAdjDetail.getColumnModel().getColumn(7).setPreferredWidth(10);//Currency
+            tblAdjDetail.getColumnModel().getColumn(8).setPreferredWidth(20);//Adj Qty
+            tblAdjDetail.getColumnModel().getColumn(9).setPreferredWidth(20);//Unit
+            tblAdjDetail.getColumnModel().getColumn(10).setPreferredWidth(30);//Type
+            tblAdjDetail.getColumnModel().getColumn(11).setPreferredWidth(30);//Balance
+            tblAdjDetail.getColumnModel().getColumn(12).setPreferredWidth(40);//Cost Price
+            tblAdjDetail.getColumnModel().getColumn(13).setPreferredWidth(40);//Amount
 
-        tblCurrTotal.getColumnModel().getColumn(0).setPreferredWidth(10);  //Option
-        tblCurrTotal.getColumnModel().getColumn(1).setPreferredWidth(50);  //Vou No
+            tblAdjDetail.getColumnModel().getColumn(0).setCellEditor(
+                    new SaleTableCodeCellEditor(dao));
+            tblAdjDetail.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor(this));
+            tblAdjDetail.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor(this));
+            tblAdjDetail.getColumnModel().getColumn(7).setCellEditor(new CurrencyEditor());
+            tblAdjDetail.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor(this));
+            JComboBox cboAdjType = new JComboBox();
+            BindingUtil.BindCombo(cboAdjType, dao.findAll("AdjType"));
+            tblAdjDetail.getColumnModel().getColumn(10).setCellEditor(
+                    new DefaultCellEditor(cboAdjType));
+            tblAdjDetail.getColumnModel().getColumn(11).setCellEditor(new BestTableCellEditor(this));
 
-        tblExRate.getColumnModel().getColumn(0).setCellEditor(
-                new CurrencyEditor());
-        tblExRate.getColumnModel().getColumn(1).setCellEditor(
-                new BestTableCellEditor(this));
-        tblExRate.getColumnModel().getColumn(2).setCellEditor(
-                new BestTableCellEditor(this));
+            DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+            rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+            tblAdjDetail.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
+            tblAdjDetail.getColumnModel().getColumn(11).setCellRenderer(rightRenderer);
+
+            tblAdjDetail.getModel().addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    //txtTotalAmount.setValue(adjTableModel.getTotalAmount());
+                    cttlModel.setList(adjTableModel.getCurrTotal());
+                }
+            });
+
+            tblCurrTotal.getColumnModel().getColumn(0).setPreferredWidth(10);  //Option
+            tblCurrTotal.getColumnModel().getColumn(1).setPreferredWidth(50);  //Vou No
+
+            tblExRate.getColumnModel().getColumn(0).setCellEditor(
+                    new CurrencyEditor());
+            tblExRate.getColumnModel().getColumn(1).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblExRate.getColumnModel().getColumn(2).setCellEditor(
+                    new BestTableCellEditor(this));
+        } catch (Exception ex) {
+            log.error("initAdjTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     // <editor-fold defaultstate="collapsed" desc="FormAction Implementation">
@@ -492,7 +532,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 deleteExRateHis(vouNo);
                 insertExRateHis(vouNo);
                 List<AdjDetailHis> listTmp = adjTableModel.getListDetail();
-                
+
                 dao.open();
                 dao.beginTran();
                 for (AdjDetailHis adh : listTmp) {
@@ -527,8 +567,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
     @Override
     public void history() {
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Adjust Search", dao);
+                "Adjust Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -702,14 +746,16 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             } else if (col == 2 && ridh.getMedicineId().getMedId() != null) {
                 tblAdjDetail.setColumnSelectionInterval(3, 3); //Move to Exp-Date
             } else if (col == 3 && ridh.getMedicineId().getMedId() != null) {
-                tblAdjDetail.setColumnSelectionInterval(4, 4); //Move to Qty
+                tblAdjDetail.setColumnSelectionInterval(5, 5); //Move to Qty
             } else if (col == 4 && ridh.getMedicineId().getMedId() != null) {
-                tblAdjDetail.setColumnSelectionInterval(6, 6); //Move to Adj Type
+                tblAdjDetail.setColumnSelectionInterval(5, 5); //Move to Adj Type
             } else if (col == 5 && ridh.getMedicineId().getMedId() != null) {
-                tblAdjDetail.setColumnSelectionInterval(6, 6); //Move to Qty
+                tblAdjDetail.setColumnSelectionInterval(7, 7); //Move to Qty
             } else if (col == 6 && ridh.getMedicineId().getMedId() != null) {
                 tblAdjDetail.setColumnSelectionInterval(7, 7); //Move to Qty
             } else if (col == 7 && ridh.getMedicineId().getMedId() != null) {
+                tblAdjDetail.setColumnSelectionInterval(8, 8); //Move to Qty
+            } else if (col == 8 && ridh.getMedicineId().getMedId() != null) {
                 if ((row + 1) <= listDetail.size()) {
                     tblAdjDetail.setRowSelectionInterval(row + 1, row + 1);
                 }
@@ -849,9 +895,9 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         return id;
     }
 
-    private void deleteExRateTmp(){
+    private void deleteExRateTmp() {
         String strSql = "delete from tmp_ex_rate where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         try {
             dao.deleteSQL(strSql);
         } catch (Exception ex) {
@@ -860,8 +906,8 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             dao.close();
         }
     }
-    
-    private void deleteExRateHis(String vouNo){
+
+    private void deleteExRateHis(String vouNo) {
         String strSql = "delete from stock_adjust_ex_rate_his where vou_no = '"
                 + vouNo + "'";
         try {
@@ -872,11 +918,11 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             dao.close();
         }
     }
-    
-    private void insertExRateHis(String vouNo){
+
+    private void insertExRateHis(String vouNo) {
         String strSql = "insert into stock_adjust_ex_rate_his(vou_no, from_curr, to_curr, ex_rate) "
                 + "select '" + vouNo + "', from_curr, to_curr, ex_rate from "
-                + "tmp_ex_rate where user_id = '" + Global.loginUser.getUserId() + "'";
+                + "tmp_ex_rate where user_id = '" + Global.machineId + "'";
         try {
             dao.deleteSQL(strSql);
         } catch (Exception ex) {
@@ -885,10 +931,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             dao.close();
         }
     }
-    
-    private void insertExRateToTemp(String vouNo){
+
+    private void insertExRateToTemp(String vouNo) {
         String strSql = "insert into tmp_ex_rate(user_id, from_curr, to_curr, ex_rate) "
-                + "select '" + Global.loginUser.getUserId() + "', from_curr, to_curr, ex_rate "
+                + "select '" + Global.machineId + "', from_curr, to_curr, ex_rate "
                 + "from stock_adjust_ex_rate_his where vou_no = '" + vouNo + "'";
         try {
             dao.deleteSQL(strSql);
@@ -898,10 +944,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             dao.close();
         }
     }
-    
-    private void getExRate(){
-        String strSql = "select o from TmpEXRate o where o.key.userId = '" + Global.loginUser.getUserId() + "'";
-        
+
+    private void getExRate() {
+        String strSql = "select o from TmpEXRate o where o.key.userId = '" + Global.machineId + "'";
+
         try {
             List<TmpEXRate> list = dao.findAllHSQL(strSql);
             tmpExrTableModel.setList(list);
@@ -912,6 +958,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             dao.close();
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1058,7 +1105,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     .addComponent(jLabel4)
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 41, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(lblStatus)

@@ -204,25 +204,31 @@ public class BusinessTypeSetup extends javax.swing.JDialog {
     // End of variables declaration//GEN-END:variables
 
     private void initTable() {
-        tableModel.setListBusinessType(dao.findAll("BusinessType"));
+        try {
+            tableModel.setListBusinessType(dao.findAll("BusinessType"));
 
-        //Define table selection model to single row selection.
-        tblBusinessType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblBusinessType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblBusinessType.getSelectedRow() >= 0) {
-                    selectedRow = tblBusinessType.convertRowIndexToModel(
-                            tblBusinessType.getSelectedRow());
-                }
+            //Define table selection model to single row selection.
+            tblBusinessType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblBusinessType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblBusinessType.getSelectedRow() >= 0) {
+                        selectedRow = tblBusinessType.convertRowIndexToModel(
+                                tblBusinessType.getSelectedRow());
+                    }
 
-                if (selectedRow >= 0) {
-                    setCurrBusinessType(tableModel.getBusinessType(selectedRow));
+                    if (selectedRow >= 0) {
+                        setCurrBusinessType(tableModel.getBusinessType(selectedRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setCurrBusinessType(BusinessType businessType) {
@@ -297,8 +303,7 @@ public class BusinessTypeSetup extends javax.swing.JDialog {
     }
 
     private void delete() {
-        
-        
+
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -306,9 +311,7 @@ public class BusinessTypeSetup extends javax.swing.JDialog {
 
                 if (yes_no == 0) {
                     dao.delete(currBusinessType);
-                    
-                   
-                
+
                     int tmpRow = selectedRow;
                     selectedRow = -1;
                     tableModel.deleteChargeType(tmpRow);
@@ -325,11 +328,7 @@ public class BusinessTypeSetup extends javax.swing.JDialog {
         }
 
         clear();
-        
+
     }
-
-    
-
-    
 
 }

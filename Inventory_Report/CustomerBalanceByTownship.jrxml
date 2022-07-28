@@ -12,9 +12,9 @@
 	<parameter name="data_date" class="java.lang.String"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select ttbd.trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name, v_cs.discriminator, tow.township_name
+		<![CDATA[select if(ifnull(v_cs.sys_p,'-')='Y', v_cs.stu_no, ttbd.trader_id) as trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name, v_cs.discriminator, tow.township_name
 from tmp_trader_bal_date ttbd
-join v_cs on ttbd.trader_id = v_cs.trader_id 
+join v_cs on ttbd.trader_id = v_cs.trader_id
 join currency curr on ttbd.curr_id = curr.cur_code
 left join township tow on v_cs.township = tow.township_id
 where user_id = $P{user_id} and v_cs.discriminator = 'C'
@@ -47,7 +47,7 @@ order by tow.township_name, v_cs.trader_name]]>
 	<group name="currency">
 		<groupExpression><![CDATA[$F{township_name}]]></groupExpression>
 		<groupHeader>
-			<band height="37">
+			<band height="15">
 				<staticText>
 					<reportElement x="0" y="0" width="48" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
@@ -62,54 +62,6 @@ order by tow.township_name, v_cs.trader_name]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{township_name}]]></textFieldExpression>
 				</textField>
-				<line>
-					<reportElement x="0" y="18" width="555" height="1" uuid="9b6d80a6-52e3-4e9f-a4f2-223319e9acce"/>
-				</line>
-				<line>
-					<reportElement x="0" y="36" width="555" height="1" uuid="9b6d80a6-52e3-4e9f-a4f2-223319e9acce"/>
-				</line>
-				<staticText>
-					<reportElement x="0" y="20" width="49" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Code]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="54" y="20" width="135" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Name]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="190" y="20" width="83" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Balance]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="280" y="20" width="49" height="15" uuid="5f9c4b70-0ee4-4565-aec7-2366477521d7"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Code]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="334" y="20" width="135" height="15" uuid="1b4c48d3-2f8a-4537-adce-a7c1c30bbb3e"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Name]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="470" y="20" width="83" height="15" uuid="9c2ddf4d-0bee-40c3-8588-ad8cd0c465df"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Balance]]></text>
-				</staticText>
 			</band>
 		</groupHeader>
 		<groupFooter>
@@ -201,7 +153,7 @@ order by tow.township_name, v_cs.trader_name]]>
 		</band>
 	</title>
 	<pageHeader>
-		<band height="15" splitType="Stretch">
+		<band height="33" splitType="Stretch">
 			<textField>
 				<reportElement x="431" y="0" width="80" height="15" uuid="c1e378a6-01b4-4837-acdc-c15ba807527c"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -216,6 +168,54 @@ order by tow.township_name, v_cs.trader_name]]>
 				</textElement>
 				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement x="1" y="14" width="555" height="1" uuid="9b6d80a6-52e3-4e9f-a4f2-223319e9acce"/>
+			</line>
+			<line>
+				<reportElement x="1" y="32" width="555" height="1" uuid="9b6d80a6-52e3-4e9f-a4f2-223319e9acce"/>
+			</line>
+			<staticText>
+				<reportElement x="1" y="16" width="49" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="55" y="16" width="135" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="191" y="16" width="83" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Balance]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="16" width="49" height="15" uuid="5f9c4b70-0ee4-4565-aec7-2366477521d7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="335" y="16" width="135" height="15" uuid="1b4c48d3-2f8a-4537-adce-a7c1c30bbb3e"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="471" y="16" width="83" height="15" uuid="9c2ddf4d-0bee-40c3-8588-ad8cd0c465df"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Balance]]></text>
+			</staticText>
 		</band>
 	</pageHeader>
 	<detail>

@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * ItemUnitSetup.java
  *
  * Created on Apr 22, 2012, 9:52:24 PM
@@ -37,6 +37,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class ItemUnitSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(ItemUnitSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private ItemUnitTableModel tableModel = new ItemUnitTableModel();
@@ -124,7 +125,7 @@ public class ItemUnitSetup extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Unit Name cannot be blank or null.",
                     "Unit Name null error.", JOptionPane.ERROR_MESSAGE);
             txtUnitDesc.requestFocusInWindow();
-        } else if(txtUnitShort.getText().length() > 10){
+        } else if (txtUnitShort.getText().length() > 10) {
             status = false;
             JOptionPane.showMessageDialog(this, "Character length at most 10.",
                     "Character Length", JOptionPane.ERROR_MESSAGE);
@@ -315,36 +316,26 @@ public class ItemUnitSetup extends javax.swing.JPanel {
     }//GEN-LAST:event_butDeleteActionPerformed
 
     private void initTable() {
-        tableModel.setListItemUnit(dao.findAll("ItemUnit"));
+        try {
+            tableModel.setListItemUnit(dao.findAll("ItemUnit"));
 
-        /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE, 
-         listItemUnit, tblUnit);
-         ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.
-         jdesktop.beansbinding.ELProperty.create("${itemUnitCode}"));
-         columnBinding.setColumnName("Unit-S");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-        
-         columnBinding = jTableBinding.addColumnBinding(org.
-         jdesktop.beansbinding.ELProperty.create("${itemUnitName}"));
-         columnBinding.setColumnName("Unit");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-        
-         jTableBinding.bind();*/
-
-        tblUnit.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblUnit.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblUnit.getSelectedRow() >= 0) {
-                            selectedRow = tblUnit.convertRowIndexToModel(
-                                    tblUnit.getSelectedRow());
-                            setCurrItemUnit(tableModel.getItemUnit(selectedRow));
-                        }
+            tblUnit.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblUnit.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblUnit.getSelectedRow() >= 0) {
+                        selectedRow = tblUnit.convertRowIndexToModel(
+                                tblUnit.getSelectedRow());
+                        setCurrItemUnit(tableModel.getItemUnit(selectedRow));
                     }
-                });
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;

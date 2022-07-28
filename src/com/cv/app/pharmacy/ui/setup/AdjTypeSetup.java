@@ -33,6 +33,7 @@ import org.jdesktop.swingbinding.SwingBindings;
  * @author WSwe
  */
 public class AdjTypeSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(AdjTypeSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao; // Data access object.    
     private List<AdjType> listAdjType = ObservableCollections.
@@ -75,32 +76,37 @@ public class AdjTypeSetup extends javax.swing.JPanel {
     }
 
     private void initTable() {
+        try {
+            listAdjType = ObservableCollections.observableList(dao.findAll("AdjType"));
 
-        listAdjType = ObservableCollections.observableList(dao.findAll("AdjType"));
+            //Binding table with listAdjType using beansbinding library.
+            JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
+                    listAdjType, tblAdjType);
+            JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${adjDesp}"));
+            columnBinding.setColumnName("Description");
+            columnBinding.setColumnClass(String.class);
+            columnBinding.setEditable(false);
+            jTableBinding.bind();
 
-        //Binding table with listAdjType using beansbinding library.
-        JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
-                listAdjType, tblAdjType);
-        JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${adjDesp}"));
-        columnBinding.setColumnName("Description");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        jTableBinding.bind();
+            //Define table selection model to single row selection.
+            tblAdjType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblAdjType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    int row = tblAdjType.getSelectedRow();
 
-        //Define table selection model to single row selection.
-        tblAdjType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblAdjType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        int row = tblAdjType.getSelectedRow();
-
-                        if (row != -1) {
-                            setCurrAdjType(listAdjType.get(tblAdjType.convertRowIndexToModel(row)));
-                        }
+                    if (row != -1) {
+                        setCurrAdjType(listAdjType.get(tblAdjType.convertRowIndexToModel(row)));
                     }
-                });
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {

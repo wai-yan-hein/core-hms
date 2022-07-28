@@ -139,14 +139,20 @@ public class LabResultTableModelInd extends AbstractTableModel {
 
     public void setSelectResultId(Integer serviceId) {
         this.serviceId = serviceId;
-        String strSql = "select o from OPDLabResultInd o where o.resultId = " + serviceId;
-        List<OPDLabResultInd> tmpListResultInd = dao.findAllHSQL(strSql);
+        try {
+            String strSql = "select o from OPDLabResultInd o where o.resultId = " + serviceId;
+            List<OPDLabResultInd> tmpListResultInd = dao.findAllHSQL(strSql);
 
-        if (tmpListResultInd == null) {
-            tmpListResultInd = new ArrayList();
+            if (tmpListResultInd == null) {
+                tmpListResultInd = new ArrayList();
+            }
+
+            setListResult(tmpListResultInd);
+        } catch (Exception ex) {
+            log.error("setSelectResultId : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        setListResult(tmpListResultInd);
         addNewRow();
     }
 

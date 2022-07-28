@@ -33,6 +33,7 @@ public class VoucherSearch {
     private String voucherChecker;
     private Boolean isPrinted;
     private Date tranDT;
+    private String traderId;
 
     public Date getTranDate() {
         return tranDate;
@@ -192,6 +193,14 @@ public class VoucherSearch {
 
     public void setExpInTotal(Double expInTotal) {
         this.expInTotal = expInTotal;
+    }
+
+    public String getTraderId() {
+        return traderId;
+    }
+
+    public void setTraderId(String traderId) {
+        this.traderId = traderId;
     }
 
 }

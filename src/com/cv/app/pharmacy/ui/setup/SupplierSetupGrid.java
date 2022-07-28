@@ -14,6 +14,7 @@ import com.cv.app.pharmacy.database.entity.Appuser;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Customer;
 import com.cv.app.pharmacy.database.entity.CustomerGroup;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.PaymentVou;
 import com.cv.app.pharmacy.database.entity.SupplierWithParent;
 import com.cv.app.pharmacy.database.entity.TraderPayHis;
@@ -41,7 +42,8 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
     private final TableRowSorter<TableModel> sorter;
     private final StartWithRowFilter swrf;
     private final AbstractDataAccess dao = Global.dao;
-    private boolean bindStatus = false; 
+    private boolean bindStatus = false;
+
     //private final TableRowSorter<TableModel> tblTraderSorter;
     /**
      * Creates new form CustomerPayment1
@@ -73,11 +75,17 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
     }
 
     private void initCombo() {
-        bindStatus = true;
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
-                "select o from CustomerGroup o where o.useFor = 'SUP' order by o.groupName"));
-        
-        bindStatus = false;
+        try {
+            bindStatus = true;
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
+                    "select o from CustomerGroup o where o.useFor = 'SUP' order by o.groupName"));
+            BindingUtil.BindComboFilter(cboLocation, dao.findAllHSQL("select o from Location o order by o.locationName"));
+            bindStatus = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void search() {
@@ -88,6 +96,19 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
                 strSql = "o.traderGroup.groupId = '" + cusGroup + "'";
             } else {
                 strSql = strSql + " and o.traderGroup.groupId = '" + cusGroup + "'";
+            }
+        }
+
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            int locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            if (strSql.isEmpty()) {
+                strSql = "o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ")";
+            } else {
+                strSql = strSql + " and o.traderId in (select a.key.traderId "
+                        + "from LocationTraderMapping a where a.key.locationId = "
+                        + locationId + ")";
             }
         }
 
@@ -117,8 +138,7 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
                 strSql = strSql + " and o.businessType.businessId = " + id;
             }
         }*/
-        
-        /*if (cboParent.getSelectedItem() instanceof Customer) {
+ /*if (cboParent.getSelectedItem() instanceof Customer) {
             String id = ((Customer) cboParent.getSelectedItem()).getTraderId();
             if (strSql.isEmpty()) {
                 strSql = "o.parent.traderId = '" + id + "'";
@@ -126,19 +146,18 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
                 strSql = strSql + " and o.parent.traderId = '" + id + "'";
             }
         }*/
-
         if (strSql.isEmpty()) {
             strSql = "o.active = " + chkActive.isSelected();
         } else {
             strSql = strSql + " and o.active = " + chkActive.isSelected();
         }
 
-        if(strSql.isEmpty()){
+        if (strSql.isEmpty()) {
             strSql = "select o from SupplierWithParent o";
-        }else{
+        } else {
             strSql = "select o from SupplierWithParent o where " + strSql;
         }
-        
+
         try {
             List<SupplierWithParent> listCUS = dao.findAllHSQL(strSql);
             tblCusGridEntry.setListCUS(listCUS);
@@ -164,6 +183,7 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
         jScrollPane1 = new javax.swing.JScrollPane();
         tblCustomer = new javax.swing.JTable();
         cboCusGroup = new javax.swing.JComboBox<>();
+        cboLocation = new javax.swing.JComboBox<>();
 
         jLabel1.setText("Filter");
 
@@ -198,6 +218,13 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
             }
         });
 
+        cboLocation.setFont(Global.textFont);
+        cboLocation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLocationActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -209,24 +236,29 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 21, Short.MAX_VALUE)
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkActive)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addGap(10, 10, 10)))
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chkActive)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel1)
-                        .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel1)
+                            .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(chkActive))
+                .addGap(6, 6, 6)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
                 .addContainerGap())
         );
@@ -254,14 +286,21 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
     }//GEN-LAST:event_chkActiveActionPerformed
 
     private void cboCusGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCusGroupActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboCusGroupActionPerformed
 
+    private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
+        if (!bindStatus) {
+            search();
+        }
+    }//GEN-LAST:event_cboLocationActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboCusGroup;
+    private javax.swing.JComboBox<String> cboLocation;
     private javax.swing.JCheckBox chkActive;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
@@ -308,40 +347,43 @@ public class SupplierSetupGrid extends javax.swing.JPanel implements SelectionOb
     }
 
     private void assignData() {
-        TraderPayHis tph = new TraderPayHis();
-        VoucherPayment vp = new VoucherPayment();
-        tph.setPayDate(vp.getPayDate());
-        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
-        tph.setTrader(cus.get(0));
-        tph.setRemark(vp.getRemark());
-        tph.setPaidAmtC(vp.getCurrentPaid());
-        tph.setDiscount(vp.getCurrentDiscount());
-        String appCurr = Util1.getPropValue("system.app.currency");
-        List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" 
-                + appCurr + "'");
-        tph.setCurrency(curr.get(0));
-        tph.setExRate(1.0);
-        tph.setPaidAmtP(vp.getCurrentPaid());
-        List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-        tph.setCreatedBy(user.get(0));
-        tph.setPayOption("Cash");
-        tph.setParentCurr(curr.get(0));
-        tph.setPayDt(vp.getPayDate());
-        PaymentVou pv = new PaymentVou();
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouNo(vp.getVouNo());
-        pv.setVouPaid(vp.getCurrentPaid());
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouDate(vp.getTranDate());
-        pv.setDiscount(vp.getDiscount());
-        pv.setVouType("Sale");
-        List<PaymentVou> listPV = new ArrayList();
-        listPV.add(pv);
-        tph.setListDetail(listPV);
         try {
+            TraderPayHis tph = new TraderPayHis();
+            VoucherPayment vp = new VoucherPayment();
+            tph.setPayDate(vp.getPayDate());
+            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
+            tph.setTrader(cus.get(0));
+            tph.setRemark(vp.getRemark());
+            tph.setPaidAmtC(vp.getCurrentPaid());
+            tph.setDiscount(vp.getCurrentDiscount());
+            String appCurr = Util1.getPropValue("system.app.currency");
+            List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='"
+                    + appCurr + "'");
+            tph.setCurrency(curr.get(0));
+            tph.setExRate(1.0);
+            tph.setPaidAmtP(vp.getCurrentPaid());
+            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+            tph.setCreatedBy(user.get(0));
+            tph.setPayOption("Cash");
+            tph.setParentCurr(curr.get(0));
+            tph.setPayDt(vp.getPayDate());
+            PaymentVou pv = new PaymentVou();
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouNo(vp.getVouNo());
+            pv.setVouPaid(vp.getCurrentPaid());
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouDate(vp.getTranDate());
+            pv.setDiscount(vp.getDiscount());
+            pv.setVouType("Sale");
+            List<PaymentVou> listPV = new ArrayList();
+            listPV.add(pv);
+            tph.setListDetail(listPV);
+
             dao.save(tph);
         } catch (Exception ex) {
-
+            log.error("assignData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

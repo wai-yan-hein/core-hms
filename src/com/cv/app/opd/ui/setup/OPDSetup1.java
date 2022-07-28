@@ -72,19 +72,25 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         swrfGroup = new StartWithRowFilter(txtFilterGroup);
         sorterGroup = new TableRowSorter(tblCategory.getModel());
         tblCategory.setRowSorter(sorterGroup);
-        
+
         swrfSrv = new StartWithRowFilter(txtFilterService);
         sorterService = new TableRowSorter(tblService.getModel());
         tblService.setRowSorter(sorterService);
-        
+
         setGroupId();
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
-        BindingUtil.BindComboFilter(cboLabGroupFilter, dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
-        bindStatus = true;
-        catTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
+        try {
+            BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
+            BindingUtil.BindComboFilter(cboLabGroupFilter, dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
+            bindStatus = true;
+            catTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -141,10 +147,16 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         tblService.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor());
 
-        JComboBox cboDoctor = new JComboBox();
-        BindingUtil.BindCombo(cboDoctor, dao.findAllHSQL(
-                "select o from Doctor o order by o.doctorName"));
-        tblService.getColumnModel().getColumn(12).setCellEditor(new DefaultCellEditor(cboDoctor));
+        try {
+            JComboBox cboDoctor = new JComboBox();
+            BindingUtil.BindCombo(cboDoctor, dao.findAllHSQL(
+                    "select o from Doctor o order by o.doctorName"));
+            tblService.getColumnModel().getColumn(12).setCellEditor(new DefaultCellEditor(cboDoctor));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
 
         tblMedUsage.getTableHeader().setFont(Global.lableFont);
         tblMedUsage.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
@@ -240,7 +252,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                             "Are you sure to delete?",
                             "Item delete", JOptionPane.YES_NO_OPTION);
-                    if(tblMedUsage.getCellEditor() != null){
+                    if (tblMedUsage.getCellEditor() != null) {
                         tblMedUsage.getCellEditor().stopCellEditing();
                     }
                 } catch (HeadlessException ex) {
@@ -266,7 +278,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
                             "Are you sure to delete?",
                             "Service delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblService.getCellEditor() != null){
+                    if (tblService.getCellEditor() != null) {
                         tblService.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -291,7 +303,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
                             "Are you sure to delete?",
                             "Category delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblCategory.getCellEditor() != null){
+                    if (tblCategory.getCellEditor() != null) {
                         tblCategory.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
@@ -316,14 +328,15 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         }
     }
 
-    private void setGroupId(){
-        if(cboLabGroupFilter.getSelectedItem() instanceof OPDLabGroup){
-            OPDLabGroup opdLGroup = (OPDLabGroup)cboLabGroupFilter.getSelectedItem();
+    private void setGroupId() {
+        if (cboLabGroupFilter.getSelectedItem() instanceof OPDLabGroup) {
+            OPDLabGroup opdLGroup = (OPDLabGroup) cboLabGroupFilter.getSelectedItem();
             srvTableModel.setLabGroupId(opdLGroup.getId());
-        }else{
+        } else {
             srvTableModel.setLabGroupId(-1);
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -486,24 +499,20 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
     private void txtFilterGroupKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterGroupKeyReleased
         if (txtFilterGroup.getText().isEmpty()) {
             sorterGroup.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorterGroup.setRowFilter(swrfGroup);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorterGroup.setRowFilter(swrfGroup);
-            } else {
-                sorterGroup.setRowFilter(RowFilter.regexFilter(txtFilterGroup.getText()));
-            }
+            sorterGroup.setRowFilter(RowFilter.regexFilter(txtFilterGroup.getText()));
         }
     }//GEN-LAST:event_txtFilterGroupKeyReleased
 
     private void txtFilterServiceKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterServiceKeyReleased
         if (txtFilterService.getText().isEmpty()) {
             sorterService.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorterService.setRowFilter(swrfSrv);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorterService.setRowFilter(swrfSrv);
-            } else {
-                sorterService.setRowFilter(RowFilter.regexFilter(txtFilterService.getText()));
-            }
+            sorterService.setRowFilter(RowFilter.regexFilter(txtFilterService.getText()));
         }
     }//GEN-LAST:event_txtFilterServiceKeyReleased
 

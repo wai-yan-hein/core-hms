@@ -55,6 +55,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     private final GPCostTableModel gpTableModel = new GPCostTableModel();
     private final GPDetailTableModel scdTableModel = new GPDetailTableModel();
     private int mouseClick = 2;
+
     /**
      * Creates new form GrossProfit
      */
@@ -87,13 +88,13 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
         txtGP.setFormatterFactory(NumberUtil.getDecimalFormat());
 
         butView.setVisible(false);
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
-        if(propValue != null){
-            if(!propValue.equals("-")){
-                if(!propValue.isEmpty()){
+        if (propValue != null) {
+            if (!propValue.equals("-")) {
+                if (!propValue.isEmpty()) {
                     int tmpValue = NumberUtil.NZeroInt(propValue);
-                    if(tmpValue != 0){
+                    if (tmpValue != 0) {
                         mouseClick = tmpValue;
                     }
                 }
@@ -102,17 +103,23 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void initCombo() {
-        isInit = true;
-        BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
-        BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
-        BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
-        BindingUtil.BindComboFilter(cboCustomG, dao.findAll("ItemGroup"));
+        try {
+            isInit = true;
+            BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindComboFilter(cboBrand, dao.findAll("ItemBrand"));
+            BindingUtil.BindComboFilter(cboCustomG, dao.findAll("ItemGroup"));
 
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        new ComBoBoxAutoComplete(cboBrand, this);
-        new ComBoBoxAutoComplete(cboCustomG, this);
-        isInit = false;
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            new ComBoBoxAutoComplete(cboBrand, this);
+            new ComBoBoxAutoComplete(cboCustomG, this);
+            isInit = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -184,24 +191,29 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 int selectedRow = tblGP.getSelectedRow();
+                try {
+                    if (selectedRow >= 0) {
+                        VGrossProfit vgp = gpTableModel.getGrossProfit(
+                                tblGP.convertRowIndexToModel(selectedRow));
 
-                if (selectedRow >= 0) {
-                    VGrossProfit vgp = gpTableModel.getGrossProfit(
-                            tblGP.convertRowIndexToModel(selectedRow));
+                        String itemId = vgp.getKey().getItemId();
 
-                    String itemId = vgp.getKey().getItemId();
+                        String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
+                                + itemId + "' and c.userId = '" + Global.machineId + "'"
+                                + " and c.costFor = 'Opening' ";
 
-                    String strHSQL = "select c from StockCostingDetail c where c.itemId = '"
-                            + itemId + "' and c.userId = '" + Global.loginUser.getUserId() + "'"
-                            + " and c.costFor = 'Opening' ";
+                        List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
 
-                    List<StockCostingDetail> listCostDetail = dao.findAllHSQL(strHSQL);
-
-                    //lblDescription.setText(sc.getKey().getMedicine().getMedName());
-                    scdTableModel.setListStockCostingDetail(listCostDetail);
-                } else {
-                    scdTableModel.removeAll();
-                    //lblDescription.setText(null);
+                        //lblDescription.setText(sc.getKey().getMedicine().getMedName());
+                        scdTableModel.setListStockCostingDetail(listCostDetail);
+                    } else {
+                        scdTableModel.removeAll();
+                        //lblDescription.setText(null);
+                    }
+                } catch (Exception ex) {
+                    log.error("valueChanged : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         });
@@ -220,9 +232,9 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     private void calculate() {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             Date opDate = DateUtil.toDate(dao.getMax("op_date", "stock_op_his", null), "yyyy-MM-dd");
             if (opDate == null) {
                 opDate = DateUtil.toDate("1900-12-31", "yyyy-MM-dd");
@@ -247,7 +259,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
                     DateUtil.toDateStrMYSQL(strOpDate),
                     "Opening",
                     Global.loginUser.getUserId());*/
-            dao.execSql("delete from tmp_stock_costing where user_id = '" + Global.loginUser.getUserId() + "'\n"
+            dao.execSql("delete from tmp_stock_costing where user_id = '" + Global.machineId + "'\n"
                     + "	and tran_option = 'Opening'");
             dao.commit();
             String sql1 = "insert into tmp_stock_costing(med_id, user_id, bal_qty, qty_str, tran_option)\n"
@@ -335,7 +347,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
                     + "            join v_med_unit_smallest_rel B on A.med_id = B.med_id\n"
                     + "     group by A.med_id) D on C.med_id = D.med_id";
             sql1 = sql1.replace("prm_tran_option", "'Opening'")
-                    .replace("prm_user_id", "'" + Global.loginUser.getUserId() + "'")
+                    .replace("prm_user_id", "'" + Global.machineId + "'")
                     .replace("prm_stock_date", "'" + DateUtil.toDateStrMYSQL(strOpDate) + "'");
             dao.execSql(sql1);
             dao.commit();
@@ -344,18 +356,18 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
                     + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                     + "group by med_id) ts on tsc.med_id = ts.med_id\n"
                     + "set tsc.bal_qty = ts.sale_qty\n"
-                    + "where tsc.user_id = '" + Global.loginUser.getUserId() + "' and tsc.tran_option = 'Opening'";
+                    + "where tsc.user_id = '" + Global.machineId + "' and tsc.tran_option = 'Opening'";
             dao.execSql(tmpSql);
             dao.commit();
             dao.execProc("insert_cost_detail",
                     "Opening", DateUtil.toDateStrMYSQL(txtTo.getText()),
-                    Global.loginUser.getUserId(), strMethod);
+                    Global.machineId, strMethod);
             dao.commit();
 
             dao.execProc("calculate_sale_cost_gp",
                     DateUtil.toDateStrMYSQL(txtFrom.getText()),
                     DateUtil.toDateStrMYSQL(txtTo.getText()),
-                    Global.loginUser.getUserId());
+                    Global.machineId);
             /*
             //For closing value
             insertStockFilterCode(txtTo.getText());
@@ -381,58 +393,68 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void applyFilter() {
-        String strHSQL = getHSQL();
-        List<VGrossProfit> listGrossProfit
-                = dao.findAllHSQL(strHSQL);
-        dao.commit();
-        gpTableModel.setListGrossProfit(listGrossProfit);
+        try {
+            String strHSQL = getHSQL();
+            List<VGrossProfit> listGrossProfit
+                    = dao.findAllHSQL(strHSQL);
+            dao.commit();
+            gpTableModel.setListGrossProfit(listGrossProfit);
 
-        double op_value = 0;
-        double ttl_pur = 0;
-        double cl_value = 0;
-        double cogs = 0;
-        double ttl_sale = 0;
-        double grossProfit = 0;
+            double op_value = 0;
+            double ttl_pur = 0;
+            double cl_value = 0;
+            double cogs = 0;
+            double ttl_sale = 0;
+            double grossProfit = 0;
 
-        for (VGrossProfit gp : listGrossProfit) {
-            //totalCost += NumberUtil.NZero(sc.getTtlCost());
-            op_value += gp.getOpValue();
-            ttl_pur += gp.getTtlPur();
-            cl_value += gp.getClValue();
-            cogs += gp.getCogsValue();
-            ttl_sale += gp.getTtlSale();
-            grossProfit += gp.getGpValue();
+            for (VGrossProfit gp : listGrossProfit) {
+                //totalCost += NumberUtil.NZero(sc.getTtlCost());
+                op_value += gp.getOpValue();
+                ttl_pur += gp.getTtlPur();
+                cl_value += gp.getClValue();
+                cogs += gp.getCogsValue();
+                ttl_sale += gp.getTtlSale();
+                grossProfit += gp.getGpValue();
+            }
+
+            txtOpValue.setValue(op_value);
+            txtTtlPur.setValue(ttl_pur);
+            txtClValue.setValue(cl_value);
+            txtCogs.setValue(cogs);
+            txtTtlSale.setValue(ttl_sale);
+            txtGP.setValue(grossProfit);
+        } catch (Exception ex) {
+            log.error("applyFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        txtOpValue.setValue(op_value);
-        txtTtlPur.setValue(ttl_pur);
-        txtClValue.setValue(cl_value);
-        txtCogs.setValue(cogs);
-        txtTtlSale.setValue(ttl_sale);
-        txtGP.setValue(grossProfit);
-
-        dao.close();
     }
 
     private String getHSQL() {
         String strHSQL = "select c from VGrossProfit c where c.key.userId = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         if (cboCustomG.getSelectedItem() instanceof ItemGroup) {
             ItemGroup itemGroup = (ItemGroup) cboCustomG.getSelectedItem();
-            List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
-                    "group_id = " + itemGroup.getGroupId());
-            String tmpItemList = "";
+            try {
+                List<ItemGroupDetail> listItemGroupDetail = dao.findAll("ItemGroupDetail",
+                        "group_id = " + itemGroup.getGroupId());
+                String tmpItemList = "";
 
-            for (ItemGroupDetail igd : listItemGroupDetail) {
-                if (tmpItemList.isEmpty()) {
-                    tmpItemList = "'" + igd.getItem().getMedId() + "'";
-                } else {
-                    tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                for (ItemGroupDetail igd : listItemGroupDetail) {
+                    if (tmpItemList.isEmpty()) {
+                        tmpItemList = "'" + igd.getItem().getMedId() + "'";
+                    } else {
+                        tmpItemList = tmpItemList + ",'" + igd.getItem().getMedId() + "'";
+                    }
                 }
-            }
 
-            strHSQL = strHSQL + " and c.key.itemId in (" + tmpItemList + ")";
+                strHSQL = strHSQL + " and c.key.itemId in (" + tmpItemList + ")";
+            } catch (Exception ex) {
+                log.error("getHSQL : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -472,9 +494,9 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
 
     private void insertStockFilterCode(String strDate) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date <= '" + DateUtil.toDateStrMYSQL(strDate) + "'";
@@ -508,7 +530,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
             if (codeTableModel.getListCodeFilter().size() > 1) {
                 strSQL = strSQL + " and m.med_id in (select item_code from "
                         + "tmp_item_code_filter where user_id = '"
-                        + Global.loginUser.getUserId() + "')";
+                        + Global.machineId + "')";
             }
         }
 
@@ -532,7 +554,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
 
         params.put("compName", compName);
         params.put("data_date", txtFrom.getText() + " to " + txtTo.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("method", cboMethod.getSelectedItem().toString());
 
         if (cboItemType.getSelectedItem() instanceof ItemType) {
@@ -577,7 +599,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
 
         params.put("compName", compName);
         params.put("data_date", txtFrom.getText() + " to " + txtTo.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             ItemType itemType = (ItemType) cboItemType.getSelectedItem();
             params.put("item_type", itemType.getItemTypeCode());
@@ -613,7 +635,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
 
     private void deleteTmpData() {
         String strSql1 = "delete from tmp_item_code_filter where user_id ='"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
 
         dao.execSql(strSql1);
     }
@@ -666,7 +688,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void execCostBalance1(String date, String option) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         String sqlDelete = "delete from tmp_stock_costing where user_id = prm_user_id\n"
                 + "	and tran_option = prm_tran_option\n";
         String strSql = "insert into tmp_stock_costing(med_id, user_id, bal_qty, qty_str, tran_option)\n"
@@ -753,21 +775,21 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
                 + "             group by vd.med_id) A\n"
                 + "            join v_med_unit_smallest_rel B on A.med_id = B.med_id\n"
                 + "     group by A.med_id) D on C.med_id = D.med_id";
-        
+
         sqlDelete = sqlDelete.replace("prm_tran_option", "'" + option + "'")
                 .replace("prm_user_id", "'" + userId + "'");
         strSql = strSql.replace("prm_stock_date", "'" + date + "'")
                 .replace("prm_tran_option", "'" + option + "'")
                 .replace("prm_user_id", "'" + userId + "'");
         try {
-            dao.execSql(sqlDelete,strSql);
+            dao.execSql(sqlDelete, strSql);
         } catch (Exception ex) {
             log.error("execCostBalance1 : " + ex.getMessage());
         } finally {
             dao.close();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1172,7 +1194,7 @@ public class GrossProfit extends javax.swing.JPanel implements SelectionObserver
     private void butExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butExcelActionPerformed
         try {
             GenExcel excel = new GPExcel(dao, "gp.xls");
-            excel.setUserId(Global.loginUser.getUserId());
+            excel.setUserId(Global.machineId);
             excel.setStrOpDate(DateUtil.toDateStrMYSQL(txtFrom.getText()));
             excel.setItemGroup(getCusGroup());
             excel.setItemType(getItemType());

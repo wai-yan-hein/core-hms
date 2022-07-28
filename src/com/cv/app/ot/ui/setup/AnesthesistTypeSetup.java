@@ -28,6 +28,7 @@ public class AnesthesistTypeSetup extends javax.swing.JDialog {
     private final AnesthesistTypeTableModel tblAnesthesistTypeTableModel = new AnesthesistTypeTableModel(dao);
     private AnesthesistType currType = new AnesthesistType();
     private int selectRow = -1;
+
     /**
      * Creates new form AnesthesistTypeSetup
      */
@@ -36,73 +37,79 @@ public class AnesthesistTypeSetup extends javax.swing.JDialog {
         initComponents();
     }
 
-    public AnesthesistTypeSetup(){
+    public AnesthesistTypeSetup() {
         super(Util1.getParent(), true);
         initComponents();
         initTable();
         setLocationRelativeTo(null);
     }
-    
-    private void save(){
-        if(txtTypeName.getText().trim().isEmpty()){
+
+    private void save() {
+        if (txtTypeName.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Type name cannot be blank.",
-            "Anesthesist Type", JOptionPane.ERROR_MESSAGE);
-        }else{
-            if(currType == null){
+                    "Anesthesist Type", JOptionPane.ERROR_MESSAGE);
+        } else {
+            if (currType == null) {
                 currType = new AnesthesistType();
             }
-            
+
             currType.setTypeName(txtTypeName.getText().trim());
             currType.setActStatus(chkStatus.isSelected());
-            
-            try{
+
+            try {
                 dao.save(currType);
-                if(lblStatus.getText().equals("NEW")){
-                   tblAnesthesistTypeTableModel.addType(currType);
-                }else{
+                if (lblStatus.getText().equals("NEW")) {
+                    tblAnesthesistTypeTableModel.addType(currType);
+                } else {
                     tblAnesthesistTypeTableModel.setType(selectRow, currType);
                 }
                 clear();
-            }catch(Exception ex){
+            } catch (Exception ex) {
                 log.error("save : " + ex);
-            }finally{
+            } finally {
                 dao.close();
             }
         }
     }
-    
-    private void clear(){
+
+    private void clear() {
         txtTypeName.setText(null);
         chkStatus.setSelected(false);
         txtTypeName.requestFocus();
     }
-    
-    private void initTable() {
-        tblAnesthesistTypeTableModel.setListAneType(dao.findAll("AnesthesistType"));
-        tblAnesthesistType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblAnesthesistType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblAnesthesistType.getSelectedRow() >= 0) {
-                    selectRow = tblAnesthesistType.convertRowIndexToModel(tblAnesthesistType.getSelectedRow());
-                }
 
-                if (selectRow >= 0) {
-                    setRecord(tblAnesthesistTypeTableModel.getType(selectRow));
+    private void initTable() {
+        try {
+            tblAnesthesistTypeTableModel.setListAneType(dao.findAll("AnesthesistType"));
+            tblAnesthesistType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblAnesthesistType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblAnesthesistType.getSelectedRow() >= 0) {
+                        selectRow = tblAnesthesistType.convertRowIndexToModel(tblAnesthesistType.getSelectedRow());
+                    }
+
+                    if (selectRow >= 0) {
+                        setRecord(tblAnesthesistTypeTableModel.getType(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     private void setRecord(AnesthesistType aType) {
         currType = aType;
         txtTypeName.setText(currType.getTypeName());
         chkStatus.setSelected(currType.isActStatus());
         lblStatus.setText("EDIT");
     }
-    
-    private void delete(){
+
+    private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
@@ -127,7 +134,7 @@ public class AnesthesistTypeSetup extends javax.swing.JDialog {
 
         clear();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

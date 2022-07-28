@@ -31,7 +31,6 @@ import com.cv.app.pharmacy.ui.common.ItemSetupLocationItemMappingTableModel;
 import com.cv.app.pharmacy.ui.common.ItemTableModel;
 import com.cv.app.pharmacy.ui.common.RelationPriceTableModel;
 import com.cv.app.pharmacy.ui.common.TableUnitCellEditor;
-import static com.cv.app.pharmacy.ui.setup.SupplierSetup.log;
 import com.cv.app.pharmacy.ui.util.ItemSetupFilterDialog;
 import com.cv.app.pharmacy.ui.util.PackingTemplateList;
 import com.cv.app.pharmacy.util.PharmacyUtil;
@@ -132,7 +131,7 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                 //System.out.println("Table Selection : " + selectRow);
                 if (selectRow >= 0) {
                     try {
-                        if(tblRelationPrice.getCellEditor() != null){
+                        if (tblRelationPrice.getCellEditor() != null) {
                             tblRelationPrice.getCellEditor().stopCellEditing();
                         }
                     } catch (Exception ex) {
@@ -189,16 +188,22 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
 
     private boolean isDuplicate() {
         boolean status = false;
-        if (!txtItemCode.getText().trim().isEmpty()) {
-            if (lblStatus.getText().equals("NEW")) {
-                List<Medicine> listMed = dao.findAllHSQL(
-                        "select o from Medicine o where o.medId = '" + txtItemCode.getText().trim() + "'");
-                if (listMed != null) {
-                    if (!listMed.isEmpty()) {
-                        return true;
+        try {
+            if (!txtItemCode.getText().trim().isEmpty()) {
+                if (lblStatus.getText().equals("NEW")) {
+                    List<Medicine> listMed = dao.findAllHSQL(
+                            "select o from Medicine o where o.medId = '" + txtItemCode.getText().trim() + "'");
+                    if (listMed != null) {
+                        if (!listMed.isEmpty()) {
+                            return true;
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("isDuplicate : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
         return status;
     }
@@ -294,41 +299,46 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
     }
 
     private boolean isDuplicate(String itemCode, String shortName, String strStatus) {
-        if (strStatus.equals("NEW")) {
-            List<Medicine> listMed = dao.findAllHSQL("select o from Medicine o "
-                    + "where o.medId = '" + itemCode + "'");
-            if (listMed != null) {
-                if (!listMed.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Duplicate system item code. You cannot save.",
-                            "Duplicate", JOptionPane.ERROR_MESSAGE);
-                    log.error("isDuplicate item code : " + itemCode + " Status : " + strStatus);
-                    return true;
+        try {
+            if (strStatus.equals("NEW")) {
+                List<Medicine> listMed = dao.findAllHSQL("select o from Medicine o "
+                        + "where o.medId = '" + itemCode + "'");
+                if (listMed != null) {
+                    if (!listMed.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Duplicate system item code. You cannot save.",
+                                "Duplicate", JOptionPane.ERROR_MESSAGE);
+                        log.error("isDuplicate item code : " + itemCode + " Status : " + strStatus);
+                        return true;
+                    }
                 }
-            }
 
-            listMed = dao.findAllHSQL("select o from Medicine o "
-                    + "where o.shortName = '" + itemCode + "'");
-            if (listMed != null) {
-                if (!listMed.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Duplicate item code. You cannot save.",
-                            "Duplicate", JOptionPane.ERROR_MESSAGE);
-                    log.error("isDuplicate short name : " + shortName + " Status : " + strStatus);
-                    return true;
+                listMed = dao.findAllHSQL("select o from Medicine o "
+                        + "where o.shortName = '" + itemCode + "'");
+                if (listMed != null) {
+                    if (!listMed.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Duplicate item code. You cannot save.",
+                                "Duplicate", JOptionPane.ERROR_MESSAGE);
+                        log.error("isDuplicate short name : " + shortName + " Status : " + strStatus);
+                        return true;
+                    }
+                }
+            } else if (strStatus.equals("EDIT")) {
+                List<Medicine> listMed = dao.findAllHSQL("select o from Medicine o "
+                        + "where o.shortName = '" + shortName + "' and o.medId <> '" + itemCode + "'");
+                if (listMed != null) {
+                    if (!listMed.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "Duplicate item code. You cannot save.",
+                                "Duplicate", JOptionPane.ERROR_MESSAGE);
+                        log.error("isDuplicate short name : " + shortName + " Status : " + strStatus);
+                        return true;
+                    }
                 }
             }
-        } else if (strStatus.equals("EDIT")) {
-            List<Medicine> listMed = dao.findAllHSQL("select o from Medicine o "
-                    + "where o.shortName = '" + shortName + "' and o.medId <> '" + itemCode + "'");
-            if (listMed != null) {
-                if (!listMed.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Duplicate item code. You cannot save.",
-                            "Duplicate", JOptionPane.ERROR_MESSAGE);
-                    log.error("isDuplicate short name : " + shortName + " Status : " + strStatus);
-                    return true;
-                }
-            }
+        } catch (Exception ex) {
+            log.error("isDuplicate : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
         return false;
     }
 
@@ -340,15 +350,13 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                     List<RelationGroup> lstTmp = new ArrayList();
                     lstTmp.addAll(rpTableMode.getDetail());
                     currMedicine.setRelationGroupId(lstTmp);
+                } else if (currMedicine.getRelationGroupId() != null) {
+                    currMedicine.getRelationGroupId().removeAll(currMedicine.getRelationGroupId());
+                    currMedicine.setRelationGroupId(rpTableMode.getDetail());
                 } else {
-                    if (currMedicine.getRelationGroupId() != null) {
-                        currMedicine.getRelationGroupId().removeAll(currMedicine.getRelationGroupId());
-                        currMedicine.setRelationGroupId(rpTableMode.getDetail());
-                    } else {
-                        List<RelationGroup> lstTmp = new ArrayList();
-                        lstTmp.addAll(rpTableMode.getDetail());
-                        currMedicine.setRelationGroupId(lstTmp);
-                    }
+                    List<RelationGroup> lstTmp = new ArrayList();
+                    lstTmp.addAll(rpTableMode.getDetail());
+                    currMedicine.setRelationGroupId(lstTmp);
                 }
                 //For BK Pagolay
                 if (lblStatus.getText().equals("EDIT")) {
@@ -472,8 +480,14 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void filterItem(String strFilter) {
-        itemTableModel.setListMedicine(dao.findAll("VMedicine1", strFilter));
-        statusFilter = true;
+        try {
+            itemTableModel.setListMedicine(dao.findAll("VMedicine1", strFilter));
+            statusFilter = true;
+        } catch (Exception ex) {
+            log.error("filterItem : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {
@@ -495,10 +509,16 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
     private void autoAssignTemplate() {
         if (Util1.getPropValue("system.app.ItemSetup.AutoTemplate").equals("Y")) {
             int id = NumberUtil.NZeroInt(Util1.getPropValue("system.app.ItemSetup.AutoTemplateId"));
-            PackingTemplate pt = (PackingTemplate) dao.find(PackingTemplate.class, id);
+            try {
+                PackingTemplate pt = (PackingTemplate) dao.find(PackingTemplate.class, id);
 
-            if (pt != null) {
-                selected("PackingTemplate", pt);
+                if (pt != null) {
+                    selected("PackingTemplate", pt);
+                }
+            } catch (Exception ex) {
+                log.error("autoAssignTemplate : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
     }
@@ -559,7 +579,7 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                                         strUnitSmallest = strUnitSmallest + "/" + String.valueOf(smallestQty);
                                     }
                                 } else {
-                                    rg.setSmallestQty(new Float(1));
+                                    rg.setSmallestQty(1f);
                                     if (strUnitSmallest.isEmpty()) {
                                         strUnitSmallest = String.valueOf(1);
                                     } else {
@@ -1014,8 +1034,14 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
 
     private void butItemTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butItemTypeActionPerformed
         showDialog("Item Type Setup");
-        BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
-        cboItemType.setSelectedItem(currMedicine.getMedTypeId());
+        try {
+            BindingUtil.BindCombo(cboItemType, dao.findAll("ItemType"));
+            cboItemType.setSelectedItem(currMedicine.getMedTypeId());
+        } catch (Exception ex) {
+            log.error("butItemTypeActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //initCombo();
     }//GEN-LAST:event_butItemTypeActionPerformed
 
@@ -1035,8 +1061,14 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
 
     private void butCategoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCategoryActionPerformed
         showDialog("Category Setup");
-        BindingUtil.BindCombo(cboCategory, dao.findAll("Category"));
-        cboCategory.setSelectedItem(currMedicine.getCatId());
+        try {
+            BindingUtil.BindCombo(cboCategory, dao.findAll("Category"));
+            cboCategory.setSelectedItem(currMedicine.getCatId());
+        } catch (Exception ex) {
+            log.error("butCategoryActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //initCombo();
     }//GEN-LAST:event_butCategoryActionPerformed
 
@@ -1046,7 +1078,13 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
 
     private void butUnitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butUnitActionPerformed
         showDialog("Item Unit Setup");
-        BindingUtil.BindCombo(cboUnit, dao.findAll("ItemUnit"));
+        try {
+            BindingUtil.BindCombo(cboUnit, dao.findAll("ItemUnit"));
+        } catch (Exception ex) {
+            log.error("butUnitRelationActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //initCombo();
     }//GEN-LAST:event_butUnitActionPerformed
 
@@ -1096,8 +1134,14 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
 
     private void butBrandActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBrandActionPerformed
         showDialog("Brand Setup");
-        BindingUtil.BindCombo(cboBrandName, dao.findAll("ItemBrand"));
-        cboBrandName.setSelectedItem(currMedicine.getBrand());
+        try {
+            BindingUtil.BindCombo(cboBrandName, dao.findAll("ItemBrand"));
+            cboBrandName.setSelectedItem(currMedicine.getBrand());
+        } catch (Exception ex) {
+            log.error("butBrandActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //initCombo();
     }//GEN-LAST:event_butBrandActionPerformed
 
@@ -1173,51 +1217,51 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                 break;
             case "Medicine":
                 try {
-                    dao.open();
-                    currMedicine = (Medicine) dao.find(Medicine.class,
-                            ((VMedicine1) selectObj).getMedId());
+                dao.open();
+                currMedicine = (Medicine) dao.find(Medicine.class,
+                        ((VMedicine1) selectObj).getMedId());
 
-                    List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
+                List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
 
-                    if (listRelationGroup != null) {
-                        if (listRelationGroup.size() > 0) {
-                            currMedicine.setRelationGroupId(listRelationGroup);
-                            listItemUnit.removeAll(listItemUnit);
-                            for (RelationGroup rg : listRelationGroup) {
-                                listItemUnit.add(rg.getUnitId());
-                            }
-                            BindingUtil.BindCombo(cboPurUnit, listItemUnit);
-                            rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
-                        } else {
-                            rpTableMode.setEditable(true);
+                if (listRelationGroup != null) {
+                    if (listRelationGroup.size() > 0) {
+                        currMedicine.setRelationGroupId(listRelationGroup);
+                        listItemUnit.removeAll(listItemUnit);
+                        for (RelationGroup rg : listRelationGroup) {
+                            listItemUnit.add(rg.getUnitId());
                         }
+                        BindingUtil.BindCombo(cboPurUnit, listItemUnit);
+                        rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
                     } else {
                         rpTableMode.setEditable(true);
                     }
-
-                    //txtItemCode.setText(currMedicine.getMedId());
-                    txtItemName.setText(currMedicine.getMedName());
-                    cboBrandName.setSelectedItem(currMedicine.getBrand());
-                    txtChemicalName.setText(currMedicine.getChemicalName());
-                    txtUnitRelation.setText(currMedicine.getRelStr());
-                    cboCategory.setSelectedItem(currMedicine.getCatId());
-                    cboItemType.setSelectedItem(currMedicine.getMedTypeId());
-                    chkActive.setSelected(currMedicine.getActive());
-                    //rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
-                    rpTableMode.setListDetail(currMedicine.getRelationGroupId());
-                    txtBarcode.setText(currMedicine.getBarcode());
-                    txtItemCode.setText(currMedicine.getShortName());
-                    txtPurPrice.setText(NumberUtil.toChar(currMedicine.getPurPrice()));
-                    cboPurUnit.setSelectedItem(currMedicine.getPurUnit());
-                    txtLiceneExpDate.setText(DateUtil.toDateStr(currMedicine.getLiceneExpDate()));
-
-                    lblStatus.setText("EDIT");
-                    dao.close();
-                    mappingTableModel.setMedId(currMedicine.getMedId());
-                } catch (Exception ex) {
-                    log.error("select Medicine : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                } else {
+                    rpTableMode.setEditable(true);
                 }
-                break;
+
+                //txtItemCode.setText(currMedicine.getMedId());
+                txtItemName.setText(currMedicine.getMedName());
+                cboBrandName.setSelectedItem(currMedicine.getBrand());
+                txtChemicalName.setText(currMedicine.getChemicalName());
+                txtUnitRelation.setText(currMedicine.getRelStr());
+                cboCategory.setSelectedItem(currMedicine.getCatId());
+                cboItemType.setSelectedItem(currMedicine.getMedTypeId());
+                chkActive.setSelected(currMedicine.getActive());
+                //rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
+                rpTableMode.setListDetail(currMedicine.getRelationGroupId());
+                txtBarcode.setText(currMedicine.getBarcode());
+                txtItemCode.setText(currMedicine.getShortName());
+                txtPurPrice.setText(NumberUtil.toChar(currMedicine.getPurPrice()));
+                cboPurUnit.setSelectedItem(currMedicine.getPurUnit());
+                txtLiceneExpDate.setText(DateUtil.toDateStr(currMedicine.getLiceneExpDate()));
+
+                lblStatus.setText("EDIT");
+                dao.close();
+                mappingTableModel.setMedId(currMedicine.getMedId());
+            } catch (Exception ex) {
+                log.error("select Medicine : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
+            break;
         }
     }
 
@@ -1271,15 +1315,21 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
-        BindingUtil.BindCombo(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
-        BindingUtil.BindCombo(cboUnit, dao.findAllHSQL("select o from ItemUnit o order by o.itemUnitName"));
-        BindingUtil.BindCombo(cboBrandName, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
+        try {
+            BindingUtil.BindCombo(cboItemType, dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+            BindingUtil.BindCombo(cboCategory, dao.findAllHSQL("select o from Category o order by o.catName"));
+            BindingUtil.BindCombo(cboUnit, dao.findAllHSQL("select o from ItemUnit o order by o.itemUnitName"));
+            BindingUtil.BindCombo(cboBrandName, dao.findAllHSQL("select o from ItemBrand o order by o.brandName"));
 
-        new ComBoBoxAutoComplete(cboItemType, this);
-        new ComBoBoxAutoComplete(cboCategory, this);
-        //new ComBoBoxAutoComplete(cboUnit);
-        new ComBoBoxAutoComplete(cboBrandName, this);
+            new ComBoBoxAutoComplete(cboItemType, this);
+            new ComBoBoxAutoComplete(cboCategory, this);
+            //new ComBoBoxAutoComplete(cboUnit);
+            new ComBoBoxAutoComplete(cboBrandName, this);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTableItem() {
@@ -1289,11 +1339,17 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                 Thread thread = new Thread() {
                     @Override
                     public void run() {
-                        log.info("Start get.");
-                        List<VMedicine1> list = dao.findAll("VMedicine1");
-                        log.info("End get.");
-                        itemTableModel.setListMedicine(list);
-                        log.info("End model assign.");
+                        try {
+                            log.info("Start get.");
+                            List<VMedicine1> list = dao.findAll("VMedicine1");
+                            log.info("End get.");
+                            itemTableModel.setListMedicine(list);
+                            log.info("End model assign.");
+                        } catch (Exception ex) {
+                            log.error("initTableItem : " + ex.getMessage());
+                        } finally {
+                            dao.close();
+                        }
                     }
                 };
                 //System.out.println("Start : " + new Date());
@@ -1319,39 +1375,45 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void initTableRelationGroup() {
-        tblRelationPrice.getColumnModel().getColumn(0).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(2).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(3).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(4).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(5).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(6).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(7).setCellEditor(
-                new BestTableCellEditor(this));
-        tblRelationPrice.getColumnModel().getColumn(1).setCellEditor(
-                new TableUnitCellEditor(dao.findAll("ItemUnit")));
+        try {
+            tblRelationPrice.getColumnModel().getColumn(0).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(2).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(3).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(4).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(5).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(6).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(7).setCellEditor(
+                    new BestTableCellEditor(this));
+            tblRelationPrice.getColumnModel().getColumn(1).setCellEditor(
+                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
 
-        //Adjust table column width
-        TableColumn column = tblRelationPrice.getColumnModel().getColumn(0);
-        column.setPreferredWidth(30);
+            //Adjust table column width
+            TableColumn column = tblRelationPrice.getColumnModel().getColumn(0);
+            column.setPreferredWidth(30);
 
-        tblRelationPrice.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                List<RelationGroup> listRG = rpTableMode.getRelationGroup();
+            tblRelationPrice.getModel().addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    List<RelationGroup> listRG = rpTableMode.getRelationGroup();
 
-                listItemUnit.removeAll(listItemUnit);
-                for (RelationGroup rg : listRG) {
-                    listItemUnit.add(rg.getUnitId());
+                    listItemUnit.removeAll(listItemUnit);
+                    for (RelationGroup rg : listRG) {
+                        listItemUnit.add(rg.getUnitId());
+                    }
+                    BindingUtil.BindCombo(cboPurUnit, listItemUnit);
                 }
-                BindingUtil.BindCombo(cboPurUnit, listItemUnit);
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTableRelationGroup : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initMappingTableModel() {
@@ -1580,7 +1642,7 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblRelationPrice.getCellEditor() != null){
+                if (tblRelationPrice.getCellEditor() != null) {
                     tblRelationPrice.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -1600,7 +1662,7 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                             "Relation delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblRelationPrice.getCellEditor() != null){
+                    if (tblRelationPrice.getCellEditor() != null) {
                         tblRelationPrice.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {

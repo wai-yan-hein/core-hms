@@ -48,7 +48,8 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
     private final TableRowSorter<TableModel> sorter;
     private final StartWithRowFilter swrf;
     private final AbstractDataAccess dao = Global.dao;
-    private boolean bindStatus = false; 
+    private boolean bindStatus = false;
+
     //private final TableRowSorter<TableModel> tblTraderSorter;
     /**
      * Creates new form CustomerPayment1
@@ -85,30 +86,42 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
         tblCustomer.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
         tblCustomer.getColumnModel().getColumn(5).setCellEditor(new BusinessTypeTableCellEditor(dao));
         tblCustomer.getColumnModel().getColumn(9).setCellEditor(new TownshipTableCellEditor(dao));
-        
-        JComboBox cboCusPriceType = new JComboBox();
-        BindingUtil.BindCombo(cboCusPriceType, dao.findAllHSQL(
-                "select o from TraderType o"));
-        tblCustomer.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboCusPriceType));
+
+        try {
+            JComboBox cboCusPriceType = new JComboBox();
+            BindingUtil.BindCombo(cboCusPriceType, dao.findAllHSQL(
+                    "select o from TraderType o"));
+            tblCustomer.getColumnModel().getColumn(8).setCellEditor(new DefaultCellEditor(cboCusPriceType));
+        } catch (Exception ex) {
+            log.error("initTableCus : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initCombo() {
         bindStatus = true;
-        BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
-                "select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
-        BindingUtil.BindComboFilter(cboPriceType, dao.findAllHSQL(
-                "select o from TraderType o"));
-        BindingUtil.BindComboFilter(cboTownship, dao.findAllHSQL(
-                "select o from Township o order by o.townshipName"));
-        BindingUtil.BindComboFilter(cboBusinessType, dao.findAllHSQL(
-                "select o from BusinessType o order by o.description"));
-        String strBaseGroup = Util1.getPropValue("system.cus.base.group");
-        if(strBaseGroup.isEmpty()){
-            strBaseGroup = "-";
+        try {
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAllHSQL(
+                    "select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
+            BindingUtil.BindComboFilter(cboPriceType, dao.findAllHSQL(
+                    "select o from TraderType o"));
+            BindingUtil.BindComboFilter(cboTownship, dao.findAllHSQL(
+                    "select o from Township o order by o.townshipName"));
+            BindingUtil.BindComboFilter(cboBusinessType, dao.findAllHSQL(
+                    "select o from BusinessType o order by o.description"));
+            String strBaseGroup = Util1.getPropValue("system.cus.base.group");
+            if (strBaseGroup.isEmpty()) {
+                strBaseGroup = "-";
+            }
+            BindingUtil.BindComboFilter(cboParent, dao.findAllHSQL(
+                    "select o from Customer o where o.traderGroup.groupId = '"
+                    + strBaseGroup + "' order by o.traderName"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        BindingUtil.BindComboFilter(cboParent, dao.findAllHSQL(
-                "select o from Customer o where o.traderGroup.groupId = '" 
-                        + strBaseGroup + "' order by o.traderName"));
         bindStatus = false;
     }
 
@@ -149,7 +162,7 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
                 strSql = strSql + " and o.businessType.businessId = " + id;
             }
         }
-        
+
         if (cboParent.getSelectedItem() instanceof Customer) {
             String id = ((Customer) cboParent.getSelectedItem()).getTraderId();
             if (strSql.isEmpty()) {
@@ -165,12 +178,12 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
             strSql = strSql + " and o.active = " + chkActive.isSelected();
         }
 
-        if(strSql.isEmpty()){
+        if (strSql.isEmpty()) {
             strSql = "select o from CustomerWithParent o";
-        }else{
+        } else {
             strSql = "select o from CustomerWithParent o where " + strSql;
         }
-        
+
         try {
             List<CustomerWithParent> listCUS = dao.findAllHSQL(strSql);
             tblCusGridEntry.setListCUS(listCUS);
@@ -337,31 +350,31 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
     }//GEN-LAST:event_chkActiveActionPerformed
 
     private void cboCusGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboCusGroupActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboCusGroupActionPerformed
 
     private void cboBusinessTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBusinessTypeActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboBusinessTypeActionPerformed
 
     private void cboPriceTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPriceTypeActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboPriceTypeActionPerformed
 
     private void cboTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTownshipActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboTownshipActionPerformed
 
     private void cboParentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboParentActionPerformed
-        if(!bindStatus){
+        if (!bindStatus) {
             search();
         }
     }//GEN-LAST:event_cboParentActionPerformed
@@ -419,40 +432,43 @@ public class CustomerSetupGrid extends javax.swing.JPanel implements SelectionOb
     }
 
     private void assignData() {
-        TraderPayHis tph = new TraderPayHis();
-        VoucherPayment vp = new VoucherPayment();
-        tph.setPayDate(vp.getPayDate());
-        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
-        tph.setTrader(cus.get(0));
-        tph.setRemark(vp.getRemark());
-        tph.setPaidAmtC(vp.getCurrentPaid());
-        tph.setDiscount(vp.getCurrentDiscount());
-        String appCurr = Util1.getPropValue("system.app.currency");
-        List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" 
-                + appCurr + "'");
-        tph.setCurrency(curr.get(0));
-        tph.setExRate(1.0);
-        tph.setPaidAmtP(vp.getCurrentPaid());
-        List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-        tph.setCreatedBy(user.get(0));
-        tph.setPayOption("Cash");
-        tph.setParentCurr(curr.get(0));
-        tph.setPayDt(vp.getPayDate());
-        PaymentVou pv = new PaymentVou();
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouNo(vp.getVouNo());
-        pv.setVouPaid(vp.getCurrentPaid());
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouDate(vp.getTranDate());
-        pv.setDiscount(vp.getDiscount());
-        pv.setVouType("Sale");
-        List<PaymentVou> listPV = new ArrayList();
-        listPV.add(pv);
-        tph.setListDetail(listPV);
         try {
+            TraderPayHis tph = new TraderPayHis();
+            VoucherPayment vp = new VoucherPayment();
+            tph.setPayDate(vp.getPayDate());
+            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
+            tph.setTrader(cus.get(0));
+            tph.setRemark(vp.getRemark());
+            tph.setPaidAmtC(vp.getCurrentPaid());
+            tph.setDiscount(vp.getCurrentDiscount());
+            String appCurr = Util1.getPropValue("system.app.currency");
+            List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='"
+                    + appCurr + "'");
+            tph.setCurrency(curr.get(0));
+            tph.setExRate(1.0);
+            tph.setPaidAmtP(vp.getCurrentPaid());
+            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+            tph.setCreatedBy(user.get(0));
+            tph.setPayOption("Cash");
+            tph.setParentCurr(curr.get(0));
+            tph.setPayDt(vp.getPayDate());
+            PaymentVou pv = new PaymentVou();
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouNo(vp.getVouNo());
+            pv.setVouPaid(vp.getCurrentPaid());
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouDate(vp.getTranDate());
+            pv.setDiscount(vp.getDiscount());
+            pv.setVouType("Sale");
+            List<PaymentVou> listPV = new ArrayList();
+            listPV.add(pv);
+            tph.setListDetail(listPV);
+
             dao.save(tph);
         } catch (Exception ex) {
-
+            log.error("assignData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

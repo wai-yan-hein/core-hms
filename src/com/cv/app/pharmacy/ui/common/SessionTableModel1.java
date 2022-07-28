@@ -9,6 +9,7 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import com.cv.app.util.NumberUtil;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
@@ -39,7 +40,7 @@ public class SessionTableModel1 extends AbstractTableModel {
     public Class getColumnClass(int column) {
         switch (column) {
             case 0: //Tran Date
-                return String.class;
+                return Date.class;
             case 1: //Vou No
                 return String.class;
             case 2: //Ref. Vou.
@@ -78,7 +79,7 @@ public class SessionTableModel1 extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Tran Date
-                    return DateUtil.toDateStr(vSession.getTranDate());
+                    return vSession.getTranDate();
                 case 1: //Vou No
                     if (vSession.isDeleted()) {
                         return vSession.getKey().getInvId() + "*";
@@ -90,8 +91,7 @@ public class SessionTableModel1 extends AbstractTableModel {
                 case 3: //Cus-Name
                     if (vSession.getTraderId() != null) {
                         if (prifxStatus.equals("Y")) {
-                            return vSession.getTraderId().replace("CUS", "")
-                                    .replace("SUP", "") + " - " + vSession.getTraderName();
+                            return vSession.getStuNo() + " - " + vSession.getTraderName();
                         } else {
                             return vSession.getTraderId() + " - " + vSession.getTraderName();
                         }

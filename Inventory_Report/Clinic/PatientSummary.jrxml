@@ -105,21 +105,6 @@ order by a.trader_name, a.source, date(a.tran_date)]]>
 	<variable name="ttl_balance_rpt" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{balance}]]></variableExpression>
 	</variable>
-	<variable name="ttl_source_vou" class="java.lang.Double" resetType="Group" resetGroup="tran_option" calculation="Sum">
-		<variableExpression><![CDATA[$F{vou_total}]]></variableExpression>
-	</variable>
-	<variable name="ttl_source_disc" class="java.lang.Double" resetType="Group" resetGroup="tran_option" calculation="Sum">
-		<variableExpression><![CDATA[$F{discount}]]></variableExpression>
-	</variable>
-	<variable name="ttl_source_tax" class="java.lang.Double" resetType="Group" resetGroup="tran_option" calculation="Sum">
-		<variableExpression><![CDATA[$F{tax_amt}]]></variableExpression>
-	</variable>
-	<variable name="ttl_source_paid" class="java.lang.Double" resetType="Group" resetGroup="tran_option" calculation="Sum">
-		<variableExpression><![CDATA[$F{paid}]]></variableExpression>
-	</variable>
-	<variable name="ttl_source_bal" class="java.lang.Double" resetType="Group" resetGroup="tran_option" calculation="Sum">
-		<variableExpression><![CDATA[$F{balance}]]></variableExpression>
-	</variable>
 	<group name="patient">
 		<groupExpression><![CDATA[$F{cus_id}]]></groupExpression>
 		<groupHeader>
@@ -164,7 +149,7 @@ order by a.trader_name, a.source, date(a.tran_date)]]>
 				<textField>
 					<reportElement x="168" y="4" width="139" height="15" uuid="ef0c6ec0-18ca-476f-8b5c-97ddf53cba39"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
+						<font fontName="Zawgyi-One" size="8" isBold="true"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{trader_name}]]></textFieldExpression>
 				</textField>
@@ -202,62 +187,6 @@ order by a.trader_name, a.source, date(a.tran_date)]]>
 						<font fontName="Arial" size="8" isBold="true"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{ttl_balance}]]></textFieldExpression>
-				</textField>
-			</band>
-		</groupFooter>
-	</group>
-	<group name="tran_option">
-		<groupExpression><![CDATA[$F{source}]]></groupExpression>
-		<groupFooter>
-			<band height="15">
-				<textField>
-					<reportElement x="168" y="0" width="139" height="15" uuid="ea21c5df-bf90-417a-82a2-7a651ef1eb94"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{source}]]></textFieldExpression>
-				</textField>
-				<staticText>
-					<reportElement x="309" y="0" width="39" height="15" uuid="f9b527e2-0e99-4b5b-88c7-b1c55788090a"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Total :]]></text>
-				</staticText>
-				<textField pattern="#,##0.00;(#,##0.00)">
-					<reportElement x="353" y="0" width="117" height="15" uuid="a84b08c9-85cc-4e26-b209-a65dc7243cea"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_source_vou}]]></textFieldExpression>
-				</textField>
-				<textField pattern="#,##0.00;(#,##0.00)">
-					<reportElement x="472" y="0" width="57" height="15" uuid="7ad04866-3915-412a-912a-836ca6523124"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_source_disc}]]></textFieldExpression>
-				</textField>
-				<textField pattern="#,##0.00;(#,##0.00)">
-					<reportElement x="531" y="0" width="57" height="15" uuid="86fa1481-52ff-4ac8-a37c-3da8db21e5c9"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_source_tax}]]></textFieldExpression>
-				</textField>
-				<textField pattern="#,##0.00;(#,##0.00)">
-					<reportElement x="590" y="0" width="57" height="15" uuid="8ff0076d-cdab-4aaa-a657-d55950508a6c"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_source_paid}]]></textFieldExpression>
-				</textField>
-				<textField pattern="#,##0.00;(#,##0.00)">
-					<reportElement x="649" y="0" width="75" height="15" uuid="7fa6730d-545d-4a9c-bb04-0e896ca8ac16"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="8" isBold="true"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_source_bal}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>

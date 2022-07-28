@@ -86,7 +86,7 @@ public class CheckPatientBalance extends javax.swing.JPanel {
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {

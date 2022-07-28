@@ -77,7 +77,7 @@ public class DesertYellow extends DesertBlue {
                 "ScrollBar.is3DEnabled",
                 Boolean.TRUE,
                 PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY,
-                new Integer(30),
+                30,
                 };
         table.putDefaults(uiDefaults);
     }

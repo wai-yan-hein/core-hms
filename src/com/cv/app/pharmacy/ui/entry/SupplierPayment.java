@@ -53,12 +53,16 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         initComponents();
         initTableCusPay();
         txtPayDate.setText(DateUtil.getTodayDateStr());
-        BindingUtil.BindCombo(cboAccount,
-                dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
-        new ComBoBoxAutoComplete(cboAccount);
+        try {
+            BindingUtil.BindCombo(cboAccount,
+                    dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
+            new ComBoBoxAutoComplete(cboAccount);
+        } catch (Exception ex) {
+            log.error("SupplierPayment : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblPaymentEntry.setCboPayment(cboAccount);
-        //cboAccount.setSelectedIndex(0);
-        // tblPaymentEntry.setObserver(this);
         swrf = new StartWithRowFilter(txtFilter);
         sorter = new TableRowSorter(tblVouList.getModel());
         tblVouList.setRowSorter(sorter);
@@ -84,7 +88,8 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     + "       sh.due_date, sh.remark ref_no, (sh.vou_total-ifnull(sh.discount,0)) as vou_total, (sh.paid+ifnull(pah.pay_amt,0)) as ttl_paid, "
                     + "sh.discount, sh.balance,\n"
                     + "	   sum(ifnull(balance,0))-(ifnull(pah.pay_amt,0)) bal, \n"
-                    + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue \n"
+                    + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue, \n"
+                    + "    t.stu_no \n"
                     + "from pur_his sh\n"
                     + "left join trader t on sh.cus_id = t.trader_id\n"
                     + "left join (select pv.vou_no, sum(ifnull(pv.vou_paid,0)+ifnull(pv.discount,0)) pay_amt, pv.vou_type\n"
@@ -94,7 +99,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     + "				and pv.vou_type = 'PURCHASE'\n"
                     + "			  group by pv.vou_no, pv.vou_type) pah on sh.pur_inv_id = pah.vou_no\n"
                     + "where sh.deleted = false\n"
-                    + "group by sh.pur_inv_id, sh.pur_date,sh.vou_total, sh.currency, sh.paid, sh.discount, sh.balance) a\n"
+                    + "group by sh.pur_inv_id, sh.pur_date,sh.vou_total, sh.currency, sh.paid, sh.discount, sh.balance, t.stu_no) a\n"
                     + "where a.balance > 0 and a.bal > 0.9 order by a.pur_date, a.vou_no";
             ResultSet rs = dao.execSQL(strSql);
 
@@ -122,7 +127,8 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                             rs.getDouble("bal"),
                             rs.getInt("ttl_overdue1"),
                             rs.getString("currency"),
-                            DateUtil.toDate(DateUtil.getTodayDateStr())
+                            DateUtil.toDate(DateUtil.getTodayDateStr()),
+                            rs.getString("stu_no")
                     ));
                 }
                 //txtTotalBalance.setValue(ttlBalance);
@@ -440,39 +446,42 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
     }
 
     private void assignData() {
-        TraderPayHis tph = new TraderPayHis();
-        VoucherPayment vp = new VoucherPayment();
-        tph.setPayDate(vp.getPayDate());
-        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
-        tph.setTrader(cus.get(0));
-        tph.setRemark(vp.getRemark());
-        tph.setPaidAmtC(vp.getCurrentPaid());
-        tph.setDiscount(vp.getCurrentDiscount());
-        String appCurr = Util1.getPropValue("system.app.currency");
-        List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" + appCurr + "'");
-        tph.setCurrency(curr.get(0));
-        tph.setExRate(1.0);
-        tph.setPaidAmtP(vp.getCurrentPaid());
-        List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-        tph.setCreatedBy(user.get(0));
-        tph.setPayOption("Cash");
-        tph.setParentCurr(curr.get(0));
-        tph.setPayDt(vp.getPayDate());
-        PaymentVou pv = new PaymentVou();
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouNo(vp.getVouNo());
-        pv.setVouPaid(vp.getCurrentPaid());
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouDate(vp.getTranDate());
-        pv.setDiscount(vp.getDiscount());
-        pv.setVouType("Sale");
-        List<PaymentVou> listPV = new ArrayList();
-        listPV.add(pv);
-        tph.setListDetail(listPV);
         try {
+            TraderPayHis tph = new TraderPayHis();
+            VoucherPayment vp = new VoucherPayment();
+            tph.setPayDate(vp.getPayDate());
+            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
+            tph.setTrader(cus.get(0));
+            tph.setRemark(vp.getRemark());
+            tph.setPaidAmtC(vp.getCurrentPaid());
+            tph.setDiscount(vp.getCurrentDiscount());
+            String appCurr = Util1.getPropValue("system.app.currency");
+            List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" + appCurr + "'");
+            tph.setCurrency(curr.get(0));
+            tph.setExRate(1.0);
+            tph.setPaidAmtP(vp.getCurrentPaid());
+            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+            tph.setCreatedBy(user.get(0));
+            tph.setPayOption("Cash");
+            tph.setParentCurr(curr.get(0));
+            tph.setPayDt(vp.getPayDate());
+            PaymentVou pv = new PaymentVou();
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouNo(vp.getVouNo());
+            pv.setVouPaid(vp.getCurrentPaid());
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouDate(vp.getTranDate());
+            pv.setDiscount(vp.getDiscount());
+            pv.setVouType("Sale");
+            List<PaymentVou> listPV = new ArrayList();
+            listPV.add(pv);
+            tph.setListDetail(listPV);
+
             dao.save(tph);
         } catch (Exception ex) {
-
+            log.error("assignData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

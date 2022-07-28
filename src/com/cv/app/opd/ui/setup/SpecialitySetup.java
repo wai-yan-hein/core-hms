@@ -33,6 +33,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class SpecialitySetup extends javax.swing.JDialog {
+
     static Logger log = Logger.getLogger(SpecialitySetup.class.getName());
     private SpecialityTableModel tableModel = new SpecialityTableModel();
     private final AbstractDataAccess dao = Global.dao; // Data access object.
@@ -68,21 +69,27 @@ public class SpecialitySetup extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tableModel.setListSpeciality(dao.findAll("Speciality"));
-        tblSpeciality.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblSpeciality.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblSpeciality.getSelectedRow() >= 0) {
-                    selectRow = tblSpeciality.convertRowIndexToModel(tblSpeciality.getSelectedRow());
-                }
+        try {
+            tableModel.setListSpeciality(dao.findAll("Speciality"));
+            tblSpeciality.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblSpeciality.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblSpeciality.getSelectedRow() >= 0) {
+                        selectRow = tblSpeciality.convertRowIndexToModel(tblSpeciality.getSelectedRow());
+                    }
 
-                if (selectRow >= 0) {
-                    setRecord(tableModel.getSpeciality(selectRow));
+                    if (selectRow >= 0) {
+                        setRecord(tableModel.getSpeciality(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void setRecord(Speciality speciality) {

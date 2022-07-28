@@ -131,22 +131,28 @@ public class RoleSetup extends javax.swing.JPanel implements SelectionObserver {
     }
 
     private void initTable() {
-        roleTableModel.setListUserRole(dao.findAll("UserRole"));
-        tblRole.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JComboBox cboLocationCell = new JComboBox();
-        cboLocationCell.setFont(Global.textFont); // NOI18N
-        BindingUtil.BindCombo(cboLocationCell, dao.findAll("ItemType"));
-        tblMapping.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cboLocationCell));
-        tblRole.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                selectRow = tblRole.convertRowIndexToModel(tblRole.getSelectedRow());
-                if (selectRow >= 0) {
-                    setCurrUserRole(roleTableModel.getUserRole(selectRow));
+        try {
+            roleTableModel.setListUserRole(dao.findAll("UserRole"));
+            tblRole.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            JComboBox cboLocationCell = new JComboBox();
+            cboLocationCell.setFont(Global.textFont); // NOI18N
+            BindingUtil.BindCombo(cboLocationCell, dao.findAll("ItemType"));
+            tblMapping.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(cboLocationCell));
+            tblRole.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    selectRow = tblRole.convertRowIndexToModel(tblRole.getSelectedRow());
+                    if (selectRow >= 0) {
+                        setCurrUserRole(roleTableModel.getUserRole(selectRow));
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void createPrivilegeList(MenuNode root) {
@@ -236,7 +242,7 @@ public class RoleSetup extends javax.swing.JPanel implements SelectionObserver {
             currUserRole.setVouPrinter(chkVouPrinter.isSelected());
             currUserRole.setVouStatus((VouStatus) cboVouStatus.getSelectedItem());
             currUserRole.setUpdatedDate(new Date());
-            
+
             MenuNode root = treeModel.getTreeRoot();
 
             if (lblStatus.getText().equals("EDIT")) {
@@ -252,13 +258,19 @@ public class RoleSetup extends javax.swing.JPanel implements SelectionObserver {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
+        try {
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboVouStatus, dao.findAll("VouStatus"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboVouStatus);
-        new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboVouStatus);
+            new ComBoBoxAutoComplete(cboCurrency);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void clearPrivilegeList(MenuNode root) {
@@ -284,7 +296,7 @@ public class RoleSetup extends javax.swing.JPanel implements SelectionObserver {
 
     private void getCustomerList() {
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Customer List", dao);
+                "Customer List", dao, -1);
     }
 
     /**

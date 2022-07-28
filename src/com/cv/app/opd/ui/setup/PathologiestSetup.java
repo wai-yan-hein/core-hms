@@ -89,6 +89,7 @@ public class PathologiestSetup extends javax.swing.JPanel implements FormAction,
     }
 
     private void initTable() {
+        try{
         pTableModel.setListPatho(dao.findAll("Pathologiest"));
         tblPatho.getColumnModel().getColumn(0).setPreferredWidth(200); //Name
         tblPatho.getColumnModel().getColumn(1).setPreferredWidth(100); //Rank
@@ -110,6 +111,11 @@ public class PathologiestSetup extends javax.swing.JPanel implements FormAction,
                 }
             }
         });
+        }catch(Exception ex){
+            log.error("initTable : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
     }
 
     @Override

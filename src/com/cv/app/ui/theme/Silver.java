@@ -99,7 +99,7 @@ public class Silver extends ExperienceBlue {
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         Object[] uiDefaults =
-            { PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY, new Integer(50), };
+            { PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY, 50, };
         table.putDefaults(uiDefaults);
     }
 

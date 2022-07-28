@@ -118,12 +118,10 @@ public class TransferTableModel extends AbstractTableModel {
                         } else {
                             return record.getMedicineId().getShortName();
                         }
+                    } else if (record.getMedicineId() == null) {
+                        return null;
                     } else {
-                        if (record.getMedicineId() == null) {
-                            return null;
-                        } else {
-                            return record.getMedicineId().getMedId();
-                        }
+                        return record.getMedicineId().getMedId();
                     }
                 case 1: //Medicine Name
                     if (record.getMedicineId() == null) {
@@ -440,31 +438,32 @@ public class TransferTableModel extends AbstractTableModel {
     public boolean isValidEntry() {
         boolean status = true;
         int row = maxUniqueId;
+        int dataCnt = 0;
 
         if (listDetail != null) {
             for (TransferDetailHis record : listDetail) {
                 if (record.getMedicineId().getMedId() != null) {
+                    dataCnt++;
                     if (NumberUtil.NZero(record.getQty()) <= 0) {
                         JOptionPane.showMessageDialog(Util1.getParent(), "Qty must be positive value.",
                                 "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
                         status = false;
-                    } else {
-                        if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
-                            record.setUniqueId(row + 1);
-                            row++;
-                        }
+                    } else if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                        record.setUniqueId(row + 1);
+                        row++;
                     }
                 }
             }
         }
 
-        if (row == 0) {
+        if (dataCnt == 0) {
             JOptionPane.showMessageDialog(Util1.getParent(), "No transfer record.",
                     "No data.", JOptionPane.ERROR_MESSAGE);
             status = false;
         }
 
-        //parent.setRowSelectionInterval(row, row);
+        maxUniqueId = row;
+        parent.setRowSelectionInterval(0, 0);
         return status;
     }
 
@@ -568,25 +567,31 @@ public class TransferTableModel extends AbstractTableModel {
     public void getMedInfo(String medCode, int index) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selectMedicine(medicine, index);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selectMedicine(medicine, index);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selectMedicine(medicine, index);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

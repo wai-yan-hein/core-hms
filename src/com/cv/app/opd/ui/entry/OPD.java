@@ -24,12 +24,14 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.ui.util.PackageSearchDialog;
+import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.entity.Service;
 import com.cv.app.opd.database.tempentity.TempAmountLink;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
 import com.cv.app.opd.ui.common.OPDTableModel;
 import com.cv.app.opd.ui.util.AmountLinkDialog;
+import com.cv.app.opd.ui.util.AppointmentDoctorDialog;
 import com.cv.app.opd.ui.util.DoctorSearchNameFilterDialog;
 import com.cv.app.opd.ui.util.OPDConfirDialog;
 import com.cv.app.opd.ui.util.OPDVouSearchDialog;
@@ -408,7 +410,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 currVou.setDeleted(true);
                 currVou.setIntgUpdStatus(null);
                 try {
-                    dao.save(currVou);
+                    //dao.save(currVou);
+                    String vouNo = currVou.getOpdInvId();
+                    dao.execSql("update opd_his set deleted = true, intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
                     }
@@ -504,55 +508,70 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     }
 
     private void copyVoucher(String invNo) {
-        OPDHis tmpVou = (OPDHis) dao.find(OPDHis.class, invNo);
+        try {
+            OPDHis tmpVou = (OPDHis) dao.find(OPDHis.class, invNo);
 
-        currVou = new OPDHis();
-        BeanUtils.copyProperties(tmpVou, currVou);
-        List<OPDDetailHis> listDetail = new ArrayList();
-        List<OPDDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
+            currVou = new OPDHis();
+            BeanUtils.copyProperties(tmpVou, currVou);
+            List<OPDDetailHis> listDetail = new ArrayList();
+            List<OPDDetailHis> listDetailTmp = null;
 
-        for (OPDDetailHis detail : listDetailTmp) {
-            OPDDetailHis tmpDetail = new OPDDetailHis();
-            BeanUtils.copyProperties(detail, tmpDetail);
-            tmpDetail.setOpdDetailId(null);
-            listDetail.add(tmpDetail);
+            try {
+                listDetailTmp = dao.findAllHSQL(
+                        "select o from OPDDetailHis o where o.vouNo = '" + invNo + "' order by o.uniqueId");
+            } catch (Exception ex) {
+                log.error("copyVoucher : " + ex.toString());
+            } finally {
+                dao.close();
+            }
+
+            for (OPDDetailHis detail : listDetailTmp) {
+                OPDDetailHis tmpDetail = new OPDDetailHis();
+                BeanUtils.copyProperties(detail, tmpDetail);
+                tmpDetail.setOpdDetailId(null);
+                listDetail.add(tmpDetail);
+            }
+            currVou.setListOPDDetailHis(listDetail);
+            currVou.setDeleted(false);
+
+            if (tmpVou.getListOPDDetailHis().size() > 0) {
+                //tableModel.clear();
+                tableModel.setListOPDDetailHis(listDetail);
+            }
+
+            //txtVouNo.setText(tmpVou.getOpdInvId());
+            lblStatus.setText("NEW");
+            txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
+            cboCurrency.setSelectedItem(tmpVou.getCurrency());
+            cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
+            txtRemark.setText(tmpVou.getRemark());
+
+            if (tmpVou.getPatient() != null) {
+                txtPatientNo.setText(tmpVou.getPatient().getRegNo());
+                txtPatientName.setText(tmpVou.getPatient().getPatientName());
+            } else {
+                txtPatientName.setText(tmpVou.getPatientName());
+                txtPatientName.setEditable(true);
+                txtPatientNo.setEditable(false);
+            }
+
+            if (tmpVou.getDoctor() != null) {
+                txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
+                txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
+            }
+
+            txtVouTotal.setValue(tmpVou.getVouTotal());
+            txtDiscP.setValue(tmpVou.getDiscountP());
+            txtDiscA.setValue(tmpVou.getDiscountA());
+            txtTaxP.setValue(tmpVou.getTaxP());
+            txtTaxA.setValue(tmpVou.getTaxA());
+            txtPaid.setValue(tmpVou.getPaid());
+            txtVouBalance.setValue(tmpVou.getVouBalance());
+        } catch (Exception ex) {
+            log.error("copyVoucher : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        currVou.setListOPDDetailHis(listDetail);
-        currVou.setDeleted(false);
-
-        if (tmpVou.getListOPDDetailHis().size() > 0) {
-            //tableModel.clear();
-            tableModel.setListOPDDetailHis(listDetail);
-        }
-
-        //txtVouNo.setText(tmpVou.getOpdInvId());
-        lblStatus.setText("NEW");
-        txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
-        cboCurrency.setSelectedItem(tmpVou.getCurrency());
-        cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
-        txtRemark.setText(tmpVou.getRemark());
-
-        if (tmpVou.getPatient() != null) {
-            txtPatientNo.setText(tmpVou.getPatient().getRegNo());
-            txtPatientName.setText(tmpVou.getPatient().getPatientName());
-        } else {
-            txtPatientName.setText(tmpVou.getPatientName());
-            txtPatientName.setEditable(true);
-            txtPatientNo.setEditable(false);
-        }
-
-        if (tmpVou.getDoctor() != null) {
-            txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
-            txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
-        }
-
-        txtVouTotal.setValue(tmpVou.getVouTotal());
-        txtDiscP.setValue(tmpVou.getDiscountP());
-        txtDiscA.setValue(tmpVou.getDiscountA());
-        txtTaxP.setValue(tmpVou.getTaxP());
-        txtTaxA.setValue(tmpVou.getTaxA());
-        txtPaid.setValue(tmpVou.getPaid());
-        txtVouBalance.setValue(tmpVou.getVouBalance());
     }
 
     @Override
@@ -675,9 +694,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 && currVou.getPatient() != null) {
             try {
                 String delSql = "delete from tmp_amount_link where user_id = '"
-                        + Global.loginUser.getUserId() + "'";
+                        + Global.machineId + "'";
                 String strSql = "INSERT INTO tmp_amount_link(user_id,tran_option,inv_id,amount,print_status)\n"
-                        + "  select '" + Global.loginUser.getUserId() + "', tran_source, inv_id, balance, true\n"
+                        + "  select '" + Global.machineId + "', tran_source, inv_id, balance, true\n"
                         + "    from (select date(sale_date) tran_date, reg_no cus_id, currency_id currency, "
                         + "                 'Pharmacy' as tran_source, sale_inv_id inv_id,\n"
                         + "                 ifnull(paid_amount,0) balance\n"
@@ -689,31 +708,31 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         + "		  select date(tran_date) tran_date, patient_id cus_id, currency_id currency, \n"
                         + "				 tran_option tran_source, opd_inv_id inv_id, sum(ifnull(paid,0)) balance\n"
                         + "			from v_session_clinic\n"
-                        + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD','OT') and deleted = false\n"
+                        + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD') and deleted = false\n"
                         + "		   group by date(tran_date), patient_id, currency_id, tran_option, opd_inv_id) a\n"
                         + "   where tran_source <> '" + Util1.getPropValue("system.link.amount")
                         + "'    and tran_date = '" + DateUtil.toDateStr(currVou.getInvDate(), "yyyy-MM-dd")
                         + "'    and cus_id = '" + currVou.getPatient().getRegNo() + "'";
 
                 dao.execSql(delSql, strSql);
+
+                List<TempAmountLink> listTAL = dao.findAllHSQL(
+                        "select o from TempAmountLink o where o.key.userId = '" + Global.machineId + "'");
+                if (listTAL != null) {
+                    if (!listTAL.isEmpty()) {
+                        AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
+                        dialog.setVisible(true);
+                        double ttlLinkAmt = dialog.getTtlAmt();
+                        if (ttlLinkAmt != 0) {
+                            params.put("link_amt_status", "Y");
+                            params.put("link_amt", ttlLinkAmt + currVou.getPaid());
+                        }
+                    }
+                }
             } catch (Exception ex) {
                 log.error("print link amount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
             } finally {
                 dao.close();
-            }
-
-            List<TempAmountLink> listTAL = dao.findAllHSQL(
-                    "select o from TempAmountLink o where o.key.userId = '" + Global.loginUser.getUserId() + "'");
-            if (listTAL != null) {
-                if (!listTAL.isEmpty()) {
-                    AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
-                    dialog.setVisible(true);
-                    double ttlLinkAmt = dialog.getTtlAmt();
-                    if (ttlLinkAmt != 0) {
-                        params.put("link_amt_status", "Y");
-                        params.put("link_amt", ttlLinkAmt + currVou.getPaid());
-                    }
-                }
             }
         }
 
@@ -787,7 +806,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             params.put("remark", txtRemark.getText());
         }
 
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("REPORT_CONNECTION", dao.getConnection());
@@ -812,14 +831,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             } else {
                 ReportUtil.viewReport(reportPath, params, tableModel.getListOPDDetailHis());
             }
-        } else {
-            if (Util1.getPropValue("report.file.type").equals("con")) {
-                JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                ReportUtil.printJasper(jp, printerName);
-            } else {
-                JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());
-                ReportUtil.printJasper(jp, printerName);
+        } else if (Util1.getPropValue("report.file.type").equals("con")) {
+            JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
+            ReportUtil.printJasper(jp, printerName);
+            if (Util1.getPropValue("system.pharmacy.opd.print.double").equals("Y")) {
+                params.put("user_desp", "Receive Voucher, Thanks You.");
+                JasperPrint jp1 = ReportUtil.getReport(reportPath, params, dao.getConnection());
+                ReportUtil.printJasper(jp1, printerName);
             }
+        } else {
+            JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());
+            ReportUtil.printJasper(jp, printerName);
         }
 
         newForm();
@@ -843,95 +865,113 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPaymentType, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
+            new ComBoBoxAutoComplete(cboPaymentType, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
 
-        cboBindStatus = true;
+            cboBindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void genVouNo() {
         String vouNo = vouEngine.getVouNo();
         txtVouNo.setText(vouNo);
 
-        List<OPDHis> listOPDH = dao.findAllHSQL(
-                "select o from OPDHis o where o.opdInvId = '" + vouNo + "'");
-        if (listOPDH != null) {
-            if (!listOPDH.isEmpty()) {
-                vouEngine.updateVouNo();
-                vouNo = vouEngine.getVouNo();
-                txtVouNo.setText(vouNo);
-                listOPDH = null;
-                listOPDH = dao.findAllHSQL(
-                        "select o from OPDHis o where o.opdInvId = '" + vouNo + "'");
-                if (listOPDH != null) {
-                    if (!listOPDH.isEmpty()) {
-                        log.error("Duplicate OPD voucher error : " + txtVouNo.getText() + " @ "
-                                + txtDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(),
-                                "Duplicate OPD vou no. Exit the program and try again.",
-                                "OPD Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(-1);
+        try {
+            List<OPDHis> listOPDH = dao.findAllHSQL(
+                    "select o from OPDHis o where o.opdInvId = '" + vouNo + "'");
+            if (listOPDH != null) {
+                if (!listOPDH.isEmpty()) {
+                    vouEngine.updateVouNo();
+                    vouNo = vouEngine.getVouNo();
+                    txtVouNo.setText(vouNo);
+                    listOPDH = null;
+                    listOPDH = dao.findAllHSQL(
+                            "select o from OPDHis o where o.opdInvId = '" + vouNo + "'");
+                    if (listOPDH != null) {
+                        if (!listOPDH.isEmpty()) {
+                            log.error("Duplicate OPD voucher error : " + txtVouNo.getText() + " @ "
+                                    + txtDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(),
+                                    "Duplicate OPD vou no. Exit the program and try again.",
+                                    "OPD Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(-1);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initTable() {
-        tblService.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
-        tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
-        tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
-        tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
-        tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
-        tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Refer Dr
-        tblService.getColumnModel().getColumn(6).setPreferredWidth(80);//Read Dr
-        tblService.getColumnModel().getColumn(7).setPreferredWidth(80);//Technician
+        try {
+            tblService.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
+            tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
+            tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
+            tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
+            tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
+            tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Refer Dr
+            tblService.getColumnModel().getColumn(6).setPreferredWidth(80);//Read Dr
+            tblService.getColumnModel().getColumn(7).setPreferredWidth(80);//Technician
 
-        //Change JTable cell editor
-        tblService.getColumnModel().getColumn(0).setCellEditor(
-                new OPDTableCellEditor(dao));
-        tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
-        tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
+            //Change JTable cell editor
+            tblService.getColumnModel().getColumn(0).setCellEditor(
+                    new OPDTableCellEditor(dao));
+            tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+            tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
-        tblService.getColumnModel().getColumn(5).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
-        tblService.getColumnModel().getColumn(6).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
-        JComboBox cboTechnician = new JComboBox();
-        //BindingUtil.BindCombo(cboTechnician,
-        //        dao.findAllHSQL("select o from Technician o where o.active = true order by o.techName"));
-        BindingUtil.BindCombo(cboTechnician,
-                dao.findAllHSQL("select o from Doctor o where o.active = true and o.drType = 'Technician' order by o.doctorName"));
-        tblService.getColumnModel().getColumn(7).setCellEditor(new DefaultCellEditor(cboTechnician));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
+            tblService.getColumnModel().getColumn(5).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
+            tblService.getColumnModel().getColumn(6).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
+            JComboBox cboTechnician = new JComboBox();
+            //BindingUtil.BindCombo(cboTechnician,
+            //        dao.findAllHSQL("select o from Technician o where o.active = true order by o.techName"));
+            BindingUtil.BindCombo(cboTechnician,
+                    dao.findAllHSQL("select o from Doctor o where o.active = true and o.drType = 'Technician' order by o.doctorName"));
+            tblService.getColumnModel().getColumn(7).setCellEditor(new DefaultCellEditor(cboTechnician));
 
-        tblService.getModel().addTableModelListener(new TableModelListener() {
+            tblService.getModel().addTableModelListener(new TableModelListener() {
 
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                txtVouTotal.setValue(tableModel.getTotal());
-                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                calcBalance();
-            }
-        });
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    txtVouTotal.setValue(tableModel.getTotal());
+                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                    calcBalance();
+                }
+            });
 
-        tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblService.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+            tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblService.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-            }
-        });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
+                }
+            });
 
-        tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
-        tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
+            tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
     private Action actionTblServiceEnterKey = new AbstractAction() {
 
@@ -1205,9 +1245,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtVouTotal.setValue(modelTtl);
         calcBalance();
 
-        //check patient dob
-        Patient patient = (Patient) dao.find(Patient.class, txtPatientNo.getText());
-
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());
             status = false;
@@ -1274,21 +1311,29 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             }
             currVou.setIntgUpdStatus(null);
 
-            if (patient != null) {
-                if (patient.getDob() == null) {
+            try {
+                //check patient dob
+                Patient patient = (Patient) dao.find(Patient.class, txtPatientNo.getText());
+                if (patient != null) {
+                    if (patient.getDob() == null) {
 
-                    try {
-                        String sql = "update patient_detail set dob = '"
-                                + DateUtil.toDateStr(getDOB(), "yyyy-MM-dd") + "' "
-                                + "where reg_no = '" + patient.getRegNo() + "'";
-                        dao.execSql(sql);
-                    } catch (Exception ex) {
-                        log.error("upadte patient dob " + ex.getMessage());
-                    } finally {
-                        dao.close();
+                        try {
+                            String sql = "update patient_detail set dob = '"
+                                    + DateUtil.toDateStr(getDOB(), "yyyy-MM-dd") + "' "
+                                    + "where reg_no = '" + patient.getRegNo() + "'";
+                            dao.execSql(sql);
+                        } catch (Exception ex) {
+                            log.error("upadte patient dob " + ex.getMessage());
+                        } finally {
+                            dao.close();
+                        }
+
                     }
-
                 }
+            } catch (Exception ex) {
+                log.error("Patient Error : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
 
@@ -1299,6 +1344,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "DoctorSearch":
+                try {
                 if (tableModel.isPayAlready()) {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Doctor payment already made. "
                             + "You cannot change doctor.",
@@ -1339,7 +1385,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 calcBalance();
                 tblService.requestFocus();
                 tableModel.addAutoServiceByDoctor();
-                break;
+            } catch (Exception ex) {
+                log.error("select DoctorSearch : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "PatientSearch":
                 if (tableModel.isPayAlready()) {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Doctor payment already made. "
@@ -1378,9 +1429,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     txtPatientNo.setText(patient.getRegNo());
                     txtPatientName.setText(patient.getPatientName());
                     txtPatientName.setEditable(false);
-                    if (patient.getDoctor() != null) {
-                        selected("DoctorSearch", patient.getDoctor());
-                    }
                     txtDoctorNo.requestFocus();
                     if (Util1.nullToBlankStr(patient.getAdmissionNo()).isEmpty()) {
                         lblOTID.setText(patient.getOtId());
@@ -1388,6 +1436,49 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         lblOTID.setText(null);
                     }
                     getPatientBill(patient.getRegNo());
+
+                    //Booking info
+                    String regNo = patient.getRegNo();
+                    List<Booking> listBK = dao.findAllHSQL(
+                            "select o from Booking o where o.regNo = '"
+                            + regNo + "' and o.bkDate = '" + DateUtil.toDateStrMYSQL(txtDate.getText()) + "'");
+                    if (listBK != null) {
+                        if (!listBK.isEmpty()) {
+                            if (listBK.size() == 1) {
+                                Booking bk = listBK.get(0);
+                                String visitId = bk.getDoctor().getDoctorId() + "-" + bk.getRegNo() + "-"
+                                        + DateUtil.getDatePart(bk.getBkDate(), "ddMMyyyy")
+                                        + "-" + bk.getBkSerialNo();
+                                currVou.setVisitId(visitId);
+                                selected("DoctorSearch", bk.getDoctor());
+                            } else if (listBK.size() > 1) {
+                                AppointmentDoctorDialog dialog = new AppointmentDoctorDialog();
+                                dialog.setLocationRelativeTo(null);
+                                dialog.setData(listBK);
+                                dialog.setVisible(true);
+                                Booking selBK = dialog.getSelectedBK();
+                                if (selBK != null) {
+                                    String visitId = selBK.getDoctor().getDoctorId() + "-" + selBK.getRegNo() + "-"
+                                            + DateUtil.getDatePart(selBK.getBkDate(), "ddMMyyyy")
+                                            + "-" + selBK.getBkSerialNo();
+                                    currVou.setVisitId(visitId);
+                                    selected("DoctorSearch", selBK.getDoctor());
+                                }
+                            } else {
+                                if (patient.getDoctor() != null) {
+                                    selected("DoctorSearch", patient.getDoctor());
+                                }
+                            }
+                        } else {
+                            if (patient.getDoctor() != null) {
+                                selected("DoctorSearch", patient.getDoctor());
+                            }
+                        }
+                    } else {
+                        if (patient.getDoctor() != null) {
+                            selected("DoctorSearch", patient.getDoctor());
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error("select PatientSearch : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                 }
@@ -1632,10 +1723,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
                 dao.open();
                 //dr = (Doctor) dao.find(Doctor.class, txtDoctorNo.getText());
-                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '" 
+                List<Doctor> listDr = dao.findAllHSQL("select o from Doctor o where o.doctorId = '"
                         + txtDoctorNo.getText().trim() + "'  and o.active = true");
-                if(listDr != null){
-                    if(!listDr.isEmpty()){
+                if (listDr != null) {
+                    if (!listDr.isEmpty()) {
                         dr = listDr.get(0);
                     }
                 }
@@ -1668,27 +1759,25 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             Double totalBalance = 0.0;
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
-            try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
-                            regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
-                while (resultSet.next()) {
-                    double bal = resultSet.getDouble("balance");
-                    if (bal != 0) {
-                        PatientBillPayment pbp = new PatientBillPayment();
+            ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
+                    currency, Global.machineId);
+            while (resultSet.next()) {
+                double bal = resultSet.getDouble("balance");
+                if (bal != 0) {
+                    PatientBillPayment pbp = new PatientBillPayment();
 
-                        pbp.setBillTypeDesp(resultSet.getString("payment_type_name"));
-                        pbp.setBillTypeId(resultSet.getInt("bill_type"));
-                        pbp.setCreatedBy(Global.loginUser.getUserId());
-                        pbp.setCurrency(resultSet.getString("currency"));
-                        pbp.setPayDate(DateUtil.toDate(txtDate.getText()));
-                        pbp.setRegNo(resultSet.getString("reg_no"));
-                        pbp.setAmount(resultSet.getDouble("balance"));
-                        pbp.setBalance(resultSet.getDouble("balance"));
+                    pbp.setBillTypeDesp(resultSet.getString("payment_type_name"));
+                    pbp.setBillTypeId(resultSet.getInt("bill_type"));
+                    pbp.setCreatedBy(Global.loginUser.getUserId());
+                    pbp.setCurrency(resultSet.getString("currency"));
+                    pbp.setPayDate(DateUtil.toDate(txtDate.getText()));
+                    pbp.setRegNo(resultSet.getString("reg_no"));
+                    pbp.setAmount(resultSet.getDouble("balance"));
+                    pbp.setBalance(resultSet.getDouble("balance"));
 
-                        totalBalance += pbp.getAmount();
-                        listPBP.add(pbp);
-                    }
+                    totalBalance += pbp.getAmount();
+                    listPBP.add(pbp);
                 }
             }
 
@@ -1696,6 +1785,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             txtBillTotal.setValue(totalBalance);
         } catch (SQLException ex) {
             log.error("PatientSearch : Patient_bill_Payment :" + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } catch (Exception ex) {
+            log.error("getPatientBill : " + ex.getMessage());
         } finally {
             dao.close();
         }

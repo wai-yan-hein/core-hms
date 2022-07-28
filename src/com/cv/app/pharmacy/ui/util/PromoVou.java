@@ -16,10 +16,11 @@ import com.cv.app.util.Util1;
  */
 public class PromoVou extends javax.swing.JDialog {
 
-    private PurHis ph;
+    private final PurHis ph;
 
     /**
      * Creates new form PromoVou
+     * @param ph
      */
     public PromoVou(PurHis ph) {
         super(Util1.getParent(), true);
@@ -28,7 +29,11 @@ public class PromoVou extends javax.swing.JDialog {
 
         //Init for voucher info
         txtPromoDesp.setText(ph.getPromoDesp());
-        chkGetComplete.setSelected(ph.isPromoGetComplete());
+        if (ph.isPromoGetComplete() == null) {
+            chkGetComplete.setSelected(false);
+        } else {
+            chkGetComplete.setSelected(ph.isPromoGetComplete());
+        }
         txtPromoFrom.setText(DateUtil.toDateStr(ph.getPromoStartDate(), "dd/MM/yyyy"));
         txtPromoTo.setText(DateUtil.toDateStr(ph.getPromoEndDate(), "dd/MM/yyyy"));
         if (ph.getPromoGivePercent() != null) {

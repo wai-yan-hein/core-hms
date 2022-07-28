@@ -4,7 +4,7 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.ui.entry.PriceChange1;
+import com.cv.app.pharmacy.ui.entry.PriceChange;
 import com.cv.app.util.Util1;
 import java.awt.Container;
 
@@ -31,7 +31,7 @@ public class PriceChangeDialog extends javax.swing.JDialog {
 
     public void addPanel(String selectedMedId){
         Container contentPane = getContentPane();
-        contentPane.add(new PriceChange1(selectedMedId));
+        contentPane.add(new PriceChange(selectedMedId));
         pack();
     }
     

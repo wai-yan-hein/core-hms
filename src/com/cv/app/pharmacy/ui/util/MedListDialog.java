@@ -68,52 +68,30 @@ public class MedListDialog extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        listMedicine = dao.findAll("Medicine", "active = true");
-        tableModel.setListMedicine(listMedicine);
-        /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE,
-         listMedicine, tblMedicine);
-         JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${medId}"));
-         columnBinding.setColumnName("Item-Code");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
+        try {
+            listMedicine = dao.findAll("Medicine", "active = true");
+            tableModel.setListMedicine(listMedicine);
 
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${medName}"));
-         columnBinding.setColumnName("Item Name");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
+            tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(40);
+            tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
+            tblMedicine.getColumnModel().getColumn(2).setPreferredWidth(50);
+            tblMedicine.getColumnModel().getColumn(3).setPreferredWidth(80);
+            tblMedicine.getColumnModel().getColumn(4).setPreferredWidth(50);
 
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${medTypeId.itemTypeName}"));
-         columnBinding.setColumnName("Item Type");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
+            tblMedicine.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblMedicine.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${brand.brandName}"));
-         columnBinding.setColumnName("Brand");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${catId.catName}"));
-         columnBinding.setColumnName("Category");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-
-         jTableBinding.bind();*/
-
-        tblMedicine.getColumnModel().getColumn(0).setPreferredWidth(40);
-        tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
-        tblMedicine.getColumnModel().getColumn(2).setPreferredWidth(50);
-        tblMedicine.getColumnModel().getColumn(3).setPreferredWidth(80);
-        tblMedicine.getColumnModel().getColumn(4).setPreferredWidth(50);
-
-        tblMedicine.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblMedicine.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblMedicine.getSelectedRow();
-                    }
-                });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    selectedRow = tblMedicine.getSelectedRow();
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public Medicine getSelect() {

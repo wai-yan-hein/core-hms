@@ -13,6 +13,7 @@ import com.cv.app.pharmacy.database.entity.TraderType;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -20,90 +21,97 @@ import java.awt.Dimension;
  */
 public class CustomerSetupFilterDialog extends javax.swing.JDialog {
 
-  private AbstractDataAccess dao;
-  private boolean status = false;
-  
-  /**
-   * Creates new form CustomerSetupFilterDialog
-   */
-  public CustomerSetupFilterDialog(AbstractDataAccess dao) {
-    super(Util1.getParent(), true);
-    initComponents();
-    this.dao = dao;
-    initCombo();
-    
-    Dimension screen = Util1.getScreenSize();
-    int x = (screen.width - this.getWidth()) / 2;
-    int y = (screen.height - this.getHeight()) / 2;
-    chkActive.setSelected(true);
-    setLocation(x, y);
-    setVisible(true);
-  }
+    static Logger log = Logger.getLogger(CustomerSetupFilterDialog.class.getName());
+    private AbstractDataAccess dao;
+    private boolean status = false;
 
-  private void initCombo() {
-    BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
-    BindingUtil.BindComboFilter(cboPriceType, dao.findAll("TraderType"));
-    BindingUtil.BindComboFilter(cboTownship, dao.findAll("Township"));
-    
-    new ComBoBoxAutoComplete(cboCusGroup);
-    new ComBoBoxAutoComplete(cboPriceType);
-    new ComBoBoxAutoComplete(cboTownship);
-  }
-  
-  public boolean getStatus(){
-    return status;
-  }
-  
-  public String getFilter(){
-    String strFilter = "";
-    
-    if(cboCusGroup.getSelectedItem() instanceof CustomerGroup){
-      CustomerGroup cusGroup = (CustomerGroup)cboCusGroup.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and traderGroup.groupId = '" 
-                + cusGroup.getGroupId() + "'";
-      }else{
-        strFilter = "traderGroup.groupId = '" 
-                + cusGroup.getGroupId() + "'";
-      }
+    /**
+     * Creates new form CustomerSetupFilterDialog
+     */
+    public CustomerSetupFilterDialog(AbstractDataAccess dao) {
+        super(Util1.getParent(), true);
+        initComponents();
+        this.dao = dao;
+        initCombo();
+
+        Dimension screen = Util1.getScreenSize();
+        int x = (screen.width - this.getWidth()) / 2;
+        int y = (screen.height - this.getHeight()) / 2;
+        chkActive.setSelected(true);
+        setLocation(x, y);
+        setVisible(true);
     }
-    
-    if(cboPriceType.getSelectedItem() instanceof TraderType){
-      TraderType traderType = (TraderType)cboPriceType.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and typeId.typeId = " + traderType.getTypeId();
-      }else{
-        strFilter = "typeId.typeId = " + traderType.getTypeId();
-      }
+
+    private void initCombo() {
+        try {
+            BindingUtil.BindComboFilter(cboCusGroup, dao.findAll("CustomerGroup"));
+            BindingUtil.BindComboFilter(cboPriceType, dao.findAll("TraderType"));
+            BindingUtil.BindComboFilter(cboTownship, dao.findAll("Township"));
+
+            new ComBoBoxAutoComplete(cboCusGroup);
+            new ComBoBoxAutoComplete(cboPriceType);
+            new ComBoBoxAutoComplete(cboTownship);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    if(cboTownship.getSelectedItem() instanceof Township){
-      Township township = (Township)cboTownship.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and township.townshipId = " + township.getTownshipId();
-      }else{
-        strFilter = "township.townshipId = " + township.getTownshipId();
-      }
+
+    public boolean getStatus() {
+        return status;
     }
-    
-    if(strFilter.length() > 0){
-      strFilter = strFilter + " and active = " +  chkActive.isSelected();
-    }else{
-      strFilter = "active = " + chkActive.isSelected();
+
+    public String getFilter() {
+        String strFilter = "";
+
+        if (cboCusGroup.getSelectedItem() instanceof CustomerGroup) {
+            CustomerGroup cusGroup = (CustomerGroup) cboCusGroup.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and traderGroup.groupId = '"
+                        + cusGroup.getGroupId() + "'";
+            } else {
+                strFilter = "traderGroup.groupId = '"
+                        + cusGroup.getGroupId() + "'";
+            }
+        }
+
+        if (cboPriceType.getSelectedItem() instanceof TraderType) {
+            TraderType traderType = (TraderType) cboPriceType.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and typeId.typeId = " + traderType.getTypeId();
+            } else {
+                strFilter = "typeId.typeId = " + traderType.getTypeId();
+            }
+        }
+
+        if (cboTownship.getSelectedItem() instanceof Township) {
+            Township township = (Township) cboTownship.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and township.townshipId = " + township.getTownshipId();
+            } else {
+                strFilter = "township.townshipId = " + township.getTownshipId();
+            }
+        }
+
+        if (strFilter.length() > 0) {
+            strFilter = strFilter + " and active = " + chkActive.isSelected();
+        } else {
+            strFilter = "active = " + chkActive.isSelected();
+        }
+
+        return strFilter;
     }
-    
-    return strFilter;
-  }
-  
-  /**
-   * This method is called from within the constructor to initialize the form.
-   * WARNING: Do NOT modify this code. The content of this method is always
-   * regenerated by the Form Editor.
-   */
-  @SuppressWarnings("unchecked")
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -196,8 +204,8 @@ public class CustomerSetupFilterDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
   private void butFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFilterActionPerformed
-    status = true;
-    dispose();
+      status = true;
+      dispose();
   }//GEN-LAST:event_butFilterActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

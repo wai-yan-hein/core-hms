@@ -92,9 +92,15 @@ public class StructureTypeSetupDialog extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        List<BuildingStructurType> listBST = dao.findAllHSQL(
-                "select o from BuildingStructurType o order by o.typeDesp");
-        tblTypeModel.setListBST(listBST);
+        try {
+            List<BuildingStructurType> listBST = dao.findAllHSQL(
+                    "select o from BuildingStructurType o order by o.typeDesp");
+            tblTypeModel.setListBST(listBST);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblType.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {

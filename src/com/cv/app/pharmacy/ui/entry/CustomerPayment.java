@@ -119,8 +119,14 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         tblVouList.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
         tblVouList.getColumnModel().getColumn(4).setCellRenderer(new TableDateFieldRenderer());
         JComboBox cboAccount = new JComboBox();
-        BindingUtil.BindCombo(cboAccount, dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.desp"));
-        tblVouList.getColumnModel().getColumn(9).setCellEditor(new DefaultCellEditor(cboAccount));//AC
+        try {
+            BindingUtil.BindCombo(cboAccount, dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.desp"));
+            tblVouList.getColumnModel().getColumn(9).setCellEditor(new DefaultCellEditor(cboAccount));//AC
+        } catch (Exception ex) {
+            log.error("initTableCusPay : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void calculateTotal() {
@@ -140,75 +146,88 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
     }
 
     private void initCombo() {
-        bindStatus = true;
-        BindingUtil.BindComboFilter(cboCusGroup,
-                dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
+        try {
+            bindStatus = true;
+            BindingUtil.BindComboFilter(cboCusGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
 
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                Object tmpObj;
+                if (Util1.getPropValue("system.login.default.value").equals("Y")) {
+                    tmpObj = Global.loginLocation;
+                } else {
+                    tmpObj = Util1.getDefaultValue("Location");
+                }
+                BindingUtil.BindCombo(cboLocation, getLocationFilter());
+                cboLocation.setSelectedItem(tmpObj);
+                int index = cboLocation.getSelectedIndex();
+                if (index == -1) {
+                    if (cboLocation.getItemCount() > 0) {
+                        cboLocation.setSelectedIndex(0);
+                    }
+                }
+            } else {
+                BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            }
+
             Object tmpObj;
             if (Util1.getPropValue("system.login.default.value").equals("Y")) {
                 tmpObj = Global.loginLocation;
             } else {
                 tmpObj = Util1.getDefaultValue("Location");
             }
-            BindingUtil.BindCombo(cboLocation, getLocationFilter());
-            cboLocation.setSelectedItem(tmpObj);
-            int index = cboLocation.getSelectedIndex();
-            if (index == -1) {
-                if (cboLocation.getItemCount() > 0) {
-                    cboLocation.setSelectedIndex(0);
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                BindingUtil.BindCombo(cboLocation1, getLocationFilter());
+                cboLocation1.setSelectedItem(tmpObj);
+                int index = cboLocation1.getSelectedIndex();
+                if (index == -1) {
+                    if (cboLocation1.getItemCount() > 0) {
+                        cboLocation1.setSelectedIndex(0);
+                    }
                 }
+            } else {
+                BindingUtil.BindCombo(cboLocation1, dao.findAll("Location",
+                        new Location(0, "All")));
+                cboLocation1.setSelectedIndex(0);
             }
-        } else {
-            BindingUtil.BindComboFilter(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
+                    new Appuser("000", "All")));
+
+            cboUser.setSelectedIndex(0);
+
+            new ComBoBoxAutoComplete(cboLocation1);
+            new ComBoBoxAutoComplete(cboUser);
+
+            cboPayOption.removeAllItems();
+            cboPayOption.addItem("All");
+            cboPayOption.addItem("Cash");
+            cboPayOption.addItem("Credit Card");
+
+            bindStatus = false;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        Object tmpObj;
-        if (Util1.getPropValue("system.login.default.value").equals("Y")) {
-            tmpObj = Global.loginLocation;
-        } else {
-            tmpObj = Util1.getDefaultValue("Location");
-        }
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            BindingUtil.BindCombo(cboLocation1, getLocationFilter());
-            cboLocation1.setSelectedItem(tmpObj);
-            int index = cboLocation1.getSelectedIndex();
-            if (index == -1) {
-                if (cboLocation1.getItemCount() > 0) {
-                    cboLocation1.setSelectedIndex(0);
-                }
-            }
-        } else {
-            BindingUtil.BindCombo(cboLocation1, dao.findAll("Location",
-                    new Location(0, "All")));
-            cboLocation1.setSelectedIndex(0);
-        }
-        BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
-                new Appuser("000", "All")));
-
-        cboUser.setSelectedIndex(0);
-
-        new ComBoBoxAutoComplete(cboLocation1);
-        new ComBoBoxAutoComplete(cboUser);
-
-        cboPayOption.removeAllItems();
-        cboPayOption.addItem("All");
-        cboPayOption.addItem("Cash");
-        cboPayOption.addItem("Credit Card");
-
-        bindStatus = false;
     }
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowCusPayVou = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.machineId
+                        + "' and a.isAllowCusPayVou = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+        return null;
     }
 
     private void getData() {
@@ -225,7 +244,8 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     + "		   'Opening' ref_no, vob.vou_total, vob.paid_amount ttl_paid, vob.discount, vob.balance,\n"
                     + "		   vob.bal, if(date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)='-',0,\n"
                     + "		   if(DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day))<0,0,\n"
-                    + "		   DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)))) ttl_overdue\n"
+                    + "		   DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)))) ttl_overdue,\n"
+                    + "       t.stu_no \n"
                     + "	  from v_opening_balance vob\n"
                     + "	  join trader t on vob.trader_id = t.trader_id\n"
                     + "	  left join customer_group cg on t.group_id = cg.group_id\n"
@@ -235,7 +255,8 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     + "       sh.due_date, sh.remark ref_no, sh.vou_total, (sh.paid_amount+ifnull(pah.pay_amt,0)) as ttl_paid, "
                     + "sh.discount, sh.balance,\n"
                     + "	   sum(ifnull(balance,0))-(ifnull(pah.pay_amt,0)) bal, \n"
-                    + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue \n"
+                    + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue, \n"
+                    + "     t.stu_no \n"
                     + "from sale_his sh\n"
                     + "left join trader t on sh.cus_id = t.trader_id\n"
                     + "left join (select pv.vou_no, sum(ifnull(pv.vou_paid,0)+ifnull(pv.discount,0)) pay_amt, pv.vou_type\n"
@@ -272,7 +293,9 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                             rs.getDouble("ttl_paid"),
                             rs.getDouble("bal"),
                             rs.getInt("ttl_overdue1"),
-                            "MMK", DateUtil.toDate(DateUtil.getTodayDateStr())));
+                            "MMK",
+                            DateUtil.toDate(DateUtil.getTodayDateStr()),
+                            rs.getString("stu_no")));
                 }
                 //tblPaymentEntry.setListVP(listVP);
             }
@@ -393,39 +416,42 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
     }
 
     private void assignData() {
-        TraderPayHis tph = new TraderPayHis();
-        VoucherPayment vp = new VoucherPayment();
-        tph.setPayDate(vp.getPayDate());
-        List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
-        tph.setTrader(cus.get(0));
-        tph.setRemark(vp.getRemark());
-        tph.setPaidAmtC(vp.getCurrentPaid());
-        tph.setDiscount(vp.getCurrentDiscount());
-        String appCurr = Util1.getPropValue("system.app.currency");
-        List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" + appCurr + "'");
-        tph.setCurrency(curr.get(0));
-        tph.setExRate(1.0);
-        tph.setPaidAmtP(vp.getCurrentPaid());
-        List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
-        tph.setCreatedBy(user.get(0));
-        tph.setPayOption("Cash");
-        tph.setParentCurr(curr.get(0));
-        tph.setPayDt(vp.getPayDate());
-        PaymentVou pv = new PaymentVou();
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouNo(vp.getVouNo());
-        pv.setVouPaid(vp.getCurrentPaid());
-        pv.setBalance(vp.getVouBalance());
-        pv.setVouDate(vp.getTranDate());
-        pv.setDiscount(vp.getDiscount());
-        pv.setVouType("Sale");
-        List<PaymentVou> listPV = new ArrayList();
-        listPV.add(pv);
-        tph.setListDetail(listPV);
         try {
+            TraderPayHis tph = new TraderPayHis();
+            VoucherPayment vp = new VoucherPayment();
+            tph.setPayDate(vp.getPayDate());
+            List<Customer> cus = dao.findAllHSQL("select o from Customer o where o.traderId='" + vp.getTraderId() + "'");
+            tph.setTrader(cus.get(0));
+            tph.setRemark(vp.getRemark());
+            tph.setPaidAmtC(vp.getCurrentPaid());
+            tph.setDiscount(vp.getCurrentDiscount());
+            String appCurr = Util1.getPropValue("system.app.currency");
+            List<Currency> curr = dao.findAllHSQL("select o from Currency o where o.currencyCode='" + appCurr + "'");
+            tph.setCurrency(curr.get(0));
+            tph.setExRate(1.0);
+            tph.setPaidAmtP(vp.getCurrentPaid());
+            List<Appuser> user = dao.findAllHSQL("select o from Appuser o where  o.userId='" + vp.getUserId() + "'");
+            tph.setCreatedBy(user.get(0));
+            tph.setPayOption("Cash");
+            tph.setParentCurr(curr.get(0));
+            tph.setPayDt(vp.getPayDate());
+            PaymentVou pv = new PaymentVou();
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouNo(vp.getVouNo());
+            pv.setVouPaid(vp.getCurrentPaid());
+            pv.setBalance(vp.getVouBalance());
+            pv.setVouDate(vp.getTranDate());
+            pv.setDiscount(vp.getDiscount());
+            pv.setVouType("Sale");
+            List<PaymentVou> listPV = new ArrayList();
+            listPV.add(pv);
+            tph.setListDetail(listPV);
+
             dao.save(tph);
         } catch (Exception ex) {
-
+            log.error("assignData : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -520,22 +546,22 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                                 "Are you sure to delete?",
                                 "Payment delete", JOptionPane.YES_NO_OPTION);
                         if (yes_no == 0) {
-                            TraderPayHis traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class, vtp.getPayId());
-
-                            if (traderPayHis.getPaymentId() != null) {
-                                try {
-                                    dao.getPro("bkpayment", traderPayHis.getPaymentId().toString(),
-                                            Global.loginUser.getUserId());
-                                } catch (Exception ex) {
-                                    log.error("bkpayment : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-
-                            traderPayHis.setDeleted(true);
-
                             try {
+                                TraderPayHis traderPayHis = (TraderPayHis) dao.find(TraderPayHis.class, vtp.getPayId());
+
+                                if (traderPayHis.getPaymentId() != null) {
+                                    try {
+                                        dao.getPro("bkpayment", traderPayHis.getPaymentId().toString(),
+                                                Global.loginUser.getUserId());
+                                    } catch (Exception ex) {
+                                        log.error("bkpayment : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                                    } finally {
+                                        dao.close();
+                                    }
+                                }
+
+                                traderPayHis.setDeleted(true);
+
                                 dao.open();
                                 dao.save(traderPayHis);
 
@@ -941,7 +967,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1177, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

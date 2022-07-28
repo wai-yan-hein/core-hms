@@ -380,8 +380,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 try {
                     currVou.setDeleted(true);
                     currVou.setIntgUpdStatus(null);
-                    currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
-                    dao.save(currVou);
+                    //currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
+                    //dao.save(currVou);
+                    String vouNo = currVou.getOpdInvId();
+                    dao.execSql("update ot_his set deleted = true, intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
                     uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
                             currVou.getPaid(), currVou.getTaxA(), "");
@@ -471,55 +473,61 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     }
 
     private void copyVoucher(String invNo) {
-        OTHis tmpVou = (OTHis) dao.find(OTHis.class, invNo);
+        try {
+            OTHis tmpVou = (OTHis) dao.find(OTHis.class, invNo);
 
-        currVou = new OTHis();
-        BeanUtils.copyProperties(tmpVou, currVou);
-        List<OTDetailHis> listDetail = new ArrayList();
-        List<OTDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
+            currVou = new OTHis();
+            BeanUtils.copyProperties(tmpVou, currVou);
+            List<OTDetailHis> listDetail = new ArrayList();
+            List<OTDetailHis> listDetailTmp = tmpVou.getListOPDDetailHis();
 
-        for (OTDetailHis detail : listDetailTmp) {
-            OTDetailHis tmpDetail = new OTDetailHis();
-            BeanUtils.copyProperties(detail, tmpDetail);
-            tmpDetail.setOpdDetailId(null);
-            listDetail.add(tmpDetail);
+            for (OTDetailHis detail : listDetailTmp) {
+                OTDetailHis tmpDetail = new OTDetailHis();
+                BeanUtils.copyProperties(detail, tmpDetail);
+                tmpDetail.setOpdDetailId(null);
+                listDetail.add(tmpDetail);
+            }
+            currVou.setListOPDDetailHis(listDetail);
+            currVou.setDeleted(false);
+
+            if (tmpVou.getListOPDDetailHis().size() > 0) {
+                //tableModel.clear();
+                tableModel.setListOPDDetailHis(listDetail);
+            }
+
+            //txtVouNo.setText(tmpVou.getOpdInvId());
+            lblStatus.setText("NEW");
+            txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
+            cboCurrency.setSelectedItem(tmpVou.getCurrency());
+            cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
+            txtRemark.setText(tmpVou.getRemark());
+
+            if (tmpVou.getPatient() != null) {
+                txtPatientNo.setText(tmpVou.getPatient().getRegNo());
+                txtPatientName.setText(tmpVou.getPatient().getPatientName());
+            } else {
+                txtPatientName.setText(tmpVou.getPatientName());
+                txtPatientName.setEditable(true);
+                txtPatientNo.setEditable(false);
+            }
+
+            if (tmpVou.getDoctor() != null) {
+                txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
+                txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
+            }
+
+            txtVouTotal.setValue(tmpVou.getVouTotal());
+            txtDiscP.setValue(tmpVou.getDiscountP());
+            txtDiscA.setValue(tmpVou.getDiscountA());
+            txtTaxP.setValue(tmpVou.getTaxP());
+            txtTaxA.setValue(tmpVou.getTaxA());
+            txtPaid.setValue(tmpVou.getPaid());
+            txtVouBalance.setValue(tmpVou.getVouBalance());
+        } catch (Exception ex) {
+            log.error("copyVoucher : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        currVou.setListOPDDetailHis(listDetail);
-        currVou.setDeleted(false);
-
-        if (tmpVou.getListOPDDetailHis().size() > 0) {
-            //tableModel.clear();
-            tableModel.setListOPDDetailHis(listDetail);
-        }
-
-        //txtVouNo.setText(tmpVou.getOpdInvId());
-        lblStatus.setText("NEW");
-        txtDate.setText(DateUtil.toDateStr(tmpVou.getInvDate()));
-        cboCurrency.setSelectedItem(tmpVou.getCurrency());
-        cboPaymentType.setSelectedItem(tmpVou.getPaymentType());
-        txtRemark.setText(tmpVou.getRemark());
-
-        if (tmpVou.getPatient() != null) {
-            txtPatientNo.setText(tmpVou.getPatient().getRegNo());
-            txtPatientName.setText(tmpVou.getPatient().getPatientName());
-        } else {
-            txtPatientName.setText(tmpVou.getPatientName());
-            txtPatientName.setEditable(true);
-            txtPatientNo.setEditable(false);
-        }
-
-        if (tmpVou.getDoctor() != null) {
-            txtDoctorNo.setText(tmpVou.getDoctor().getDoctorId());
-            txtDoctorName.setText(tmpVou.getDoctor().getDoctorName());
-        }
-
-        txtVouTotal.setValue(tmpVou.getVouTotal());
-        txtDiscP.setValue(tmpVou.getDiscountP());
-        txtDiscA.setValue(tmpVou.getDiscountA());
-        txtTaxP.setValue(tmpVou.getTaxP());
-        txtTaxA.setValue(tmpVou.getTaxA());
-        txtPaid.setValue(tmpVou.getPaid());
-        txtVouBalance.setValue(tmpVou.getVouBalance());
     }
 
     @Override
@@ -675,9 +683,9 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     && currVou.getPatient() != null) {
                 try {
                     String delSql = "delete from tmp_amount_link where user_id = '"
-                            + Global.loginUser.getUserId() + "'";
+                            + Global.machineId + "'";
                     String strSql = "INSERT INTO tmp_amount_link(user_id,tran_option,inv_id,amount,print_status)\n"
-                            + "  select '" + Global.loginUser.getUserId() + "', tran_source, inv_id, balance, true\n"
+                            + "  select '" + Global.machineId + "', tran_source, inv_id, balance, true\n"
                             + "    from (select date(tran_date) tran_date, cus_id, currency, 'Pharmacy' as tran_source, inv_id, \n"
                             + "                 sum(ifnull(paid,0)) balance\n"
                             + "			from v_session\n"
@@ -687,32 +695,33 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                             + "		  select date(tran_date) tran_date, patient_id cus_id, currency_id currency, \n"
                             + "				 tran_option tran_source, opd_inv_id inv_id, sum(ifnull(paid,0)) balance\n"
                             + "			from v_session_clinic\n"
-                            + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD','OT') and deleted = false\n"
+                            + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD') and deleted = false\n"
                             + "		   group by date(tran_date), patient_id, currency_id, tran_option, opd_inv_id) a\n"
                             + "   where tran_source <> '" + Util1.getPropValue("system.link.amount")
                             + "'    and tran_date = '" + DateUtil.toDateStr(currVou.getInvDate(), "yyyy-MM-dd")
                             + "'    and cus_id = '" + currVou.getPatient().getRegNo() + "'";
 
                     dao.execSql(delSql, strSql);
+
+                    List<TempAmountLink> listTAL = dao.findAllHSQL(
+                            "select o from TempAmountLink o where o.key.userId = '" + Global.machineId + "'");
+                    if (listTAL != null) {
+                        if (!listTAL.isEmpty()) {
+                            AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
+                            dialog.setVisible(true);
+                            double ttlLinkAmt = dialog.getTtlAmt();
+                            if (ttlLinkAmt != 0) {
+                                params.put("link_amt_status", "Y");
+                                params.put("link_amt", ttlLinkAmt + currVou.getPaid());
+                            }
+                        }
+                    }
                 } catch (Exception ex) {
                     log.error("print link amount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
                 } finally {
                     dao.close();
                 }
 
-                List<TempAmountLink> listTAL = dao.findAllHSQL(
-                        "select o from TempAmountLink o where o.key.userId = '" + Global.loginUser.getUserId() + "'");
-                if (listTAL != null) {
-                    if (!listTAL.isEmpty()) {
-                        AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
-                        dialog.setVisible(true);
-                        double ttlLinkAmt = dialog.getTtlAmt();
-                        if (ttlLinkAmt != 0) {
-                            params.put("link_amt_status", "Y");
-                            params.put("link_amt", ttlLinkAmt + currVou.getPaid());
-                        }
-                    }
-                }
             }
         } else {
             reportPath = Util1.getAppWorkFolder()
@@ -796,18 +805,16 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         params.put("compAddress", Util1.getPropValue("report.address"));
         params.put("phoneNo", phoneNo);
         params.put("remark", txtRemark.getText());
-        params.put("user_id", Global.loginUser.getUserId());
+        params.put("user_id", Global.machineId);
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("category", Util1.getPropValue("report.company.cat"));
         if (lblOTID.getText() == null) {
             params.put("bill_id", "-");
+        } else if (lblOTID.getText().isEmpty()) {
+            params.put("bill_id", "-");
         } else {
-            if (lblOTID.getText().isEmpty()) {
-                params.put("bill_id", "-");
-            } else {
-                params.put("bill_id", lblOTID.getText());
-            }
+            params.put("bill_id", lblOTID.getText());
         }
 
         if (lblStatus.getText().equals("NEW")) {
@@ -844,6 +851,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "DoctorSearch":
+                try {
                 Doctor doctor = (Doctor) selectObj;
                 doctor = (Doctor) dao.find(Doctor.class, doctor.getDoctorId());
                 currVou.setDoctor(doctor);
@@ -852,7 +860,12 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 txtVouTotal.setValue(tableModel.getTotal());
                 calcBalance();
                 tblService.requestFocus();
-                break;
+            } catch (Exception ex) {
+                log.error("selected : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "PatientSearch":
                 Patient patient = (Patient) selectObj;
                 currVou.setPatient(patient);
@@ -954,12 +967,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 lblOTID.setText(currVou.getOtId());
                 if (lblOTID.getText() == null) {
                     butOTID.setEnabled(true);
+                } else if (!lblOTID.getText().isEmpty()) {
+                    butOTID.setEnabled(false);
                 } else {
-                    if (!lblOTID.getText().isEmpty()) {
-                        butOTID.setEnabled(false);
-                    } else {
-                        butOTID.setEnabled(true);
-                    }
+                    butOTID.setEnabled(true);
                 }
                 tableModel.setOtInvId(txtVouNo.getText());
             } catch (Exception ex) {
@@ -1050,27 +1061,33 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         String vouNo = vouEngine.getVouNo();
         txtVouNo.setText(vouNo);
 
-        List<OTHis> listOTH = dao.findAllHSQL(
-                "select o from OTHis o where o.opdInvId = '" + vouNo + "'");
-        if (listOTH != null) {
-            if (!listOTH.isEmpty()) {
-                vouEngine.updateVouNo();
-                vouNo = vouEngine.getVouNo();
-                txtVouNo.setText(vouNo);
-                listOTH = null;
-                listOTH = dao.findAllHSQL(
-                        "select o from OTHis o where o.opdInvId = '" + vouNo + "'");
-                if (listOTH != null) {
-                    if (!listOTH.isEmpty()) {
-                        log.error("Duplicate ot vour error : " + txtVouNo.getText() + " @ "
-                                + txtDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(),
-                                "Duplicate OT vou no. Exit the program and try again.",
-                                "OT Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(-1);
+        try {
+            List<OTHis> listOTH = dao.findAllHSQL(
+                    "select o from OTHis o where o.opdInvId = '" + vouNo + "'");
+            if (listOTH != null) {
+                if (!listOTH.isEmpty()) {
+                    vouEngine.updateVouNo();
+                    vouNo = vouEngine.getVouNo();
+                    txtVouNo.setText(vouNo);
+                    listOTH = null;
+                    listOTH = dao.findAllHSQL(
+                            "select o from OTHis o where o.opdInvId = '" + vouNo + "'");
+                    if (listOTH != null) {
+                        if (!listOTH.isEmpty()) {
+                            log.error("Duplicate ot vour error : " + txtVouNo.getText() + " @ "
+                                    + txtDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(),
+                                    "Duplicate OT vou no. Exit the program and try again.",
+                                    "OT Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(-1);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1117,11 +1134,33 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     }
 
     private void calcBalance() {
-        double discount = NumberUtil.NZero(txtDiscA.getValue());
+        if (cboPaymentType.getSelectedItem() != null) {
+            PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+            double discount = NumberUtil.NZero(txtDiscA.getValue());
+            double tax = NumberUtil.NZero(txtTaxA.getValue());
+            double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+
+            if (pt.getPaymentTypeId() == 1) {
+                txtPaid.setValue((vouTotal + tax) - discount);
+            } else {
+                txtPaid.setValue(0);
+            }
+            double paid = NumberUtil.NZero(txtPaid.getValue());
+            txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
+        } else {
+            //Payment type is not selected
+            double discount = NumberUtil.NZero(txtDiscA.getValue());
+            double tax = NumberUtil.NZero(txtTaxA.getValue());
+            double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+            txtPaid.setValue((vouTotal + tax) - discount);
+            double paid = NumberUtil.NZero(txtPaid.getValue());
+            txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
+        }
+        /*double discount = NumberUtil.NZero(txtDiscA.getValue());
         double tax = NumberUtil.NZero(txtTaxA.getValue());
         double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
         double paid = NumberUtil.NZero(txtPaid.getValue());
-        txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
+        txtVouBalance.setValue((vouTotal + tax) - (discount + paid));*/
     }
 
     private void getPatient() {
@@ -1166,99 +1205,111 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPaymentType, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPaymentType, this);
-        new ComBoBoxAutoComplete(cboCurrency, this);
+            new ComBoBoxAutoComplete(cboPaymentType, this);
+            new ComBoBoxAutoComplete(cboCurrency, this);
 
-        cboBindStatus = true;
+            cboBindStatus = true;
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
-        tblService.getTableHeader().setFont(Global.lableFont);
-        //Adjust column width
-        tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
-        tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
-        tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
-        tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
-        tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
-        tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Amount
+        try {
+            tblService.getTableHeader().setFont(Global.lableFont);
+            //Adjust column width
+            tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
+            tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
+            tblService.getColumnModel().getColumn(2).setPreferredWidth(20);//Qty
+            tblService.getColumnModel().getColumn(3).setPreferredWidth(60);//Fees
+            tblService.getColumnModel().getColumn(4).setPreferredWidth(50);//Charge Type
+            tblService.getColumnModel().getColumn(5).setPreferredWidth(80);//Amount
 
-        //Change JTable cell editor
-        tblService.getColumnModel().getColumn(0).setCellEditor(
-                new OTTableCellEditor(dao));
-        tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
-        tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
+            //Change JTable cell editor
+            tblService.getColumnModel().getColumn(0).setCellEditor(
+                    new OTTableCellEditor(dao));
+            tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+            tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
-        tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
+            tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-        tblService.getModel().addTableModelListener(new TableModelListener() {
+            tblService.getModel().addTableModelListener(new TableModelListener() {
 
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                //txtVouTotal.setValue(tableModel.getTotal());
-                String depositeId = Util1.getPropValue("system.ot.deposite.id");
-                String discountId = Util1.getPropValue("system.ot.disc.id");
-                String paidId = Util1.getPropValue("system.ot.paid.id");
-                String refundId = Util1.getPropValue("system.ot.refund.id");
-                List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-                QueryResults qr;
-                Query q = new Query();
-                String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis"
-                        + " WHERE service IS NOT NULL "
-                        + "EXECUTE ON ALL sum(amount) AS total";
-                String strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                        + "service.serviceId not in (" + depositeId + ","
-                        + discountId + "," + paidId + "," + refundId + ")";
-                try {
-                    q.parse(strSql);
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtVouTotal.setValue(vTotal);
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    //txtVouTotal.setValue(tableModel.getTotal());
+                    String depositeId = Util1.getPropValue("system.ot.deposite.id");
+                    String discountId = Util1.getPropValue("system.ot.disc.id");
+                    String paidId = Util1.getPropValue("system.ot.paid.id");
+                    String refundId = Util1.getPropValue("system.ot.refund.id");
+                    List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+                    QueryResults qr;
+                    Query q = new Query();
+                    String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis"
+                            + " WHERE service IS NOT NULL "
+                            + "EXECUTE ON ALL sum(amount) AS total";
+                    String strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                            + "service.serviceId not in (" + depositeId + ","
+                            + discountId + "," + paidId + "," + refundId + ")";
+                    try {
+                        q.parse(strSql);
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtVouTotal.setValue(vTotal);
 
-                    strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                            + "service.serviceId in (" + depositeId + "," + paidId + ")";
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtPaid.setValue(vTotalPaid);
-                    isPaid = vTotalPaid != 0;
+                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                                + "service.serviceId in (" + depositeId + "," + paidId + ")";
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtPaid.setValue(vTotalPaid);
+                        isPaid = vTotalPaid != 0;
 
-                    strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                            + "service.serviceId in (" + refundId + ")";
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtPaid.setValue(vTotalPaid - vTotalRefund);
+                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                                + "service.serviceId in (" + refundId + ")";
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtPaid.setValue(vTotalPaid - vTotalRefund);
 
-                    strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                            + "service.serviceId in (" + discountId + ")";
-                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                    double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
-                    txtDiscA.setValue(vTotalDiscount);
-                } catch (QueryParseException qpe) {
-                    log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
-                } catch (QueryExecutionException | NumberFormatException ex) {
-                    log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
+                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                                + "service.serviceId in (" + discountId + ")";
+                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                        double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
+                        txtDiscA.setValue(vTotalDiscount);
+                    } catch (QueryParseException qpe) {
+                        log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
+                    } catch (QueryExecutionException | NumberFormatException ex) {
+                        log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
+                    }
+                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                    calcBalance();
                 }
-                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                calcBalance();
-            }
-        });
+            });
 
-        tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblService.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+            tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            tblService.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
 
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-            }
-        });
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
+                }
+            });
 
-        tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
-        tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
+            tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {
@@ -1358,12 +1409,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
             if (lblOTID.getText() == null) {
                 currVou.setOtId(null);
+            } else if (lblOTID.getText().isEmpty()) {
+                currVou.setOtId(null);
             } else {
-                if (lblOTID.getText().isEmpty()) {
-                    currVou.setOtId(null);
-                } else {
-                    currVou.setOtId(lblOTID.getText());
-                }
+                currVou.setOtId(lblOTID.getText());
             }
         }
 
@@ -1558,7 +1607,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
-                            currency, Global.loginUser.getUserId())) {
+                            currency, Global.machineId)) {
                 while (resultSet.next()) {
                     double bal = resultSet.getDouble("balance");
                     if (bal != 0) {

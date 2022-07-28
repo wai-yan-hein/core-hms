@@ -11,6 +11,7 @@ import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.entry.Sale;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.util.MedicineUtil;
 import com.opencsv.CSVReader;
 import java.io.BufferedReader;
 import java.io.File;
@@ -298,7 +299,8 @@ public class TestPanel extends javax.swing.JPanel {
             System.out.println(tmpChar);
         }*/
         //massDelete();
-        priceUpdate();
+        //priceUpdate();
+        String qtyStr = MedicineUtil.getQtyInStr("30/10/1", "Bx/Crd/t", 1010f);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

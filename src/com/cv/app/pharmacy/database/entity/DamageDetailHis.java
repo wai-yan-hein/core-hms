@@ -25,7 +25,8 @@ public class DamageDetailHis implements java.io.Serializable {
     private Double costPrice;
     private Double amount;
     private String vouNo;
-
+    private String currencyId;
+    
     @Id
     @Column(name = "dmg_detail_id", unique = true, nullable = false, length=25)
     public String getDmgDetailId() {
@@ -118,6 +119,15 @@ public class DamageDetailHis implements java.io.Serializable {
 
     public void setVouNo(String vouNo) {
         this.vouNo = vouNo;
+    }
+
+    @Column(name="currency_id", length=15)
+    public String getCurrencyId() {
+        return currencyId;
+    }
+
+    public void setCurrencyId(String currencyId) {
+        this.currencyId = currencyId;
     }
 
 }

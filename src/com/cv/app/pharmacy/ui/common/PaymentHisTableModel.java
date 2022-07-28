@@ -7,6 +7,7 @@ package com.cv.app.pharmacy.ui.common;
 import com.cv.app.pharmacy.database.view.VTraderPayment;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
+import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -15,10 +16,12 @@ import javax.swing.table.AbstractTableModel;
  *
  * @author WSwe
  */
-public class PaymentHisTableModel extends AbstractTableModel{
+public class PaymentHisTableModel extends AbstractTableModel {
+
     private List<VTraderPayment> listTraderPayHis = new ArrayList();
     private final String[] columnNames = {"Date", "Code", "Trader", "P-Amount"};
-    
+    private final String prifxStatus = Util1.getPropValue("system.sale.emitted.prifix");
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -31,7 +34,7 @@ public class PaymentHisTableModel extends AbstractTableModel{
 
     @Override
     public Class getColumnClass(int column) {
-        switch(column){
+        switch (column) {
             case 0: //Date
                 return String.class;
             case 1: //Code
@@ -53,7 +56,11 @@ public class PaymentHisTableModel extends AbstractTableModel{
             case 0: //Date
                 return DateUtil.toDateStr(ph.getPayDate());
             case 1: //Code
-                return ph.getTraderId();
+                if (prifxStatus.equals("Y")) {
+                    return ph.getStuNo();
+                } else {
+                    return ph.getTraderId();
+                }
             case 2: //Trader Name
                 return ph.getTraderName();
             case 3: //P-Amount
@@ -85,34 +92,34 @@ public class PaymentHisTableModel extends AbstractTableModel{
         this.listTraderPayHis = listTraderPayHis;
         fireTableDataChanged();
     }
-    
-    public VTraderPayment getSelectVou(int row){
+
+    public VTraderPayment getSelectVou(int row) {
         return listTraderPayHis.get(row);
     }
-    
-    public Double getTotal(){
-        if(listTraderPayHis == null){
+
+    public Double getTotal() {
+        if (listTraderPayHis == null) {
             return 0.0;
-        }else if(listTraderPayHis.isEmpty()){
+        } else if (listTraderPayHis.isEmpty()) {
             return 0.0;
-        }else{
+        } else {
             Double total = 0.0;
-            for(VTraderPayment vtp : listTraderPayHis){
+            for (VTraderPayment vtp : listTraderPayHis) {
                 total += NumberUtil.NZero(vtp.getPaidAmtP());
             }
             return total;
         }
     }
-    
-    public void removeAll(){
-        if(listTraderPayHis != null){
+
+    public void removeAll() {
+        if (listTraderPayHis != null) {
             listTraderPayHis.clear();
             fireTableDataChanged();
         }
     }
-    
-    public void remove(int row){
-        if(listTraderPayHis != null){
+
+    public void remove(int row) {
+        if (listTraderPayHis != null) {
             listTraderPayHis.remove(row);
             fireTableRowsDeleted(row, row);
         }

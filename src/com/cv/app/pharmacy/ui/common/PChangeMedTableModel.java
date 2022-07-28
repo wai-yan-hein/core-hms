@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
-import com.cv.app.pharmacy.database.entity.PriceChangeMedHis1;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
@@ -320,8 +319,15 @@ public class PChangeMedTableModel extends AbstractTableModel {
 
         fireTableCellUpdated(pos, 0);
         parent.setColumnSelectionInterval(2, 2);
-        
-        HashMap<String, ItemUnit> hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
+
+        HashMap<String, ItemUnit> hmUnit = null;
+        try {
+            hmUnit = MedicineUtil.getUnitHash(dao.findAll("ItemUnit"));
+        } catch (Exception ex) {
+            log.error("setMed5 : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         double smallestCost = 0;
         if (record != null) {
             try {
@@ -336,7 +342,7 @@ public class PChangeMedTableModel extends AbstractTableModel {
                     record.setCostPrice(rsLatestPur.getDouble("pur_unit_cost"));
                     record.setPurchasePrice(rsLatestPur.getDouble("pur_price"));
                     smallestCost = rsLatestPur.getDouble("smallest_cost");
-                    
+
                     String strUnit = Util1.getString(rsLatestPur.getString("pur_unit"), "-");
                     if (hmUnit.containsKey(strUnit)) {
                         record.setCostUnit(hmUnit.get(strUnit));
@@ -349,11 +355,11 @@ public class PChangeMedTableModel extends AbstractTableModel {
                 dao.closeStatment();
             }
         }
-        
+
         if (record != null) {
             if (record.getListUnit() == null) {
                 List<PriceChangeUnitHis> listUnit = new ArrayList();
-                
+
                 List<RelationGroup> listRelation = med.getRelationGroupId();
                 for (RelationGroup rg : listRelation) {
                     PriceChangeUnitHis pcuh = new PriceChangeUnitHis(rg.getUnitId(), rg.getSalePrice(),

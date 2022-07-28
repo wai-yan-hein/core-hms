@@ -180,7 +180,7 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
                         + "  payable_acc_opt, bk_user, bk_dt, bk_machine)\n"
                         + "select cat_id, cat_name, sort_order, mig_id, account_id, dep_code,\n"
                         + "  srvf1_acc_id, srvf2_acc_id, srvf3_acc_id, srvf4_acc_id, srvf5_acc_id, payable_acc_id,\n"
-                        + "  payable_acc_opt, '" + Global.loginUser.getUserId() + "',  SYSDATE(), " 
+                        + "  payable_acc_opt, '" + Global.loginUser.getUserId() + "',  SYSDATE(), "
                         + Global.machineId + " \n"
                         + "from inp_category where cat_id = " + catId;
                 dao.execSql(strSql);
@@ -255,13 +255,19 @@ public class InpCategoryTableModel1 extends AbstractTableModel {
     }
 
     public void getCategory() {
-        listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.catName");
-        if (listInpCategory == null) {
-            listInpCategory = new ArrayList();
-        }
+        try {
+            listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.catName");
+            if (listInpCategory == null) {
+                listInpCategory = new ArrayList();
+            }
 
-        addNewRow();
-        fireTableDataChanged();
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getCategory : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

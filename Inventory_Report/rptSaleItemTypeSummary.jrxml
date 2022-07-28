@@ -111,7 +111,7 @@ order by tmp.sort_order, tmp.item_type_name]]>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="20" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Sale Item Type Summary]]></text>
+				<text><![CDATA[Sale Item Type Summary 1]]></text>
 			</staticText>
 			<textField>
 				<reportElement x="0" y="49" width="225" height="15" uuid="97acf7e4-ef3e-4f58-86cc-186e63f6022a"/>

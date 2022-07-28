@@ -22,7 +22,7 @@ public class UserLocationMappingSetup extends javax.swing.JPanel {
     private final UserLocationMappingTableModel tableModel = new UserLocationMappingTableModel();
     private final AbstractDataAccess dao = Global.dao;
     private boolean bindStatus = false;
-    
+
     /**
      * Creates new form UserLocationMappingSetup
      */
@@ -32,17 +32,23 @@ public class UserLocationMappingSetup extends javax.swing.JPanel {
         initTable();
     }
 
-    private void initCombo(){
+    private void initCombo() {
         bindStatus = true;
-        BindingUtil.BindCombo(cboUser, dao.findAllHSQL("select o from Appuser o order by o.userName"));
-        cboUser.setSelectedItem(null);
+        try {
+            BindingUtil.BindCombo(cboUser, dao.findAllHSQL("select o from Appuser o order by o.userName"));
+            cboUser.setSelectedItem(null);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         bindStatus = false;
     }
-    
-    private void initTable(){
+
+    private void initTable() {
         tblUserLocationMapping.getColumnModel().getColumn(0).setPreferredWidth(150);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -103,8 +109,8 @@ public class UserLocationMappingSetup extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void cboUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboUserActionPerformed
-        if(cboUser.getSelectedItem() != null && !bindStatus){
-            tableModel.setUserId(((Appuser)cboUser.getSelectedItem()).getUserId());
+        if (cboUser.getSelectedItem() != null && !bindStatus) {
+            tableModel.setUserId(((Appuser) cboUser.getSelectedItem()).getUserId());
         }
     }//GEN-LAST:event_cboUserActionPerformed
 

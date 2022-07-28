@@ -19,6 +19,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.ReOrderLevel;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.Stock;
+import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
@@ -80,12 +81,13 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     private TransferHis currTransfer = new TransferHis();
     private StockList stockList = new StockList(dao, medUp);
 
-    private String strPrvDate;
-    private Object prvFLocation;
-    private Object prvTLocation;
-
+    //private String strPrvDate;
+    //private Object prvFLocation;
+    //private Object prvTLocation;
     private int mouseClick = 2;
     private String strOption = "-";
+    private String tmpCusId = null;
+    private String tmpSupId = null;
 
     /**
      * Creates new form Sale
@@ -227,22 +229,28 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        List<TransferHis> listTFH = dao.findAllHSQL(
-                "select o from TransferHis o where o.tranVouId = '" + vouNo + "'"
-        );
-        if (listTFH != null) {
-            if (!listTFH.isEmpty()) {
-                log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
-                        + txtTranDate.getText());
-                JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate tran vou no. Exit the program and try again.",
-                        "Transfer Vou No", JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            List<TransferHis> listTFH = dao.findAllHSQL(
+                    "select o from TransferHis o where o.tranVouId = '" + vouNo + "'"
+            );
+            if (listTFH != null) {
+                if (!listTFH.isEmpty()) {
+                    log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
+                            + txtTranDate.getText());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate tran vou no. Exit the program and try again.",
+                            "Transfer Vou No", JOptionPane.ERROR_MESSAGE);
+                    System.exit(1);
+                } else {
+                    txtVouNo.setText(vouNo);
+                }
             } else {
                 txtVouNo.setText(vouNo);
             }
-        } else {
-            txtVouNo.setText(vouNo);
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -254,11 +262,11 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         } catch (Exception ex) {
 
         }
-        if (lblStatus.getText().equals("NEW")) {
+        /*if (lblStatus.getText().equals("NEW")) {
             strPrvDate = txtTranDate.getText();
             prvFLocation = cboFromLocation.getSelectedItem();
             prvTLocation = cboToLocation.getSelectedItem();
-        }
+        }*/
         txtCusId.setText(null);
         txtCusName.setText(null);
         txtSupId.setText(null);
@@ -267,6 +275,9 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         lblStatus.setText("NEW");
         medUp.clear();
         stockList.clear();
+        tblTransferModel.clear();
+        tmpCusId = null;
+        tmpSupId = null;
         assignDefaultValue();
         vouEngine.setPeriod(DateUtil.getPeriod(txtTranDate.getText()));
         genVouNo();
@@ -291,27 +302,43 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private List getLocationFromFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowTranOut = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowTranOut = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFromFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private List getLocationToFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowTranIn = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowTranIn = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationToFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private void actionMapping() {
@@ -336,10 +363,10 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblTransfer.getCellEditor() != null){
+                if (tblTransfer.getCellEditor() != null) {
                     tblTransfer.getCellEditor().stopCellEditing();
                 }
-                
+
                 //No entering medCode, only press F3
                 try {
                     dao.open();
@@ -349,7 +376,7 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
                     log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
                 }
             } catch (Exception ex) {
-                
+
             }
         }
     };
@@ -386,25 +413,31 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     public void getMedInfo(String medCode) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -433,78 +466,93 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         switch (source.toString()) {
             case "MedicineList":
                 try {
-                    dao.open();
-                    Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    List<RelationGroup> listRel = med.getRelationGroupId();
-                    med.setRelationGroupId(listRel);
+                dao.open();
+                Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
+                List<RelationGroup> listRel = med.getRelationGroupId();
+                med.setRelationGroupId(listRel);
 
-                    if (listRel.size() > 0) {
-                        medUp.add(med);
-                        stockList.add(med, (Location) cboFromLocation.getSelectedItem());
-                        int selectRow = tblTransfer.getSelectedRow();
-                        tblTransferModel.setMed(med, selectRow, stockList);
-                    } else {
-                        System.out.println("Transfer.selected MedicineList : Cannot get relation group");
-                    }
-                } catch (Exception ex) {
-                    log.error("MedicineList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-                } finally {
-                    dao.close();
+                if (listRel.size() > 0) {
+                    medUp.add(med);
+                    stockList.add(med, (Location) cboFromLocation.getSelectedItem());
+                    int selectRow = tblTransfer.getSelectedRow();
+                    tblTransferModel.setMed(med, selectRow, stockList);
+                } else {
+                    System.out.println("Transfer.selected MedicineList : Cannot get relation group");
                 }
-                break;
+            } catch (Exception ex) {
+                log.error("MedicineList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            } finally {
+                dao.close();
+            }
+            break;
             case "TransferVouList":
                 try {
-                    dao.open();
+                dao.open();
+                if (selectObj instanceof TransferHis) {
                     currTransfer = (TransferHis) dao.find(TransferHis.class, ((TransferHis) selectObj).getTranVouId());
-
-                    if (Util1.getNullTo(currTransfer.isDeleted())) {
-                        lblStatus.setText("DELETED");
-                    } else {
-                        lblStatus.setText("EDIT");
-                    }
-
-                    txtVouNo.setText(currTransfer.getTranVouId());
-                    txtTranDate.setText(DateUtil.toDateStr(currTransfer.getTranDate()));
-                    txtRemark.setText(currTransfer.getRemark());
-                    cboFromLocation.setSelectedItem(currTransfer.getFromLocation());
-                    cboToLocation.setSelectedItem(currTransfer.getToLocation());
-
-                    if (currTransfer.getListDetail().size() > 0) {
-                        listDetail = currTransfer.getListDetail();
-                    }
-
-                    for (TransferDetailHis td : listDetail) {
-                        medUp.add(td.getMedicineId());
-                    }
-                    tblTransferModel.setListDetail(listDetail);
-
-                    if (currTransfer.getCusId() != null) {
-                        if (!currTransfer.getCusId().isEmpty()) {
-                            Trader cus = (Trader) dao.find(Trader.class, currTransfer.getCusId());
-                            if (cus != null) {
-                                txtCusId.setText(cus.getTraderId());
-                                txtCusName.setText(cus.getTraderName());
-                            }
-                        }
-                    }
-
-                    if (currTransfer.getSupId() != null) {
-                        if (!currTransfer.getSupId().isEmpty()) {
-                            Trader sup = (Trader) dao.find(Trader.class, currTransfer.getSupId());
-                            if (sup != null) {
-                                txtSupId.setText(sup.getTraderId());
-                                txtSupName.setText(sup.getTraderName());
-                            }
-                        }
-                    }
-
-                    dao.close();
-                } catch (Exception ex) {
-                    log.error("TransferVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                } else {
+                    String vouNo = ((VoucherSearch) selectObj).getInvNo();
+                    currTransfer = (TransferHis) dao.find(TransferHis.class, vouNo);
+                }
+                if (Util1.getNullTo(currTransfer.isDeleted())) {
+                    lblStatus.setText("DELETED");
+                } else {
+                    lblStatus.setText("EDIT");
                 }
 
-                tblTransfer.requestFocusInWindow();
-                break;
+                txtVouNo.setText(currTransfer.getTranVouId());
+                txtTranDate.setText(DateUtil.toDateStr(currTransfer.getTranDate()));
+                txtRemark.setText(currTransfer.getRemark());
+                cboFromLocation.setSelectedItem(currTransfer.getFromLocation());
+                cboToLocation.setSelectedItem(currTransfer.getToLocation());
+
+                listDetail = dao.findAllHSQL(
+                        "select o from TransferDetailHis o where o.vouNo = '"
+                        + currTransfer.getTranVouId() + "' order by o.uniqueId"
+                );
+
+                for (TransferDetailHis td : listDetail) {
+                    medUp.add(td.getMedicineId());
+                }
+                tblTransferModel.setListDetail(listDetail);
+
+                if (currTransfer.getCusId() != null) {
+                    if (!currTransfer.getCusId().isEmpty()) {
+                        Trader cus = (Trader) dao.find(Trader.class, currTransfer.getCusId());
+                        if (cus != null) {
+                            tmpCusId = cus.getTraderId();
+                            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                                txtCusId.setText(cus.getStuCode());
+                            } else {
+                                txtCusId.setText(tmpCusId);
+                            }
+                            txtCusName.setText(cus.getTraderName());
+                        }
+                    }
+                }
+
+                if (currTransfer.getSupId() != null) {
+                    if (!currTransfer.getSupId().isEmpty()) {
+                        Trader sup = (Trader) dao.find(Trader.class, currTransfer.getSupId());
+                        if (sup != null) {
+                            tmpSupId = sup.getTraderId();
+                            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                                txtSupId.setText(sup.getStuCode());
+                            } else {
+                                txtSupId.setText(tmpSupId);
+                            }
+                            txtSupName.setText(sup.getTraderName());
+                        }
+                    }
+                }
+
+                dao.close();
+            } catch (Exception ex) {
+                log.error("TransferVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
+
+            tblTransfer.requestFocusInWindow();
+            break;
             case "DemanUpdate":
                 //Update to stock balance list
                 String entity = "com.cv.app.pharmacy.database.helper.Stock";
@@ -675,31 +723,50 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
             //removeEmptyRow();
 
             try {
+                dao.open();
+                dao.beginTran();
                 List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
                 String vouNo = currTransfer.getTranVouId();
-                for(TransferDetailHis tdh : listTmp){
+                for (TransferDetailHis tdh : listTmp) {
                     tdh.setVouNo(vouNo);
+                    if (tdh.getTranDetailId() == null) {
+                        tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                    }
+                    dao.save1(tdh);
                 }
                 currTransfer.setListDetail(listTmp);
-                dao.save(currTransfer);
+                dao.save1(currTransfer);
+                dao.commit();
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
 
-                if(currTransfer.getCusId() != null){
+                /*if (currTransfer.getCusId() != null) {
                     uploadToAccountSale(currTransfer);
                 }
-                
-                if(currTransfer.getSupId() != null){
+
+                if (currTransfer.getSupId() != null) {
                     uploadToAccountPurchase(currTransfer);
-                }
-                
+                }*/
+                deleteDetail();
                 newForm();
             } catch (Exception ex) {
                 log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
         }
+    }
+
+    private void deleteDetail() {
+        String deleteSQL;
+
+        //All detail section need to explicity delete
+        //because of save function only delete to join table
+        deleteSQL = tblTransferModel.getDeleteSql();
+        if (deleteSQL != null) {
+            dao.execSql(deleteSQL);
+        }
+        //delete section end
     }
 
     @Override
@@ -716,8 +783,12 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         } catch (Exception ex) {
 
         }
+        int locationId = -1;
+        if (cboFromLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboFromLocation.getSelectedItem()).getLocationId();
+        }
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Transfer Voucher Search", dao);
+                "Transfer Voucher Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -758,18 +829,26 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
             //removeEmptyRow();
 
             try {
+                dao.open();
+                dao.beginTran();
                 List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
                 String vouNo = currTransfer.getTranVouId();
-                for(TransferDetailHis tdh : listTmp){
+                for (TransferDetailHis tdh : listTmp) {
                     tdh.setVouNo(vouNo);
+                    if (tdh.getTranDetailId() == null) {
+                        tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                    }
+                    dao.save1(tdh);
                 }
                 currTransfer.setListDetail(listTmp);
-                dao.save(currTransfer);
+                dao.save1(currTransfer);
+                dao.commit();
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
                 String strPrintVouNo = currTransfer.getTranVouId();
+                deleteDetail();
                 newForm();
 
                 String reportPath = Util1.getAppWorkFolder()
@@ -839,8 +918,10 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
             currTransfer.setRemark(txtRemark.getText());
             currTransfer.setVouTotal(NumberUtil.NZero(txtTotalAmount.getText()));
             currTransfer.setDeleted(Util1.getNullTo(currTransfer.isDeleted()));
-            currTransfer.setCusId(txtCusId.getText());
-            currTransfer.setSupId(txtSupId.getText());
+            log.info("tmpCusId : " + tmpCusId);
+            currTransfer.setCusId(tmpCusId);
+            log.info("tmpSupId : " + tmpSupId);
+            currTransfer.setSupId(tmpSupId);
 
             if (lblStatus.getText().equals("NEW")) {
                 currTransfer.setDeleted(false);
@@ -877,7 +958,7 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                if(tblTransfer.getCellEditor() != null){
+                if (tblTransfer.getCellEditor() != null) {
                     tblTransfer.getCellEditor().stopCellEditing();
                 }
             } catch (Exception ex) {
@@ -983,25 +1064,28 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     private Trader getTrader(String traderId, int locationId) {
         Trader cus = null;
         try {
-            if (!traderId.contains("SUP")) {
-                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                    if (!traderId.contains("CUS")) {
-                        traderId = "CUS" + traderId;
-                    }
-                }
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
             }
+
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 List<Trader> listTrader = dao.findAllHSQL("select o from Trader o where "
                         + "o.active = true and o.traderId in (select a.key.traderId "
                         + "from LocationTraderMapping a where a.key.locationId = "
-                        + locationId + ") and o.traderId = '" + traderId + "' order by o.traderName");
+                        + locationId + ") and " + strFieldName + " = '" + traderId + "' order by o.traderName");
                 if (listTrader != null) {
                     if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);
                     }
                 }
             } else {
-                cus = (Trader) dao.find(Trader.class, traderId);
+                List<Trader> listTrader = dao.findAllHSQL("select o from Trader where " + strFieldName + " = '" + traderId + "'");
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
             }
         } catch (Exception ex) {
             log.error("getTrader : " + ex.toString());
@@ -1033,7 +1117,12 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
                     "Trader Code", JOptionPane.ERROR_MESSAGE);
 
         } else {
-            txtCusId.setText(cus.getTraderId());
+            tmpCusId = cus.getTraderId();
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                txtCusId.setText(cus.getStuCode());
+            } else {
+                txtCusId.setText(cus.getTraderId());
+            }
             txtCusName.setText(cus.getTraderName());
 
             if (cus.getTypeId() != null) {
@@ -1066,7 +1155,12 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
                     "Trader Code", JOptionPane.ERROR_MESSAGE);
 
         } else {
-            txtSupId.setText(cus.getTraderId());
+            tmpSupId = cus.getTraderId();
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                txtSupId.setText(cus.getStuCode());
+            } else {
+                txtSupId.setText(cus.getTraderId());
+            }
             txtSupName.setText(cus.getTraderName());
         }
 
@@ -1085,7 +1179,12 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void getSupplierList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Supplier List", dao);
+        int locationId = -1;
+        if (cboFromLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboFromLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Supplier List", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);

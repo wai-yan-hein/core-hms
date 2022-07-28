@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * ChargeTypeSetup.java
  *
  * Created on May 29, 2012, 8:25:36 PM
@@ -35,6 +35,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class ChargeTypeSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(ChargeTypeSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private ChargeTypeTableModel tableModel = new ChargeTypeTableModel();
@@ -63,14 +64,14 @@ public class ChargeTypeSetup extends javax.swing.JPanel {
     public void setCurrChargeType(ChargeType currChargeType) {
         this.currChargeType = currChargeType;
         txtChargeType.setText(currChargeType.getChargeTypeDesc());
-        if(currChargeType.getFactor() == null){
+        if (currChargeType.getFactor() == null) {
             txtFactor.setText("");
-        }else{
-        txtFactor.setText(currChargeType.getFactor().toString());
+        } else {
+            txtFactor.setText(currChargeType.getFactor().toString());
         }
-        if(currChargeType.getIsAmount() == null){
+        if (currChargeType.getIsAmount() == null) {
             chkIsAmount.setSelected(false);
-        }else{
+        } else {
             chkIsAmount.setSelected(currChargeType.getIsAmount());
         }
         lblStatus.setText("EDIT");
@@ -84,39 +85,36 @@ public class ChargeTypeSetup extends javax.swing.JPanel {
         txtChargeType.setText(null);
         txtFactor.setText("");
         chkIsAmount.setSelected(false);
-        
+
         setFocus();
     }
 
     private void initTable() {
-        //Get ChargeType from database.
-        tableModel.setListChargeType(dao.findAll("ChargeType"));
+        try {
+            //Get ChargeType from database.
+            tableModel.setListChargeType(dao.findAll("ChargeType"));
 
-        //Binding table with listCategory using beansbinding library.
-        /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
-         listChargeType, tblChargeType);
-         ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${chargeTypeDesc}"));
-         columnBinding.setColumnName("Charge Type");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-         jTableBinding.bind();*/
-
-        //Define table selection model to single row selection.
-        tblChargeType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblChargeType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblChargeType.getSelectedRow() >= 0) {
-                            selectedRow = tblChargeType.convertRowIndexToModel(
-                                    tblChargeType.getSelectedRow());
-                        }
-
-                        if (selectedRow >= 0) {
-                            setCurrChargeType(tableModel.getChargeType(selectedRow));
-                        }
+            //Define table selection model to single row selection.
+            tblChargeType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblChargeType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblChargeType.getSelectedRow() >= 0) {
+                        selectedRow = tblChargeType.convertRowIndexToModel(
+                                tblChargeType.getSelectedRow());
                     }
-                });
+
+                    if (selectedRow >= 0) {
+                        setCurrChargeType(tableModel.getChargeType(selectedRow));
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {
@@ -155,10 +153,10 @@ public class ChargeTypeSetup extends javax.swing.JPanel {
             status = false;
         } else {
             currChargeType.setChargeTypeDesc(txtChargeType.getText().trim());
-            if(!txtFactor.getText().trim().isEmpty()){
+            if (!txtFactor.getText().trim().isEmpty()) {
                 float tmpFactor = Float.parseFloat(txtFactor.getText().trim());
                 currChargeType.setFactor(tmpFactor);
-            }else{
+            } else {
                 currChargeType.setFactor(0f);
             }
             currChargeType.setIsAmount(chkIsAmount.isSelected());

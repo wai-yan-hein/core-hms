@@ -45,11 +45,12 @@ public class MedPriceAutoCompleter {
         scroll.setBorder(null); 
         
         tblPrice.setFocusable(false);
+        tblPrice.setRowHeight(23);
         scroll.getVerticalScrollBar().setFocusable( false ); 
         scroll.getHorizontalScrollBar().setFocusable( false ); 
  
         popup.setBorder(BorderFactory.createLineBorder(Color.black)); 
-        popup.setPopupSize(120, 120);
+        popup.setPopupSize(120, 180);
         
         popup.add(scroll);
         

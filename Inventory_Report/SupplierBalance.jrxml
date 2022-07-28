@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustomerBalance" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="082af7d9-2519-4223-9be8-15fb35add365">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -10,7 +9,7 @@
 	<parameter name="data_date" class="java.lang.String"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select ttbd.trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name
+		<![CDATA[select if(ifnull(v_cs.sys_p,'-')='Y', v_cs.stu_no, ttbd.trader_id) as trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name
 from tmp_trader_bal_date ttbd, v_cs, currency curr
 where ttbd.trader_id = v_cs.trader_id and ttbd.curr_id = curr.cur_code
 and user_id = $P{user_id} and v_cs.discriminator = 'S'

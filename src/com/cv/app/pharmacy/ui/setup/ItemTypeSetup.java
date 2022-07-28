@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * ItemTypeSetup.java
  *
  * Created on Apr 22, 2012, 9:51:59 PM
@@ -75,7 +75,13 @@ public class ItemTypeSetup extends javax.swing.JPanel {
     //Inatilize tblItemType
     private void initTable() {
         //Get item type from database
-        tableModel.setListItemType(dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+        try {
+            tableModel.setListItemType(dao.findAllHSQL("select o from ItemType o order by o.itemTypeName"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Binding tblItemType with listItemType using beansbinding library.
         /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
          listItemType, tblItemType);
@@ -89,17 +95,17 @@ public class ItemTypeSetup extends javax.swing.JPanel {
         //Adding table row selection listener.
         tblItemType.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblItemType.getSelectedRow() >= 0) {
-                            selectedRow = tblItemType.convertRowIndexToModel(
-                                    tblItemType.getSelectedRow());
-                        }
-                        if (selectedRow >= 0) {
-                            setCurrItemType(tableModel.getItemType(selectedRow));
-                        }
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblItemType.getSelectedRow() >= 0) {
+                    selectedRow = tblItemType.convertRowIndexToModel(
+                            tblItemType.getSelectedRow());
+                }
+                if (selectedRow >= 0) {
+                    setCurrItemType(tableModel.getItemType(selectedRow));
+                }
+            }
+        });
     }
 
     private void setCurrItemType(ItemType currItemType) {

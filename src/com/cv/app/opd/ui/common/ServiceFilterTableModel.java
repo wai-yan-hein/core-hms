@@ -148,7 +148,7 @@ public class ServiceFilterTableModel extends AbstractTableModel {
     }
 
     public void setService(Service service, int row) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         final String TABLE = "com.cv.app.opd.database.tempentity.VouSrvFilter";
         String strSQL = "SELECT * FROM " + TABLE
                 + " WHERE key.service.serviceId = " + service.getServiceId();

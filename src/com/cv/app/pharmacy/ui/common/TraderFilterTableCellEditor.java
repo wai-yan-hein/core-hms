@@ -8,6 +8,9 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.ui.util.TraderAutoCompleter;
 import java.awt.Component;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.EventObject;
 import java.util.List;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JComponent;
@@ -61,5 +64,22 @@ public class TraderFilterTableCellEditor extends AbstractCellEditor implements T
         }
         
         return obj;
+    }
+    
+    @Override
+    public boolean isCellEditable(EventObject anEvent) {
+        if (anEvent instanceof MouseEvent) {
+            return false;
+        } else if (anEvent instanceof KeyEvent) {
+            KeyEvent ke = (KeyEvent) anEvent;
+
+            if (ke.isActionKey()) {//Function key
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
     }
 }

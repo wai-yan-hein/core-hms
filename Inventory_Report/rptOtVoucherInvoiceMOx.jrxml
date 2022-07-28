@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" language="groovy" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="96"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="invoiceNo" class="java.lang.String"/>
 	<parameter name="customerName" class="java.lang.String"/>
 	<parameter name="saleDate" class="java.util.Date"/>
@@ -26,10 +29,12 @@
 		<defaultValueExpression><![CDATA["D:\\CoreValue\\Program\\cv_inventory\\Inventory_Report\\"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="phoneNo" class="java.lang.String"/>
+	<parameter name="compAddress" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select if(ifnull(tmp.service_id,'') = '', service_name, concat(service_name,' (',tmp.doctor_name,')')) serviceName,qty quantity,amount,price
-from v_ot left join (SELECT d.doctor_name,vt.service_id FROM v_ot vt,ot_dr_fee_join odfj,ot_doctor_fee dof,doctor d,dr_detail_id ddi
-where vt.ot_inv_id = $P{invoiceNo} and vt.ot_detail_id=odfj.ot_detail_id and odfj.dr_fee_id=dof.dr_fee_id and d.doctor_id = dof.doctor_id and vt.service_id = ddi.service_id and ddi.option = 'OT') tmp on v_ot.service_id = tmp.service_id where ot_inv_id = $P{invoiceNo}]]>
+from v_ot left join (SELECT d.doctor_name,vt.service_id FROM v_ot vt,ot_doctor_fee dof,doctor d,dr_detail_id ddi
+where vt.ot_inv_id = $P{invoiceNo}  and vt.ot_detail_id=dof.ot_detail_id and d.doctor_id = dof.doctor_id 
+and vt.service_id = ddi.service_id and ddi.option = 'OT') tmp on v_ot.service_id = tmp.service_id where ot_inv_id =$P{invoiceNo}]]>
 	</queryString>
 	<field name="serviceName" class="java.lang.String"/>
 	<field name="quantity" class="java.lang.Integer"/>
@@ -43,27 +48,34 @@ where vt.ot_inv_id = $P{invoiceNo} and vt.ot_detail_id=odfj.ot_detail_id and odf
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="65" splitType="Stretch">
+		<band height="78" splitType="Stretch">
 			<textField>
 				<reportElement x="2" y="1" width="195" height="15" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
 				<textElement textAlignment="Center">
-					<font fontName="Zawgyi-One" size="10"/>
+					<font fontName="Zawgyi-One" size="10" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="2" y="49" width="195" height="15" uuid="a5f7c78e-0ecc-49f5-a8dc-56e0c612ff7c"/>
+				<reportElement x="2" y="63" width="195" height="15" uuid="a5f7c78e-0ecc-49f5-a8dc-56e0c612ff7c"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="8"/>
+					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[OT Voucher]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="2" y="16" width="195" height="33" uuid="d1f066da-aedf-4534-86ef-15c106dcb007"/>
-				<textElement textAlignment="Center" verticalAlignment="Top">
+				<reportElement x="2" y="48" width="195" height="15" uuid="d1f066da-aedf-4534-86ef-15c106dcb007"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="11" y="16" width="178" height="32" uuid="a6de42f8-1aba-4746-8f4c-e216520b4422"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compAddress}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>

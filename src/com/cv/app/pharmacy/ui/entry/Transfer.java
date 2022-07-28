@@ -154,7 +154,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         addNewRow();
         assignLocation();
         tblTransferModel.setStockList(stockList);
-        
+
         applyFocusPolicy();
         AddFocusMoveKey();
         this.setFocusTraversalPolicy(focusPolicy);
@@ -233,22 +233,28 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        List<TransferHis> listTFH = dao.findAllHSQL(
-                "select o from TransferHis o where o.tranVouId = '" + vouNo + "'"
-        );
-        if (listTFH != null) {
-            if (!listTFH.isEmpty()) {
-                log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
-                        + txtTranDate.getText());
-                JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate tran vou no. Exit the program and try again.",
-                        "Transfer Vou No", JOptionPane.ERROR_MESSAGE);
-                System.exit(1);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            List<TransferHis> listTFH = dao.findAllHSQL(
+                    "select o from TransferHis o where o.tranVouId = '" + vouNo + "'"
+            );
+            if (listTFH != null) {
+                if (!listTFH.isEmpty()) {
+                    log.error("Duplicate Sale vour error : " + txtVouNo.getText() + " @ "
+                            + txtTranDate.getText());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate tran vou no. Exit the program and try again.",
+                            "Transfer Vou No", JOptionPane.ERROR_MESSAGE);
+                    System.exit(1);
+                } else {
+                    txtVouNo.setText(vouNo);
+                }
             } else {
                 txtVouNo.setText(vouNo);
             }
-        } else {
-            txtVouNo.setText(vouNo);
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -301,27 +307,43 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private List getLocationFromFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowTranOut = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowTranOut = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFromFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private List getLocationToFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowTranIn = true) order by o.locationName");
-        } else {
-            return dao.findAll("Location");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowTranIn = true) order by o.locationName");
+            } else {
+                return dao.findAll("Location");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationToFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     private void actionMapping() {
@@ -346,18 +368,18 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         @Override
         public void actionPerformed(ActionEvent e) {
             //try {
-                //if (tblTransfer.getCellEditor() != null) {
-                //    tblTransfer.getCellEditor().stopCellEditing();
-                //}
+            //if (tblTransfer.getCellEditor() != null) {
+            //    tblTransfer.getCellEditor().stopCellEditing();
+            //}
             //} catch (Exception ex) {
-                //No entering medCode, only press F3
-                try {
-                    dao.open();
-                    getMedList("");
-                    dao.close();
-                } catch (Exception ex1) {
-                    log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
-                }
+            //No entering medCode, only press F3
+            try {
+                dao.open();
+                getMedList("");
+                dao.close();
+            } catch (Exception ex1) {
+                log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
+            }
             //}
         }
     };
@@ -395,21 +417,27 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         Medicine medicine;
 
         if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+            try {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } catch (Exception ex) {
+                log.error("getMedInfo : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         } else {
             System.out.println("Blank medicine code.");
@@ -723,8 +751,12 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         } catch (Exception ex) {
 
         }
+        int locationId = -1;
+        if (cboFromLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboFromLocation.getSelectedItem()).getLocationId();
+        }
         UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
-                "Transfer Voucher Search", dao);
+                "Transfer Voucher Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -734,10 +766,10 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     public void delete() {
         Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
         try {
@@ -791,6 +823,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                     vouEngine.updateVouNo();
                 }
                 String strPrintVouNo = currTransfer.getTranVouId();
+                deleteDetail();
                 newForm();
 
                 String reportPath = Util1.getAppWorkFolder()
@@ -845,13 +878,13 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     private boolean isValidEntry() {
         Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
         boolean status = true;
 
         if (cboFromLocation.getSelectedItem() == null) {
@@ -1112,7 +1145,12 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void getSupplierList() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Supplier List", dao);
+        int locationId = -1;
+        if (cboFromLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboFromLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Supplier List", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -1130,12 +1168,13 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         //delete section end
     }
 
-    private void assignLocation(){
+    private void assignLocation() {
         if (!isBind) {
             Location location = (Location) cboFromLocation.getSelectedItem();
             tblTransferModel.setLocation(location);
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

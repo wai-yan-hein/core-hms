@@ -9,21 +9,24 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author WSwe
  */
-public class LabTestTableModel extends AbstractTableModel{
+public class LabTestTableModel extends AbstractTableModel {
+
+    static Logger log = Logger.getLogger(LabTestTableModel.class.getName());
     private List<VService> listService = new ArrayList();
-    private String[] columnNames = {"Code","Test Name"};
+    private String[] columnNames = {"Code", "Test Name"};
     private AbstractDataAccess dao;
     private int groupId;
-    
-    public LabTestTableModel(AbstractDataAccess dao){
+
+    public LabTestTableModel(AbstractDataAccess dao) {
         this.dao = dao;
     }
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -55,7 +58,7 @@ public class LabTestTableModel extends AbstractTableModel{
 
     @Override
     public void setValueAt(Object value, int row, int column) {
-        
+
     }
 
     @Override
@@ -76,24 +79,29 @@ public class LabTestTableModel extends AbstractTableModel{
         this.listService = listService;
         fireTableDataChanged();
     }
-    
-    public void setGroupId(int id){
+
+    public void setGroupId(int id) {
         groupId = id;
         getCategory();
     }
-    
-     private void getCategory(){
-        //listOPDCategory = dao.findAll("OPDCategory", "groupId = " + groupId);
-        listService = dao.findAllHSQL(
-            "select o from VService o where o.catId = " + groupId + " order by o.catName");
-        addNewRow();
-        fireTableDataChanged();
+
+    private void getCategory() {
+        try {
+            listService = dao.findAllHSQL(
+                    "select o from VService o where o.catId = " + groupId + " order by o.catName");
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getCategory : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-     
-     private void addNewRow(){
+
+    private void addNewRow() {
         int count = listService.size();
-        
-        if(count == 0 || listService.get(count-1).getCatId()!= null){
+
+        if (count == 0 || listService.get(count - 1).getCatId() != null) {
             listService.add(new VService());
         }
     }

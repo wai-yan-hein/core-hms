@@ -190,13 +190,19 @@ public class InpCategoryTableModel extends AbstractTableModel {
     }
 
     public void getCategory() {
-        listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.userCode");
-        if (listInpCategory == null) {
-            listInpCategory = new ArrayList();
-        }
+        try {
+            listInpCategory = dao.findAllHSQL("select o from InpCategory o order by o.userCode");
+            if (listInpCategory == null) {
+                listInpCategory = new ArrayList();
+            }
 
-        addNewRow();
-        fireTableDataChanged();
+            addNewRow();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("getCategory : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void addNewRow() {

@@ -38,6 +38,7 @@ public class VTraderPayment implements java.io.Serializable{
     private String traderName;
     private String createdBy;
     private String cusGroupId;
+    private String stuNo;
     
     @Id
     @Column(name="payment_id")
@@ -210,5 +211,14 @@ public class VTraderPayment implements java.io.Serializable{
 
     public void setCusGroupId(String cusGroupId) {
         this.cusGroupId = cusGroupId;
+    }
+
+    @Column(name="stu_no")
+    public String getStuNo() {
+        return stuNo;
+    }
+
+    public void setStuNo(String stuNo) {
+        this.stuNo = stuNo;
     }
 }

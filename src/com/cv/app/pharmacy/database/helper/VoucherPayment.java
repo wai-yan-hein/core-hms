@@ -34,14 +34,15 @@ public class VoucherPayment {
     private int listIndex;
     private Integer tranId;
     private String currency;
-
+    private String traderCode;
+    
     public VoucherPayment() {
     }
 
     public VoucherPayment(Date tranDate, String vouNo, String traderId,
             String traderName, String vouType, Date dueDate, Double vouTotal,
             Double discount, Double ttlPaid, Double vouBalance, int ttlOverdue,
-            String currency,Date payDate) {
+            String currency,Date payDate, String traderCode) {
         this.tranDate = tranDate;
         this.vouNo = vouNo;
         this.traderId = traderId;
@@ -55,6 +56,7 @@ public class VoucherPayment {
         this.ttlOverdue = ttlOverdue;
         this.currency = currency;
         this.payDate = payDate;
+        this.traderCode = traderCode;
     }
 
     public Date getTranDate() {
@@ -223,5 +225,13 @@ public class VoucherPayment {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public String getTraderCode() {
+        return traderCode;
+    }
+
+    public void setTraderCode(String traderCode) {
+        this.traderCode = traderCode;
     }
 }

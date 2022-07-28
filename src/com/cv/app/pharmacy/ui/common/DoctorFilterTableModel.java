@@ -172,7 +172,7 @@ public class DoctorFilterTableModel extends AbstractTableModel {
     }
 
     public void getDoctorInfo(String doctorId, int row) {
-        String userId = Global.loginUser.getUserId();
+        String userId = Global.machineId;
         final String TABLE = "com.cv.app.pharmacy.database.tempentity.DoctorFilter";
         String strSQL = "SELECT * FROM " + TABLE
                 + " WHERE key.doctorId.doctorId = '" + doctorId + "'";

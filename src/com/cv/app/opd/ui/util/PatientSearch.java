@@ -63,50 +63,62 @@ public class PatientSearch extends javax.swing.JDialog {
     }
 
     private void getPrvFilter() {
-        VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PatientSearch'"
-                + " and key.userId = '" + Global.loginUser.getUserId() + "'");
+        try {
+            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PatientSearch'"
+                    + " and key.userId = '" + Global.machineId + "'");
 
-        if (tmpFilter == null) {
-            vouFilter = new VouFilter();
-            vouFilter.getKey().setTranOption("PatientSearch");
-            vouFilter.getKey().setUserId(Global.loginUser.getUserId());
+            if (tmpFilter == null) {
+                vouFilter = new VouFilter();
+                vouFilter.getKey().setTranOption("PatientSearch");
+                vouFilter.getKey().setUserId(Global.machineId);
 
-            //txtFrom.setText(DateUtil.getTodayDateStr());
-            //txtTo.setText(DateUtil.getTodayDateStr());
-        } else {
-            vouFilter = tmpFilter;
-            txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-            txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
+                //txtFrom.setText(DateUtil.getTodayDateStr());
+                //txtTo.setText(DateUtil.getTodayDateStr());
+            } else {
+                vouFilter = tmpFilter;
+                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
+                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
 
-            if (vouFilter.getPtName() != null) {
-                if (!vouFilter.getPtName().isEmpty()) {
-                    txtName.setText(vouFilter.getPtName());
+                if (vouFilter.getPtName() != null) {
+                    if (!vouFilter.getPtName().isEmpty()) {
+                        txtName.setText(vouFilter.getPtName());
+                    }
+                }
+
+                if (vouFilter.getRemark() != null) {
+                    if (!vouFilter.getRemark().isEmpty()) {
+                        txtFatherName.setText(vouFilter.getRemark());
+                    }
+                }
+
+                if (vouFilter.getVouNo() != null) {
+                    if (!vouFilter.getVouNo().isEmpty()) {
+                        txtRegNo.setText(vouFilter.getVouNo());
+                    }
                 }
             }
-
-            if (vouFilter.getRemark() != null) {
-                if (!vouFilter.getRemark().isEmpty()) {
-                    txtFatherName.setText(vouFilter.getRemark());
-                }
-            }
-
-            if (vouFilter.getVouNo() != null) {
-                if (!vouFilter.getVouNo().isEmpty()) {
-                    txtRegNo.setText(vouFilter.getVouNo());
-                }
-            }
+        } catch (Exception ex) {
+            log.error("getPrvFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
-        BindingUtil.BindComboFilter(cboCity, dao.findAll("City"));
+        try {
+            BindingUtil.BindComboFilter(cboGender, dao.findAll("Gender"));
+            BindingUtil.BindComboFilter(cboCity, dao.findAll("City"));
 
-        new ComBoBoxAutoComplete(cboGender);
-        new ComBoBoxAutoComplete(cboCity);
+            new ComBoBoxAutoComplete(cboGender);
+            new ComBoBoxAutoComplete(cboCity);
 
-        cboGender.setSelectedIndex(0);
-        cboCity.setSelectedIndex(0);
+            cboGender.setSelectedIndex(0);
+            cboCity.setSelectedIndex(0);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -121,11 +133,11 @@ public class PatientSearch extends javax.swing.JDialog {
         //Adding table row selection listener.
         tblPatient.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblPatient.getSelectedRow();
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedRow = tblPatient.getSelectedRow();
+            }
+        });
     }
 
     private void select() {
@@ -236,14 +248,14 @@ public class PatientSearch extends javax.swing.JDialog {
             }
         }
 
-        if(!txtPhoneNo.getText().trim().isEmpty()){
+        if (!txtPhoneNo.getText().trim().isEmpty()) {
             if (strFilter == null) {
                 strFilter = "p.contactNo like '%" + txtPhoneNo.getText().trim() + "%'";
             } else {
                 strFilter = strFilter + " and p.contactNo like '%" + txtPhoneNo.getText().trim() + "%'";
             }
         }
-        
+
         if (strFilter != null) {
             strSql = strSql + " where " + strFilter;
         }
@@ -262,7 +274,7 @@ public class PatientSearch extends javax.swing.JDialog {
 
     private void search() {
         if (txtName.getText().isEmpty() && txtFatherName.getText().isEmpty() && txtRegNo.getText().isEmpty()
-            && txtFrom.getText().isEmpty() && txtTo.getText().isEmpty() && txtPhoneNo.getText().trim().isEmpty()) {
+                && txtFrom.getText().isEmpty() && txtTo.getText().isEmpty() && txtPhoneNo.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Please enter some characterss of patient name "
                     + "or father name.",
                     "No Filter", JOptionPane.ERROR_MESSAGE);

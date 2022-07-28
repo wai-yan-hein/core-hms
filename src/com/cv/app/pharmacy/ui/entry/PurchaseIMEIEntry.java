@@ -405,7 +405,8 @@ public class PurchaseIMEIEntry extends javax.swing.JPanel implements SelectionOb
     }// </editor-fold>//GEN-END:initComponents
 
     private void butHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butHistoryActionPerformed
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Purchase Voucher Search", dao);
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, 
+                "Purchase Voucher Search", dao, -1);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);

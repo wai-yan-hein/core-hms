@@ -16,15 +16,18 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
+import org.apache.log4j.Logger;
+
 /**
  *
  * @author ACER
  */
 public class DCAutoVouItemDialog extends javax.swing.JDialog {
 
+    static Logger log = Logger.getLogger(DCAutoVouItemDialog.class.getName());
     private DCAutoVouItemSetupModel tableModel = new DCAutoVouItemSetupModel();
     private final AbstractDataAccess dao = Global.dao;
-    
+
     /**
      * Creates new form DCDrDetailIdDialog
      */
@@ -55,16 +58,22 @@ public class DCAutoVouItemDialog extends javax.swing.JDialog {
             }
         }
     };
-    
-    private void initTable(){
-        List<VDCAutoVouItem> list = dao.findAll("VDCAutoVouItem");
-        tableModel.setList(list);
-        tblDrId.getColumnModel().getColumn(0).setPreferredWidth(150);//Service
-        tblDrId.getColumnModel().getColumn(1).setPreferredWidth(20);//Qty
-        tblDrId.getColumnModel().getColumn(0).setCellEditor(
-                new DCTableCellEditor(dao));
+
+    private void initTable() {
+        try {
+            List<VDCAutoVouItem> list = dao.findAll("VDCAutoVouItem");
+            tableModel.setList(list);
+            tblDrId.getColumnModel().getColumn(0).setPreferredWidth(150);//Service
+            tblDrId.getColumnModel().getColumn(1).setPreferredWidth(20);//Qty
+            tblDrId.getColumnModel().getColumn(0).setCellEditor(
+                    new DCTableCellEditor(dao));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

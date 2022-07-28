@@ -30,7 +30,7 @@ public class SaleVouPrintTableModel extends AbstractTableModel {
     private Double discTotal = 0.0;
     private Double paidTotal = 0.0;
     private Double balanceTotal = 0.0;
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -109,12 +109,7 @@ public class SaleVouPrintTableModel extends AbstractTableModel {
                         }
                     } else {
                         if (vs.getCusNo() != null) {
-                            if (prifxStatus.equals("Y")) {
-                                return vs.getCusNo().replace("CUS", "").replace("SUP", "")
-                                        + " - " + vs.getCusName();
-                            } else {
-                                return vs.getCusNo() + " - " + vs.getCusName();
-                            }
+                            return vs.getCusNo() + " - " + vs.getCusName();
                         } else {
                             if (vs.getCusName() != null) {
                                 return vs.getCusName();
@@ -193,7 +188,7 @@ public class SaleVouPrintTableModel extends AbstractTableModel {
         discTotal = 0.0;
         paidTotal = 0.0;
         balanceTotal = 0.0;
-    
+
         if (listVS != null) {
             if (!listVS.isEmpty()) {
                 listVS.stream().map(vs -> {
@@ -243,20 +238,20 @@ public class SaleVouPrintTableModel extends AbstractTableModel {
     public void setBalanceTotal(Double balanceTotal) {
         this.balanceTotal = balanceTotal;
     }
-    
-    public void clear(){
+
+    public void clear() {
         this.listVS = new ArrayList();
         fireTableDataChanged();
         System.gc();
     }
-    
-    public void setVoucherChecker(int index, String name){
+
+    public void setVoucherChecker(int index, String name) {
         VoucherSearch vs = listVS.get(index);
         vs.setVoucherChecker(name);
         fireTableCellUpdated(index, 7);
     }
-    
-    public void setPrintStatus(int index, boolean status){
+
+    public void setPrintStatus(int index, boolean status) {
         VoucherSearch vs = listVS.get(index);
         vs.setIsPrinted(status);
         fireTableCellUpdated(index, 7);

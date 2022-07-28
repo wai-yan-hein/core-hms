@@ -64,88 +64,86 @@ public class TraderOpSetup extends javax.swing.JPanel {
     }
 
     private void initTblTrader() {
-        /*JTableBinding jTableBinding = SwingBindings.
-         createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE, listTrader,
-         tblTrader);
-         JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${traderId}"));
-         columnBinding.setColumnName("Code");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-        
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${traderName}"));
-         columnBinding.setColumnName("Name");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-        
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${township.townshipName}"));
-         columnBinding.setColumnName("Township");
-         columnBinding.setColumnClass(String.class);
-         columnBinding.setEditable(false);
-        
-         columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${active}"));
-         columnBinding.setColumnName("Active");
-         columnBinding.setColumnClass(Boolean.class);
-         columnBinding.setEditable(false);
-        
-         jTableBinding.bind();*/
+        try {
+            tblTraderModel.setListTrader(dao.findAllHSQL("select t from Trader t where t.active = true"));
+            //Adjust table column width
+            TableColumn column = null;
+            column = tblTrader.getColumnModel().getColumn(0);
+            column.setPreferredWidth(60);
 
-        tblTraderModel.setListTrader(dao.findAllHSQL("select t from Trader t where t.active = true"));
-        //Adjust table column width
-        TableColumn column = null;
-        column = tblTrader.getColumnModel().getColumn(0);
-        column.setPreferredWidth(60);
+            column = tblTrader.getColumnModel().getColumn(1);
+            column.setPreferredWidth(150);
 
-        column = tblTrader.getColumnModel().getColumn(1);
-        column.setPreferredWidth(150);
+            column = tblTrader.getColumnModel().getColumn(2);
+            column.setPreferredWidth(80);
 
-        column = tblTrader.getColumnModel().getColumn(2);
-        column.setPreferredWidth(80);
+            column = tblTrader.getColumnModel().getColumn(3);
+            column.setPreferredWidth(20);
 
-        column = tblTrader.getColumnModel().getColumn(3);
-        column.setPreferredWidth(20);
+            //Define table selection model to single row selection.
+            tblTrader.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblTrader.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    int row = tblTrader.getSelectedRow();
 
-        //Define table selection model to single row selection.
-        tblTrader.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblTrader.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int row = tblTrader.getSelectedRow();
+                    if (row != -1) {
+                        selTrader = tblTraderModel.getTrader(tblTrader.convertRowIndexToModel(row));
+                        tblEntryModel.setTrader(selTrader);
+                        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                            txtCusCode.setText(selTrader.getStuCode());
+                        } else {
+                            txtCusCode.setText(selTrader.getTraderId());
+                        }
 
-                if (row != -1) {
-                    selTrader = tblTraderModel.getTrader(tblTrader.convertRowIndexToModel(row));
-                    tblEntryModel.setTrader(selTrader);
-                    txtCusCode.setText(selTrader.getTraderId());
-                    txtCusName.setText(selTrader.getTraderName());
-                    String strSQL = "select o from TraderOpening o where o.key.trader.traderId = '"
-                            + selTrader.getTraderId() + "'";
-                    List<TraderOpening> prvOP = dao.findAllHSQL(strSQL);
-                    tblLastOpModel.setListOp(prvOP);
+                        txtCusName.setText(selTrader.getTraderName());
+                        String strSQL = "select o from TraderOpening o where o.key.trader.traderId = '"
+                                + selTrader.getTraderId() + "'";
+                        try {
+                            List<TraderOpening> prvOP = dao.findAllHSQL(strSQL);
+                            tblLastOpModel.setListOp(prvOP);
+                        } catch (Exception ex) {
+                            log.error("valueChanged : " + ex.getMessage());
+                        } finally {
+                            dao.close();
+                        }
+                    }
                 }
             }
+            );
+        } catch (Exception ex) {
+            log.error("initTblTrader : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        );
     }
 
     private void initTblEntry() {
-        tblEntry.setModel(tblEntryModel);
-        tblEntryModel.addEmptyRow();
+        try {
+            tblEntry.setModel(tblEntryModel);
+            tblEntryModel.addEmptyRow();
 
-        //Adjust table column width
-        TableColumn column = null;
-        column = tblEntry.getColumnModel().getColumn(0);
-        column.setPreferredWidth(50);
+            //Adjust table column width
+            TableColumn column = null;
+            column = tblEntry.getColumnModel().getColumn(0);
+            column.setPreferredWidth(50);
 
-        column = tblEntry.getColumnModel().getColumn(1);
-        column.setPreferredWidth(50);
+            column = tblEntry.getColumnModel().getColumn(1);
+            column.setPreferredWidth(50);
 
-        column = tblEntry.getColumnModel().getColumn(2);
-        column.setPreferredWidth(80);
+            column = tblEntry.getColumnModel().getColumn(2);
+            column.setPreferredWidth(80);
 
-        JComboBox cboChargeType = new JComboBox();
-        BindingUtil.BindCombo(cboChargeType, dao.findAll("Currency"));
-        tblEntry.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboChargeType));
+            JComboBox cboChargeType = new JComboBox();
+            BindingUtil.BindCombo(cboChargeType, dao.findAll("Currency"));
+            tblEntry.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboChargeType));
+        } catch (Exception ex) {
+            log.error("initTblEntry : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTblLastOp() {
@@ -233,7 +231,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try ( CSVReader csvReader = new CSVReader(reader)) {
+                try (CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
                     int ttlSave = 0;
@@ -267,6 +265,8 @@ public class TraderOpSetup extends javax.swing.JPanel {
                 }
             } catch (IOException | NumberFormatException ex) {
                 log.error("processCSV : " + ex.getMessage());
+            } catch (Exception ex) {
+                log.error("processCSV1 : " + ex.getMessage());
             } finally {
                 dao.close();
             }
@@ -508,54 +508,60 @@ public class TraderOpSetup extends javax.swing.JPanel {
 
     private void btnToAccActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnToAccActionPerformed
         String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            String strDate = JOptionPane.showInputDialog("Please enter opening date : ");
-            String appCurr = Util1.getPropValue("system.app.currency");
-            String strSql = "select o from VTraderOpToAcc o where o.key.opDate = '"
-                    + DateUtil.toDateStrMYSQL(strDate) + "' "
-                    + " and o.key.currency.currencyCode = '" + appCurr + "'";
-            List<VTraderOpToAcc> listTraderOp = dao.findAllHSQL(strSql);
-            log.info("Total Records : " + listTraderOp.size());
-            if (listTraderOp.size() > 0) {
-                for (VTraderOpToAcc vtota : listTraderOp) {
-                    if (Global.mqConnection != null) {
-                        if (Global.mqConnection.isStatus()) {
-                            try {
-                                ActiveMQConnection mq = Global.mqConnection;
-                                MapMessage msg = mq.getMapMessageTemplate();
-                                msg.setString("program", Global.programId);
-                                msg.setString("entity", "OPENING-CV");
-                                msg.setString("sourceAccId", vtota.getSourceAccId());
-                                msg.setString("currency", vtota.getKey().getCurrency().getCurrencyCode());
-                                Trader trader = vtota.getKey().getTrader();
-                                if (trader != null) {
-                                    if (trader.getTraderGroup() != null) {
-                                        CustomerGroup cg = trader.getTraderGroup();
-                                        msg.setString("deptId", cg.getDeptId());
+        try {
+            if (isIntegration.toUpperCase().equals("Y")) {
+                String strDate = JOptionPane.showInputDialog("Please enter opening date : ");
+                String appCurr = Util1.getPropValue("system.app.currency");
+                String strSql = "select o from VTraderOpToAcc o where o.key.opDate = '"
+                        + DateUtil.toDateStrMYSQL(strDate) + "' "
+                        + " and o.key.currency.currencyCode = '" + appCurr + "'";
+                List<VTraderOpToAcc> listTraderOp = dao.findAllHSQL(strSql);
+                log.info("Total Records : " + listTraderOp.size());
+                if (listTraderOp.size() > 0) {
+                    for (VTraderOpToAcc vtota : listTraderOp) {
+                        if (Global.mqConnection != null) {
+                            if (Global.mqConnection.isStatus()) {
+                                try {
+                                    ActiveMQConnection mq = Global.mqConnection;
+                                    MapMessage msg = mq.getMapMessageTemplate();
+                                    msg.setString("program", Global.programId);
+                                    msg.setString("entity", "OPENING-CV");
+                                    msg.setString("sourceAccId", vtota.getSourceAccId());
+                                    msg.setString("currency", vtota.getKey().getCurrency().getCurrencyCode());
+                                    Trader trader = vtota.getKey().getTrader();
+                                    if (trader != null) {
+                                        if (trader.getTraderGroup() != null) {
+                                            CustomerGroup cg = trader.getTraderGroup();
+                                            msg.setString("deptId", cg.getDeptId());
+                                        } else {
+                                            msg.setString("deptId", "-");
+                                        }
                                     } else {
                                         msg.setString("deptId", "-");
                                     }
-                                } else {
-                                    msg.setString("deptId", "-");
+                                    msg.setString("cusId", trader.getTraderId());
+                                    msg.setString("cusType", vtota.getDiscriminator());
+                                    msg.setBoolean("deleted", false);
+                                    msg.setDouble("opAmount", vtota.getAmount());
+
+                                    msg.setString("queueName", "INVENTORY");
+
+                                    //mq.sendMessage(Global.queueName, msg);
+                                    mq.sendMessage("ACCOUNT", msg);
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listTraderOp + " - " + ex);
                                 }
-                                msg.setString("cusId", trader.getTraderId());
-                                msg.setString("cusType", vtota.getDiscriminator());
-                                msg.setBoolean("deleted", false);
-                                msg.setDouble("opAmount", vtota.getAmount());
-
-                                msg.setString("queueName", "INVENTORY");
-
-                                //mq.sendMessage(Global.queueName, msg);
-                                mq.sendMessage("ACCOUNT", msg);
-                            } catch (Exception ex) {
-                                log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listTraderOp + " - " + ex);
+                                //i = listTraderOp.size();
                             }
-                            //i = listTraderOp.size();
                         }
-                    }
 
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("btnToAccActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }//GEN-LAST:event_btnToAccActionPerformed
 

@@ -170,7 +170,8 @@ public class SaleAudit extends javax.swing.JPanel implements SelectionObserver {
                 MarchantSearch dialog = new MarchantSearch(dao, this);
                 break;*/
             default:
-                UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Customer List", dao);
+                UtilDialog dialog = new UtilDialog(Util1.getParent(), true, 
+                        this, "Customer List", dao, -1);
                 break;
         }
     }

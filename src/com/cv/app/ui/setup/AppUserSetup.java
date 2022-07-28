@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * AppUserSetup.java
  *
  * Created on Apr 22, 2012, 9:50:37 PM
@@ -43,6 +43,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class AppUserSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(AppUserSetup.class.getName());
     private AbstractDataAccess dao = Global.dao;
     private BestAppFocusTraversalPolicy focusPolicy;
@@ -111,10 +112,16 @@ public class AppUserSetup extends javax.swing.JPanel {
     }
 
     private void initCombo() {
-        BindingUtil.BindCombo(cboRole, dao.findAll("UserRole"));
-        new ComBoBoxAutoComplete(cboRole);
-        BindingUtil.BindCombo(cboLocation, dao.findAll("Location"));
-        new ComBoBoxAutoComplete(cboLocation);
+        try {
+            BindingUtil.BindCombo(cboRole, dao.findAll("UserRole"));
+            new ComBoBoxAutoComplete(cboRole);
+            BindingUtil.BindCombo(cboLocation, dao.findAll("Location"));
+            new ComBoBoxAutoComplete(cboLocation);
+        } catch (Exception ex) {
+            log.error("initCombo : ");
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTable() {
@@ -125,14 +132,14 @@ public class AppUserSetup extends javax.swing.JPanel {
         tblUser.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblUser.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        selectedRow = tblUser.convertRowIndexToModel(tblUser.getSelectedRow());
-                        if (selectedRow >= 0) {
-                            setCurrAppuser(userTableModel.getAppuser(selectedRow));
-                        }
-                    }
-                });
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                selectedRow = tblUser.convertRowIndexToModel(tblUser.getSelectedRow());
+                if (selectedRow >= 0) {
+                    setCurrAppuser(userTableModel.getAppuser(selectedRow));
+                }
+            }
+        });
     }
 
     private boolean isValidEntry() {
@@ -176,7 +183,7 @@ public class AppUserSetup extends javax.swing.JPanel {
             currAppuser.setPhone(txtPhone.getText().trim());
             currAppuser.setActive(chkActive.isSelected());
             currAppuser.setUserRole((UserRole) cboRole.getSelectedItem());
-            currAppuser.setDefLocation((Location)cboLocation.getSelectedItem());
+            currAppuser.setDefLocation((Location) cboLocation.getSelectedItem());
             currAppuser.setUpdatedDate(new Date());
             if (lblStatus.getText().equals("NEW")) {
                 currAppuser.setUserId(getUserId());

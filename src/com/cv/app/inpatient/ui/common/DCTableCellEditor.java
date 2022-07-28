@@ -18,6 +18,7 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellEditor;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -25,6 +26,7 @@ import javax.swing.table.TableCellEditor;
  */
 public class DCTableCellEditor extends AbstractCellEditor implements TableCellEditor {
 
+    static Logger log = Logger.getLogger(DCTableCellEditor.class.getName());
     private JComponent component = null;
     private AbstractDataAccess dao;
     private DCAutoCompleter completer;
@@ -37,7 +39,6 @@ public class DCTableCellEditor extends AbstractCellEditor implements TableCellEd
     public Component getTableCellEditorComponent(JTable table, Object value,
             boolean isSelected, int rowIndex, int vColIndex) {
         JTextField jtf = new JTextField();
-        List<InpService> listService = dao.findAllHSQL("select o from InpService o where o.status = true");
 
         KeyListener keyListener = new KeyListener() {
             @Override
@@ -70,7 +71,15 @@ public class DCTableCellEditor extends AbstractCellEditor implements TableCellEd
             jtf.setText(value.toString());
             jtf.selectAll();
         }
-        completer = new DCAutoCompleter(jtf, listService, this);
+
+        try {
+            List<InpService> listService = dao.findAllHSQL("select o from InpService o where o.status = true");
+            completer = new DCAutoCompleter(jtf, listService, this);
+        } catch (Exception ex) {
+            log.error("getTableCellEditorComponent : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
 
         return component;
     }

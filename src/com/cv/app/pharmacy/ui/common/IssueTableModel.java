@@ -173,12 +173,10 @@ public class IssueTableModel extends AbstractTableModel {
                         } else {
                             return null;
                         }
+                    } else if (sidh.getIssueMed() != null) {
+                        return sidh.getIssueMed().getMedId();
                     } else {
-                        if (sidh.getIssueMed() != null) {
-                            return sidh.getIssueMed().getMedId();
-                        } else {
-                            return null;
-                        }
+                        return null;
                     }
                 case 3: //Medicine
                     if (sidh.getIssueMed() != null) {
@@ -260,6 +258,8 @@ public class IssueTableModel extends AbstractTableModel {
                             parent.setRowSelectionInterval(row, row);
                             parent.setColumnSelectionInterval(8, 8);
                         }
+
+                        getOutstandingBalance(sidh);
                     }
                     break;
                 case 3: //Medicine
@@ -267,6 +267,7 @@ public class IssueTableModel extends AbstractTableModel {
                 case 4: //T-Code                    
                     if (value != null) {
                         sidh.setTrader((Trader) value);
+                        getOutstandingBalance(sidh);
                     }
                     break;
                 case 5: //Trader Name
@@ -388,6 +389,7 @@ public class IssueTableModel extends AbstractTableModel {
         if (column != 0) {
             try {
                 fireTableCellUpdated(row, column);
+                fireTableCellUpdated(row, 6);
                 fireTableCellUpdated(row, 8);
                 fireTableCellUpdated(row, 12);
                 fireTableCellUpdated(row, 13);
@@ -439,9 +441,15 @@ public class IssueTableModel extends AbstractTableModel {
             sidh.setIssueMed(outs.getMed());
             sidh.setIssueOpt(outs.getTranOption());
             sidh.setRefVou(outs.getInvId());
-            if (outs.getCusId() != null) {
-                sidh.setTrader((Trader) dao.find(Trader.class,
-                        outs.getCusId()));
+            try {
+                if (outs.getCusId() != null) {
+                    sidh.setTrader((Trader) dao.find(Trader.class,
+                            outs.getCusId()));
+                }
+            } catch (Exception ex) {
+                log.error("add : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
             sidh.setStrOutstanding(outs.getQtyStr());
 
@@ -493,11 +501,9 @@ public class IssueTableModel extends AbstractTableModel {
              status = false;
              JOptionPane.showMessageDialog(Util1.getParent(), "Invalid trader.",
              "No Trader", JOptionPane.ERROR_MESSAGE);
-             }*/ else {
-                    if (NumberUtil.NZeroInt(his.getUniqueId()) == 0) {
-                        his.setUniqueId(row + 1);
-                        row++;
-                    }
+             }*/ else if (NumberUtil.NZeroInt(his.getUniqueId()) == 0) {
+                    his.setUniqueId(row + 1);
+                    row++;
                 }
             }
         }
@@ -668,9 +674,9 @@ public class IssueTableModel extends AbstractTableModel {
     private void calculateMed(String medId, String currency) {
         try {
             String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
+                    + Global.machineId + "'";
             String strMethod = "AVG";
 
             dao.execSql(deleteTmpData1, deleteTmpData2);
@@ -680,10 +686,10 @@ public class IssueTableModel extends AbstractTableModel {
             String tmpDate = DateUtil.getTodayDateStr();
             dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(tmpDate), "Opening",
-                    Global.loginUser.getUserId());
+                    Global.machineId);
 
             List<TmpEXRate> listEXR = dao.findAllHSQL("select o from TmpEXRate o where o.key.userId = '"
-                    + Global.loginUser.getUserId() + "'");
+                    + Global.machineId + "'");
             boolean localCost = false;
             if (listEXR != null) {
                 if (!listEXR.isEmpty()) {
@@ -694,19 +700,19 @@ public class IssueTableModel extends AbstractTableModel {
             if (Util1.getPropValue("system.multicurrency").equals("Y")) {
                 if (localCost) {
                     calculateWithLocalExRate("Opening", DateUtil.toDateStrMYSQL(tmpDate),
-                            Global.loginUser.getUserId(), strMethod, currency);
+                            Global.machineId, strMethod, currency);
                 } else {
                     dao.execProc("insert_cost_detail_mc",
                             "Opening", DateUtil.toDateStrMYSQL(tmpDate),
-                            Global.loginUser.getUserId(), strMethod, currency);
+                            Global.machineId, strMethod, currency);
                 }
             } else {
                 dao.execProc("insert_cost_detail",
                         "Opening", DateUtil.toDateStrMYSQL(tmpDate),
-                        Global.loginUser.getUserId(), strMethod);
+                        Global.machineId, strMethod);
                 dao.commit();
             }
-            
+
         } catch (Exception ex) {
             log.error("calculate : " + ex.toString());
         } finally {
@@ -716,9 +722,9 @@ public class IssueTableModel extends AbstractTableModel {
 
     private void insertStockFilterCodeMed(String MedId) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
-                + Global.loginUser.getUserId() + "'";
+                + Global.machineId + "'";
         String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.loginUser.getUserId()
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
                 + " where op_date < '" + DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()) + "'";
@@ -744,7 +750,7 @@ public class IssueTableModel extends AbstractTableModel {
         try {
             listStockCosting = dao.findAllHSQL(
                     "select o from StockCosting o where o.key.medicine.medId = '" + medId
-                    + "' and o.key.userId = '" + Global.loginUser.getUserId() + "' "
+                    + "' and o.key.userId = '" + Global.machineId + "' "
                     + "and o.key.tranOption = 'Opening'"
             );
         } catch (Exception ex) {
@@ -873,19 +879,17 @@ public class IssueTableModel extends AbstractTableModel {
                         if (curr.equals(currId)) {
                             scd.setExrSmallCost(rs.getDouble("smallest_cost"));
                             scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                        } else if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
+                            double exRate = rs.getDouble("ex_rate");
+                            double ttlStock = scd.getCostQty();
+                            double smlCost = rs.getDouble("smallest_cost");
+                            double amount = ttlStock * smlCost * exRate;
+                            scd.setExrSmallCost(smlCost * exRate);
+                            //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
+                            scd.setExrTtlCost(amount);
                         } else {
-                            if (curr.equals(fromCurrId) || curr.equals(toCurrId)) {
-                                double exRate = rs.getDouble("ex_rate");
-                                double ttlStock = scd.getCostQty();
-                                double smlCost = rs.getDouble("smallest_cost");
-                                double amount = ttlStock * smlCost * exRate;
-                                scd.setExrSmallCost(smlCost * exRate);
-                                //scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                                scd.setExrTtlCost(amount);
-                            } else {
-                                scd.setExrSmallCost(0.0);
-                                scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
-                            }
+                            scd.setExrSmallCost(0.0);
+                            scd.setExrTtlCost(scd.getCostQty() * scd.getExrSmallCost());
                         }
 
                         dao.save(scd);
@@ -932,6 +936,53 @@ public class IssueTableModel extends AbstractTableModel {
             log.error("calculateWithLocalExRate : " + ex.getMessage());
         } finally {
             dao.close();
+        }
+    }
+
+    private void getOutstandingBalance(StockIssueDetailHis sidh) {
+        String medId = "";
+        String cusId = "";
+        String option = "";
+
+        if (sidh.getIssueMed() != null) {
+            medId = sidh.getIssueMed().getMedId();
+        }
+
+        if (sidh.getTrader() != null) {
+            cusId = sidh.getTrader().getTraderId();
+        }
+
+        if (sidh.getIssueOpt() != null) {
+            option = sidh.getIssueOpt();
+        }
+
+        if (!medId.isEmpty() && !cusId.isEmpty() && option.equals("Borrow")) {
+            String strSql = "select sum(a.ttl) as balance\n"
+                    + "from (\n"
+                    + "select sum(ifnull(smallest_qty,0))*-1 as ttl\n"
+                    + "from v_stock_issue\n"
+                    + "where issue_opt = 'Borrow' and deleted = false\n"
+                    + "and med_id = '" + medId + "' and cus_id = '" + cusId + "'\n"
+                    + "union all\n"
+                    + "select sum(ifnull(smallest_qty,0)) as ttl\n"
+                    + "from v_stock_receive\n"
+                    + "where rec_option = 'Borrow' and deleted = false\n"
+                    + "and rec_med_id = '" + medId + "' and cus_id = '" + cusId + "') a";
+            try {
+                ResultSet rs = dao.execSQL(strSql);
+                if (rs != null) {
+                    if (rs.next()) {
+                        float balance = rs.getFloat("balance");
+                        String strBalance = MedicineUtil.getQtyInStr(sidh.getIssueMed(), balance);
+                        sidh.setStrOutstanding(strBalance);
+                        sidh.setOutsBalance(balance);
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("getOutstandingBalance : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 }

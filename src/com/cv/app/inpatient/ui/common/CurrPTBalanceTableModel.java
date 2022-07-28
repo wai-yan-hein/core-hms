@@ -109,7 +109,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
             String regNo = "-";
             String appCurr = Util1.getPropValue("system.app.currency");
             String strDate = DateUtil.getTodayDateStrMYSQL();
-            String userId = Global.loginUser.getUserId();
+            String userId = Global.machineId;
             dao.execProc("patient_balance", DateUtil.getTodayDateStrMYSQL(),
                     appCurr, userId, regNo);
             

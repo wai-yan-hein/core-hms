@@ -33,7 +33,7 @@ public class SysPropSetup extends javax.swing.JPanel {
     private SysPropTableModel tableModel = new SysPropTableModel(dao);
     private TableRowSorter<TableModel> sorter;
     private StartWithRowFilter swrf;
-    
+
     /**
      * Creates new form SysPropSetup
      */
@@ -50,8 +50,14 @@ public class SysPropSetup extends javax.swing.JPanel {
     }
 
     private void setProperties() {
-        List<SysProperty> listProperties = dao.findAll("SysProperty");
-        tableModel.setListSysProperty(listProperties);
+        try {
+            List<SysProperty> listProperties = dao.findAll("SysProperty");
+            tableModel.setListSysProperty(listProperties);
+        } catch (Exception ex) {
+            log.error("setProperties : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Action actionItemDelete = new AbstractAction() {
@@ -66,7 +72,7 @@ public class SysPropSetup extends javax.swing.JPanel {
                             "Are you sure to delete?",
                             "Sale item delete", JOptionPane.YES_NO_OPTION);
 
-                    if(tblProperty.getCellEditor() != null){
+                    if (tblProperty.getCellEditor() != null) {
                         tblProperty.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {

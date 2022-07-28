@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
 
@@ -44,7 +43,7 @@ public class ReaderEntryTableModel extends AbstractTableModel {
         VOpd rec = listService.get(row);
         Date vouSaleDate = rec.getOpdDate();
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
             return false;
         }
         return column == 8 || column == 9 || column == 10 || column == 11 || column == 12;
@@ -172,7 +171,7 @@ public class ReaderEntryTableModel extends AbstractTableModel {
                     record.setReaderDrName(null);
 
                     try {
-                        String strSql = "update opd_details_his set reader_doctor_id = null where opd_detail_id = '" 
+                        String strSql = "update opd_details_his set reader_doctor_id = null where opd_detail_id = '"
                                 + record.getKey().getOpdDetailId() + "'";
                         dao.execSql(strSql);
                     } catch (Exception ex) {
@@ -236,23 +235,23 @@ public class ReaderEntryTableModel extends AbstractTableModel {
                 break;
             case 12: //Print
                 try {
-                    String userId = Global.loginUser.getUserId();
-                    String detailId = record.getKey().getOpdDetailId();
-                    Boolean print = (Boolean) value;
-                    record.setPrint(print);
-                    String strSql;
-                    if (print) {
-                        strSql = "insert into tmp_xray_print(user_id, opd_detail_id) "
-                                + "values('" + userId + "','" + detailId + "')";
-                    }else{
-                        strSql = "delete from tmp_xray_print where "
-                                + "user_id = '" + userId + "' and opd_detail_id = '" + detailId + "'";
-                    }
-                    dao.execSql(strSql);
-                } catch (Exception ex) {
-                    log.error("print : " + ex.getMessage());
+                String userId = Global.machineId;
+                String detailId = record.getKey().getOpdDetailId();
+                Boolean print = (Boolean) value;
+                record.setPrint(print);
+                String strSql;
+                if (print) {
+                    strSql = "insert into tmp_xray_print(user_id, opd_detail_id) "
+                            + "values('" + userId + "','" + detailId + "')";
+                } else {
+                    strSql = "delete from tmp_xray_print where "
+                            + "user_id = '" + userId + "' and opd_detail_id = '" + detailId + "'";
                 }
-                break;
+                dao.execSql(strSql);
+            } catch (Exception ex) {
+                log.error("print : " + ex.getMessage());
+            }
+            break;
         }
 
         fireTableCellUpdated(row, column);
@@ -307,9 +306,15 @@ public class ReaderEntryTableModel extends AbstractTableModel {
 
         strSql = strSql + " order by o.opdDate, o.key.vouNo";
 
-        listService = dao.findAllHSQL(strSql);
-        System.gc();
-        fireTableDataChanged();
+        try {
+            listService = dao.findAllHSQL(strSql);
+            System.gc();
+            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("search : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void printXRayForm(VOpd record) {

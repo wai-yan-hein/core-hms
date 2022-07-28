@@ -113,15 +113,21 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
     }
 
     private void initCombo() {
-        BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-        BindingUtil.BindCombo(cboExpenseType,
-                dao.findAllHSQL("select o from ExpenseType o where o.expenseOption = 'OT' order by o.expenseName"));
+        try {
+            BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
+            BindingUtil.BindCombo(cboExpenseType,
+                    dao.findAllHSQL("select o from ExpenseType o where o.expenseOption = 'OT' order by o.expenseName"));
 
-        //cboService.setSelectedItem(null);
-        cboExpenseType.setSelectedItem(null);
+            //cboService.setSelectedItem(null);
+            cboExpenseType.setSelectedItem(null);
 
-        AutoCompleteDecorator.decorate(cboExpenseType);
-        AutoCompleteDecorator.decorate(cboSession);
+            AutoCompleteDecorator.decorate(cboExpenseType);
+            AutoCompleteDecorator.decorate(cboSession);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override
@@ -157,12 +163,12 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             return;
         }
         String groupId = et.getCusGroupoId().toString();
-        
+
         String sessionId = "0";
-        if(cboSession.getSelectedItem() instanceof Session){
-            sessionId = ((Session)cboSession.getSelectedItem()).getSessionId().toString();
+        if (cboSession.getSelectedItem() instanceof Session) {
+            sessionId = ((Session) cboSession.getSelectedItem()).getSessionId().toString();
         }
-        
+
         String strSql;
         if (et.getNeedDr()) {
             strSql = "select ot_date, ot_inv_id, patient_id, patient_name, admission_no, service_name, qty, price, amount,\n"
@@ -183,10 +189,10 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                     + groupId + ")";
         }
 
-        if(!sessionId.equals("0")){
+        if (!sessionId.equals("0")) {
             strSql = strSql + " and session_id = " + sessionId;
         }
-        
+
         switch (et.getSysCode()) {
             case "OTDR": //OT Surgeon Fee Payment
                 if (et.getNeedDr()) {
@@ -264,10 +270,10 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
     private boolean isValidEntry() {
         Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
         Date lockDate = PharmacyUtil.getLockDate(dao);
-        if(vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)){
-            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at " + 
-                    DateUtil.toDateStr(lockDate) + ".",
-                            "Locked Data", JOptionPane.ERROR_MESSAGE);
+        if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                    + DateUtil.toDateStr(lockDate) + ".",
+                    "Locked Data", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         boolean status = true;
@@ -311,7 +317,7 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             if (cboSession.getSelectedItem() instanceof Session) {
                 sessionId = ((Session) cboSession.getSelectedItem()).getSessionId().toString();
             }
-            
+
             switch (et.getSysCode()) {
                 case "OTDR": //CF Fee Payment
                     if (et.getNeedDr()) {
@@ -359,26 +365,24 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                                     + " and group_id in (select ot_cat_id from ot_cus_group_detail a where cus_grp_id = veac.cus_group_id) "
                                     + "and pay_dr_id = '" + selectedDrId + "' and ifnull(pay_id,'')='' ";
                         }
+                    } else if (drPaySetting.equals("IPD")) {
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id\n"
+                                + "from v_ot_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                + " and date(ot_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and group_id in (select ot_cat_id from ot_cus_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + " and ifnull(pay_id1,'')='' ";
                     } else {
-                        if (drPaySetting.equals("IPD")) {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id\n"
-                                    + "from v_ot_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
-                                    + " and date(ot_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and group_id in (select ot_cat_id from ot_cus_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + " and ifnull(pay_id1,'')='' ";
-                        } else {
-                            strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id\n"
-                                    + "from v_ot_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
-                                    + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt = veac.use_for\n"
-                                    + " and date(ot_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                                    + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
-                                    + " and group_id in (select ot_cat_id from ot_cus_group_detail a where cus_grp_id = veac.cus_group_id) "
-                                    + " and ifnull(pay_id1,'')='' ";
-                        }
+                        strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id\n"
+                                + "from v_ot_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
+                                + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
+                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + " and date(ot_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
+                                + " and group_id in (select ot_cat_id from ot_cus_group_detail a where cus_grp_id = veac.cus_group_id) "
+                                + " and ifnull(pay_id1,'')='' ";
                     }
                     break;
                 case "OTSTAFF": //OT Staff Payment
@@ -489,9 +493,9 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                 strSql = strSql + " and oh.session_id = " + sessionId;
                 strSqlExp = strSqlExp + " and session_id = " + sessionId;
             }
-            
+
             strSqlExp = strSqlExp + " group by source_acc_id, acc_id, dept_code, use_for, veac.exp_acc_id";
-            
+
             try {
                 String appCurr = Util1.getPropValue("system.app.currency");
                 ResultSet rs = dao.execSQL(strSqlExp);
@@ -543,7 +547,7 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             } finally {
                 dao.close();
             }
-            
+
             clear();
         }
 
@@ -591,7 +595,7 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             String compName = Util1.getPropValue("report.company.name");
             String phoneNo = Util1.getPropValue("report.phone");
             String address = Util1.getPropValue("report.address");
-            params.put("p_user_id", Global.loginUser.getUserId());
+            params.put("p_user_id", Global.machineId);
             params.put("compName", compName);
             params.put("phoneNo", phoneNo);
             params.put("comAddress", address);
@@ -629,7 +633,7 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
         txtTtlAmt.setValue(0);
         txtTtlDr.setValue(0);
         chkUPP.setSelected(false);
-        
+
         genVouNo();
     }
 

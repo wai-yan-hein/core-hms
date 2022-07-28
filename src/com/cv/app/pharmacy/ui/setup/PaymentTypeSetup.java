@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-/*
+ /*
  * PaymentTypeSetup.java
  *
  * Created on May 29, 2012, 9:17:12 PM
@@ -35,13 +35,14 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author winswe
  */
 public class PaymentTypeSetup extends javax.swing.JPanel {
+
     static Logger log = Logger.getLogger(PaymentTypeSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private PaymentTypeTableModel tableModel = new PaymentTypeTableModel();
     private BestAppFocusTraversalPolicy focusPolicy;
     private PaymentType currPaymenttype = new PaymentType();
     private int selectedRow = -1;
-    
+
     /**
      * Creates new form PaymentTypeSetup
      */
@@ -76,33 +77,30 @@ public class PaymentTypeSetup extends javax.swing.JPanel {
     }
 
     private void initTable() {
-        //Get PaymentType from database.
-        tableModel.setListPaymentType(dao.findAll("PaymentType"));
+        try {
+            //Get PaymentType from database.
+            tableModel.setListPaymentType(dao.findAll("PaymentType"));
 
-        //Binding table with listCategory using beansbinding library.
-        /*JTableBinding jTableBinding = SwingBindings.createJTableBinding(UpdateStrategy.READ_WRITE,
-                listPaymentType, tblPaymentType);
-        ColumnBinding columnBinding = jTableBinding.addColumnBinding(org.jdesktop.beansbinding.ELProperty.create("${paymentTypeName}"));
-        columnBinding.setColumnName("Payment Type");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-        jTableBinding.bind();*/
-
-        //Define table selection model to single row selection.
-        tblPaymentType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        //Adding table row selection listener.
-        tblPaymentType.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    public void valueChanged(ListSelectionEvent e) {
-                        if(tblPaymentType.getSelectedRow() >= 0){
-                            selectedRow = tblPaymentType.convertRowIndexToModel(
-                                    tblPaymentType.getSelectedRow());
-                        }
-                        if (selectedRow >= 0) {
-                            setCurrPaymentType(tableModel.getPaymentType(selectedRow));
-                        }
+            //Define table selection model to single row selection.
+            tblPaymentType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            //Adding table row selection listener.
+            tblPaymentType.getSelectionModel().addListSelectionListener(
+                    new ListSelectionListener() {
+                public void valueChanged(ListSelectionEvent e) {
+                    if (tblPaymentType.getSelectedRow() >= 0) {
+                        selectedRow = tblPaymentType.convertRowIndexToModel(
+                                tblPaymentType.getSelectedRow());
                     }
-                });
+                    if (selectedRow >= 0) {
+                        setCurrPaymentType(tableModel.getPaymentType(selectedRow));
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     public void setFocus() {
@@ -171,6 +169,7 @@ public class PaymentTypeSetup extends javax.swing.JPanel {
 
         clear();
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -284,9 +283,9 @@ public class PaymentTypeSetup extends javax.swing.JPanel {
         try {
             if (isValidEntry()) {
                 dao.save(currPaymenttype);
-                if(lblStatus.getText().equals("NEW")){
+                if (lblStatus.getText().equals("NEW")) {
                     tableModel.addPaymentType(currPaymenttype);
-                }else{
+                } else {
                     tableModel.setPaymentType(selectedRow, currPaymenttype);
                 }
                 clear();

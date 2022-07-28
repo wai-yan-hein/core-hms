@@ -72,14 +72,14 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private final AbstractDataAccess dao = Global.dao;
     private GenVouNoImpl vouEngine = null;
     private List<RetInDetailHis> listDetail
-            = ObservableCollections.observableList(new ArrayList<RetInDetailHis>());
+            = ObservableCollections.observableList(new ArrayList<>());
     private MedicineUP medUp = new MedicineUP(dao);
     private BestAppFocusTraversalPolicy focusPolicy;
     private RetInHis currRetIn = new RetInHis();
     private RetInTableModel retInTableModel = new RetInTableModel(listDetail, dao,
             medUp, this);
-    private final PaymentType ptCash;
-    private final PaymentType ptCredit;
+    private PaymentType ptCash;
+    private PaymentType ptCredit;
     private boolean canEdit = true;
     private int mouseClick = 2;
 
@@ -105,10 +105,16 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
         txtReturnInDate.setText(DateUtil.getTodayDateStr());
         vouEngine = new GenVouNoImpl(dao, "RetIn", DateUtil.getPeriod(txtReturnInDate.getText()));
-        ptCash = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
-        ptCredit = (PaymentType) dao.find(PaymentType.class,
-                NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        try {
+            ptCash = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.cash")));
+            ptCredit = (PaymentType) dao.find(PaymentType.class,
+                    NumberUtil.NZeroInt(Util1.getPropValue("system.paymenttype.credit")));
+        } catch (Exception ex) {
+            log.error("ReturnIn : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         genVouNo();
         addNewRow();
 
@@ -145,28 +151,34 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void genVouNo() {
-        String vouNo = vouEngine.getVouNo();
-        txtVouNo.setText(vouNo);
-        List<RetInHis> listRIH = dao.findAllHSQL(
-                "select o from RetInHis o where o.retInId = '" + txtVouNo.getText() + "'");
-        if (listRIH != null) {
-            if (!listRIH.isEmpty()) {
-                vouEngine.updateVouNo();
-                vouNo = vouEngine.getVouNo();
-                txtVouNo.setText(vouNo);
-                listRIH = null;
-                listRIH = dao.findAllHSQL(
-                        "select o from RetInHis o where o.retInId = '" + txtVouNo.getText() + "'");
-                if (listRIH != null) {
-                    if (!listRIH.isEmpty()) {
-                        log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
-                                + txtReturnInDate.getText());
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate return in vou no. Exit the program and try again.",
-                                "Return In Vou No", JOptionPane.ERROR_MESSAGE);
-                        System.exit(1);
+        try {
+            String vouNo = vouEngine.getVouNo();
+            txtVouNo.setText(vouNo);
+            List<RetInHis> listRIH = dao.findAllHSQL(
+                    "select o from RetInHis o where o.retInId = '" + txtVouNo.getText() + "'");
+            if (listRIH != null) {
+                if (!listRIH.isEmpty()) {
+                    vouEngine.updateVouNo();
+                    vouNo = vouEngine.getVouNo();
+                    txtVouNo.setText(vouNo);
+                    listRIH = null;
+                    listRIH = dao.findAllHSQL(
+                            "select o from RetInHis o where o.retInId = '" + txtVouNo.getText() + "'");
+                    if (listRIH != null) {
+                        if (!listRIH.isEmpty()) {
+                            log.error("Duplicate purchase vour error : " + txtVouNo.getText() + " @ "
+                                    + txtReturnInDate.getText());
+                            JOptionPane.showMessageDialog(Util1.getParent(), "Duplicate return in vou no. Exit the program and try again.",
+                                    "Return In Vou No", JOptionPane.ERROR_MESSAGE);
+                            System.exit(1);
+                        }
                     }
                 }
             }
+        } catch (Exception ex) {
+            log.error("genVouNo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -205,6 +217,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private void deleteDetail() {
         try {
             String deleteSQL = retInTableModel.getDeleteSql();
+            log.info("deleteSQL : " + deleteSQL);
             if (deleteSQL != null) {
                 dao.execSql(deleteSQL);
             }
@@ -219,49 +232,69 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     public void getMedInfo(String medCode) {
         Medicine medicine;
 
-        if (!medCode.trim().isEmpty()) {
-            medicine = (Medicine) dao.find("Medicine", "medId = '"
-                    + medCode + "' and active = true");
-
-            if (medicine != null) {
-                selected("MedicineList", medicine);
-            } else { //For barcode
-                medicine = (Medicine) dao.find("Medicine", "barcode = '"
+        try {
+            if (!medCode.trim().isEmpty()) {
+                medicine = (Medicine) dao.find("Medicine", "medId = '"
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
                     selected("MedicineList", medicine);
-                } else {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
-                            "Invalid.", JOptionPane.ERROR_MESSAGE);
+                } else { //For barcode
+                    medicine = (Medicine) dao.find("Medicine", "barcode = '"
+                            + medCode + "' and active = true");
+
+                    if (medicine != null) {
+                        selected("MedicineList", medicine);
+                    } else {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
+                                "Invalid.", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+            } else {
+                System.out.println("Blank medicine code.");
             }
-        } else {
-            System.out.println("Blank medicine code.");
+        } catch (Exception ex) {
+            log.error("getMedInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
-        BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
-        BindingUtil.BindCombo(cboLocation, getLocationFilter());
-        BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        try {
+            BindingUtil.BindCombo(cboPayment, dao.findAll("PaymentType"));
+            BindingUtil.BindCombo(cboLocation, getLocationFilter());
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
 
-        new ComBoBoxAutoComplete(cboPayment);
-        new ComBoBoxAutoComplete(cboLocation);
-        new ComBoBoxAutoComplete(cboCurrency);
+            new ComBoBoxAutoComplete(cboPayment);
+            new ComBoBoxAutoComplete(cboLocation);
+            new ComBoBoxAutoComplete(cboCurrency);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }// </editor-fold>
 
     private List getLocationFilter() {
-        if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-            return dao.findAllHSQL(
-                    "select o from Location o where o.locationId in ("
-                    + "select a.key.locationId from UserLocationMapping a "
-                    + "where a.key.userId = '" + Global.loginUser.getUserId()
-                    + "' and a.isAllowRetIn = true) order by o.locationName");
-        } else {
-            return dao.findAllHSQL("select o from Location o order by o.locationName");
+        try {
+            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                return dao.findAllHSQL(
+                        "select o from Location o where o.locationId in ("
+                        + "select a.key.locationId from UserLocationMapping a "
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
+                        + "' and a.isAllowRetIn = true) order by o.locationName");
+            } else {
+                return dao.findAllHSQL("select o from Location o order by o.locationName");
+            }
+        } catch (Exception ex) {
+            log.error("getLocationFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
+
+        return null;
     }
 
     // <editor-fold defaultstate="collapsed" desc="actionMapping">
@@ -374,15 +407,27 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
                 currRetIn.setCustomer(cus);
                 if (cus != null) {
-                    txtCusId.setText(cus.getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusId.setText(cus.getStuCode());
+                    } else {
+                        txtCusId.setText(cus.getTraderId());
+                    }
                     txtCusName.setText(cus.getTraderName());
 
+                    String selCusId;
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        selCusId = cus.getStuCode();
+                    } else {
+                        selCusId = cus.getTraderId();
+                    }
                     //Change payment type to credit
                     //PaymentType pt = (PaymentType) dao.find(PaymentType.class, 2);
-                    if (Util1.getPropValue("system.default.customer").equals(cus.getTraderId())) {
+                    if (Util1.getPropValue("system.default.customer").equals(selCusId)) {
                         cboPayment.setSelectedItem(ptCash);
+                        cboPayment.setEnabled(false);
                     } else {
                         cboPayment.setSelectedItem(ptCredit);
+                        cboPayment.setEnabled(true);
                     }
                 } else {
                     txtCusId.setText(null);
@@ -430,7 +475,11 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         txtCusName.setText(null);
                     }
                 } else if (currRetIn.getCustomer() != null) {
-                    txtCusId.setText(currRetIn.getCustomer().getTraderId());
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusId.setText(currRetIn.getCustomer().getStuCode());
+                    } else {
+                        txtCusId.setText(currRetIn.getCustomer().getTraderId());
+                    }
                     txtCusName.setText(currRetIn.getCustomer().getTraderName());
                 } else {
                     txtCusId.setText(null);
@@ -559,7 +608,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
     // <editor-fold defaultstate="collapsed" desc="calculateTotalAmount">
     private void calculateTotalAmount() {
-        Double totalAmount = new Double(0);
+        Double totalAmount = 0d;
 
         for (RetInDetailHis sdh : listDetail) {
             totalAmount += NumberUtil.NZero(sdh.getAmount());
@@ -720,7 +769,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
                 }
             } catch (Exception ex) {
-                log.error("insert packing : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+                log.error("insert packing : " + ex.getStackTrace()[0].getLineNumber() + " - " + currRetIn.getRetInId() + " - " + ex);
             } finally {
                 dao.close();
             }
@@ -735,7 +784,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     if (ridh.getRetInDetailId() == null) {
                         ridh.setRetInDetailId(vouNo + "-" + ridh.getUniqueId().toString());
                     }
-
+                    log.info("med_id : " + ridh.getMedicineId().getMedId() + " ret_in_detail_id : " + ridh.getRetInDetailId());
                     dao.save1(ridh);
                 }
                 currRetIn.setListDetail(listTmp);
@@ -754,7 +803,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 newForm();
             } catch (Exception ex) {
                 dao.rollBack();
-                log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + currRetIn.getRetInId() + " - " + ex.toString());
                 JOptionPane.showMessageDialog(Util1.getParent(), "Error : " + ex.toString(),
                         "Return In Save", JOptionPane.ERROR_MESSAGE);
             } finally {
@@ -770,7 +819,12 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
     @Override
     public void history() {
-        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this, "Return In Voucher Search", dao);
+        int locationId = -1;
+        if (cboLocation.getSelectedItem() instanceof Location) {
+            locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
+        }
+        UtilDialog dialog = new UtilDialog(Util1.getParent(), true, this,
+                "Return In Voucher Search", dao, locationId);
         dialog.setPreferredSize(new Dimension(1200, 600));
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
@@ -799,9 +853,35 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     "Return In voucher delete", JOptionPane.YES_NO_OPTION);
 
             if (yes_no == 0) {
+                try {
+                    dao.execProc("bkreturnin",
+                            currRetIn.getRetInId(),
+                            Global.loginUser.getUserId(),
+                            Global.machineId,
+                            currRetIn.getVouTotal().toString(),
+                            currRetIn.getPaid().toString(),
+                            currRetIn.getBalance().toString());
+                } catch (Exception ex) {
+                    log.error("bkreturnin : " + ex.getStackTrace()[0].getLineNumber() + " - " + currRetIn.getRetInId() + " - " + ex);
+                } finally {
+                    dao.close();
+                }
+
                 currRetIn.setDeleted(true);
                 currRetIn.setIntgUpdStatus(null);
-                save();
+
+                String vouNo = currRetIn.getRetInId();
+                try {
+                    dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_his = '" + vouNo + "'");
+                    //For upload to account
+                    uploadToAccount(currRetIn);
+                } catch (Exception ex) {
+                    log.error("delete error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                //save();
+                newForm();
             }
         }
     }
@@ -1050,12 +1130,10 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
             if (lblOTID.getText() == null) {
                 currRetIn.setOtId(null);
+            } else if (!lblOTID.getText().isEmpty()) {
+                currRetIn.setOtId(lblOTID.getText());
             } else {
-                if (!lblOTID.getText().isEmpty()) {
-                    currRetIn.setOtId(lblOTID.getText());
-                } else {
-                    currRetIn.setOtId(null);
-                }
+                currRetIn.setOtId(null);
             }
 
             if (NumberUtil.NZeroL(currRetIn.getExrId()) == 0) {
@@ -1245,9 +1323,15 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         Object tmpObj;
 
         if (!Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-            tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
-            if (tmpObj != null) {
-                selected("CustomerList", tmpObj);
+            try {
+                tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
+                if (tmpObj != null) {
+                    selected("CustomerList", tmpObj);
+                }
+            } catch (Exception ex) {
+                log.error("assignDefaultValue : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
         }
 
@@ -1470,16 +1554,11 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private Trader getTrader(String traderId) {
         Trader cus = null;
         try {
-            String prefix = traderId.toUpperCase().substring(0, 3);
-            if (!prefix.contains("SUP")) {
-                if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                    if (!Util1.getPropValue("system.default.customer").equals(traderId)) {
-                        if (!prefix.contains("CUS")) {
-                            traderId = "CUS" + traderId;
-                        }
-                    }
-                }
+            String strFieldName = "o.traderId";
+            if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                strFieldName = "o.stuCode";
             }
+
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 int locationId = -1;
                 if (cboLocation.getSelectedItem() instanceof Location) {
@@ -1488,14 +1567,19 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 List<Trader> listTrader = dao.findAllHSQL("select o from Trader o where "
                         + "o.active = true and o.traderId in (select a.key.traderId "
                         + "from LocationTraderMapping a where a.key.locationId = "
-                        + locationId + ") and o.traderId = '" + traderId + "' order by o.traderName");
+                        + locationId + ") and " + strFieldName + " = '" + traderId + "' order by o.traderName");
                 if (listTrader != null) {
                     if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);
                     }
                 }
             } else {
-                cus = (Trader) dao.find(Trader.class, traderId);
+                List<Trader> listTrader = dao.findAllHSQL("select o from Trader where " + strFieldName + " = '" + traderId + "'");
+                if (listTrader != null) {
+                    if (!listTrader.isEmpty()) {
+                        cus = listTrader.get(0);
+                    }
+                }
             }
         } catch (Exception ex) {
             log.error("getTrader : " + ex.toString());

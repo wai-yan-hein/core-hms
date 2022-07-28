@@ -13,6 +13,7 @@ import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -20,76 +21,83 @@ import java.awt.Dimension;
  */
 public class ItemSetupFilterDialog extends javax.swing.JDialog {
 
-  private AbstractDataAccess dao;
-  private boolean status = false;
+    static Logger log = Logger.getLogger(ItemSetupFilterDialog.class.getName());
+    private AbstractDataAccess dao;
+    private boolean status = false;
 
-  /**
-   * Creates new form ItemSetupFilterDialog
-   */
-  public ItemSetupFilterDialog(AbstractDataAccess dao) {
-    super(Util1.getParent(), true);
-    initComponents();
-    this.dao = dao;
-    initCombo();
+    /**
+     * Creates new form ItemSetupFilterDialog
+     */
+    public ItemSetupFilterDialog(AbstractDataAccess dao) {
+        super(Util1.getParent(), true);
+        initComponents();
+        this.dao = dao;
+        initCombo();
 
-    Dimension screen = Util1.getScreenSize();
-    int x = (screen.width - this.getWidth()) / 2;
-    int y = (screen.height - this.getHeight()) / 2;
+        Dimension screen = Util1.getScreenSize();
+        int x = (screen.width - this.getWidth()) / 2;
+        int y = (screen.height - this.getHeight()) / 2;
 
-    setLocation(x, y);
-    setVisible(true);
-  }
-
-  private void initCombo() {
-    BindingUtil.BindComboFilter(cboBrandName, dao.findAll("ItemBrand"));
-    BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
-    BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
-
-    new ComBoBoxAutoComplete(cboBrandName);
-    new ComBoBoxAutoComplete(cboCategory);
-    new ComBoBoxAutoComplete(cboItemType);
-  }
-
-  public boolean getStatus(){
-    return status;
-  }
-  
-  public String getFilter(){
-    String strFilter = "";
-    
-    if(cboItemType.getSelectedItem() instanceof ItemType){
-      ItemType itemType = (ItemType)cboItemType.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and medTypeId = '" 
-                + itemType.getItemTypeCode() + "'";
-      }else{
-        strFilter = "medTypeId = '" 
-                + itemType.getItemTypeCode() + "'";
-      }
+        setLocation(x, y);
+        setVisible(true);
     }
-    
-    if(cboCategory.getSelectedItem() instanceof Category){
-      Category cat = (Category)cboCategory.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and catId = " + cat.getCatId();
-      }else{
-        strFilter = " catId = " + cat.getCatId();
-      }
+
+    private void initCombo() {
+        try {
+            BindingUtil.BindComboFilter(cboBrandName, dao.findAll("ItemBrand"));
+            BindingUtil.BindComboFilter(cboCategory, dao.findAll("Category"));
+            BindingUtil.BindComboFilter(cboItemType, dao.findAll("ItemType"));
+
+            new ComBoBoxAutoComplete(cboBrandName);
+            new ComBoBoxAutoComplete(cboCategory);
+            new ComBoBoxAutoComplete(cboItemType);
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
-    
-    if(cboBrandName.getSelectedItem() instanceof ItemBrand){
-      ItemBrand itemBrand = (ItemBrand)cboBrandName.getSelectedItem();
-      
-      if(strFilter.length() > 0){
-        strFilter = strFilter + " and brandId = " + itemBrand.getBrandId();
-      }else{
-        strFilter = "brandId = " + itemBrand.getBrandId();
-      }
+
+    public boolean getStatus() {
+        return status;
     }
-    
-    /*if(!txtChemicalName.getText().isEmpty()){
+
+    public String getFilter() {
+        String strFilter = "";
+
+        if (cboItemType.getSelectedItem() instanceof ItemType) {
+            ItemType itemType = (ItemType) cboItemType.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and medTypeId = '"
+                        + itemType.getItemTypeCode() + "'";
+            } else {
+                strFilter = "medTypeId = '"
+                        + itemType.getItemTypeCode() + "'";
+            }
+        }
+
+        if (cboCategory.getSelectedItem() instanceof Category) {
+            Category cat = (Category) cboCategory.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and catId = " + cat.getCatId();
+            } else {
+                strFilter = " catId = " + cat.getCatId();
+            }
+        }
+
+        if (cboBrandName.getSelectedItem() instanceof ItemBrand) {
+            ItemBrand itemBrand = (ItemBrand) cboBrandName.getSelectedItem();
+
+            if (strFilter.length() > 0) {
+                strFilter = strFilter + " and brandId = " + itemBrand.getBrandId();
+            } else {
+                strFilter = "brandId = " + itemBrand.getBrandId();
+            }
+        }
+
+        /*if(!txtChemicalName.getText().isEmpty()){
       if(strFilter.length() > 0){
         strFilter = strFilter + " and chemicalName like '" 
                 + txtChemicalName.getText() + "%'";
@@ -98,22 +106,21 @@ public class ItemSetupFilterDialog extends javax.swing.JDialog {
                 + txtChemicalName.getText() + "%'";
       }
     }*/
-    
-    if(strFilter.length() > 0){
-      strFilter = strFilter + " and active = " +  chkActive.isSelected();
-    }else{
-      strFilter = "active = " + chkActive.isSelected();
+        if (strFilter.length() > 0) {
+            strFilter = strFilter + " and active = " + chkActive.isSelected();
+        } else {
+            strFilter = "active = " + chkActive.isSelected();
+        }
+
+        return strFilter;
     }
-    
-    return strFilter;
-  }
-  
-  /**
-   * This method is called from within the constructor to initialize the form.
-   * WARNING: Do NOT modify this code. The content of this method is always
-   * regenerated by the Form Editor.
-   */
-  @SuppressWarnings("unchecked")
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -231,8 +238,8 @@ public class ItemSetupFilterDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
   private void butFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFilterActionPerformed
-    status = true;
-    dispose();
+      status = true;
+      dispose();
   }//GEN-LAST:event_butFilterActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

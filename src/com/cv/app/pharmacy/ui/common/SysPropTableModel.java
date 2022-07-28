@@ -4,6 +4,7 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.SysProperty;
 import java.util.ArrayList;
@@ -128,6 +129,7 @@ public class SysPropTableModel extends AbstractTableModel {
 
             if (status) {
                 dao.save(prop);
+                Global.systemProperties.put(prop.getPropDesp(), prop.getPropValue());
                 addNewRow();
             }
         } catch (Exception ex) {

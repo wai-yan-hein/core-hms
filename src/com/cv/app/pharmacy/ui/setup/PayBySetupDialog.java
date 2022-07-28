@@ -34,14 +34,14 @@ public class PayBySetupDialog extends javax.swing.JDialog {
     private int selectedRow = -1;
     private final TableRowSorter<TableModel> sorter;
     private final StartWithRowFilter swrf;
-    
+
     /**
      * Creates new form LocationTypeSetupDialog
      */
     public PayBySetupDialog() {
         super(Util1.getParent(), true);
         initComponents();
-        
+
         try {
             dao.open();
             initTable();
@@ -53,7 +53,6 @@ public class PayBySetupDialog extends javax.swing.JDialog {
         //applyFocusPolicy();
         //AddFocusMoveKey();
         //this.setFocusTraversalPolicy(focusPolicy);
-
         swrf = new StartWithRowFilter(txtFilter);
         sorter = new TableRowSorter(tblLocationType.getModel());
         tblLocationType.setRowSorter(sorter);
@@ -81,25 +80,30 @@ public class PayBySetupDialog extends javax.swing.JDialog {
      */
     private void initTable() {
         //Get Category from database.
-        ltTableModel.setListPB(dao.findAllHSQL("select o from PayBy o order by o.desp"));
-
+        try {
+            ltTableModel.setListPB(dao.findAllHSQL("select o from PayBy o order by o.desp"));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         //Define table selection model to single row selection.
         tblLocationType.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
         tblLocationType.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (tblLocationType.getSelectedRow() >= 0) {
-                            selectedRow = tblLocationType.convertRowIndexToModel(
-                                    tblLocationType.getSelectedRow());
-                        }
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblLocationType.getSelectedRow() >= 0) {
+                    selectedRow = tblLocationType.convertRowIndexToModel(
+                            tblLocationType.getSelectedRow());
+                }
 
-                        if (selectedRow >= 0) {
-                            setPayBy(ltTableModel.getPayBy(selectedRow));
-                        }
-                    }
-                });
+                if (selectedRow >= 0) {
+                    setPayBy(ltTableModel.getPayBy(selectedRow));
+                }
+            }
+        });
     }
 
     public void setFocus() {
@@ -144,7 +148,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
 
         clear();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -306,7 +310,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
             }
         } catch (ConstraintViolationException ex) {
             JOptionPane.showMessageDialog(this, "Duplicate entry.",
-                "Category Save", JOptionPane.ERROR_MESSAGE);
+                    "Category Save", JOptionPane.ERROR_MESSAGE);
             dao.rollBack();
         } catch (Exception ex) {
             log.error("butSaveActionPerformed : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());

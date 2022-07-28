@@ -4,6 +4,8 @@
  */
 package com.cv.app;
 
+import java.awt.Color;
+import javax.swing.UIManager;
 import org.apache.log4j.Logger;
 import org.springframework.richclient.application.ApplicationLauncher;
 
@@ -22,7 +24,8 @@ public class Application {
      */
     public static void main(String[] args) {
         log.info("SimpleApp starting up");
-
+        UIManager.put("ComboBox.disabledBackground", new Color(212, 212, 210));
+        UIManager.put("ComboBox.disabledForeground", Color.BLACK);
         // In order to launch the platform, we have to construct an
         // application context that defines the beans (services) and
         // wiring. This is pretty much straight Spring.
@@ -34,7 +37,6 @@ public class Application {
 
         // The startup context defines elements that should be available
         // quickly such as a splash screen image.
-
         String startupContextPath = rootContextDirectoryClassPath + "/richclient-startup-context.xml";
 
         String richclientApplicationContextPath = rootContextDirectoryClassPath
@@ -45,8 +47,8 @@ public class Application {
         // singleton instance, creating the application window to display
         // the initial page.
         try {
-            new ApplicationLauncher(startupContextPath, 
-                    new String[] { richclientApplicationContextPath });
+            new ApplicationLauncher(startupContextPath,
+                    new String[]{richclientApplicationContextPath});
         } catch (RuntimeException e) {
             log.error("RuntimeException during startup", e);
         }
