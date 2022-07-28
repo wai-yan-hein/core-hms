@@ -115,22 +115,22 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                     //srHis.setListDetail(list);
                     System.out.println(list.size());
 
-                    if (srHis.isDeleted()) {
-                        lblStatus.setText("DELETED");
-                    } else {
-                        lblStatus.setText("EDIT");
-                    }
-
-                    txtRevId.setText(srHis.getReceivedId());
-                    txtReceiveDate.setText(DateUtil.toDateStr(srHis.getReceiveDate()));
-                    txtRemark.setText(srHis.getRemark());
-                    cboLocation.setSelectedItem(srHis.getLocation());
-                    recTblModel.setListDetail(list);
-                    recTblModel.addEmptyRow();
-                    dao.close();
-                } catch (Exception ex) {
-                    log.error("selected : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                if (srHis.isDeleted()) {
+                    lblStatus.setText("DELETED");
+                } else {
+                    lblStatus.setText("EDIT");
                 }
+
+                txtRevId.setText(srHis.getReceivedId());
+                txtReceiveDate.setText(DateUtil.toDateStr(srHis.getReceiveDate()));
+                txtRemark.setText(srHis.getRemark());
+                cboLocation.setSelectedItem(srHis.getLocation());
+                recTblModel.setListDetail(list);
+                recTblModel.addEmptyRow();
+                dao.close();
+            } catch (Exception ex) {
+                log.error("selected : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
         }
     }
 

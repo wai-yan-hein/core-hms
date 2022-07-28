@@ -13,11 +13,13 @@ import com.cv.app.pharmacy.database.entity.ItemBrand;
 import com.cv.app.pharmacy.database.entity.ItemGroup;
 import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.ReOrderLevel;
 import com.cv.app.pharmacy.database.view.VReOrderLevel;
 import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.ReOrderLevelTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.util.TransferDialog;
+import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -33,6 +35,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -255,22 +258,55 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
 
     private void applyFilter() {
         try {
-            if (tblReOrderLevel.getCellEditor() != null) {
-                tblReOrderLevel.getCellEditor().stopCellEditing();
+            try {
+                if (tblReOrderLevel.getCellEditor() != null) {
+                    tblReOrderLevel.getCellEditor().stopCellEditing();
+                }
+            } catch (Exception ex) {
+
             }
-        } catch (Exception ex) {
-
-        }
-
-        try {
-            List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
+            /*Thread thread = new Thread() {
+            @Override
+            public void run() {
+            List<ReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
             tblReOrderModel.setListReOrderLevel(listReOrderLevel);
+            System.gc();
+            };
+            };
+            thread.start();*/
+            List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
+            final List<ReOrderLevel> listROL = new ArrayList();
+            
+            listReOrderLevel.forEach(vrol -> {
+                try {
+                    String strQty = MedicineUtil.getQtyInStr(vrol.getQtyList(),
+                            vrol.getUnitList(), NumberUtil.FloatZero(vrol.getBalance()));
+                    ReOrderLevel rol = (ReOrderLevel) dao.find(ReOrderLevel.class, vrol.getKey());
+                    if (rol != null) {
+                        rol.setStrBalance(strQty);
+                        vrol.setStrBalance(strQty);
+                        log.info("med_id : " + vrol.getKey().getMed());
+                        listROL.add(rol);
+                    }
+                } catch (Exception ex) {
+                    java.util.logging.Logger.getLogger(ReOrderLevelEntry.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            
+            try {
+                dao.saveBatch(listROL);
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+            }finally{
+                dao.close();
+            }
+            
+            tblReOrderModel.setListReOrderLevel(listReOrderLevel);
+            System.gc();
         } catch (Exception ex) {
-            log.error("applyFilter : " + ex.getMessage());
-        } finally {
-            dao.close();
+            java.util.logging.Logger.getLogger(ReOrderLevelEntry.class.getName()).log(Level.SEVERE, null, ex);
+
         }
-        System.gc();
     }
 
     private void initTable() {

@@ -908,6 +908,33 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             } catch (Exception ex) {
                 log.info("rpt : " + ex.getMessage());
             }
+
+            /*if (report.getMenuClass().equals("ControlDrugForm3") && report.getMenuUrl().equals("xls")) {
+             ResultSet rs = null;
+             try {
+             rs = dao.execSQL("select tran_date, item_id, item_name, tsio.location_id, location_name, "
+             + "op_qty, sale_qty, in_ttl, out_ttl, closing,\n"
+             + "name1 as vou_no, reg_no, name2 as pt_name, name3 as nric, dr.doctor_name\n"
+             + "from tmp_stock_in_out tsio join location l on  tsio.location_id = l.location_id\n"
+             + "left join doctor dr on tsio.name4 = dr.doctor_id\n"
+             + "where user_id = '" + Global.loginUser.getUserId()
+             + "' and (sale_qty <> 0 or in_ttl <> 0 or out_ttl <> 0)\n"
+             + "order by tran_id, item_id, tran_date;");
+             POIUtil util = new POIUtil();
+             util.createControlDrugForm3(rs, "/Users/winswe/Documents/mws/CoreValue/Cus_program/wesley/test.xls");
+             } catch (Exception ex) {
+             log.error("excel : " + ex);
+             } finally {
+             if(rs != null){
+             try{
+             rs.close();
+             }catch(Exception ex1){
+                            
+             }
+             }
+             dao.close();
+             }
+             } else {*/
             //}
         } else {
             JOptionPane.showMessageDialog(Util1.getParent(), "Please select report in the list.",

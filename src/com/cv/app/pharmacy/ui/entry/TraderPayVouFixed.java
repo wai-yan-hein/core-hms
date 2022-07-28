@@ -380,6 +380,7 @@ public class TraderPayVouFixed extends javax.swing.JPanel {
 
                                     dao.save(tvaf);
                                 }
+                                tblUnPaidVouModel.dataChange();
                             }
                             tblUnPaidVouModel.dataChange();
                         }

@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import javax.jms.MapMessage;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
@@ -107,35 +108,61 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
     // <editor-fold defaultstate="collapsed" desc="initCombo">
     private void initCombo() {
         try {
-            Object tmpObj;
-            if (Util1.getPropValue("system.login.default.value").equals("Y")) {
-                tmpObj = Global.loginLocation;
-            } else {
-                tmpObj = Util1.getDefaultValue("Location");
-            }
-            if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
-                BindingUtil.BindCombo(cboLocation, getLocationFilter());
-                cboLocation.setSelectedItem(tmpObj);
-                int index = cboLocation.getSelectedIndex();
-                if (index == -1) {
-                    if (cboLocation.getItemCount() > 0) {
-                        cboLocation.setSelectedIndex(0);
-                    }
+            try {
+                Object tmpObj;
+                if (Util1.getPropValue("system.login.default.value").equals("Y")) {
+                    tmpObj = Global.loginLocation;
+                } else {
+                    tmpObj = Util1.getDefaultValue("Location");
                 }
-
-                BindingUtil.BindCombo(cboLocation1, getLocationFilter());
-                cboLocation1.setSelectedItem(tmpObj);
-                index = cboLocation.getSelectedIndex();
-                if (index == -1) {
-                    if (cboLocation1.getItemCount() > 0) {
-                        cboLocation1.setSelectedIndex(0);
+                if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
+                    BindingUtil.BindCombo(cboLocation, getLocationFilter());
+                    cboLocation.setSelectedItem(tmpObj);
+                    int index = cboLocation.getSelectedIndex();
+                    if (index == -1) {
+                        if (cboLocation.getItemCount() > 0) {
+                            cboLocation.setSelectedIndex(0);
+                        }
                     }
+                    
+                    BindingUtil.BindCombo(cboLocation1, getLocationFilter());
+                    cboLocation1.setSelectedItem(tmpObj);
+                    index = cboLocation.getSelectedIndex();
+                    if (index == -1) {
+                        if (cboLocation1.getItemCount() > 0) {
+                            cboLocation1.setSelectedIndex(0);
+                        }
+                    }
+                } else {
+                    BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
+                    BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
+                            new Location(0, "All")));
+                    cboLocation.setSelectedIndex(0);
                 }
-            } else {
-                BindingUtil.BindCombo(cboLocation1, dao.findAll("Location"));
-                BindingUtil.BindCombo(cboLocation, dao.findAll("Location",
-                        new Location(0, "All")));
-                cboLocation.setSelectedIndex(0);
+                BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
+                        new Appuser("000", "All")));
+                BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+                BindingUtil.BindCombo(cboCurrencySearch, dao.findAll("Currency",
+                        new Currency("000", "All")));
+                BindingUtil.BindCombo(cboPCurrency, dao.findAll("Currency"));
+                BindingUtil.BindCombo(cboAccount,
+                        dao.findAllHSQL("select o from TraderPayAccount o where o.status = true order by o.payId"));
+                
+                cboUser.setSelectedIndex(0);
+                cboCurrencySearch.setSelectedIndex(0);
+                
+                new ComBoBoxAutoComplete(cboLocation1);
+                new ComBoBoxAutoComplete(cboLocation);
+                new ComBoBoxAutoComplete(cboUser);
+                new ComBoBoxAutoComplete(cboCurrency);
+                new ComBoBoxAutoComplete(cboCurrencySearch);
+                new ComBoBoxAutoComplete(cboPCurrency);
+                new ComBoBoxAutoComplete(cboAccount);
+                bindStatus = true;
+            } catch (Exception ex) {
+                log.error("initCombo : " + ex.getMessage());
+            } finally {
+                dao.close();
             }
             BindingUtil.BindCombo(cboUser, dao.findAll("Appuser",
                     new Appuser("000", "All")));
@@ -157,12 +184,11 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             new ComBoBoxAutoComplete(cboPCurrency);
             new ComBoBoxAutoComplete(cboAccount);
             bindStatus = true;
-        } catch (Exception ex) {
-            log.error("initCombo : " + ex.getMessage());
-        } finally {
-            dao.close();
+        }// </editor-fold>
+ catch (Exception ex) {
+            java.util.logging.Logger.getLogger(Payment.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }// </editor-fold>
+    }
 
     private List getLocationFilter() {
         try {

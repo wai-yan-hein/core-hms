@@ -1045,13 +1045,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String depositSql = "#deposite\n"
                     + "select sum(deposite_amt) ttl_amt\n"
                     + "from(\n"
-                    + "select sum(paid) deposite_amt\n"
+                    + "select sum(amount) deposite_amt\n"
                     + "FROM v_dc\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.dc.deposite.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
                     + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
                     + "	union all\n"
-                    + "select sum(paid) deposite_amt\n"
+                    + "select sum(amount) deposite_amt\n"
                     + "FROM v_ot\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.ot.deposite.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
@@ -1991,7 +1991,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             List<PatientBillPayment> listPBP = new ArrayList();
             Double totalBalance = 0.0;
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-
+            String date = DateUtil.toDateStrMYSQL(txtDate.getText());
             try ( //dao.open();
                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
@@ -2672,7 +2672,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

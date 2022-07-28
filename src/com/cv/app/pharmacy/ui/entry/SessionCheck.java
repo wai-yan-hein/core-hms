@@ -1190,14 +1190,16 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     private void printSession() {
         insertTotalToTamp(sTableModel.getListSessionTtl());
         //Properties prop = ReportUtil.loadReportPathProperties();
+        String rpName = Util1.getPropValue("system.pharmacy.session.check.print.report");
+        rpName = Util1.isNullOrEmpty(rpName) ? "PharmacySessionCheckSummary" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + Util1.getPropValue("system.pharmacy.session.check.print.report");
+                + rpName;
         Map<String, Object> params = new HashMap();
         String sessionName;
         String sessionUser;
         String sessionDate;
-        String location;
+        String locId;
         String sessionId;
         String sessionCurr;
         String userId;
@@ -1208,7 +1210,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
             sessionId = ((Session) cboSession.getSelectedItem()).getSessionId().toString();
         } else {
             sessionName = "All";
-            sessionId = "All";
+            sessionId = "-";
         }
 
         if (cboUser.getSelectedItem() instanceof Appuser) {
@@ -1218,9 +1220,9 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         }
 
         if (cboLocation.getSelectedItem() instanceof Location) {
-            location = ((Location) cboLocation.getSelectedItem()).getLocationId().toString();
+            locId = ((Location) cboLocation.getSelectedItem()).getLocationId().toString();
         } else {
-            location = "All";
+            locId = "-";
         }
 
         if (txtFrom.getText().equals(txtTo.getText())) {
@@ -1238,7 +1240,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         if (cboUser.getSelectedItem() instanceof Appuser) {
             userId = ((Appuser) cboUser.getSelectedItem()).getUserId();
         } else {
-            userId = "All";
+            userId = "-";
         }
 
         if (cboMachine.getSelectedItem() instanceof MachineInfo) {
@@ -1250,15 +1252,22 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         params.put("session_name", sessionName);
         params.put("session_user", sessionUser);
         params.put("session_date", sessionDate);
-        params.put("p_location_id", location);
+        params.put("p_location_id", locId);
         params.put("session_fdate", DateUtil.toDateStrMYSQL(txtFrom.getText()));
         params.put("session_tdate", DateUtil.toDateStrMYSQL(txtTo.getText()));
-        params.put("session_id", sessionId);
+        params.put("sess_id", sessionId);
         params.put("session_currency", sessionCurr);
-        params.put("user_id", userId);
+        params.put("p_user_id", userId);
         params.put("tran_user_id", Global.loginUser.getUserId());
         params.put("p_machine_id", machineId);
         params.put("comp_name", Util1.getPropValue("report.company.name"));
+        params.put("p_user_name", cboUser.getSelectedItem().toString());
+        params.put("p_session_name", cboSession.getSelectedItem().toString());
+        params.put("p_loc_name", cboLocation.getSelectedItem().toString());
+        params.put("data_date", "Between " + txtFrom.getText()
+                + " and " + txtTo.getText());
+        params.put("prm_from", DateUtil.toDateStrMYSQL(txtFrom.getText()));
+        params.put("prm_to", DateUtil.toDateStrMYSQL(txtTo.getText()));
         //Need to change
         //ReportUtil.viewReport(reportPath, params, sTableModel.getListSessionTtl());
         //insertTotalToTamp(sTableModel.getListSessionTtl());
@@ -1361,9 +1370,11 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
 
     private void printSessionD() {
         //Properties prop = ReportUtil.loadReportPathProperties();
+        String rpName = Util1.getPropValue("system.pharmacy.session.check.print.reportd");
+        rpName = Util1.isNullOrEmpty(rpName) ? "PharmacySessionCheckDetail" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + Util1.getPropValue("system.pharmacy.session.check.print.reportd");
+                + rpName;
         Map<String, Object> params = new HashMap();
         params.put("data_date", "Between " + txtFrom.getText()
                 + " and " + txtTo.getText());
@@ -1496,9 +1507,11 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                 }
 
                 String userId = "-";
+                params.put("p_user_id", userId);
                 if (cboUser.getSelectedItem() instanceof Appuser) {
                     Appuser user = (Appuser) cboUser.getSelectedItem();
                     userId = user.getUserId();
+                    params.put("p_user_id", userId);
                 }
 
                 String machineId = "-1";
@@ -1508,9 +1521,11 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                 }
 
                 String locationId = "-1";
+                params.put("p_loc_id", locationId);
                 if (cboLocation.getSelectedItem() instanceof Location) {
                     Location location = (Location) cboLocation.getSelectedItem();
                     locationId = location.getLocationId().toString();
+                    params.put("p_loc_id", locationId);
                 }
 
                 String locationGroupId = "-1";
@@ -1592,7 +1607,9 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                 dao.close();
             }
         }
-
+        params.put("p_user_name", cboUser.getSelectedItem().toString());
+        params.put("p_session_name", cboSession.getSelectedItem().toString());
+        params.put("p_loc_name", cboLocation.getSelectedItem().toString());
         ReportUtil.viewReport(reportPath, params, dao.getConnection());
     }
 
