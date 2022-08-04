@@ -1030,13 +1030,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     + "where deleted = false and admission_no = '" + admNo + "'\n"
                     + "and date(opd_date) between '" + admDate + "' and '" + tranDate + "'\n"
                     + "	union all\n"
-                    + "select sum(ifnull(paid,0))\n"
+                    + "select sum(ifnull(amount,0))\n"
                     + "from v_ot\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.ot.paid.id')) and deleted = false and admission_no = '" + admNo + "'\n"
                     + "and date(ot_date) between '" + admDate + "' and '" + tranDate + "'\n"
                     + "	union all\n"
-                    + "select sum(ifnull(paid,0))\n"
+                    + "select sum(ifnull(amount,0))\n"
                     + "from v_dc\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.dc.paid.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
@@ -1081,15 +1081,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
                     + ")a";
             String refundSql = "#refund\n"
-                    + "select sum(refund_amt) ttl_amt\n"
+                    + "select sum(refund_amt)*-1 ttl_amt\n"
                     + "from(\n"
-                    + "select sum(paid) refund_amt\n"
+                    + "select sum(amount) refund_amt\n"
                     + "FROM v_dc\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.dc.refund.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
                     + "and date(dc_date) between '" + admDate + "' and '" + tranDate + "'\n"
                     + "	union all\n"
-                    + "select sum(paid) refund_amt\n"
+                    + "select sum(amount) refund_amt\n"
                     + "FROM v_ot\n"
                     + "where service_id in (select sys_prop_value from sys_prop\n"
                     + "where sys_prop_desp in ('system.ot.refund.id')) and deleted = false  and admission_no = '" + admNo + "'\n"
@@ -1486,8 +1486,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
             if (pt.getPaymentTypeId() == 1) {
                 txtPaid.setValue((vouTotal + tax) - discount);
-            } else {
-                txtPaid.setValue(0);
             }
             double paid = NumberUtil.NZero(txtPaid.getValue());
             txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
@@ -1500,7 +1498,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             double paid = NumberUtil.NZero(txtPaid.getValue());
             txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
         }
-        
+
         /*if (cboPaymentType.getSelectedItem() != null) {
             PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
             double discount = NumberUtil.NZero(txtDiscA.getValue());
@@ -1582,6 +1580,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
     private void initTable() {
         try {
+            tblService.setCellSelectionEnabled(true);
             tblService.getTableHeader().setFont(Global.lableFont);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
@@ -1601,55 +1600,51 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
             tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-            tblService.getModel().addTableModelListener(new TableModelListener() {
+            tblService.getModel().addTableModelListener((TableModelEvent e) -> {
+                //txtVouTotal.setValue(tableModel.getTotal());
+                String depositeId = Util1.getPropValue("system.dc.deposite.id");
+                String discountId = Util1.getPropValue("system.dc.disc.id");
+                String paidId = Util1.getPropValue("system.dc.paid.id");
+                String refundId = Util1.getPropValue("system.dc.refund.id");
+                List<DCDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+                QueryResults qr;
+                Query q = new Query();
+                String strSql = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis"
+                        + " WHERE service IS NOT NULL "
+                        + "EXECUTE ON ALL sum(amount) AS total";
+                String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                        + "service.serviceId not in (" + depositeId + ","
+                        + discountId + "," + paidId + "," + refundId + ")";
+                try {
+                    q.parse(strSql);
+                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                    double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
+                    txtVouTotal.setValue(vTotal);
 
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    //txtVouTotal.setValue(tableModel.getTotal());
-                    String depositeId = Util1.getPropValue("system.dc.deposite.id");
-                    String discountId = Util1.getPropValue("system.dc.disc.id");
-                    String paidId = Util1.getPropValue("system.dc.paid.id");
-                    String refundId = Util1.getPropValue("system.dc.refund.id");
-                    List<DCDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-                    QueryResults qr;
-                    Query q = new Query();
-                    String strSql = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis"
-                            + " WHERE service IS NOT NULL "
-                            + "EXECUTE ON ALL sum(amount) AS total";
-                    String strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                            + "service.serviceId not in (" + depositeId + ","
-                            + discountId + "," + paidId + "," + refundId + ")";
-                    try {
-                        q.parse(strSql);
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtVouTotal.setValue(vTotal);
+                    strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                            + "service.serviceId in (" + depositeId + "," + paidId + ")";
+                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                    double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
+                    txtPaid.setValue(vTotalPaid);
 
-                        strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                                + "service.serviceId in (" + depositeId + "," + paidId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtPaid.setValue(vTotalPaid);
+                    strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                            + "service.serviceId in (" + refundId + ")";
+                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                    double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
+                    txtPaid.setValue(vTotalPaid - vTotalRefund);
 
-                        strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                                + "service.serviceId in (" + refundId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtPaid.setValue(vTotalPaid - vTotalRefund);
-
-                        strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
-                                + "service.serviceId in (" + discountId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtDiscA.setValue(vTotalDiscount);
-                    } catch (QueryParseException qpe) {
-                        log.error("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
-                    } catch (QueryExecutionException | NumberFormatException ex) {
-                        log.error("JoSQLUtil.isAlreadyHave : " + ex.toString());
-                    }
-                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                    calcBalance();
+                    strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
+                            + "service.serviceId in (" + discountId + ")";
+                    qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                    double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
+                    txtDiscA.setValue(vTotalDiscount);
+                } catch (QueryParseException qpe) {
+                    log.error("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
+                } catch (QueryExecutionException | NumberFormatException ex) {
+                    log.error("JoSQLUtil.isAlreadyHave : " + ex.toString());
                 }
+                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                calcBalance();
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -1993,7 +1988,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             String date = DateUtil.toDateStrMYSQL(txtDate.getText());
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

@@ -25,10 +25,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
@@ -83,36 +83,31 @@ public class TraderOpSetup extends javax.swing.JPanel {
             //Define table selection model to single row selection.
             tblTrader.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adding table row selection listener.
-            tblTrader.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    int row = tblTrader.getSelectedRow();
+            tblTrader.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                int row = tblTrader.getSelectedRow();
 
-                    if (row != -1) {
-                        selTrader = tblTraderModel.getTrader(tblTrader.convertRowIndexToModel(row));
-                        tblEntryModel.setTrader(selTrader);
-                        if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
-                            txtCusCode.setText(selTrader.getStuCode());
-                        } else {
-                            txtCusCode.setText(selTrader.getTraderId());
-                        }
+                if (row != -1) {
+                    selTrader = tblTraderModel.getTrader(tblTrader.convertRowIndexToModel(row));
+                    tblEntryModel.setTrader(selTrader);
+                    if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
+                        txtCusCode.setText(selTrader.getStuCode());
+                    } else {
+                        txtCusCode.setText(selTrader.getTraderId());
+                    }
 
-                        txtCusName.setText(selTrader.getTraderName());
-                        String strSQL = "select o from TraderOpening o where o.key.trader.traderId = '"
-                                + selTrader.getTraderId() + "'";
-                        try {
-                            List<TraderOpening> prvOP = dao.findAllHSQL(strSQL);
-                            tblLastOpModel.setListOp(prvOP);
-                        } catch (Exception ex) {
-                            log.error("valueChanged : " + ex.getMessage());
-                        } finally {
-                            dao.close();
-                        }
+                    txtCusName.setText(selTrader.getTraderName());
+                    String strSQL = "select o from TraderOpening o where o.key.trader.traderId = '"
+                            + selTrader.getTraderId() + "'";
+                    try {
+                        List<TraderOpening> prvOP = dao.findAllHSQL(strSQL);
+                        tblLastOpModel.setListOp(prvOP);
+                    } catch (Exception ex) {
+                        log.error("valueChanged : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            }
-            );
+            });
         } catch (Exception ex) {
             log.error("initTblTrader : " + ex.getMessage());
         } finally {
@@ -231,7 +226,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
                     int ttlSave = 0;
@@ -272,6 +267,15 @@ public class TraderOpSetup extends javax.swing.JPanel {
             }
         }
     }
+    private final RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {
+        @Override
+        public boolean include(RowFilter.Entry<? extends Object, ? extends Object> entry) {
+            String tmp1 = entry.getStringValue(0).toUpperCase().replace(" ", "");
+            String tmp2 = entry.getStringValue(1).toUpperCase().replace(" ", "");
+            String text = txtFilter.getText().toUpperCase().replace(" ", "");
+            return tmp1.startsWith(text) || tmp2.startsWith(text);
+        }
+    };
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -502,7 +506,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
       if (txtFilter.getText().isEmpty()) {
           sorter.setRowFilter(null);
       } else {
-          sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
+          sorter.setRowFilter(startsWithFilter);
       }
   }//GEN-LAST:event_txtFilterKeyReleased
 
@@ -517,7 +521,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
                         + " and o.key.currency.currencyCode = '" + appCurr + "'";
                 List<VTraderOpToAcc> listTraderOp = dao.findAllHSQL(strSql);
                 log.info("Total Records : " + listTraderOp.size());
-                if (listTraderOp.size() > 0) {
+                if (!listTraderOp.isEmpty()) {
                     for (VTraderOpToAcc vtota : listTraderOp) {
                         if (Global.mqConnection != null) {
                             if (Global.mqConnection.isStatus()) {
@@ -548,7 +552,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
 
                                     //mq.sendMessage(Global.queueName, msg);
                                     mq.sendMessage("ACCOUNT", msg);
-                                } catch (Exception ex) {
+                                } catch (JMSException ex) {
                                     log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listTraderOp + " - " + ex);
                                 }
                                 //i = listTraderOp.size();

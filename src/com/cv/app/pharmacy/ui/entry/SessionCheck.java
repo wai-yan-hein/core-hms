@@ -177,7 +177,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
     }
 
     private String getHSQL() {
-        String strSql = "select s from VSession s where s.tranDate between '"
+        String strSql = "select s from VSession s where date(s.tranDate) between '"
                 + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtTo.getText()) + "'";
 

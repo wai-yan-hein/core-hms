@@ -601,20 +601,22 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     JOptionPane.ERROR_MESSAGE);
             txtAmsDateTime.requestFocusInWindow();
         } else if (cboRoom.getSelectedItem() instanceof BuildingStructure) {
-            BuildingStructure b = (BuildingStructure) cboRoom.getSelectedItem();
-            String sql = "select reg_no from building_structure where id = " + b.getId() + "";
-            ResultSet rs = dao.execSQL(sql);
-            try {
-                if (rs.next()) {
-                    String no = rs.getString("reg_no");
-                    if (no != null) {
-                        status = false;
-                        JOptionPane.showMessageDialog(this, no + " is admitted at " + b.getDescription());
+            if (lblStatus.getText().equals("NEW")) {
+                BuildingStructure b = (BuildingStructure) cboRoom.getSelectedItem();
+                String sql = "select reg_no from building_structure where id = " + b.getId() + "";
+                ResultSet rs = dao.execSQL(sql);
+                try {
+                    if (rs.next()) {
+                        String no = rs.getString("reg_no");
+                        if (no != null) {
+                            status = false;
+                            JOptionPane.showMessageDialog(this, no + " is admitted at " + b.getDescription());
+                        }
                     }
-                }
-            } catch (SQLException e) {
-                log.error(e.getMessage());
+                } catch (SQLException e) {
+                    log.error(e.getMessage());
 
+                }
             }
         }
         if (status) {
@@ -692,13 +694,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             } else {
                 currPatient.setPtType((CustomerGroup) cboType.getSelectedItem());
             }
-            Object tmp = cboRoom.getSelectedItem();
-            if (cboRoom.getSelectedItem() == null) {
-                currPatient.setBuildingStructure(null);
-            } else if (tmp.toString().isEmpty()) {
-                currPatient.setBuildingStructure(null);
-            } else {
+            if (cboRoom.getSelectedItem() instanceof BuildingStructure) {
                 currPatient.setBuildingStructure((BuildingStructure) cboRoom.getSelectedItem());
+            } else {
+                currPatient.setBuildingStructure(null);
             }
             if (lblStatus.getText().equals("NEW")) {
                 currPatient.setCreatedDate(new Date());
@@ -1845,7 +1844,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     try {
                         List<RBooking> listBR = dao.findAllHSQL("select o from RBooking o "
                                 + " where o.buildingStructure.id = " + ((BuildingStructure) cboRoom.getSelectedItem()).getId() + ""
-                                        + " and o.checkStatus = 1");
+                                + " and o.checkStatus = 1");
                         if (!listBR.isEmpty()) {
                             lblBooking.setVisible(true);
                             lblBooking.setText("This room have booking : " + listBR.get(0).getBookingName());

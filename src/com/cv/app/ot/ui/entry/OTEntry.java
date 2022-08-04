@@ -1142,8 +1142,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
             if (pt.getPaymentTypeId() == 1) {
                 txtPaid.setValue((vouTotal + tax) - discount);
-            } else {
-                txtPaid.setValue(0);
             }
             double paid = NumberUtil.NZero(txtPaid.getValue());
             txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
@@ -1222,6 +1220,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
     private void initTable() {
         try {
+            tblService.setCellSelectionEnabled(true);
             tblService.getTableHeader().setFont(Global.lableFont);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
@@ -1605,7 +1604,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

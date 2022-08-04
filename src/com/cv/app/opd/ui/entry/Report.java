@@ -15,6 +15,7 @@ import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Gender;
 import com.cv.app.opd.database.entity.OPDCategory;
 import com.cv.app.opd.database.entity.OPDCusLabGroup;
+import com.cv.app.opd.database.entity.OPDGroup;
 import com.cv.app.opd.database.entity.OPDLabGroup;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.excel.AdmissionByDoctorExcel;
@@ -59,6 +60,7 @@ import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -127,6 +129,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             BindingUtil.BindComboFilter(cboChargeType, dao.findAll("ChargeType"));
             BindingUtil.BindComboFilter(cboPayable,
                     dao.findAllHSQL("select o from ExpenseType o order by o.expenseName"));
+            BindingUtil.BindComboFilter(cboOPDHead, dao.findAll("OPDGroup"));
 
             AutoCompleteDecorator.decorate(cboPtType);
             AutoCompleteDecorator.decorate(cboSession);
@@ -143,6 +146,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             AutoCompleteDecorator.decorate(cboOPDLG);
             AutoCompleteDecorator.decorate(cboChargeType);
             AutoCompleteDecorator.decorate(cboPayable);
+            AutoCompleteDecorator.decorate(cboOPDHead);
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());
         } finally {
@@ -582,6 +586,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } else {
             params.put("opd_category", -1);
         }
+        if (cboDCGroup.getSelectedItem() instanceof InpCategory) {
+            params.put("dc_category", ((InpCategory) cboDCGroup.getSelectedItem()).getCatId());
+        } else {
+            params.put("dc_category", -1);
+        }
+        if (cboOTGroup.getSelectedItem() instanceof OTProcedureGroup) {
+            params.put("ot_category", ((OTProcedureGroup) cboOTGroup.getSelectedItem()).getGroupId());
+        } else {
+            params.put("ot_category", -1);
+        }
         if (txtFrom.getText().equals(txtTo.getText())) {
             params.put("data_date", txtFrom.getText());
         } else {
@@ -622,6 +636,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             params.put("payable_type", et.getExpenseId());
         } else {
             params.put("payable_type", -1);
+        }
+
+        if (cboOPDHead.getSelectedItem() instanceof OPDGroup) {
+            OPDGroup et = (OPDGroup) cboOPDHead.getSelectedItem();
+            params.put("opd_head", et.getGroupId());
+        } else {
+            params.put("opd_head", -1);
         }
 
         params.put("clinic_type", cboType.getSelectedItem().toString());
@@ -1162,6 +1183,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboPayable = new javax.swing.JComboBox<>();
         jLabel19 = new javax.swing.JLabel();
         cboType = new javax.swing.JComboBox<>();
+        jLabel20 = new javax.swing.JLabel();
+        cboOPDHead = new javax.swing.JComboBox();
         cboReportType = new javax.swing.JComboBox();
 
         tblReport.setFont(Global.textFont);
@@ -1370,6 +1393,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboType.setFont(Global.textFont);
         cboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Pharmacy", "OPD", "OT", "DC", "Ward" }));
 
+        jLabel20.setFont(Global.lableFont);
+        jLabel20.setText("OPD Head");
+
+        cboOPDHead.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1432,17 +1460,21 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         .addGap(18, 18, 18)
                         .addComponent(cboPtType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboOPDGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addGap(18, 18, 18)
                         .addComponent(cboDCGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel8)
                         .addGap(18, 18, 18)
-                        .addComponent(cboOTGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(cboOTGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel20))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(cboOPDHead, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cboOPDGroup, 0, 174, Short.MAX_VALUE))))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
@@ -1481,6 +1513,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel19)
                     .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel20)
+                    .addComponent(cboOPDHead, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
@@ -1565,12 +1601,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(cboReportType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(60, 60, 60))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 446, Short.MAX_VALUE)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -1684,7 +1720,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                             opBalance = rs.getDouble("ttl_op_amt");
                                         }
                                     }
-                                } catch (Exception ex) {
+                                } catch (SQLException ex) {
                                     log.error("PatientInOutBalance : " + ex.getMessage());
                                 }
                                 params.put("p_op_balance", opBalance);
@@ -1702,6 +1738,15 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         case "DCIncomeByGroupSummary":
                         case "DCIncomeByService":
                             removeDCPaymentService();
+                            break;
+                        case "WardPayableDetail":
+                            insertDCFilter();
+                            break;
+                        case "OPDPayableDetail":
+                            insertOPDFilter();
+                            break;
+                        case "OTPayableDetail":
+                            insertOTFilter();
                             break;
                     }
 
@@ -1751,6 +1796,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JComboBox<String> cboGender;
     private javax.swing.JComboBox<String> cboOPDCG;
     private javax.swing.JComboBox<String> cboOPDGroup;
+    private javax.swing.JComboBox<String> cboOPDHead;
     private javax.swing.JComboBox<String> cboOPDLG;
     private javax.swing.JComboBox<String> cboOTGroup;
     private javax.swing.JComboBox<String> cboPayable;
@@ -1771,6 +1817,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;

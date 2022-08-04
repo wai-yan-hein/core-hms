@@ -58,10 +58,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-//import java.util.*;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
@@ -123,24 +121,20 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         }
 
         tblItem.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblItem.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblItem.getSelectedRow() >= 0) {
-                    selectRow = tblItem.convertRowIndexToModel(tblItem.getSelectedRow());
-                }
-                //System.out.println("Table Selection : " + selectRow);
-                if (selectRow >= 0) {
-                    try {
-                        if (tblRelationPrice.getCellEditor() != null) {
-                            tblRelationPrice.getCellEditor().stopCellEditing();
-                        }
-                    } catch (Exception ex) {
-
+        tblItem.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            if (tblItem.getSelectedRow() >= 0) {
+                selectRow = tblItem.convertRowIndexToModel(tblItem.getSelectedRow());
+            }
+            //System.out.println("Table Selection : " + selectRow);
+            if (selectRow >= 0) {
+                try {
+                    if (tblRelationPrice.getCellEditor() != null) {
+                        tblRelationPrice.getCellEditor().stopCellEditing();
                     }
-                    selected("Medicine", itemTableModel.getMedicine(selectRow));
+                } catch (Exception ex) {
+
                 }
+                selected("Medicine", itemTableModel.getMedicine(selectRow));
             }
         });
 
@@ -511,7 +505,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
                     int ttlInsert = 0;
@@ -1322,8 +1316,6 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         txtItemCode.setText("");
         txtItemName.setText("");
         txtBarcode.setText("");
-        cboBrandName.setSelectedItem(null);
-        cboSystem.setSelectedItem(null);
         txtChemicalName.setText("");
         txtUnitRelation.setText("");
         txtLiceneExpDate.setText("");
@@ -1335,20 +1327,17 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         selectRow = -1;
         rpTableMode.setEditable(true);
 
-        Timer timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    dao.open();
-                    if (filter.isEmpty()) {
-                        itemTableModel.setListMedicine(dao.findAll("VMedicine1"));
-                    } else {
-                        filterItem(filter);
-                    }
-                    dao.close();
-                } catch (Exception ex) {
-                    log.error("clear : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        Timer timer = new Timer(1000, (ActionEvent e) -> {
+            try {
+                dao.open();
+                if (filter.isEmpty()) {
+                    itemTableModel.setListMedicine(dao.findAll("VMedicine1"));
+                } else {
+                    filterItem(filter);
                 }
+                dao.close();
+            } catch (Exception ex) {
+                log.error("clear : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
         });
         timer.setRepeats(false);
@@ -1365,7 +1354,10 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void assignDefaultValue() {
-        rpTableMode.setListDetail(new ArrayList<RelationGroup>());
+        rpTableMode.setListDetail(new ArrayList<>());
+        cboCategory.setSelectedItem(null);
+        cboBrandName.setSelectedItem(null);
+        cboSystem.setSelectedItem(null);
     }
 
     private void initCombo() {
@@ -1432,6 +1424,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
 
     private void initTableRelationGroup() {
         try {
+            tblRelationPrice.getTableHeader().setFont(Global.lableFont);
             tblRelationPrice.getColumnModel().getColumn(0).setCellEditor(
                     new BestTableCellEditor(this));
             tblRelationPrice.getColumnModel().getColumn(2).setCellEditor(

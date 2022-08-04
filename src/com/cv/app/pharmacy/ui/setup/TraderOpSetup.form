@@ -93,7 +93,6 @@
               <Connection code="tblTraderModel" type="code"/>
             </Property>
             <Property name="rowHeight" type="int" value="23"/>
-            <Property name="showVerticalLines" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>
@@ -252,7 +251,6 @@
                   </Table>
                 </Property>
                 <Property name="rowHeight" type="int" value="23"/>
-                <Property name="showVerticalLines" type="boolean" value="false"/>
               </Properties>
             </Component>
           </SubComponents>
@@ -290,7 +288,6 @@
                   </Table>
                 </Property>
                 <Property name="rowHeight" type="int" value="23"/>
-                <Property name="showVerticalLines" type="boolean" value="false"/>
               </Properties>
             </Component>
           </SubComponents>

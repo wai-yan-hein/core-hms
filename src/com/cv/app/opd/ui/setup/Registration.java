@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.setup;
 
+import com.cv.app.common.AutoClearEditor;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.entity.City;
 import com.cv.app.opd.database.entity.Gender;
@@ -33,6 +34,7 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Component;
+import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -108,7 +110,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
          tblBooking.setRowSorter(sorterGroup);*/
         // TableModel model = new DefaultTableModel(tblBooking.getRowCount(), tblBooking.getColumnCount());
 
-        swrfGroup = new StartWithRowFilter(doctorFilter);
+        swrfGroup = new StartWithRowFilter(txtSearch);
         sorterGroup = new TableRowSorter(tblBooking.getModel());
         tblBooking.setRowSorter(sorterGroup);
 
@@ -374,6 +376,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     + "where o.active = true order by o.doctorName"));
             AutoCompleteDecorator.decorate(cboDoctor);
 
+            BindingUtil.BindComboFilter(cboDr, dao.findAllHSQL("select o from Doctor o "
+                    + "where o.active = true order by o.doctorName"));
+            AutoCompleteDecorator.decorate(cboDr);
             BindingUtil.BindCombo(cboTownship,
                     dao.findAllHSQL("select o from Township o order by o.townshipName"));
             AutoCompleteDecorator.decorate(cboTownship);
@@ -397,16 +402,42 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         tblBooking.getColumnModel().getColumn(5).setPreferredWidth(150);//Phone
         tblBooking.getColumnModel().getColumn(6).setPreferredWidth(10);//Serial ID
         tblBooking.getColumnModel().getColumn(7).setPreferredWidth(3);//Active
-        String date = DateUtil.toDateStr(dateFilter.getText(), "yyyy-MM-dd");
-        dateFilterTable(date);
         tblBooking.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
-
+        tblBooking.getColumnModel().getColumn(0).setCellEditor(new AutoClearEditor());
+        tblBooking.getTableHeader().setFont(Global.textFont);
+        searchBooking(false);
     }
 
-    private void dateFilterTable(String date) {
+    private void searchBooking(boolean print) {
         try {
-            bkTableModel.setListBooking(dao.findAllHSQL("select o from VBooking o where o.bkDate = '" + date + "'"));
-            calculateTotalRecord();
+            String fromDate = DateUtil.toDateStr(txtFromDate.getDate(), "yyyy-MM-dd");
+            String toDate = DateUtil.toDateStr(txtToDate.getDate(), "yyyy-MM-dd");
+            String doctorId = "-";
+            if (cboDr.getSelectedItem() instanceof Doctor) {
+                Doctor d = (Doctor) cboDr.getSelectedItem();
+                doctorId = d.getDoctorId();
+            }
+            if (print) {
+                String path = Util1.getAppWorkFolder()
+                        + Util1.getPropValue("report.folder.path")
+                        + "Clinic/W/OPDAppointmentByDoctor";
+                Map<String, Object> p = new HashMap();
+                p.put("p_comp_name", Util1.getPropValue("report.company.name"));
+                p.put("p_data_date", String.format(
+                        "Between %s and %s",
+                        DateUtil.toDateStr(txtFromDate.getDate(), "dd/MM/yyyy"),
+                        DateUtil.toDateStr(txtToDate.getDate(), "dd/MM/yyyy")));
+                p.put("p_from_date", fromDate);
+                p.put("p_to_date", toDate);
+                p.put("p_doctor", doctorId);
+                ReportUtil.viewReport(path, p, dao.getConnection());
+            } else {
+                bkTableModel.setListBooking(
+                        dao.findAllHSQL(
+                                "select o from VBooking o\n"
+                                + "where date(o.bkDate) between '" + fromDate + "' and '" + toDate + "' and (o.doctorId = '" + doctorId + "' or '-' = '" + doctorId + "')"));
+                calculateTotalRecord();
+            }
         } catch (Exception ex) {
             log.error("dateFilterTable : " + ex.getMessage());
         } finally {
@@ -485,7 +516,6 @@ public final class Registration extends javax.swing.JPanel implements FormAction
 
     private void assignDefaultValue() {
         txtRegDateTime.setText(DateUtil.getTodayDateStr("dd/MM/yyyy HH:mm:ss"));
-        dateFilter.setText(DateUtil.getTodayDateStr("dd/MM/yyyy"));
         bkDate.setText(DateUtil.getTodayDateStr("dd/MM/yyyy"));
         if (Util1.getPropValue("system.opd.showregno").equals("Y")) {
             txtRegNo.setText(regNo.getRegNo());
@@ -495,6 +525,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         cboDoctor.setSelectedItem(null);
         cboTownship.setSelectedItem(null);
         cboType.setSelectedItem(null);
+        txtFromDate.setDate(DateUtil.getTodayDateTime());
+        txtToDate.setDate(DateUtil.getTodayDateTime());
     }
 
     private boolean isValidEntry() {
@@ -897,18 +929,17 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 try {
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                             "Are you sure to delete?",
-                            "OT Service delete", JOptionPane.YES_NO_OPTION);
+                            "Booking delete", JOptionPane.YES_NO_OPTION);
 
                     if (tblBooking.getCellEditor() != null) {
                         tblBooking.getCellEditor().stopCellEditing();
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                 }
 
                 if (yes_no == 0) {
                     bkTableModel.delete(tblBooking.getSelectedRow());
-                    dateFilterTable(DateUtil.toDateStr(dateFilter.getText(), "yyyy-MM-dd"));
-
+                    searchBooking(false);
                 }
 
             }
@@ -1103,33 +1134,46 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel18 = new javax.swing.JLabel();
         lblAgeStr = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
-        bkDate = new javax.swing.JFormattedTextField();
+        jPanel4 = new javax.swing.JPanel();
         bkRegno = new javax.swing.JFormattedTextField();
-        bkpatientName = new javax.swing.JFormattedTextField();
         bkDoctor = new javax.swing.JFormattedTextField();
-        jLabel24 = new javax.swing.JLabel();
-        jLabel21 = new javax.swing.JLabel();
-        jLabel23 = new javax.swing.JLabel();
-        bkSave = new javax.swing.JButton();
-        jLabel22 = new javax.swing.JLabel();
+        bkDate = new javax.swing.JFormattedTextField();
         bkPhone = new javax.swing.JFormattedTextField();
         jLabel25 = new javax.swing.JLabel();
-        butRefresh = new javax.swing.JButton();
+        jLabel23 = new javax.swing.JLabel();
+        jLabel24 = new javax.swing.JLabel();
+        bkSave = new javax.swing.JButton();
+        jLabel22 = new javax.swing.JLabel();
+        bkpatientName = new javax.swing.JFormattedTextField();
+        jLabel21 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblBooking = new javax.swing.JTable();
         jLabel20 = new javax.swing.JLabel();
-        jLabel19 = new javax.swing.JLabel();
-        dateFilter = new javax.swing.JFormattedTextField();
-        doctorFilter = new javax.swing.JFormattedTextField();
+        txtSearch = new javax.swing.JFormattedTextField();
         txtTotalRecord = new javax.swing.JFormattedTextField();
         jLabel29 = new javax.swing.JLabel();
+        butRefresh = new javax.swing.JButton();
+        txtFromDate = new com.toedter.calendar.JDateChooser();
+        jLabel30 = new javax.swing.JLabel();
+        jLabel31 = new javax.swing.JLabel();
+        txtToDate = new com.toedter.calendar.JDateChooser();
+        jLabel32 = new javax.swing.JLabel();
+        cboDr = new javax.swing.JComboBox<>();
+        jButton1 = new javax.swing.JButton();
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Registration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Reg-No");
 
         txtRegNo.setEditable(false);
         txtRegNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtRegNo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtRegNoActionPerformed(evt);
+            }
+        });
 
         jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Reg-Date Time ");
@@ -1326,6 +1370,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
 
         jLabel28.setText("D");
 
+        jLabel17.setFont(Global.lableFont);
         jLabel17.setText("Admission No : ");
 
         jLabel18.setText("Age : ");
@@ -1504,15 +1549,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     .addComponent(txtAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
-        bkDate.setEditable(false);
-        bkDate.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        bkDate.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                bkDateMouseClicked(evt);
-            }
-        });
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Appointment", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
-        bkRegno.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        bkRegno.setFont(Global.textFont);
         bkRegno.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 bkRegnoMouseClicked(evt);
@@ -1524,15 +1563,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
-        bkpatientName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        bkpatientName.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bkpatientNameActionPerformed(evt);
-            }
-        });
-
         bkDoctor.setEditable(false);
-        bkDoctor.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        bkDoctor.setFont(Global.textFont);
         bkDoctor.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 bkDoctorFocusGained(evt);
@@ -1561,12 +1593,31 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
-        jLabel24.setText("Doctor");
+        bkDate.setEditable(false);
+        bkDate.setFont(Global.textFont);
+        bkDate.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                bkDateMouseClicked(evt);
+            }
+        });
 
-        jLabel21.setText("Name");
+        bkPhone.setFont(Global.textFont);
+        bkPhone.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bkPhoneActionPerformed(evt);
+            }
+        });
 
+        jLabel25.setFont(Global.lableFont);
+        jLabel25.setText("Phone");
+
+        jLabel23.setFont(Global.lableFont);
         jLabel23.setText("Reg-No");
 
+        jLabel24.setFont(Global.lableFont);
+        jLabel24.setText("Doctor");
+
+        bkSave.setFont(Global.lableFont);
         bkSave.setText("Save");
         bkSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1574,32 +1625,27 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
+        jLabel22.setFont(Global.lableFont);
         jLabel22.setText("Date");
 
-        bkPhone.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        bkPhone.addActionListener(new java.awt.event.ActionListener() {
+        bkpatientName.setFont(Global.textFont);
+        bkpatientName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bkPhoneActionPerformed(evt);
+                bkpatientNameActionPerformed(evt);
             }
         });
 
-        jLabel25.setText("Phone");
+        jLabel21.setFont(Global.lableFont);
+        jLabel21.setText("Name");
 
-        butRefresh.setText("Refresh");
-        butRefresh.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butRefreshActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel23)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bkRegno, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1607,63 +1653,78 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addComponent(jLabel22)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createSequentialGroup()
                                 .addComponent(jLabel25)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(bkPhone, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGroup(jPanel4Layout.createSequentialGroup()
                                 .addComponent(jLabel21)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(bkpatientName, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(86, 86, 86)
-                                .addComponent(butRefresh)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel24)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel21, jLabel23, jLabel25});
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel21, jLabel23, jLabel25});
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel22, jLabel24});
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel22, jLabel24});
 
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(bkRegno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel23)
                     .addComponent(jLabel22)
                     .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel21)
                             .addComponent(bkpatientName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel25)
                             .addComponent(bkPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel24)
                             .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(butRefresh))))
+                        .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(26, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Appointment  History", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
         tblBooking.setFont(Global.textFont);
         tblBooking.setModel(bkTableModel);
@@ -1676,44 +1737,75 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         });
         jScrollPane2.setViewportView(tblBooking);
 
-        jLabel20.setText("Doctor");
+        jLabel20.setFont(Global.lableFont);
+        jLabel20.setText("Search");
 
-        jLabel19.setText("Date");
-
-        dateFilter.setEditable(false);
-        dateFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        dateFilter.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                dateFilterMouseClicked(evt);
-            }
-        });
-        dateFilter.addActionListener(new java.awt.event.ActionListener() {
+        txtSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                dateFilterActionPerformed(evt);
+                txtSearchActionPerformed(evt);
             }
         });
-        dateFilter.addKeyListener(new java.awt.event.KeyAdapter() {
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
-                dateFilterKeyReleased(evt);
-            }
-        });
-
-        doctorFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        doctorFilter.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                doctorFilterActionPerformed(evt);
-            }
-        });
-        doctorFilter.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                doctorFilterKeyReleased(evt);
+                txtSearchKeyReleased(evt);
             }
         });
 
         txtTotalRecord.setEditable(false);
         txtTotalRecord.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
+        jLabel29.setFont(Global.lableFont);
         jLabel29.setText("Total : ");
+
+        butRefresh.setFont(Global.lableFont);
+        butRefresh.setText("Refresh");
+        butRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRefreshActionPerformed(evt);
+            }
+        });
+
+        txtFromDate.setDateFormatString("dd/MM/yyyy");
+        txtFromDate.setFont(Global.textFont);
+        txtFromDate.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                txtFromDatePropertyChange(evt);
+            }
+        });
+
+        jLabel30.setFont(Global.lableFont);
+        jLabel30.setText("From Date");
+
+        jLabel31.setFont(Global.lableFont);
+        jLabel31.setText("To Date");
+
+        txtToDate.setDateFormatString("dd/MM/yyyy");
+        txtToDate.setFont(Global.textFont);
+        txtToDate.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                txtToDatePropertyChange(evt);
+            }
+        });
+
+        jLabel32.setFont(Global.lableFont);
+        jLabel32.setText("Doctor");
+
+        cboDr.setFont(Global.textFont);
+        cboDr.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboDr.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboDrItemStateChanged(evt);
+            }
+        });
+
+        jButton1.setFont(Global.lableFont);
+        jButton1.setText("Print");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1722,30 +1814,53 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel19)
-                        .addGap(34, 34, 34)
-                        .addComponent(dateFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(doctorFilter))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jLabel29)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotalRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addComponent(txtTotalRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel30, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel20, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(txtFromDate, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jLabel31)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtToDate, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cboDr, 0, 103, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(butRefresh)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton1))
+                            .addComponent(txtSearch)))
+                    .addComponent(jScrollPane2)))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel30)
+                    .addComponent(jLabel31)
+                    .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(cboDr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel32)
+                        .addComponent(butRefresh)
+                        .addComponent(jButton1)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel19)
-                    .addComponent(dateFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel20)
-                    .addComponent(doctorFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel20))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1761,7 +1876,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -1790,22 +1905,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         }
     }//GEN-LAST:event_butBillIDActionPerformed
 
-    private void doctorFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doctorFilterActionPerformed
+    private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_doctorFilterActionPerformed
-
-    private void dateFilterMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_dateFilterMouseClicked
-        // TODO add your handling code here:
-        if (evt.getClickCount() == 2) {
-            String strDate = DateUtil.getDateDialogStr();
-
-            if (strDate != null) {
-                dateFilter.setText(strDate);
-                dateFilterTable(DateUtil.toDateStr(strDate, "yyyy-MM-ddd"));
-            }
-
-        }
-    }//GEN-LAST:event_dateFilterMouseClicked
+    }//GEN-LAST:event_txtSearchActionPerformed
 
     private void cboGenderFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cboGenderFocusGained
         focusCtrlName = "cboGender";
@@ -1948,28 +2050,17 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         getPatient();
     }//GEN-LAST:event_bkRegnoActionPerformed
 
-    private void doctorFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_doctorFilterKeyReleased
+    private void txtSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyReleased
         // TODO add your handling code here:
-        if (doctorFilter.getText().isEmpty()) {
+        if (txtSearch.getText().isEmpty()) {
             sorterGroup.setRowFilter(null);
         } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
             sorterGroup.setRowFilter(swrfGroup);
         } else {
-            sorterGroup.setRowFilter(RowFilter.regexFilter(doctorFilter.getText()));
+            sorterGroup.setRowFilter(RowFilter.regexFilter(txtSearch.getText()));
         }
         calculateTotalRecord();
-    }//GEN-LAST:event_doctorFilterKeyReleased
-
-    private void dateFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_dateFilterKeyReleased
-        // TODO add your handling code here:
-        if (dateFilter.getText().isEmpty()) {
-            sorterGroup.setRowFilter(null);
-        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-            sorterGroup.setRowFilter(swrfGroup);
-        } else {
-            sorterGroup.setRowFilter(RowFilter.regexFilter(dateFilter.getText()));
-        }
-    }//GEN-LAST:event_dateFilterKeyReleased
+    }//GEN-LAST:event_txtSearchKeyReleased
 
     private void bkpatientNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bkpatientNameActionPerformed
         // TODO add your handling code here:
@@ -1982,10 +2073,6 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private void bkPhoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bkPhoneActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_bkPhoneActionPerformed
-
-    private void dateFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dateFilterActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_dateFilterActionPerformed
 
     private void txtMonthFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtMonthFocusGained
         // TODO add your handling code here:
@@ -2016,9 +2103,32 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     }//GEN-LAST:event_tblBookingMouseClicked
 
     private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed
-        String date = DateUtil.toDateStr(dateFilter.getText(), "yyyy-MM-dd");
-        dateFilterTable(date);
+        searchBooking(false);
     }//GEN-LAST:event_butRefreshActionPerformed
+
+    private void txtRegNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtRegNoActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtRegNoActionPerformed
+
+    private void txtFromDatePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_txtFromDatePropertyChange
+        // TODO add your handling code here:
+        searchBooking(false);
+    }//GEN-LAST:event_txtFromDatePropertyChange
+
+    private void txtToDatePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_txtToDatePropertyChange
+        // TODO add your handling code here:
+        searchBooking(false);
+    }//GEN-LAST:event_txtToDatePropertyChange
+
+    private void cboDrItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboDrItemStateChanged
+        // TODO add your handling code here:
+        searchBooking(false);
+    }//GEN-LAST:event_cboDrItemStateChanged
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        searchBooking(true);
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFormattedTextField bkDate;
@@ -2031,11 +2141,11 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JButton butRefresh;
     private javax.swing.JComboBox cboCity;
     private javax.swing.JComboBox cboDoctor;
+    private javax.swing.JComboBox<String> cboDr;
     private javax.swing.JComboBox cboGender;
     private javax.swing.JComboBox<String> cboTownship;
     private javax.swing.JComboBox<String> cboType;
-    private javax.swing.JFormattedTextField dateFilter;
-    private javax.swing.JFormattedTextField doctorFilter;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -2046,7 +2156,6 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
@@ -2059,6 +2168,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel30;
+    private javax.swing.JLabel jLabel31;
+    private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -2068,6 +2180,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblAgeStr;
@@ -2081,6 +2194,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JFormattedTextField txtDOB;
     private javax.swing.JTextField txtDay;
     private javax.swing.JTextField txtFatherName;
+    private com.toedter.calendar.JDateChooser txtFromDate;
     private javax.swing.JTextField txtMonth;
     private javax.swing.JTextField txtNIRC;
     private javax.swing.JTextField txtName;
@@ -2088,6 +2202,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JFormattedTextField txtRegDateTime;
     private javax.swing.JTextField txtRegNo;
     private javax.swing.JTextField txtReligion;
+    private javax.swing.JFormattedTextField txtSearch;
+    private com.toedter.calendar.JDateChooser txtToDate;
     private javax.swing.JFormattedTextField txtTotalRecord;
     // End of variables declaration//GEN-END:variables
 }

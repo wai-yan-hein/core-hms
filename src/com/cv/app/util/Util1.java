@@ -146,10 +146,7 @@ public class Util1 {
 
         if (Global.systemProperties.containsKey(key)) {
             value = Global.systemProperties.getProperty(key);
-        } else {
-            log.info("getPropValue : Invalid key " + key);
         }
-
         return value;
     }
 

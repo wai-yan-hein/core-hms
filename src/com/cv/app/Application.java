@@ -4,6 +4,7 @@
  */
 package com.cv.app;
 
+import com.cv.app.common.Global;
 import java.awt.Color;
 import javax.swing.UIManager;
 import org.apache.log4j.Logger;
@@ -32,7 +33,6 @@ public class Application {
         //
         // Part of this configuration will indicate the initial page to be
         // displayed.
-
         String rootContextDirectoryClassPath = "/ctx";
 
         // The startup context defines elements that should be available
