@@ -6,7 +6,7 @@
 package com.cv.app.opd.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.opd.database.entity.Pathologiest;
+import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.ui.util.PathoAutoCompleter;
 import java.awt.Component;
 import java.awt.event.KeyEvent;
@@ -78,7 +78,7 @@ public class PathoCellEditor extends AbstractCellEditor implements TableCellEdit
     @Override
     public Object getCellEditorValue() {
         Object obj;
-        Pathologiest patho = completer.getPatho();
+        Doctor patho = completer.getPatho();
         
         if(patho != null){
             obj = patho;

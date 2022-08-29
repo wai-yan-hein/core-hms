@@ -84,6 +84,18 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
 
         try {
             String strSql = "select a.*, if(a.ttl_overdue<0,0,a.ttl_overdue) as ttl_overdue1 from (\n"
+                    + "select vob.tran_date pur_date, vob.vou_no, vob.trader_id cus_id, \n"
+                    + "		   t.trader_name, vob.vou_type, vob.currency, date_add(vob.tran_date, interval ifnull(t.credit_days,0) day) due_date,\n"
+                    + "		   'Opening' ref_no, vob.vou_total, vob.paid_amount ttl_paid, vob.discount, vob.balance,\n"
+                    + "		   vob.bal, if(date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)='-',0,\n"
+                    + "		   if(DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day))<0,0,\n"
+                    + "		   DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)))) ttl_overdue,\n"
+                    + "       t.stu_no \n"
+                    + "	  from v_opening_balance vob\n"
+                    + "	  join trader t on vob.trader_id = t.trader_id\n"
+                    + "	  left join customer_group cg on t.group_id = cg.group_id\n"
+                    + "	 where bal > 0 and t.discriminator = 'S' \n"
+                    + " union all "
                     + "select sh.pur_date, pur_inv_id vou_no, sh.cus_id, t.trader_name, 'PURCHASE' vou_type, sh.currency,\n"
                     + "       sh.due_date, sh.remark ref_no, (sh.vou_total-ifnull(sh.discount,0)) as vou_total, (sh.paid+ifnull(pah.pay_amt,0)) as ttl_paid, "
                     + "sh.discount, sh.balance,\n"
@@ -100,7 +112,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     + "			  group by pv.vou_no, pv.vou_type) pah on sh.pur_inv_id = pah.vou_no\n"
                     + "where sh.deleted = false\n"
                     + "group by sh.pur_inv_id, sh.pur_date,sh.vou_total, sh.currency, sh.paid, sh.discount, sh.balance, t.stu_no) a\n"
-                    + "where a.balance > 0 and a.bal > 0.9 order by a.pur_date, a.vou_no";
+                    + "where a.bal > 0.9 order by a.pur_date, a.vou_no";
             ResultSet rs = dao.execSQL(strSql);
 
             List<VoucherPayment> listVP = null;

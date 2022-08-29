@@ -330,7 +330,9 @@ public class OPDTableModel extends AbstractTableModel {
          parent.setRowSelectionInterval(row + 1, row + 1);
          }*/
         try {
-            parent.setRowSelectionInterval(getRowCount() - 2, getRowCount() - 1);
+            parent.setRowSelectionInterval(getRowCount() - 1, getRowCount() - 1);
+            parent.requestFocus();
+            parent.setColumnSelectionInterval(0, 0);
         } catch (Exception ex) {
 
         }

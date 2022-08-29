@@ -25,6 +25,7 @@ public class TraderPayAccount implements java.io.Serializable {
     private String desp;
     private Boolean status;
     
+    @Id
     @Column(name = "pay_id", unique = true, nullable = false)
     public Integer getPayId() {
         return payId;
@@ -33,8 +34,7 @@ public class TraderPayAccount implements java.io.Serializable {
     public void setPayId(Integer payId) {
         this.payId = payId;
     }
-
-    @Id
+    
     @Column(name = "acc_id", nullable = false, length = 15)
     public String getAccount() {
         return account;

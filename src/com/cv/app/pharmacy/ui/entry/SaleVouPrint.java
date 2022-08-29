@@ -518,7 +518,8 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                     traderId, strTrdOpt, strTodayDateTime, "MMK",
                     Global.loginUser.getUserId(),
                     Global.machineId);
-
+            dao.execSql("delete from trader_tran where machine_id = " + Global.machineId
+                    + " and tran_option = 'Sale Voucher Payment (" + vouNo + ")'");
             List<TraderTransaction> listTran = dao.findAll("TraderTransaction",
                     "userId = '" + Global.loginUser.getUserId() + "' and tranType = 'D'"
                     + " and machineId = '" + Global.machineId + "'");
@@ -666,6 +667,7 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                     dao.save(sh);
                     //dao.commit();
                     txtCurrPayment.setEnabled(false);
+                    //ToLedgerPharmacy.entryToLedgerCusPay(tph, "NEW");
                 } catch (Exception e) {
                     //dao.rollBack();
                     isSave = false;
@@ -904,6 +906,11 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                     tt.setTranType("N");
                     tt.setSortId(3);
                     tt.setMachineId(Global.machineId);
+                    dao.execSql("delete from trader_tran where machine_id = "
+                            + Global.machineId + " and tran_option = '"
+                            + tt.getTranOption() + "' and tran_date = '"
+                            + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(sh.getSaleDate())) + "'"
+                    );
                     dao.save(tt);
 
                     //For Expense
@@ -920,7 +927,11 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                                 tt.setTranType("N");
                                 tt.setSortId(2);
                                 tt.setMachineId(Global.machineId);
-
+                                dao.execSql("delete from trader_tran where machine_id = "
+                                        + Global.machineId + " and tran_option = '"
+                                        + tt.getTranOption() + "' and tran_date = '"
+                                        + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(sh.getSaleDate())) + "'"
+                                );
                                 dao.save(tt);
                             }
                         }
@@ -935,7 +946,11 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                     tt.setTranType("N");
                     tt.setSortId(1);
                     tt.setMachineId(Global.machineId);
-
+                    String strSql = "delete from trader_tran where machine_id = "
+                            + Global.machineId + " and tran_option = '"
+                            + tt.getTranOption() + "' and tran_date = '"
+                            + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(lastSaleDate)) + "'";
+                    dao.execSql(strSql);
                     dao.save(tt);
 
                     double currPayment = NumberUtil.NZero(txtCurrPayment.getText());
@@ -948,9 +963,35 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                         tt.setTranType("D");
                         tt.setSortId(2);
                         tt.setMachineId(Global.machineId);
-
+                        dao.execSql("delete from trader_tran where machine_id = "
+                                + Global.machineId + " and tran_option = '"
+                                + tt.getTranOption() + "' and tran_date = '"
+                                + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(sh.getSaleDate())) + "'"
+                        );
                         dao.save(tt);
                     }
+
+                    //Last Balance
+                    /*tt = new TraderTransaction();
+                    tt.setAmount(NumberUtil.getDouble(txtLastBalance.getText()));
+                    tt.setUserId(Global.loginUser.getUserId());
+                    //tt.setTranOption("Last Balance : ");
+                    if (tt.getAmount() < 0) {
+                        tt.setTranOption(Util1.getPropValue("system.app.sale.lastbalanceM"));
+                    } else {
+                        tt.setTranOption(Util1.getPropValue("system.app.sale.lastbalance"));
+                    }
+                    tt.setTranDate(sh.getSaleDate());
+                    tt.setTranType("N");
+                    tt.setSortId(4);
+                    tt.setMachineId(Global.machineId);
+                    dao.execSql("delete from trader_tran where machine_id = "
+                            + Global.machineId + " and tran_option = '"
+                            + tt.getTranOption() + "' and tran_date = '"
+                            + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(sh.getSaleDate())) + "'"
+                            + " and tran_type = 'N' and sort_order = 4"
+                    );
+                    dao.save(tt);*/
                 }
             }
         } catch (Exception ex) {
@@ -961,11 +1002,15 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void calculateLastBalance() {
+        double prvBalance = NumberUtil.NZero(txtPrvLastBalance.getValue());
+        double ttlTran = NumberUtil.NZero(txtTtlTransaction.getValue());
+        double ttlExpense = NumberUtil.NZero(txtTtlExpense.getValue());
+        double ttlPay = NumberUtil.NZero(txtCurrPayment.getValue());
         double lastBalance = selVouBalance
-                + NumberUtil.NZero(txtPrvLastBalance.getValue())
-                + NumberUtil.NZero(txtTtlTransaction.getValue())
-                + NumberUtil.NZero(txtTtlExpense.getValue())
-                - NumberUtil.NZero(txtCurrPayment.getValue());
+                + prvBalance
+                + ttlTran
+                + ttlExpense
+                - ttlPay;
         txtLastBalance.setValue(lastBalance);
     }
 
@@ -1073,7 +1118,7 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
 
         tblVouList.setFont(Global.textFont);
         tblVouList.setModel(tableModel);
-        tblVouList.setRowHeight(23);
+        tblVouList.setRowHeight(30);
         jScrollPane1.setViewportView(tblVouList);
 
         jLabel4.setFont(new java.awt.Font("Tahoma", 0, 15)); // NOI18N
@@ -1089,7 +1134,7 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
 
         tblSDH.setFont(Global.textFont);
         tblSDH.setModel(sdhTableModel);
-        tblSDH.setRowHeight(25);
+        tblSDH.setRowHeight(30);
         jScrollPane5.setViewportView(tblSDH);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -1107,7 +1152,7 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
 
         tblSE.setFont(Global.textFont);
         tblSE.setModel(seTableModel);
-        tblSE.setRowHeight(23);
+        tblSE.setRowHeight(27);
         jScrollPane2.setViewportView(tblSE);
 
         txtTtlExpense.setEditable(false);
@@ -1128,12 +1173,12 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
 
         tblTransaction.setFont(Global.textFont);
         tblTransaction.setModel(tranTableModel);
-        tblTransaction.setRowHeight(23);
+        tblTransaction.setRowHeight(27);
         jScrollPane3.setViewportView(tblTransaction);
 
         tblTranDetail.setFont(Global.textFont);
         tblTranDetail.setModel(ttdTableModel);
-        tblTranDetail.setRowHeight(23);
+        tblTranDetail.setRowHeight(27);
         jScrollPane4.setViewportView(tblTranDetail);
 
         txtTtlTransaction.setEditable(false);

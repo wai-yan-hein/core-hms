@@ -177,29 +177,29 @@
                       </Group>
                       <Component id="txtRemark" max="32767" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                      <Component id="cboCategory" linkSize="3" pref="187" max="32767" attributes="0"/>
-                      <Component id="cboItemType" linkSize="3" max="32767" attributes="0"/>
-                  </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="cboLocation" linkSize="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="cboItemBrand" linkSize="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="cboCategory" pref="51" max="32767" attributes="0"/>
+                      <Component id="cboItemType" pref="51" max="32767" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="cboLocation" pref="51" max="32767" attributes="0"/>
+                      <Component id="cboItemBrand" pref="51" max="32767" attributes="0"/>
+                  </Group>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Component id="txtPurTo" alignment="0" max="32767" attributes="0"/>
                       <Component id="txtPurFrom" alignment="0" min="-2" pref="88" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Component id="jPanel2" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="txtFrom" min="-2" pref="93" max="-2" attributes="0"/>
                       <Component id="txtTo" alignment="1" min="-2" pref="93" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
                           <Component id="txtSPercent" min="-2" pref="47" max="-2" attributes="0"/>
@@ -220,7 +220,7 @@
                           <Component id="butFindLost" min="-2" pref="104" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>

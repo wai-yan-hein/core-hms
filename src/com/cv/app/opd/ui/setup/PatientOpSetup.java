@@ -5,12 +5,18 @@
 package com.cv.app.opd.ui.setup;
 
 import com.cv.app.common.Global;
+import com.cv.app.opd.database.entity.CompoundKeyPatientOp;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.entity.PatientOpening;
 import com.cv.app.opd.ui.common.PatientOpTableModel;
 import com.cv.app.opd.ui.common.PatientTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.util.BindingUtil;
+import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
+import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.*;
@@ -31,7 +37,7 @@ public class PatientOpSetup extends javax.swing.JPanel {
     private List<Patient> listPatient;
     private final AbstractDataAccess dao = Global.dao;
     private Patient selPatient;
-    private PatientOpTableModel tblEntryModel = new PatientOpTableModel(true);
+    //private PatientOpTableModel tblEntryModel = new PatientOpTableModel(true);
     private PatientOpTableModel tblLastOpModel = new PatientOpTableModel();
     private final PatientTableModel tblPatientTableModel = new PatientTableModel();
     private TableRowSorter<TableModel> sorter;
@@ -43,7 +49,7 @@ public class PatientOpSetup extends javax.swing.JPanel {
         initComponents();
         //listPatient = dao.findAllHSQL("select t from Patient t");
         initTblTrader();
-        initTblEntry();
+        initCombo();
         initTblLastOp();
         actionMapping();
         sorter = new TableRowSorter(tblPatient.getModel());
@@ -51,29 +57,6 @@ public class PatientOpSetup extends javax.swing.JPanel {
     }
 
     private void initTblTrader() {
-        /*JTableBinding jTableBinding = SwingBindings.
-                createJTableBinding(AutoBinding.UpdateStrategy.READ_WRITE, listPatient,
-                        tblPatient);
-        JTableBinding.ColumnBinding columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${regNo}"));
-        columnBinding.setColumnName("Code");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-
-        columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${patientName}"));
-        columnBinding.setColumnName("Name");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);
-
-        columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${city.cityName}"));
-        columnBinding.setColumnName("City");
-        columnBinding.setColumnClass(String.class);
-        columnBinding.setEditable(false);*/
-
- /* columnBinding = jTableBinding.addColumnBinding(ELProperty.create("${active}"));
-        columnBinding.setColumnName("Active");
-        columnBinding.setColumnClass(Boolean.class);
-        columnBinding.setEditable(false);*/
-        //jTableBinding.bind();
         //Adjust table column width
         TableColumn column = null;
         column = tblPatient.getColumnModel().getColumn(0);
@@ -95,21 +78,14 @@ public class PatientOpSetup extends javax.swing.JPanel {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 int row = tblPatient.getSelectedRow();
-
+                //log.info("select : " + e.getValueIsAdjusting());
                 if (row != -1) {
-                    selPatient = listPatient.get(tblPatient.convertRowIndexToModel(row));
-                    tblEntryModel.setPatient(selPatient);
-                    txtCusCode.setText(selPatient.getRegNo());
-                    txtCusName.setText(selPatient.getPatientName());
-                    try {
-                        String strSQL = "select o from PatientOpening o where o.key.patient.regNo = '"
-                                + selPatient.getRegNo() + "'";
-                        List<PatientOpening> prvOP = dao.findAllHSQL(strSQL);
-                        tblLastOpModel.setListOp(prvOP);
-                    } catch (Exception ex) {
-                        log.error("initTblTrader : " + ex.getMessage());
-                    } finally {
-                        dao.close();
+                    if (e.getValueIsAdjusting()) {
+                        selPatient = listPatient.get(tblPatient.convertRowIndexToModel(row));
+                        //tblEntryModel.setPatient(selPatient);
+                        txtCusCode.setText(selPatient.getRegNo());
+                        txtCusName.setText(selPatient.getPatientName());
+                        getSelectedPatientData();
                     }
                 }
             }
@@ -117,33 +93,25 @@ public class PatientOpSetup extends javax.swing.JPanel {
         );
     }
 
-    private void initTblEntry() {
+    private void getSelectedPatientData() {
         try {
-            tblEntry.setModel(tblEntryModel);
-            tblEntryModel.addEmptyRow();
-
-            //Adjust table column width
-            TableColumn column = null;
-            column = tblEntry.getColumnModel().getColumn(0);
-            column.setPreferredWidth(50);
-
-            column = tblEntry.getColumnModel().getColumn(1);
-            column.setPreferredWidth(50);
-
-            column = tblEntry.getColumnModel().getColumn(2);
-            column.setPreferredWidth(50);
-
-            column = tblEntry.getColumnModel().getColumn(3);
-            column.setPreferredWidth(80);
-
-            JComboBox cboCurrency = new JComboBox();
-            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
-            tblEntry.getColumnModel().getColumn(1).setCellEditor(new DefaultCellEditor(cboCurrency));
-            JComboBox cboBillType = new JComboBox();
-            BindingUtil.BindCombo(cboBillType, dao.findAll("PaymentType"));
-            tblEntry.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboBillType));
+            String strSQL = "select o from PatientOpening o where o.key.patient.regNo = '"
+                    + selPatient.getRegNo() + "'";
+            List<PatientOpening> prvOP = dao.findAllHSQL(strSQL);
+            tblLastOpModel.setListOp(prvOP);
         } catch (Exception ex) {
-            log.error("initTblEntry : " + ex.getMessage());
+            log.error("initTblTrader : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void initCombo() {
+        try {
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+            BindingUtil.BindCombo(cboBillType, dao.findAll("PaymentType"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
         } finally {
             dao.close();
         }
@@ -167,27 +135,50 @@ public class PatientOpSetup extends javax.swing.JPanel {
     private void clear() {
         txtCusCode.setText(null);
         txtCusName.setText(null);
-        tblEntryModel.clear();
-        tblEntryModel.addEmptyRow();
+        txtOpDate.setText(null);
+        txtOpAmt.setText(null);
+        selPatient = null;
+        //tblEntryModel.clear();
+        //tblEntryModel.addEmptyRow();
         tblLastOpModel.clear();
     }
 
+    private boolean isValidEntry() {
+        boolean status = true;
+        if (selPatient == null) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "No patient selected.",
+                    "No Patient", JOptionPane.ERROR_MESSAGE);
+        } else if (Util1.nullToBlankStr(txtOpDate.getText()).isEmpty()) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Opening date cannot be blank.",
+                    "Opening Date", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return status;
+    }
+
     private void save() {
-        if (tblEntryModel.isValidEntry()) {
+        if (isValidEntry()) {
             try {
-                dao.open();
+                PatientOpening po = new PatientOpening();
+                CompoundKeyPatientOp ckpo = new CompoundKeyPatientOp();
+                ckpo.setPatient(selPatient);
+                PaymentType pyt = (PaymentType) cboBillType.getSelectedItem();
+                ckpo.setBillType(pyt);
+                Currency curr = (Currency) cboCurrency.getSelectedItem();
+                ckpo.setCurrency(curr);
+                ckpo.setPatientType(cboPtType.getSelectedItem().toString());
+                ckpo.setOpDate(DateUtil.toDate(txtOpDate.getText()));
+                po.setKey(ckpo);
+                po.setAmount(NumberUtil.NZero(txtOpAmt.getText()));
 
-                List<PatientOpening> listDeleteOp = tblLastOpModel.getDeleteList();
-                for (PatientOpening op : listDeleteOp) {
-                    dao.delete(op);
-                }
+                dao.save(po);
 
-                List<PatientOpening> listOp = tblEntryModel.getListOp();
-                for (int i = 0; i < listOp.size() - 1; i++) {
-                    dao.save(listOp.get(i));
-                }
-
-                clear();
+                getSelectedPatientData();
+                txtOpDate.setText(null);
+                txtOpAmt.setText(null);
+                //clear();
             } catch (Exception ex) {
                 log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -202,23 +193,14 @@ public class PatientOpSetup extends javax.swing.JPanel {
         //KeyStroke delKey = KeyStroke.getKeyStroke("BACK_SPACE");
         KeyStroke delKey = KeyStroke.getKeyStroke("F4");
         //tblEntry.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
-        tblEntry.getInputMap().put(delKey, "F8-Action");
-        tblEntry.getActionMap().put("F8-Action", actionItemDelete);
+        //tblEntry.getInputMap().put(delKey, "F8-Action");
+        //tblEntry.getActionMap().put("F8-Action", actionItemDelete);
 
         //F8 event on tblLastOp
         //tblLastOp.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblLastOp.getInputMap().put(delKey, "F8-Action");
         tblLastOp.getActionMap().put("F8-Action", actionItemDeleteLastOp);
     }
-
-    private Action actionItemDelete = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (tblEntry.getSelectedRow() >= 0) {
-                tblEntryModel.delete(tblEntry.convertRowIndexToModel(tblEntry.getSelectedRow()));
-            }
-        }
-    };
 
     private Action actionItemDeleteLastOp = new AbstractAction() {
         @Override
@@ -249,18 +231,19 @@ public class PatientOpSetup extends javax.swing.JPanel {
         }
 
         if (strFilter.isEmpty()) {
-            strFilter = "select o from Patient o";
+            //strFilter = "select o from Patient o";
+            JOptionPane.showMessageDialog(Util1.getParent(), "You need to enter at least one filter.",
+                    "No Filter", JOptionPane.ERROR_MESSAGE);
         } else {
             strFilter = "select o from Patient o where " + strFilter;
-        }
-
-        try {
-            listPatient = dao.findAllHSQL(strFilter);
-            tblPatientTableModel.setListPatient(listPatient);
-        } catch (Exception ex) {
-            log.error("search : " + ex.getMessage());
-        } finally {
-            dao.close();
+            try {
+                listPatient = dao.findAllHSQL(strFilter);
+                tblPatientTableModel.setListPatient(listPatient);
+            } catch (Exception ex) {
+                log.error("search : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 
@@ -278,18 +261,26 @@ public class PatientOpSetup extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         tblPatient = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
-        butClear = new javax.swing.JButton();
-        butSave = new javax.swing.JButton();
         txtCusName = new javax.swing.JTextField();
         txtCusCode = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tblEntry = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblLastOp = new javax.swing.JTable();
-        btnToAcc = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        txtOpDate = new javax.swing.JFormattedTextField();
+        cboCurrency = new javax.swing.JComboBox<>();
+        cboBillType = new javax.swing.JComboBox<>();
+        cboPtType = new javax.swing.JComboBox<>();
+        jLabel8 = new javax.swing.JLabel();
+        txtOpAmt = new javax.swing.JFormattedTextField();
         txtRegNo = new javax.swing.JTextField();
+        btnToAcc = new javax.swing.JButton();
+        butClear = new javax.swing.JButton();
+        butSave = new javax.swing.JButton();
 
         txtFilter.setFont(Global.textFont);
         txtFilter.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -312,22 +303,6 @@ public class PatientOpSetup extends javax.swing.JPanel {
         tblPatient.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblPatient);
 
-        butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butClear.setText("Clear");
-        butClear.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butClearActionPerformed(evt);
-            }
-        });
-
-        butSave.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butSave.setText("Save");
-        butSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butSaveActionPerformed(evt);
-            }
-        });
-
         txtCusName.setEditable(false);
         txtCusName.setFont(Global.textFont);
 
@@ -339,24 +314,6 @@ public class PatientOpSetup extends javax.swing.JPanel {
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Code");
-
-        jScrollPane3.setBorder(javax.swing.BorderFactory.createTitledBorder("Entry"));
-
-        tblEntry.setFont(Global.textFont);
-        tblEntry.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        tblEntry.setRowHeight(23);
-        tblEntry.setShowVerticalLines(false);
-        jScrollPane3.setViewportView(tblEntry);
 
         jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Last Opening"));
 
@@ -377,12 +334,17 @@ public class PatientOpSetup extends javax.swing.JPanel {
         tblLastOp.setShowVerticalLines(false);
         jScrollPane2.setViewportView(tblLastOp);
 
-        btnToAcc.setText("To Acc");
-        btnToAcc.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnToAccActionPerformed(evt);
-            }
-        });
+        jLabel3.setText("OP Date : ");
+
+        jLabel5.setText("Currency :");
+
+        jLabel6.setText("Bill Type : ");
+
+        jLabel7.setText("Pt Type : ");
+
+        cboPtType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "OPD", "ADMISSION" }));
+
+        jLabel8.setText("OP Amount : ");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -390,30 +352,43 @@ public class PatientOpSetup extends javax.swing.JPanel {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtCusCode, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(12, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(btnToAcc)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butSave)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtCusCode, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(cboBillType, javax.swing.GroupLayout.PREFERRED_SIZE, 271, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtOpAmt))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboPtType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboCurrency, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtOpDate, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2});
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel5, jLabel6, jLabel7, jLabel8});
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboBillType, cboCurrency, cboPtType, txtOpAmt, txtOpDate});
 
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -427,19 +402,53 @@ public class PatientOpSetup extends javax.swing.JPanel {
                     .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(txtOpDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(butClear)
-                        .addComponent(butSave))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(btnToAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(cboBillType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(cboPtType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(txtOpAmt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         txtRegNo.setFont(Global.textFont);
+
+        btnToAcc.setText("To Acc");
+        btnToAcc.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnToAccActionPerformed(evt);
+            }
+        });
+
+        butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butClear.setText("Clear");
+        butClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butClearActionPerformed(evt);
+            }
+        });
+
+        butSave.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSave.setText("Save");
+        butSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butSaveActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -456,9 +465,21 @@ public class PatientOpSetup extends javax.swing.JPanel {
                         .addComponent(butFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(btnToAcc)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(26, 26, 26))))
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
@@ -473,10 +494,19 @@ public class PatientOpSetup extends javax.swing.JPanel {
                                     .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addComponent(butFilter))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 287, Short.MAX_VALUE))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(butClear)
+                                .addComponent(butSave))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(btnToAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 1, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -542,18 +572,26 @@ public class PatientOpSetup extends javax.swing.JPanel {
     private javax.swing.JButton butClear;
     private javax.swing.JButton butFilter;
     private javax.swing.JButton butSave;
+    private javax.swing.JComboBox<String> cboBillType;
+    private javax.swing.JComboBox<String> cboCurrency;
+    private javax.swing.JComboBox<String> cboPtType;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTable tblEntry;
     private javax.swing.JTable tblLastOp;
     private javax.swing.JTable tblPatient;
     private javax.swing.JTextField txtCusCode;
     private javax.swing.JTextField txtCusName;
     private javax.swing.JTextField txtFilter;
+    private javax.swing.JFormattedTextField txtOpAmt;
+    private javax.swing.JFormattedTextField txtOpDate;
     private javax.swing.JTextField txtRegNo;
     // End of variables declaration//GEN-END:variables
 }

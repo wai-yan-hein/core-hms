@@ -63,7 +63,7 @@ public class VOpd implements Serializable{
     private String readerDrName;
     private Integer pathoId;
     private String pathologyName;
-    private Integer techId;
+    private String techId;
     private String techName;
     private Integer techType;
     private Boolean print;
@@ -452,11 +452,11 @@ public class VOpd implements Serializable{
     }
 
     @Column(name="tech_id")
-    public Integer getTechId() {
+    public String getTechId() {
         return techId;
     }
 
-    public void setTechId(Integer techId) {
+    public void setTechId(String techId) {
         this.techId = techId;
     }
 

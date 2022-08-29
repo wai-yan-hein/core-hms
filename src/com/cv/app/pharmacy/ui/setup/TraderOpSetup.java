@@ -17,6 +17,7 @@ import com.cv.app.pharmacy.ui.common.TraderOpTableModel;
 import com.cv.app.pharmacy.ui.common.TraderOpTrListTableModel;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.opencsv.CSVReader;
 import java.awt.event.ActionEvent;
@@ -44,7 +45,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
     //private List<Trader> listTrader;
     private final AbstractDataAccess dao = Global.dao;
     private Trader selTrader;
-    private TraderOpTableModel tblEntryModel = new TraderOpTableModel(true);
+    //private TraderOpTableModel tblEntryModel = new TraderOpTableModel(true);
     private TraderOpTableModel tblLastOpModel = new TraderOpTableModel();
     private TableRowSorter<TableModel> sorter;
     private final TraderOpTrListTableModel tblTraderModel = new TraderOpTrListTableModel();
@@ -56,11 +57,22 @@ public class TraderOpSetup extends javax.swing.JPanel {
         initComponents();
         //listTrader = dao.findAllHSQL("select t from Trader t where t.active = true");
         initTblTrader();
-        initTblEntry();
+        //initTblEntry();
         initTblLastOp();
         actionMapping();
         sorter = new TableRowSorter(tblTrader.getModel());
         tblTrader.setRowSorter(sorter);
+        initCombo();
+    }
+
+    private void initCombo() {
+        try {
+            BindingUtil.BindCombo(cboCurrency, dao.findAll("Currency"));
+        } catch (Exception ex) {
+            log.error("initCombo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void initTblTrader() {
@@ -69,7 +81,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
             //Adjust table column width
             TableColumn column = null;
             column = tblTrader.getColumnModel().getColumn(0);
-            column.setPreferredWidth(60);
+            column.setPreferredWidth(50);
 
             column = tblTrader.getColumnModel().getColumn(1);
             column.setPreferredWidth(150);
@@ -88,7 +100,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
 
                 if (row != -1) {
                     selTrader = tblTraderModel.getTrader(tblTrader.convertRowIndexToModel(row));
-                    tblEntryModel.setTrader(selTrader);
+                    //tblEntryModel.setTrader(selTrader);
                     if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
                         txtCusCode.setText(selTrader.getStuCode());
                     } else {
@@ -115,7 +127,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
         }
     }
 
-    private void initTblEntry() {
+    /*private void initTblEntry() {
         try {
             tblEntry.setModel(tblEntryModel);
             tblEntryModel.addEmptyRow();
@@ -139,8 +151,7 @@ public class TraderOpSetup extends javax.swing.JPanel {
         } finally {
             dao.close();
         }
-    }
-
+    }*/
     private void initTblLastOp() {
         tblLastOp.setModel(tblLastOpModel);
 
@@ -159,29 +170,72 @@ public class TraderOpSetup extends javax.swing.JPanel {
     private void clear() {
         txtCusCode.setText(null);
         txtCusName.setText(null);
-        tblEntryModel.clear();
-        tblEntryModel.addEmptyRow();
+        txtAmount.setText(null);
+        txtOPDate.setText(null);
+        txtDesp.setText(null);
+        //tblEntryModel.clear();
+        //tblEntryModel.addEmptyRow();
         tblLastOpModel.clear();
     }
 
+    private boolean isValidEntry() {
+        boolean status = true;
+        if (Util1.isNull(txtOPDate.getText().trim(), "").isEmpty()) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
+                    "Date", JOptionPane.ERROR_MESSAGE);
+        } else if (!DateUtil.isValidDate(txtOPDate.getText().trim())) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
+                    "Date", JOptionPane.ERROR_MESSAGE);
+        } else if (Util1.isNull(txtDesp.getText().trim(), "").isEmpty()) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid desp.",
+                    "Desp", JOptionPane.ERROR_MESSAGE);
+        } else if (Util1.isNull(txtAmount.getText().trim(), "").isEmpty()) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening amount.",
+                    "Amount", JOptionPane.ERROR_MESSAGE);
+        } else if (!NumberUtil.isNumber(txtAmount.getText().trim())) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening amount.",
+                    "Amount", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return status;
+    }
+
     private void save() {
-        if (tblEntryModel.isValidEntry()) {
+        if (isValidEntry()) {
             try {
                 dao.open();
 
-                List<TraderOpening> listDeleteOp = tblLastOpModel.getDeleteList();
+                /*List<TraderOpening> listDeleteOp = tblLastOpModel.getDeleteList();
                 for (TraderOpening op : listDeleteOp) {
                     dao.delete(op);
-                }
+                }*/
+                TraderOpening record = new TraderOpening(new CompoundKeyTraderOp(selTrader));
+                Currency curr = (Currency) cboCurrency.getSelectedItem();
+                record.getKey().setCurrency(curr);
+                record.getKey().setDesp(txtDesp.getText().trim());
+                record.getKey().setOpDate(DateUtil.toDate(txtOPDate.getText().trim()));
+                record.getKey().setTrader(selTrader);
+                record.setAmount(NumberUtil.getDouble(txtAmount.getText().trim()));
 
-                List<TraderOpening> listOp = tblEntryModel.getListOp();
-                for (int i = 0; i < listOp.size() - 1; i++) {
-                    dao.save(listOp.get(i));
-                }
+                dao.save(record);
 
                 clear();
+
+                String strSQL = "select o from TraderOpening o where o.key.trader.traderId = '"
+                        + selTrader.getTraderId() + "'";
+
+                List<TraderOpening> prvOP = dao.findAllHSQL(strSQL);
+                tblLastOpModel.setListOp(prvOP);
+
             } catch (Exception ex) {
-                log.error(ex.toString());
+                JOptionPane.showMessageDialog(Util1.getParent(), ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                log.error("save : " + ex.getMessage());
             } finally {
                 dao.close();
             }
@@ -194,8 +248,8 @@ public class TraderOpSetup extends javax.swing.JPanel {
         //KeyStroke delKey = KeyStroke.getKeyStroke("BACK_SPACE");
         KeyStroke delKey = KeyStroke.getKeyStroke("F8");
         //tblEntry.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
-        tblEntry.getInputMap().put(delKey, "F8-Action");
-        tblEntry.getActionMap().put("F8-Action", actionItemDelete);
+        //tblEntry.getInputMap().put(delKey, "F8-Action");
+        //tblEntry.getActionMap().put("F8-Action", actionItemDelete);
 
         //F8 event on tblLastOp
         //tblLastOp.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
@@ -203,15 +257,14 @@ public class TraderOpSetup extends javax.swing.JPanel {
         tblLastOp.getActionMap().put("F8-Action", actionItemDeleteLastOp);
     }
 
-    private Action actionItemDelete = new AbstractAction() {
+    /*private Action actionItemDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblEntry.getSelectedRow() >= 0) {
                 tblEntryModel.delete(tblEntry.convertRowIndexToModel(tblEntry.getSelectedRow()));
             }
         }
-    };
-
+    };*/
     private Action actionItemDeleteLastOp = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -297,12 +350,20 @@ public class TraderOpSetup extends javax.swing.JPanel {
         txtCusCode = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tblEntry = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblLastOp = new javax.swing.JTable();
         btnToAcc = new javax.swing.JButton();
         butUpload = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        txtOPDate = new javax.swing.JFormattedTextField();
+        jLabel4 = new javax.swing.JLabel();
+        cboCurrency = new javax.swing.JComboBox<>();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        txtDesp = new javax.swing.JTextField();
+        txtAmount = new javax.swing.JTextField();
+
+        setPreferredSize(new java.awt.Dimension(1000, 600));
 
         txtFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         txtFilter.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -317,7 +378,6 @@ public class TraderOpSetup extends javax.swing.JPanel {
         tblTrader.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblTrader.setModel(tblTraderModel);
         tblTrader.setRowHeight(23);
-        tblTrader.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblTrader);
 
         butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
@@ -348,24 +408,6 @@ public class TraderOpSetup extends javax.swing.JPanel {
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Code");
 
-        jScrollPane3.setBorder(javax.swing.BorderFactory.createTitledBorder("Entry"));
-
-        tblEntry.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        tblEntry.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        tblEntry.setRowHeight(23);
-        tblEntry.setShowVerticalLines(false);
-        jScrollPane3.setViewportView(tblEntry);
-
         jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Last Opening"));
 
         tblLastOp.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -382,7 +424,6 @@ public class TraderOpSetup extends javax.swing.JPanel {
             }
         ));
         tblLastOp.setRowHeight(23);
-        tblLastOp.setShowVerticalLines(false);
         jScrollPane2.setViewportView(tblLastOp);
 
         btnToAcc.setText("To Acc");
@@ -399,38 +440,74 @@ public class TraderOpSetup extends javax.swing.JPanel {
             }
         });
 
+        jLabel3.setFont(Global.lableFont);
+        jLabel3.setText("OP Date : ");
+
+        jLabel4.setFont(Global.lableFont);
+        jLabel4.setText("Currency : ");
+
+        jLabel5.setFont(Global.lableFont);
+        jLabel5.setText("Desp : ");
+
+        jLabel6.setFont(Global.lableFont);
+        jLabel6.setText("Amount : ");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtCusCode, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)
+                .addGap(12, 12, 12))
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(butUpload)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnToAcc)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butSave)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(0, 0, Short.MAX_VALUE))
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(txtCusCode, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addComponent(jLabel5)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(txtDesp, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                    .addComponent(jLabel3)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(txtOPDate))
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                    .addComponent(jLabel6)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(txtAmount)))
+                            .addGap(144, 144, 144))
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGap(75, 75, 75)
+                            .addComponent(butUpload)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(btnToAcc)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(butSave)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboCurrency, 0, 108, Short.MAX_VALUE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2});
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave});
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel4, jLabel5, jLabel6});
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboCurrency, txtAmount, txtDesp, txtOPDate});
 
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -443,19 +520,32 @@ public class TraderOpSetup extends javax.swing.JPanel {
                     .addComponent(jLabel2)
                     .addComponent(txtCusName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(txtOPDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(txtDesp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(txtAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(butClear)
                         .addComponent(butSave))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnToAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(butUpload))
-                        .addContainerGap())))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(btnToAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(butUpload)))
+                .addContainerGap(29, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -469,28 +559,27 @@ public class TraderOpSetup extends javax.swing.JPanel {
                         .addComponent(txtFilter)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))
                 .addGap(18, 18, 18)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addGap(14, 14, 14)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(2, 2, 2)
-                                .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(butFilter))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 287, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(2, 2, 2)
+                        .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(butFilter))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 541, Short.MAX_VALUE)
                 .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -586,17 +675,23 @@ public class TraderOpSetup extends javax.swing.JPanel {
     private javax.swing.JButton butFilter;
     private javax.swing.JButton butSave;
     private javax.swing.JButton butUpload;
+    private javax.swing.JComboBox<String> cboCurrency;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTable tblEntry;
     private javax.swing.JTable tblLastOp;
     private javax.swing.JTable tblTrader;
+    private javax.swing.JTextField txtAmount;
     private javax.swing.JTextField txtCusCode;
     private javax.swing.JTextField txtCusName;
+    private javax.swing.JTextField txtDesp;
     private javax.swing.JTextField txtFilter;
+    private javax.swing.JFormattedTextField txtOPDate;
     // End of variables declaration//GEN-END:variables
 }

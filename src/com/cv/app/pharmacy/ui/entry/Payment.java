@@ -443,7 +443,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             traderPayHis.setParentCurr((Currency) cboPCurrency.getSelectedItem());
             traderPayHis.setPayDt(traderPayHis.getPayDate());
             traderPayHis.setIntgUpdStatus(null);
-            if (cboAccount.getSelectedItem() != null) {
+            if (cboAccount.getSelectedItem() instanceof TraderPayAccount) {
                 traderPayHis.setPayAccount((TraderPayAccount) cboAccount.getSelectedItem());
             } else {
                 traderPayHis.setPayAccount(null);

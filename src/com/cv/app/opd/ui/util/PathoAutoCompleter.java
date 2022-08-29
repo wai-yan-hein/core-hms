@@ -5,6 +5,7 @@
 package com.cv.app.opd.ui.util;
 
 import com.cv.app.common.Global;
+import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Pathologiest;
 import com.cv.app.opd.ui.common.PathoAutoCompleteTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -38,7 +39,7 @@ public class PathoAutoCompleter implements KeyListener {
     private JTextComponent textComp;
     private static final String AUTOCOMPLETER = "AUTOCOMPLETER"; //NOI18N
     private PathoAutoCompleteTableModel acTableModel;
-    private Pathologiest selPatho;
+    private Doctor selPatho;
     public AbstractCellEditor editor;
     private TableRowSorter<TableModel> sorter;
     private final AbstractDataAccess dao = Global.dao;
@@ -50,8 +51,8 @@ public class PathoAutoCompleter implements KeyListener {
         textComp.putClientProperty(AUTOCOMPLETER, this);
         textComp.setFont(Global.textFont);
         try {
-            List<Pathologiest> listPatho = dao.findAllHSQL(
-                    "select o from Pathologiest o where o.active = true order by o.pathologyName");
+            List<Doctor> listPatho = dao.findAllHSQL(
+                    "select o from Doctor o where o.active = true and o.drType = 'Technician' order by o.doctorName");
             acTableModel = new PathoAutoCompleteTableModel(listPatho);
         } catch (Exception ex) {
             log.error("PathoAutoCompleter : " + ex.getMessage());
@@ -127,7 +128,7 @@ public class PathoAutoCompleter implements KeyListener {
         if (table.getSelectedRow() != -1) {
             selPatho = acTableModel.getPatho(table.convertRowIndexToModel(
                     table.getSelectedRow()));
-            ((JTextField) textComp).setText(selPatho.getPathologyName());
+            ((JTextField) textComp).setText(selPatho.getDoctorName());
         }
 
         popup.setVisible(false);
@@ -143,7 +144,7 @@ public class PathoAutoCompleter implements KeyListener {
             if (completer.table.getSelectedRow() != -1) {
                 selPatho = acTableModel.getPatho(completer.table.convertRowIndexToModel(
                         completer.table.getSelectedRow()));
-                ((JTextField) completer.textComp).setText(selPatho.getPathologyName());
+                ((JTextField) completer.textComp).setText(selPatho.getDoctorName());
             }
 
             completer.popup.setVisible(false);
@@ -264,7 +265,7 @@ public class PathoAutoCompleter implements KeyListener {
         table.scrollRectToVisible(rect);
     }
 
-    public Pathologiest getPatho() {
+    public Doctor getPatho() {
         return selPatho;
     }
 

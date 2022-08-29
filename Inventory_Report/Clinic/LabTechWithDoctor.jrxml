@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LabTechFees" pageWidth="595" pageHeight="420" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="90"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="compName" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
@@ -30,300 +41,217 @@
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[select oc.cat_name, os.service_name, sum(ifnull(odh.qty, 0)) ttl_qty, sum(ifnull(odh.amount,0)) ttl_amount,os.srv_fees,
-if(odh.is_percent = 0,if(odh.srv_fees1 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees1,0),0), if(odh.srv_fees1 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees1,0) / 100,0)) srv_fees1,
-if(odh.is_percent = 0,if(odh.srv_fees2 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees2,0),0), if(odh.srv_fees2 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees2,0) / 100,0)) srv_fees2,
-if(odh.is_percent = 0,if(odh.srv_fees3 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees3,0),0), if(odh.srv_fees3 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees3,0) / 100,0)) srv_fees3,
+		<![CDATA[select a.* from (
+select os.service_name, sum(ifnull(odh.qty,0)) as qty,
 if(odh.is_percent = 0,if(odh.srv_fees4 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees4,0),0), if(odh.srv_fees4 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees4,0) / 100,0)) srv_fees4,
-if(odh.is_percent = 0,if(odh.srv_fees5 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees5,0),0), if(odh.srv_fees5 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees5,0) / 100,0)) srv_fees5,
-if(odh.is_percent = 0,if(odh.srv_fees6 > 0, sum(ifnull(odh.qty, 0)) * ifnull(odh.srv_fees6,0),0), if(odh.srv_fees6 > 0 ,sum(ifnull(odh.amount,0))* ifnull(odh.srv_fees6,0) / 100,0)) srv_fees6
-,odh.is_percent,t.tech_name
-from opd_his oh, opd_details_his odh, opd_service os, opd_category oc, tmp_opd_service_filter tosf,technician t
-where oh.opd_inv_id = odh.vou_no and odh.tech_id = t.tech_id
-and odh.service_id = os.service_id and os.cat_id = oc.cat_id and odh.service_id = tosf.service_id
-and tosf.user_id = $P{user_id} and oh.deleted = false
+ifnull(t.doctor_name,'-') as tech_name
+from opd_his oh
+join opd_details_his odh on oh.opd_inv_id = odh.vou_no
+join opd_service os on odh.service_id = os.service_id
+join opd_category oc on os.cat_id = oc.cat_id
+join tmp_opd_service_filter tosf on odh.service_id = tosf.service_id
+left join doctor t on odh.tech_id = t.doctor_id
+where tosf.user_id = $P{user_id} and oh.deleted = false
 and date(oh.opd_date) between $P{from_date} and $P{to_date}
 and (oh.currency_id = $P{currency} or $P{currency} = '-')
 and (oh.payment_id = $P{payment} or $P{payment} = -1)
-and (odh.tech_id = $P{tech_id} or $P{tech_id} = '-')
+and (odh.tech_id = $P{tech_id} or ifnull($P{tech_id},'-') = '-')
 and (oh.patient_id = $P{reg_no} or $P{reg_no} = '-')
-group by oc.cat_name, os.service_name,os.srv_fees,odh.srv_fees1,odh.srv_fees2,odh.srv_fees3,odh.srv_fees4,odh.srv_fees5,odh.srv_fees6,odh.is_percent,t.tech_name
-order by t.tech_name,oc.cat_name, os.service_name]]>
+group by oc.cat_name, os.service_name,odh.srv_fees4,t.doctor_name
+order by t.doctor_name, os.service_name) a 
+where ifnull(a.srv_fees4,0) <> 0]]>
 	</queryString>
-	<field name="cat_name" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
 	<field name="service_name" class="java.lang.String">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="ttl_qty" class="java.math.BigDecimal">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="ttl_amount" class="java.lang.Double"/>
-	<field name="srv_fees" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="srv_fees1" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="srv_fees2" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="srv_fees3" class="java.lang.Double">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
 	<field name="srv_fees4" class="java.lang.Double">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="srv_fees5" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="srv_fees6" class="java.lang.Double">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="is_percent" class="java.lang.Boolean">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
 	<field name="tech_name" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<variable name="amt_cat_sum" class="java.lang.Double" resetType="Group" resetGroup="Doctor" calculation="Sum">
-		<variableExpression><![CDATA[$F{ttl_amount}]]></variableExpression>
-	</variable>
-	<variable name="amt_rpt_total" class="java.lang.Double" calculation="Sum">
-		<variableExpression><![CDATA[$F{ttl_amount}]]></variableExpression>
-	</variable>
+	<field name="qty" class="java.lang.Integer"/>
 	<variable name="amt_qty_sum" class="java.lang.Double" resetType="Group" resetGroup="Doctor" calculation="Sum">
-		<variableExpression><![CDATA[$F{ttl_qty}]]></variableExpression>
-	</variable>
-	<variable name="amt_rpt_qty" class="java.lang.Double" calculation="Sum">
-		<variableExpression><![CDATA[$F{ttl_qty}]]></variableExpression>
+		<variableExpression><![CDATA[$F{qty}]]></variableExpression>
 	</variable>
 	<variable name="amt_cat_srv4" class="java.lang.Double" resetType="Group" resetGroup="Doctor" calculation="Sum">
 		<variableExpression><![CDATA[$F{srv_fees4}]]></variableExpression>
 	</variable>
-	<variable name="amt_rpt_srv4" class="java.lang.Double" calculation="Sum">
-		<variableExpression><![CDATA[$F{srv_fees4}]]></variableExpression>
-	</variable>
-	<group name="Doctor">
+	<group name="Doctor" keepTogether="true">
 		<groupExpression><![CDATA[$F{tech_name}]]></groupExpression>
 		<groupHeader>
-			<band height="20">
-				<textField>
-					<reportElement x="1" y="0" width="164" height="20" uuid="093c36d0-8319-40b9-b139-a345c47ccd1e"/>
+			<band height="63">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<line>
+					<reportElement x="0" y="40" width="554" height="1" uuid="2ad57bf6-355b-4396-8af4-15ca2c08a2f2"/>
+				</line>
+				<staticText>
+					<reportElement x="1" y="40" width="100" height="20" uuid="b5319cd4-ca40-4805-9048-625ff6bf417c"/>
 					<textElement verticalAlignment="Middle">
-						<font fontName="Zawgyi-One" size="12" isBold="true" isItalic="true" isUnderline="true"/>
+						<font fontName="Arial" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Service Name]]></text>
+				</staticText>
+				<line>
+					<reportElement x="0" y="62" width="554" height="1" uuid="083c3184-c6c2-4c76-a733-a1a7b5dd2a65"/>
+				</line>
+				<staticText>
+					<reportElement x="380" y="40" width="41" height="20" uuid="534aa308-6a37-467d-b23f-c11b4dcd3201"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Qty]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="473" y="40" width="80" height="20" uuid="58093ba5-b3a1-4c4f-bf6f-04b3a6972b0c"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Tech Fee]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="97" y="23" width="164" height="15" uuid="093c36d0-8319-40b9-b139-a345c47ccd1e">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Zawgyi-One" size="10" isBold="true" isItalic="false" isUnderline="false"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{tech_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="23" width="95" height="15" uuid="017f306f-939a-46db-a4f6-24e06a34bc46">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Technician Name : ]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="0" y="1" width="554" height="20" uuid="6602518c-7bb1-4317-a225-08c03dd3d852"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Zawgyi-One" size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="386" y="23" width="66" height="15" uuid="428cbcaa-ec93-4528-8482-7ff31e97aa53">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial"/>
+					</textElement>
+					<text><![CDATA[Printed Date :]]></text>
+				</staticText>
+				<textField pattern="dd/MM/yyyy h.mm a">
+					<reportElement x="454" y="23" width="100" height="15" uuid="a6d1588f-771a-4dac-8a6e-fc423d7ce180">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="22">
+			<band height="21">
 				<line>
-					<reportElement x="0" y="1" width="802" height="1" uuid="f555d79a-341f-4bf8-94fd-1dd527dc8fa2"/>
+					<reportElement x="0" y="0" width="554" height="1" uuid="f555d79a-341f-4bf8-94fd-1dd527dc8fa2">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
 				</line>
 				<textField pattern="#,##0;(#,##0)">
-					<reportElement x="223" y="2" width="94" height="20" uuid="5fb3cb9d-cc64-420c-9ef4-199df42917ac"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle"/>
-					<textFieldExpression><![CDATA[$V{amt_cat_sum}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="1" y="2" width="124" height="20" uuid="b710c69c-c645-4628-a4a9-69fbf5f8945f"/>
+					<reportElement x="380" y="2" width="42" height="15" uuid="cf5e2309-f365-4e4f-8b41-b372bc2d3b0d">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Zawgyi-One" size="12" isBold="true" isItalic="true" isUnderline="true"/>
+						<font fontName="Ani" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{tech_name} + " Total : "]]></textFieldExpression>
-				</textField>
-				<textField pattern="#,##0;(#,##0)">
-					<reportElement x="180" y="2" width="42" height="20" uuid="cf5e2309-f365-4e4f-8b41-b372bc2d3b0d"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{amt_qty_sum}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0;(#,##0)">
-					<reportElement x="321" y="2" width="80" height="20" uuid="27d29be8-2581-4c52-8cfb-924ba3064397"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<reportElement x="473" y="2" width="80" height="15" uuid="27d29be8-2581-4c52-8cfb-924ba3064397">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" isBold="true"/>
+					</textElement>
 					<textFieldExpression><![CDATA[$V{amt_cat_srv4}]]></textFieldExpression>
 				</textField>
+				<staticText>
+					<reportElement x="250" y="0" width="100" height="15" uuid="cb1019cd-d3ec-442e-8f65-cd656eacb603">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total : ]]></text>
+				</staticText>
 			</band>
 		</groupFooter>
 	</group>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
-	<title>
-		<band height="59" splitType="Stretch">
-			<textField>
-				<reportElement x="0" y="0" width="363" height="20" uuid="6602518c-7bb1-4317-a225-08c03dd3d852"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="12"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="0" y="19" width="363" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
-				<box>
-					<pen lineStyle="Solid" lineColor="#004ECA"/>
-					<topPen lineStyle="Solid" lineColor="#004ECA"/>
-					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
-					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
-					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
-				</box>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
-					<font fontName="Arial" size="18" isBold="true" isItalic="false"/>
-				</textElement>
-				<text><![CDATA[Tech Fees by Technician]]></text>
-			</staticText>
-			<textField pattern="dd/MM/yyyy h.mm a">
-				<reportElement x="701" y="39" width="100" height="20" uuid="a6d1588f-771a-4dac-8a6e-fc423d7ce180"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial"/>
-				</textElement>
-				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="633" y="39" width="66" height="20" uuid="428cbcaa-ec93-4528-8482-7ff31e97aa53"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial"/>
-				</textElement>
-				<text><![CDATA[Printed Date :]]></text>
-			</staticText>
-			<textField>
-				<reportElement x="0" y="43" width="363" height="16" uuid="5fafe77e-e49c-41a7-a8fe-e3042593723d"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
-			</textField>
-		</band>
-	</title>
 	<pageHeader>
-		<band height="44" splitType="Stretch">
-			<line>
-				<reportElement x="0" y="20" width="802" height="1" uuid="2ad57bf6-355b-4396-8af4-15ca2c08a2f2"/>
-			</line>
-			<staticText>
-				<reportElement x="1" y="22" width="100" height="20" uuid="b5319cd4-ca40-4805-9048-625ff6bf417c"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Service Name]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="223" y="22" width="94" height="20" uuid="b4e96551-ad38-46b5-943c-65235c6ed061"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Amount]]></text>
-			</staticText>
-			<line>
-				<reportElement x="0" y="43" width="802" height="1" uuid="083c3184-c6c2-4c76-a733-a1a7b5dd2a65"/>
-			</line>
+		<band height="18">
 			<textField>
-				<reportElement x="681" y="0" width="80" height="20" uuid="cea526fb-617a-4cf5-bf66-ccb63f4d233a"/>
+				<reportElement x="434" y="0" width="80" height="15" uuid="cea526fb-617a-4cf5-bf66-ccb63f4d233a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
 			</textField>
 			<textField evaluationTime="Report">
-				<reportElement x="761" y="0" width="40" height="20" uuid="f197d6b9-41e5-4fc0-8e72-7215dada4fe0"/>
+				<reportElement x="514" y="0" width="40" height="15" uuid="f197d6b9-41e5-4fc0-8e72-7215dada4fe0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement x="180" y="22" width="41" height="20" uuid="534aa308-6a37-467d-b23f-c11b4dcd3201"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="true"/>
+			<textField>
+				<reportElement x="0" y="0" width="363" height="16" uuid="5fafe77e-e49c-41a7-a8fe-e3042593723d">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Qty]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="321" y="22" width="80" height="20" uuid="58093ba5-b3a1-4c4f-bf6f-04b3a6972b0c"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Tech Fee]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<detail>
 		<band height="20" splitType="Stretch">
 			<textField>
-				<reportElement x="1" y="1" width="100" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f"/>
+				<reportElement x="1" y="1" width="279" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{service_name}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
-				<reportElement x="223" y="1" width="94" height="17" uuid="135ba9d2-5efb-4336-afe7-dd7499782055"/>
+				<reportElement x="381" y="1" width="41" height="17" uuid="ca8a6392-4bc5-4cb1-ae04-536cbf9bc15c"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{ttl_amount}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{qty}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
-				<reportElement x="181" y="1" width="41" height="17" uuid="ca8a6392-4bc5-4cb1-ae04-536cbf9bc15c"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{ttl_qty}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
-				<reportElement x="321" y="1" width="80" height="17" uuid="a850e21d-77f1-4b08-bceb-95f1caa393c9"/>
+				<reportElement x="473" y="1" width="80" height="17" uuid="a850e21d-77f1-4b08-bceb-95f1caa393c9"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{srv_fees4}]]></textFieldExpression>
 			</textField>
-			<line>
-				<reportElement x="0" y="19" width="802" height="1" uuid="c20cc653-e6d8-4ea5-a291-37a9416c5b1a"/>
-				<graphicElement>
-					<pen lineStyle="Dotted"/>
-				</graphicElement>
-			</line>
-			<textField>
-				<reportElement x="102" y="1" width="79" height="17" uuid="d94bfe99-ecc5-4b63-8998-6a9a01474bc1"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{cat_name}]]></textFieldExpression>
-			</textField>
 		</band>
 	</detail>
-	<summary>
-		<band height="21" splitType="Stretch">
-			<textField pattern="#,##0;(#,##0)">
-				<reportElement x="223" y="1" width="94" height="20" uuid="ae4ff96d-e011-4b3b-b0e9-c8beb441ef4a"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="12" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{amt_rpt_total}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="1" y="1" width="100" height="20" uuid="8773bd21-1703-47c4-8113-2913101590f0"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Total Amount : ]]></text>
-			</staticText>
-			<textField pattern="#,##0;(#,##0)">
-				<reportElement x="180" y="0" width="42" height="20" uuid="d11c8296-91fb-4a10-af74-5787a2c94192"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="12" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{amt_rpt_qty}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0;(#,##0)">
-				<reportElement x="321" y="1" width="80" height="20" uuid="46cd9402-219a-4464-b98d-0d527932156d"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="12" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{amt_rpt_srv4}]]></textFieldExpression>
-			</textField>
-		</band>
-	</summary>
 </jasperReport>

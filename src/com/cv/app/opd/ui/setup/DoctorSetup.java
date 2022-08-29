@@ -136,7 +136,7 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     private void initTable() {
         try {
             tableModel.setListDoctor(dao.findAllHSQL(
-                    "select o from Doctor o where o.doctorName"
+                    "select o from Doctor o order by o.doctorName"
             ));
 
             tblDoctor.getColumnModel().getColumn(0).setPreferredWidth(20);

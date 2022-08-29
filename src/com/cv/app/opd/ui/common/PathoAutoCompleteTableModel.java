@@ -4,8 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.opd.database.entity.Pathologiest;
-import java.util.ArrayList;
+import com.cv.app.opd.database.entity.Doctor;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
@@ -15,10 +14,10 @@ import javax.swing.table.AbstractTableModel;
  */
 public class PathoAutoCompleteTableModel extends AbstractTableModel {
 
-    private List<Pathologiest> listPatho;
+    private List<Doctor> listPatho;
     private final String[] columnNames = {"Name", "Rank", "Post"};
 
-    public PathoAutoCompleteTableModel(List<Pathologiest> listPatho){
+    public PathoAutoCompleteTableModel(List<Doctor> listPatho){
         this.listPatho = listPatho;
     }
     
@@ -47,15 +46,15 @@ public class PathoAutoCompleteTableModel extends AbstractTableModel {
             return null;
         }
 
-        Pathologiest record = listPatho.get(row);
+        Doctor record = listPatho.get(row);
 
         switch (column) {
             case 0: //Name
-                return record.getPathologyName();
+                return record.getDoctorName();
             case 1: //Rank
-                return record.getRank();
+                return null;
             case 2: //Post
-                return record.getPost();
+                return null;
             default:
                 return null;
         }
@@ -79,17 +78,17 @@ public class PathoAutoCompleteTableModel extends AbstractTableModel {
         return columnNames.length;
     }
 
-    public List<Pathologiest> getListPatho() {
+    public List<Doctor> getListPatho() {
         return listPatho;
     }
 
-    public void setListPatho(List<Pathologiest> listPatho) {
+    public void setListPatho(List<Doctor> listPatho) {
         this.listPatho = listPatho;
         fireTableDataChanged();
     }
 
-    public Pathologiest getPatho(int row) {
-        Pathologiest patho = null;
+    public Doctor getPatho(int row) {
+        Doctor patho = null;
 
         if (listPatho != null) {
             if (!listPatho.isEmpty()) {

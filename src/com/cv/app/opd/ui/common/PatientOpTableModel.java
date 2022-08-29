@@ -4,9 +4,11 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.CompoundKeyPatientOp;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.entity.PatientOpening;
+import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.util.DateUtil;
@@ -16,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -23,20 +26,22 @@ import javax.swing.table.AbstractTableModel;
  */
 public class PatientOpTableModel extends AbstractTableModel {
 
-    private String[] columnNames = {"Date", "Currency", "Bill Type", "Amount"};
+    static Logger log = Logger.getLogger(PatientOpTableModel.class.getName());
+    private final String[] columnNames = {"Date", "Currency", "Bill Type", "PT Type", "Amount"};
     private List<PatientOpening> listOp = new ArrayList();
-    private List<PatientOpening> listDeleteOp = new ArrayList();
+    //private List<PatientOpening> listDeleteOp = new ArrayList();
     private Patient patient = new Patient();
     private boolean editable;
-    
-    public PatientOpTableModel(){
+    private final AbstractDataAccess dao = Global.dao;
+
+    public PatientOpTableModel() {
         editable = false;
     }
-    
-    public PatientOpTableModel(boolean editable){
+
+    public PatientOpTableModel(boolean editable) {
         this.editable = editable;
     }
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -56,7 +61,9 @@ public class PatientOpTableModel extends AbstractTableModel {
                 return Currency.class;
             case 2: //Bill Type
                 return PaymentType.class;
-            case 3: //Amount
+            case 3: //PT Type
+                return String.class;
+            case 4: //Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -69,24 +76,30 @@ public class PatientOpTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Date
-                if(record.getKey() != null){
+                if (record.getKey() != null) {
                     return DateUtil.toDateStr(record.getKey().getOpDate());
-                }else{
+                } else {
                     return null;
                 }
             case 1: //Currency
-                if(record.getKey() != null){
+                if (record.getKey() != null) {
                     return record.getKey().getCurrency();
-                }else{
+                } else {
                     return null;
                 }
             case 2: //Bill Type
-                if(record.getKey() != null){
+                if (record.getKey() != null) {
                     return record.getKey().getBillType();
+                } else {
+                    return null;
+                }
+            case 3: //PT Type
+                if(record.getKey() != null){
+                    return record.getKey().getPatientType();
                 }else{
                     return null;
                 }
-            case 3: //Amount
+            case 4: //Amount
                 return record.getAmount();
             default:
                 return new Object();
@@ -99,17 +112,17 @@ public class PatientOpTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Date
-                if(value != null){
+                if (value != null) {
                     Date tmpDate = DateUtil.toDate(value.toString());
-                    
-                    if(tmpDate == null){
+
+                    if (tmpDate == null) {
                         JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
-                        "Opening date", JOptionPane.ERROR_MESSAGE);
-                    }else{
+                                "Opening date", JOptionPane.ERROR_MESSAGE);
+                    } else {
                         record.getKey().setOpDate(tmpDate);
                     }
                 }
-                
+
                 if (!hasEmptyRow()) {
                     addEmptyRow();
                 }
@@ -118,9 +131,9 @@ public class PatientOpTableModel extends AbstractTableModel {
                 record.getKey().setCurrency((Currency) value);
                 break;
             case 2: //Bill Type
-                if(value != null){
-                    record.getKey().setBillType((PaymentType)value);
-                }else{
+                if (value != null) {
+                    record.getKey().setBillType((PaymentType) value);
+                } else {
                     record.getKey().setBillType(null);
                 }
                 break;
@@ -158,7 +171,7 @@ public class PatientOpTableModel extends AbstractTableModel {
     }
 
     public void addEmptyRow() {
-        if(editable){
+        if (editable) {
             PatientOpening record = new PatientOpening(new CompoundKeyPatientOp(patient));
             listOp.add(record);
             fireTableRowsInserted(listOp.size() - 1, listOp.size() - 1);
@@ -167,23 +180,35 @@ public class PatientOpTableModel extends AbstractTableModel {
 
     public void delete(int row) {
         PatientOpening op = listOp.get(row);
-        
+
         if (op.getKey().getCurrency() != null) {
             int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
-                            "Are you sure to delete?",
-                            "Patient Opening delete", JOptionPane.YES_NO_OPTION);
-            
-            if(yes_no == 0){
-                if(!editable){
-                    listDeleteOp.add(op);
-                }
+                    "Are you sure to delete?",
+                    "Patient Opening delete", JOptionPane.YES_NO_OPTION);
 
-                listOp.remove(row);
-                if (!hasEmptyRow()) {
-                    addEmptyRow();
-                }
+            if (yes_no == 0) {
+                if (!editable) {
+                    try {
+                        String strSql = "delete from patient_op where op_date = '"
+                                + DateUtil.toDateStrMYSQL(DateUtil.toDateStr(op.getKey().getOpDate()))
+                                + "' and reg_no = '" + op.getKey().getPatient().getRegNo()
+                                + "' and currency = '" + op.getKey().getCurrency().getCurrencyCode()
+                                + "' and bill_type = " + op.getKey().getBillType().getPaymentTypeId().toString()
+                                + " and patient_type = '" + op.getKey().getPatientType() + "'";
+                        dao.execSql(strSql);
 
-                fireTableRowsDeleted(row, row);
+                        listOp.remove(row);
+                        if (!hasEmptyRow()) {
+                            addEmptyRow();
+                        }
+
+                        fireTableRowsDeleted(row, row);
+                    } catch (Exception ex) {
+                        log.error("delete : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
             }
         }
     }
@@ -192,7 +217,7 @@ public class PatientOpTableModel extends AbstractTableModel {
         this.patient = patient;
         listOp.removeAll(listOp);
         fireTableDataChanged();
-        
+
         if (!hasEmptyRow()) {
             addEmptyRow();
         }
@@ -209,7 +234,6 @@ public class PatientOpTableModel extends AbstractTableModel {
 
     public void clear() {
         listOp.removeAll(listOp);
-        listDeleteOp.removeAll(listDeleteOp);
         fireTableDataChanged();
     }
 
@@ -224,23 +248,19 @@ public class PatientOpTableModel extends AbstractTableModel {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
                         "Date null.", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
-            }else if(patientOP.getKey().getCurrency() == null){
+            } else if (patientOP.getKey().getCurrency() == null) {
                 status = false;
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid currency.",
                         "Currency null", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
-            }else if(patientOP.getAmount() == null){
+            } else if (patientOP.getAmount() == null) {
                 status = false;
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid amount.",
                         "Amount null", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
             }
         }
-        
+
         return status;
-    }
-    
-    public List<PatientOpening> getDeleteList(){
-        return listDeleteOp;
     }
 }
