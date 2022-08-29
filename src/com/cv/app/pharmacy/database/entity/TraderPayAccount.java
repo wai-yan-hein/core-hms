@@ -7,8 +7,6 @@ package com.cv.app.pharmacy.database.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -20,19 +18,9 @@ import javax.persistence.Table;
 @Table(name = "trader_pay_account")
 public class TraderPayAccount implements java.io.Serializable {
 
-    private Integer payId;
     private String account;
     private String desp;
     private Boolean status;
-    
-    @Column(name = "pay_id", unique = true, nullable = false)
-    public Integer getPayId() {
-        return payId;
-    }
-
-    public void setPayId(Integer payId) {
-        this.payId = payId;
-    }
 
     @Id
     @Column(name = "acc_id", nullable = false, length = 15)

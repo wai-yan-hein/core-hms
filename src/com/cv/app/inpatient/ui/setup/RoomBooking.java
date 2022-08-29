@@ -202,7 +202,7 @@ public class RoomBooking extends javax.swing.JPanel implements FormAction,
                     "Please key in name.", "Booking Name",
                     JOptionPane.ERROR_MESSAGE);
             txtName.requestFocusInWindow();
-        } else if (status == true) {
+        } else if (status) {
             currBooking.setBookingDate(DateUtil.toDateTime(txtBookingDateTime.getText()));
             currBooking.setBookingContact(txtContactNo.getText().trim());
             currBooking.setBookingRemark(txtRemark.getText().trim());
@@ -448,13 +448,13 @@ public class RoomBooking extends javax.swing.JPanel implements FormAction,
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel6))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel13)
                     .addComponent(txtContactNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cboRoom, javax.swing.GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)
+                    .addComponent(cboRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 25, Short.MAX_VALUE)
                     .addComponent(jLabel19))
                 .addGap(19, 19, 19))
         );

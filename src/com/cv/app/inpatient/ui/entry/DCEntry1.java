@@ -3111,7 +3111,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         jLabel12.setText("Adm No.");
 
         txtAdmissionNo.setEditable(false);
-        txtAdmissionNo.setFont(Global.textFont);
+        txtAdmissionNo.setFont(Global.lableFont);
 
         jLabel17.setFont(Global.lableFont);
         jLabel17.setText("Diagnosis");
@@ -3610,7 +3610,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 .addComponent(chkA5))
                             .addComponent(chkSummary))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)

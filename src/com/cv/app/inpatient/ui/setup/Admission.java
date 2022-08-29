@@ -258,7 +258,6 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         initComponents();
         initCombo();
         assignDefaultValue();
-        initTable();
         actionMapping();
         //applyFocusPolicy();
         //AddFocusMoveKey();
@@ -486,23 +485,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             BindingUtil.BindCombo(cboType,
                     dao.findAllHSQL("select o from CustomerGroup o order by o.groupName"));
             AutoCompleteDecorator.decorate(cboType);
-            BindingUtil.BindCombo(cboRoom,
-                    dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null "
-                            + " and o.structureType.typeId in (3,4) order by o.description"));
-            AutoCompleteDecorator.decorate(cboRoom);
             BindingUtil.BindCombo(cboBooking,
                     dao.findAllHSQL("select o from RBooking o where checkStatus = true order by o.bookingName"));
             AutoCompleteDecorator.decorate(cboBooking);
-
-            BindingUtil.BindCombo(cboRTFromRoom,
-                    dao.findAllHSQL("select o from BuildingStructure o where "
-                            + " o.structureType.typeId in (3,4) order by o.description"));
-            AutoCompleteDecorator.decorate(cboRTFromRoom);
-            BindingUtil.BindCombo(cboRTToRoom,
-                    dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null "
-                            + " and o.structureType.typeId in (3,4) order by o.description"));
-            AutoCompleteDecorator.decorate(cboRTToRoom);
-
             bindStatus = true;
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());
@@ -601,23 +586,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     JOptionPane.ERROR_MESSAGE);
             txtAmsDateTime.requestFocusInWindow();
         } else if (cboRoom.getSelectedItem() instanceof BuildingStructure) {
-            if (lblStatus.getText().equals("NEW")) {
-                BuildingStructure b = (BuildingStructure) cboRoom.getSelectedItem();
-                String sql = "select reg_no from building_structure where id = " + b.getId() + "";
-                ResultSet rs = dao.execSQL(sql);
-                try {
-                    if (rs.next()) {
-                        String no = rs.getString("reg_no");
-                        if (no != null) {
-                            status = false;
-                            JOptionPane.showMessageDialog(this, no + " is admitted at " + b.getDescription());
-                        }
-                    }
-                } catch (SQLException e) {
-                    log.error(e.getMessage());
-
-                }
-            }
+            status = isValidRoom((BuildingStructure) cboRoom.getSelectedItem());
         }
         if (status) {
             if (Util1.nullToBlankStr(txtAmsNo.getText()).trim().equals("")) {
@@ -707,8 +676,24 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         return status;
     }
 
-    private void initTable() {
+    private boolean isValidRoom(BuildingStructure b) {
+        if (lblStatus.getText().equals("NEW")) {
+            String sql = "select reg_no from building_structure where id = " + b.getId() + "";
+            ResultSet rs = dao.execSQL(sql);
+            try {
+                if (rs.next()) {
+                    String no = rs.getString("reg_no");
+                    if (no != null) {
+                        JOptionPane.showMessageDialog(this, no + " is admitted at " + b.getDescription());
+                        return false;
+                    }
+                }
+            } catch (SQLException e) {
+                log.error(e.getMessage());
 
+            }
+        }
+        return true;
     }
 
     private void applyFocusPolicy() {
@@ -891,14 +876,14 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             if (rs != null) {
                 while (rs.next()) {
                     BuildingStructure bs = (BuildingStructure) dao.find(BuildingStructure.class, rs.getInt("id"));
-                    bs.setReg_no(null);
+                    bs.setRegNo(null);
                     dao.save(bs);
                 }
-
-                BindingUtil.BindCombo(cboRoom,
-                        dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null "
-                                + " and o.structureType.typeId in (3,4) order by o.description"));
             }
+            BindingUtil.BindCombo(cboRoom,
+                    dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null "
+                            + " and o.structureType.typeId in (3,4) order by o.description"));
+            AutoCompleteDecorator.decorate(cboRoom);
         } catch (Exception ex) {
             log.error("verifyRoom : " + ex.toString());
         } finally {
@@ -911,9 +896,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtRTAdmissionNo.setText("");
         txtRTName.setText("");
         butSave.setEnabled(false);
+        cboRTFromRoom.setEnabled(false);
+        cboRTToRoom.setEnabled(false);
         cboRTFromRoom.setSelectedItem(null);
         cboRTToRoom.setSelectedItem(null);
-        cboRTFromRoom.setEnabled(true);
     }
 
     private void transferSave() {
@@ -934,9 +920,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 DCRoomTransferHis his = new DCRoomTransferHis();
                 BuildingStructure fromRoom = (BuildingStructure) cboRTFromRoom.getSelectedItem();
                 admission.setBuildingStructure(toRoom);
-                toRoom.setReg_no(tmpRegNo);
+                toRoom.setRegNo(tmpRegNo);
                 if (fromRoom != null) {
-                    fromRoom.setReg_no(null);
+                    fromRoom.setRegNo(null);
                     his.setFromRoom(fromRoom.getId());
                 }
                 his.setAdmissionNo(admNo);
@@ -947,14 +933,14 @@ public class Admission extends javax.swing.JPanel implements FormAction,
 
                 //dao.open();
                 //dao.beginTran();
-                dao.save(admission);
                 if (fromRoom != null) {
                     dao.save(fromRoom);
                 }
-                dao.save(toRoom);
-                dao.save(his);
-                //dao.commit();
-
+                if (isValidRoom(toRoom)) {
+                    dao.save(toRoom);
+                    dao.save(his);
+                    dao.save(admission);
+                }
                 clear();
             } catch (Exception ex) {
                 dao.rollBack();
@@ -1045,6 +1031,17 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         }
     }
 
+    private void initRoom() throws Exception {
+        BindingUtil.BindCombo(cboRTFromRoom,
+                dao.findAllHSQL("select o from BuildingStructure o where "
+                        + " o.structureType.typeId in (3,4) order by o.description"));
+        AutoCompleteDecorator.decorate(cboRTFromRoom);
+        BindingUtil.BindCombo(cboRTToRoom,
+                dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null "
+                        + " and o.structureType.typeId in (3,4) order by o.description"));
+        AutoCompleteDecorator.decorate(cboRTToRoom);
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1061,7 +1058,6 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtRTAdmissionNo = new javax.swing.JTextField();
         jLabel23 = new javax.swing.JLabel();
         txtRTName = new javax.swing.JTextField();
-        jPanel2 = new javax.swing.JPanel();
         jLabel24 = new javax.swing.JLabel();
         cboRTFromRoom = new javax.swing.JComboBox<>();
         jLabel25 = new javax.swing.JLabel();
@@ -1119,12 +1115,19 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel27 = new javax.swing.JLabel();
         txtRCADAdmNo = new javax.swing.JTextField();
         butReCover = new javax.swing.JButton();
+        panelReCoverAdmissionDelete1 = new javax.swing.JPanel();
+        jLabel28 = new javax.swing.JLabel();
+        txtRCARegNo1 = new javax.swing.JTextField();
+        jLabel29 = new javax.swing.JLabel();
+        txtRCADAdmNo1 = new javax.swing.JTextField();
+        butReCover1 = new javax.swing.JButton();
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Room Transfer"));
 
         jLabel21.setFont(Global.lableFont);
         jLabel21.setText("Reg No.");
 
+        txtRTRegNo.setFont(Global.textFont);
         txtRTRegNo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtRTRegNoActionPerformed(evt);
@@ -1132,9 +1135,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         });
 
         jLabel22.setFont(Global.lableFont);
-        jLabel22.setText("Admission No. ");
+        jLabel22.setText("Ams No");
 
         txtRTAdmissionNo.setEditable(false);
+        txtRTAdmissionNo.setFont(Global.textFont);
 
         jLabel23.setFont(Global.lableFont);
         jLabel23.setText("Name ");
@@ -1145,8 +1149,14 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel24.setFont(Global.lableFont);
         jLabel24.setText("From ");
 
+        cboRTFromRoom.setFont(Global.textFont);
+        cboRTFromRoom.setEnabled(false);
+
         jLabel25.setFont(Global.lableFont);
         jLabel25.setText("To");
+
+        cboRTToRoom.setFont(Global.textFont);
+        cboRTToRoom.setEnabled(false);
 
         butSave.setFont(Global.lableFont);
         butSave.setText("Save");
@@ -1164,59 +1174,42 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             }
         });
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel24)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(cboRTFromRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel25)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cboRTToRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(butSave)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(butClear)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboRTFromRoom, cboRTToRoom});
-
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(jLabel24)
-                .addComponent(cboRTFromRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(jLabel25)
-                .addComponent(cboRTToRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(butSave)
-                .addComponent(butClear))
-        );
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel21)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jLabel24, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel21, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(cboRTFromRoom, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(txtRTRegNo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRTRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel22)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRTAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(cboRTToRoom, 0, 137, Short.MAX_VALUE)
+                    .addComponent(txtRTAdmissionNo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel23)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRTName, javax.swing.GroupLayout.PREFERRED_SIZE, 309, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(butSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butClear)
+                        .addGap(0, 131, Short.MAX_VALUE))
+                    .addComponent(txtRTName))
+                .addContainerGap())
         );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboRTFromRoom, cboRTToRoom});
+
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -1227,14 +1220,24 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     .addComponent(txtRTAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel23)
                     .addComponent(txtRTName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 8, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(butSave)
+                                .addComponent(butClear))
+                            .addComponent(cboRTToRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel25))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel24)
+                        .addComponent(cboRTFromRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
-        txtAmsDateTime.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAmsDateTime.setFont(Global.textFont);
 
         jLabel10.setFont(Global.lableFont);
         jLabel10.setText("City");
@@ -1251,7 +1254,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             }
         });
 
-        txtRegNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtRegNo.setFont(Global.textFont);
         txtRegNo.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtRegNoFocusGained(evt);
@@ -1274,7 +1277,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Religion");
 
-        txtReligion.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtReligion.setFont(Global.textFont);
         txtReligion.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtReligionFocusGained(evt);
@@ -1282,7 +1285,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         });
 
         txtRegDateTime.setEditable(false);
-        txtRegDateTime.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtRegDateTime.setFont(Global.textFont);
 
         jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Contact No");
@@ -1290,14 +1293,14 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel2.setFont(Global.lableFont);
         jLabel2.setText("Name");
 
-        txtContactNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtContactNo.setFont(Global.textFont);
         txtContactNo.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtContactNoFocusGained(evt);
             }
         });
 
-        txtName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtName.setFont(Global.textFont);
         txtName.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtNameFocusGained(evt);
@@ -1313,7 +1316,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel14.setFont(Global.lableFont);
         jLabel14.setText("Doctor ");
 
-        txtFatherName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtFatherName.setFont(Global.textFont);
         txtFatherName.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtFatherNameFocusGained(evt);
@@ -1340,7 +1343,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         } catch (java.text.ParseException ex) {
             System.out.println("Registration : " + ex.toString());
         }
-        txtDOB.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtDOB.setFont(Global.textFont);
         txtDOB.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtDOBFocusGained(evt);
@@ -1360,7 +1363,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel18.setFont(Global.lableFont);
         jLabel18.setText("Type");
 
-        txtAge.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAge.setFont(Global.textFont);
         txtAge.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtAgeFocusGained(evt);
@@ -1420,7 +1423,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel7.setFont(Global.lableFont);
         jLabel7.setText("NIRC");
 
-        txtNIRC.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtNIRC.setFont(Global.textFont);
         txtNIRC.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtNIRCFocusGained(evt);
@@ -1430,7 +1433,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel8.setFont(Global.lableFont);
         jLabel8.setText("Nationality");
 
-        txtNationality.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtNationality.setFont(Global.textFont);
         txtNationality.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtNationalityFocusGained(evt);
@@ -1443,10 +1446,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel9.setFont(Global.lableFont);
         jLabel9.setText("Address");
 
-        txtAmsNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAmsNo.setFont(Global.textFont);
 
         txtAddress.setColumns(20);
-        txtAddress.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtAddress.setFont(Global.textFont);
         txtAddress.setRows(5);
         jScrollPane1.setViewportView(txtAddress);
 
@@ -1465,14 +1468,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         .addContainerGap())
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel20)
-                                    .addComponent(jLabel19))
-                                .addGap(27, 27, 27))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
+                            .addComponent(jLabel20)
+                            .addComponent(jLabel19)
+                            .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createSequentialGroup()
                                 .addComponent(cboBooking, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1493,7 +1492,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, 486, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addGap(16, 16, 16))
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel3Layout.createSequentialGroup()
                     .addContainerGap()
@@ -1558,9 +1557,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addGap(79, 79, 79)
+                .addGap(85, 85, 85)
                 .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 305, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 311, Short.MAX_VALUE)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1642,8 +1641,12 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel26.setFont(Global.lableFont);
         jLabel26.setText("Reg No. ");
 
+        txtRCARegNo.setFont(Global.textFont);
+
         jLabel27.setFont(Global.lableFont);
         jLabel27.setText("Admission No.");
+
+        txtRCADAdmNo.setFont(Global.textFont);
 
         butReCover.setFont(Global.lableFont);
         butReCover.setText("Re-Cover");
@@ -1683,47 +1686,23 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        panelReCoverAdmissionDelete.setBorder(javax.swing.BorderFactory.createTitledBorder("Re-Cover Admission Delete"));
+        panelReCoverAdmissionDelete1.setBorder(javax.swing.BorderFactory.createTitledBorder("Re-Cover Admission Delete"));
 
-        jLabel26.setText("Reg No. ");
+        jLabel28.setText("Reg No. ");
+        panelReCoverAdmissionDelete1.add(jLabel28);
+        panelReCoverAdmissionDelete1.add(txtRCARegNo1);
 
-        jLabel27.setText("Admission No.");
+        jLabel29.setText("Admission No.");
+        panelReCoverAdmissionDelete1.add(jLabel29);
+        panelReCoverAdmissionDelete1.add(txtRCADAdmNo1);
 
-        butReCover.setText("Re-Cover");
-        butReCover.addActionListener(new java.awt.event.ActionListener() {
+        butReCover1.setText("Re-Cover");
+        butReCover1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butReCoverActionPerformed(evt);
             }
         });
-
-        panelReCoverAdmissionDelete.setLayout(panelReCoverAdmissionDeleteLayout);
-        panelReCoverAdmissionDeleteLayout.setHorizontalGroup(
-            panelReCoverAdmissionDeleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelReCoverAdmissionDeleteLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel26)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRCARegNo, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel27)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRCADAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(butReCover)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        panelReCoverAdmissionDeleteLayout.setVerticalGroup(
-            panelReCoverAdmissionDeleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelReCoverAdmissionDeleteLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelReCoverAdmissionDeleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel26)
-                    .addComponent(txtRCARegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel27)
-                    .addComponent(txtRCADAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(butReCover))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+        panelReCoverAdmissionDelete1.add(butReCover1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -1736,7 +1715,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panelReCoverAdmissionDelete, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(39, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1746,7 +1725,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(panelReCoverAdmissionDelete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
@@ -1857,7 +1836,6 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 }
 
             }
-
         }
     }//GEN-LAST:event_cboRoomActionPerformed
 
@@ -1875,7 +1853,11 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         JOptionPane.showMessageDialog(Util1.getParent(),
                                 "This patient is not admitted.",
                                 "Admitted Patient", JOptionPane.ERROR_MESSAGE);
+                        clear();
                     } else {
+                        initRoom();
+                        cboRTToRoom.setEnabled(true);
+                        butSave.setEnabled(true);
                         String admNo = pt.getAdmissionNo();
                         txtRTRegNo.setText(pt.getRegNo());
                         txtRTAdmissionNo.setText(admNo);
@@ -1891,15 +1873,15 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                             cboRTFromRoom.setSelectedItem(bs);
                         }
                         cboRTFromRoom.setEnabled(false);
-                        butSave.setEnabled(true);
                         BindingUtil.BindCombo(cboRTToRoom,
-                                dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null "
+                                dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null "
                                         + " and o.structureType.typeId in (3,4) order by o.description"));
                     }
                 } else {
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid patient code.",
                             "Patient Code", JOptionPane.ERROR_MESSAGE);
+                    clear();
                 }
             } catch (Exception ex) {
                 log.error("Patient Search : " + ex.toString());
@@ -1922,6 +1904,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;
     private javax.swing.JButton butReCover;
+    private javax.swing.JButton butReCover1;
     private javax.swing.JButton butSave;
     private javax.swing.JComboBox cboBooking;
     private javax.swing.JComboBox cboCity;
@@ -1952,6 +1935,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
     private javax.swing.JLabel jLabel27;
+    private javax.swing.JLabel jLabel28;
+    private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1960,13 +1945,13 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JLabel lblBooking;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JPanel panelReCoverAdmissionDelete;
+    private javax.swing.JPanel panelReCoverAdmissionDelete1;
     private javax.swing.JTextArea txtAddress;
     private javax.swing.JTextField txtAge;
     private javax.swing.JFormattedTextField txtAmsDateTime;
@@ -1978,7 +1963,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private javax.swing.JTextField txtName;
     private javax.swing.JTextField txtNationality;
     private javax.swing.JTextField txtRCADAdmNo;
+    private javax.swing.JTextField txtRCADAdmNo1;
     private javax.swing.JTextField txtRCARegNo;
+    private javax.swing.JTextField txtRCARegNo1;
     private javax.swing.JTextField txtRTAdmissionNo;
     private javax.swing.JTextField txtRTName;
     private javax.swing.JTextField txtRTRegNo;

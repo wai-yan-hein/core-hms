@@ -2350,7 +2350,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel12.setText("Adm No.");
 
         txtAdmissionNo.setEditable(false);
-        txtAdmissionNo.setFont(Global.textFont);
+        txtAdmissionNo.setFont(Global.lableFont);
 
         butAdmit.setText("Admit");
         butAdmit.addActionListener(new java.awt.event.ActionListener() {

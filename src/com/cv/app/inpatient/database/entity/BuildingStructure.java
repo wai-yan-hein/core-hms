@@ -21,16 +21,18 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "building_structure")
 public class BuildingStructure implements java.io.Serializable {
+
     private Integer id;
     private String code;
     private String description;
     private BuildingStructurType structureType;
     private Integer parent;
     private FacilityType facilityType;
-    private String reg_no;
-    
-    @Id @GeneratedValue(strategy=IDENTITY)
-    @Column(name="id", unique=true, nullable=false)
+    private String regNo;
+
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    @Column(name = "id", unique = true, nullable = false)
     public Integer getId() {
         return id;
     }
@@ -39,7 +41,7 @@ public class BuildingStructure implements java.io.Serializable {
         this.id = id;
     }
 
-    @Column(name="code")
+    @Column(name = "code")
     public String getCode() {
         return code;
     }
@@ -48,7 +50,7 @@ public class BuildingStructure implements java.io.Serializable {
         this.code = code;
     }
 
-    @Column(name="description", length=150)
+    @Column(name = "description", length = 150)
     public String getDescription() {
         return description;
     }
@@ -67,7 +69,7 @@ public class BuildingStructure implements java.io.Serializable {
         this.structureType = structureType;
     }
 
-    @Column(name="parent_id")
+    @Column(name = "parent_id")
     public Integer getParent() {
         return parent;
     }
@@ -85,19 +87,19 @@ public class BuildingStructure implements java.io.Serializable {
     public void setFacilityType(FacilityType facilityType) {
         this.facilityType = facilityType;
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         return description;
     }
-    
-    @Column(name="reg_no")
-    public String getReg_no() {
-        return reg_no;
+
+    @Column(name = "reg_no")
+    public String getRegNo() {
+        return regNo;
     }
 
-    public void setReg_no(String reg_no) {
-        this.reg_no = reg_no;
+    public void setRegNo(String regNo) {
+        this.regNo = regNo;
     }
-    
+
 }

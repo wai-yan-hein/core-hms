@@ -19,7 +19,6 @@ import java.awt.Dimension;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -51,8 +50,8 @@ public class PatientSearch extends javax.swing.JDialog {
         initTable();
         sorter = new TableRowSorter(tblPatient.getModel());
         tblPatient.setRowSorter(sorter);
-        //txtFrom.setText(DateUtil.getTodayDateStr());
-        //txtTo.setText(DateUtil.getTodayDateStr());
+        txtFrom.setText(DateUtil.getTodayDateStr());
+        txtTo.setText(DateUtil.getTodayDateStr());
 
         Dimension screen = Util1.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
@@ -127,16 +126,12 @@ public class PatientSearch extends javax.swing.JDialog {
         tblPatient.getColumnModel().getColumn(2).setPreferredWidth(15);
         tblPatient.getColumnModel().getColumn(3).setPreferredWidth(150);
         tblPatient.getColumnModel().getColumn(4).setPreferredWidth(30);
-
+        tblPatient.getTableHeader().setFont(Global.lableFont);
         //Define table selection model to single row selection.
         tblPatient.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblPatient.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                selectedRow = tblPatient.getSelectedRow();
-            }
+        tblPatient.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            selectedRow = tblPatient.getSelectedRow();
         });
     }
 
@@ -333,9 +328,9 @@ public class PatientSearch extends javax.swing.JDialog {
         setTitle("Patient Search");
         setPreferredSize(new java.awt.Dimension(1200, 600));
 
-        tblPatient.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblPatient.setFont(Global.textFont);
         tblPatient.setModel(tableModel);
-        tblPatient.setRowHeight(23);
+        tblPatient.setRowHeight(24);
         tblPatient.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblPatientMouseClicked(evt);
@@ -345,7 +340,7 @@ public class PatientSearch extends javax.swing.JDialog {
 
         txtNationality.setFont(Global.textFont);
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -381,12 +376,13 @@ public class PatientSearch extends javax.swing.JDialog {
 
         cboCity.setFont(Global.textFont);
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText(" ");
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("From ");
 
-        txtFrom.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        txtFrom.setFont(Global.textFont);
         txtFrom.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtFromMouseClicked(evt);
@@ -396,7 +392,7 @@ public class PatientSearch extends javax.swing.JDialog {
         jLabel2.setFont(Global.lableFont);
         jLabel2.setText("To");
 
-        txtTo.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        txtTo.setFont(Global.textFont);
         txtTo.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtToMouseClicked(evt);
@@ -467,16 +463,18 @@ public class PatientSearch extends javax.swing.JDialog {
                                 .addComponent(jLabel4)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(txtPhoneNo)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblTotalRec, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butSearch)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(butSearch)
+                            .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel16, jLabel18, jLabel3});
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel17, jLabel19, jLabel4});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel15});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -518,7 +516,7 @@ public class PatientSearch extends javax.swing.JDialog {
                         .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel3)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
                 .addContainerGap())
         );
 

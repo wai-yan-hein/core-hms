@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -136,7 +135,7 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     private void initTable() {
         try {
             tableModel.setListDoctor(dao.findAllHSQL(
-                    "select o from Doctor o where o.doctorName"
+                    "select o from Doctor o order by o.doctorName"
             ));
 
             tblDoctor.getColumnModel().getColumn(0).setPreferredWidth(20);
@@ -169,17 +168,13 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         //Define table selection model to single row selection.
         tblDoctor.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblDoctor.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int row = tblDoctor.getSelectedRow();
-
-                selectRow = -1;
-                if (row != -1) {
-                    selectRow = tblDoctor.convertRowIndexToModel(row);
-                    setCurrDoctor(tableModel.getDoctor(selectRow));
-                }
+        tblDoctor.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            int row = tblDoctor.getSelectedRow();
+            
+            selectRow = -1;
+            if (row != -1) {
+                selectRow = tblDoctor.convertRowIndexToModel(row);
+                setCurrDoctor(tableModel.getDoctor(selectRow));
             }
         });
     }

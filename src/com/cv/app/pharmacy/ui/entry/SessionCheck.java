@@ -1191,7 +1191,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         insertTotalToTamp(sTableModel.getListSessionTtl());
         //Properties prop = ReportUtil.loadReportPathProperties();
         String rpName = Util1.getPropValue("system.pharmacy.session.check.print.report");
-        rpName = Util1.isNullOrEmpty(rpName) ? "PharmacySessionCheckSummary" : rpName;
+        rpName = Util1.isNullOrEmpty(rpName) ? "PharmacySessionCheckVoucher" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + rpName;

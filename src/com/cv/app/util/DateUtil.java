@@ -28,7 +28,6 @@ public class DateUtil {
     public static Date getDateDialog() {
         Date selectedDate = null;
         DateChooserDialog dateChooserDialog = new DateChooserDialog();
-
         dateChooserDialog.showDialog(Application.instance().getActiveWindow().getControl(), true);
 
         if (dateChooserDialog.isSelected()) {

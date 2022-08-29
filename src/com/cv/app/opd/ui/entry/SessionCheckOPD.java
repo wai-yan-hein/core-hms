@@ -1207,7 +1207,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     private void print() {
         //Properties prop = ReportUtil.loadReportPathProperties();
         String rpName = Util1.getPropValue("system.clinic.session.check.print.report");
-        rpName = Util1.isNullOrEmpty(rpName) ? "ClinicSessionCheckSummary" : rpName;
+        rpName = Util1.isNullOrEmpty(rpName) ? "ClinicSessionCheckVoucher" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
                 + "Clinic/"

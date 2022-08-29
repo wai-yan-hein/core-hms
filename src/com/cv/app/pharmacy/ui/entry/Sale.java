@@ -1364,22 +1364,19 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void addSaleTableModelListener() {
-        tblSale.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                int column = e.getColumn();
-
-                if (column >= 0) {
-                    switch (column) {
-                        case 0: //Code
-                        case 4: //Qty
-                        case 5: //Unit
-                        case 6: //Sale price
-                        case 7: //Discount
-                        case 8: //Charge type
-                            calculateTotalAmount();
-                            break;
-                    }
+        tblSale.getModel().addTableModelListener((TableModelEvent e) -> {
+            int column = e.getColumn();
+            
+            if (column >= 0) {
+                switch (column) {
+                    case 0: //Code
+                    case 4: //Qty
+                    case 5: //Unit
+                    case 6: //Sale price
+                    case 7: //Discount
+                    case 8: //Charge type
+                        calculateTotalAmount();
+                        break;
                 }
             }
         });
@@ -4973,7 +4970,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         });
 
         txtAdmissionNo.setEditable(false);
-        txtAdmissionNo.setFont(Global.textFont);
+        txtAdmissionNo.setFont(Global.lableFont);
 
         butAdmit.setText("Admit");
         butAdmit.addActionListener(new java.awt.event.ActionListener() {
@@ -5529,7 +5526,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, txtVouBalance)
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel9Layout.createSequentialGroup()
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(txtTaxP, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 49, Short.MAX_VALUE)
+                            .add(txtTaxP)
                             .add(txtDiscP))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
