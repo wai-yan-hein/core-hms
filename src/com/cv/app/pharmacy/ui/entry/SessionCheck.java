@@ -744,10 +744,13 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
                 ttlRoCash += NumberUtil.NZero(vs.getPaid());
                 ttlRoBal += NumberUtil.NZero(vs.getBalance());
             } else if (vs.getKey().getSource().equals("Trader Payment")) {
-                if (vs.getDiscriminator().equals("C")) {
+                String strOption = vs.getTraderId().substring(0,3);
+                if (strOption.equals("CUS")) {
                     ttlCusPaid += vs.getPaid();
-                } else if (vs.getDiscriminator().equals("S")) {
+                } else if (strOption.equals("SUP")) {
                     ttlSupPaid += (vs.getPaid() * -1);
+                }else{
+                    ttlCusPaid += vs.getPaid();
                 }
             } else if (vs.getKey().getSource().equals("Cash In")) {
                 ttlExpIn += NumberUtil.NZero(vs.getExpIn());

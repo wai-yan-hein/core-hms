@@ -6,7 +6,6 @@ package com.cv.app.opd.ui.common;
 
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.Doctor;
-import com.cv.app.opd.database.entity.Technician;
 import com.cv.app.opd.database.view.VOpd;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.util.PharmacyUtil;
@@ -183,13 +182,13 @@ public class ReaderEntryTableModel extends AbstractTableModel {
                 break;
             case 10: //Technician
                 if (value != null) {
-                    Technician tech = (Technician) value;
+                    Doctor tech = (Doctor) value;
 
-                    record.setTechId(tech.getTechId());
-                    record.setTechName(tech.getTechName());
+                    record.setTechId(tech.getDoctorId());
+                    record.setTechName(tech.getDoctorName());
                     try {
-                        String strSql = "update opd_details_his set tech_id = " + tech.getTechId().toString()
-                                + " where opd_detail_id = '" + record.getKey().getOpdDetailId() + "'";
+                        String strSql = "update opd_details_his set tech_id = '" + tech.getDoctorId()
+                                + "' where opd_detail_id = '" + record.getKey().getOpdDetailId() + "'";
                         dao.execSql(strSql);
                     } catch (Exception ex) {
                         log.error("Technician save : " + ex);

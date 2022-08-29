@@ -93,6 +93,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -542,7 +543,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         String strSQL = "insert into tmp_trader_bal_filter(trader_id,currency,op_date,user_id, amount) "
                 + "select t.trader_id, t.cur_code, "
                 + " ifnull(trop.op_date, '1900-01-01'),'" + Global.machineId
-                + "', ifnull(trop.op_amount,0)"
+                + "', sum(ifnull(trop.op_amount,0))"
                 + " from v_trader_cur t left join "
                 + "(select a.trader_id, a.currency, a.op_date, a.op_amount\n"
                 + "from trader_op a, (select trader_id, currency, max(op_date) op_date from trader_op \n"
@@ -617,7 +618,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         if (!strFilter.isEmpty()) {
             strSQL = strSQL + " where " + strFilter;
         }
-
+        
+        strSQL = strSQL  + " group by t.trader_id, t.cur_code,  ifnull(trop.op_date, '1900-01-01')";
+        
         try {
             dao.open();
             dao.execSql(strSQLDelete);
@@ -2287,7 +2290,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
-    private void generateExcel() {
+    public void generateExcel() {
         int index = tblReportList.convertRowIndexToModel(tblReportList.getSelectedRow());
         if (index >= 0) {
             try {
@@ -2996,7 +2999,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     TmpStockBalOutsKey key = new TmpStockBalOutsKey();
                     String medId = rs.getString("med_id");
                     Medicine med = (Medicine) dao.find(Medicine.class, medId);
-                    if (med.getRelationGroupId().size() > 0) {
+                    if (!med.getRelationGroupId().isEmpty()) {
                         med.setRelationGroupId(med.getRelationGroupId());
                     }
                     key.setItemId(medId);
@@ -3032,6 +3035,22 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
+    private void listMethod(){
+        //Method methods[];
+        
+        try{
+            Class obj = this.getClass();
+            Method mt = obj.getMethod("generateExcel", null);
+            mt.invoke(obj.newInstance(), null);
+            /*methods = this.getClass().getMethods();
+            for(Method mt : methods){
+                String name = mt.getName();
+                log.info("Method Name : " + name);
+            }*/
+        }catch(Exception ex){
+            log.error("listMethod : " + ex.getMessage());
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -3809,6 +3828,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void butExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butExcelActionPerformed
         generateExcel();
+        //listMethod();
     }//GEN-LAST:event_butExcelActionPerformed
 
     private void txtDueToMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDueToMouseClicked

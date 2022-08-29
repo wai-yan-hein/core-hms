@@ -562,7 +562,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                 } else {
                     tableModel.setTrader(selectRow, currCustomer);
                 }*/
-                tableModel.setListTrader(dao.findAllHSQL("select o from Customer o"));
+                tableModel.setListTrader(dao.findAllHSQL("select o from Customer o order by o.traderName"));
                 tblCustomer.setRowSorter(sorter);
                 clear();
             }
@@ -846,7 +846,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         tblCustomer.setFont(Global.textFont);
         tblCustomer.setModel(tableModel);
         tblCustomer.setRowHeight(23);
-        tblCustomer.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblCustomer);
 
         jLabel1.setFont(Global.lableFont);
@@ -1078,7 +1077,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtId, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE))
+                        .addComponent(txtId, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1137,7 +1136,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                                 .addComponent(cboBusinessType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(butBusiness))
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE)
                             .addComponent(txtCreditDays)
                             .addComponent(txtCreditLimit)
                             .addComponent(txtEMail)
@@ -1174,6 +1173,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                                 .addComponent(jLabel8)
                                 .addComponent(butGroup))
                             .addComponent(cboGroup, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(butBusiness)
@@ -1240,7 +1240,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(butGCC)
                             .addComponent(butUploadAll))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 55, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -1254,7 +1254,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         try {
             if (currCustomer != null) {
                 if (currCustomer.getTraderId() == null) {
-                    if (bindStatus) {
+                    if (!bindStatus) {
                         assignCusId();
                     }
                 }

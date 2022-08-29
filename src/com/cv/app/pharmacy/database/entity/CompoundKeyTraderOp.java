@@ -22,6 +22,7 @@ public class CompoundKeyTraderOp implements Serializable{
     private Trader trader;
     private Date opDate;
     private Currency currency;
+    private String desp;
 
     public CompoundKeyTraderOp(){
         
@@ -60,30 +61,13 @@ public class CompoundKeyTraderOp implements Serializable{
     public void setCurrency(Currency currency) {
         this.currency = currency;
     }
-    
-    @Override
-    public boolean equals(Object o){
-        if (o == null) {
-            return false;
-        }
 
-        if (!(o instanceof CompoundKeyTraderOp)) {
-            return false;
-        }
+    @Column(name="desp", length=25)
+    public String getDesp() {
+        return desp;
+    }
 
-        final CompoundKeyTraderOp other = (CompoundKeyTraderOp) o;
-        if (!(trader.getTraderId().equals(other.getTrader().getTraderId()))) {
-            return false;
-        }
-
-        if (opDate != other.getOpDate()) {
-            return false;
-        }
-
-        if (!(currency.getCurrencyCode().equals(other.getCurrency().getCurrencyCode()))) {
-            return false;
-        }
-
-        return true;
+    public void setDesp(String desp) {
+        this.desp = desp;
     }
 }

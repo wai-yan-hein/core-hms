@@ -1574,7 +1574,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     }
                 }
             } else {
-                List<Trader> listTrader = dao.findAllHSQL("select o from Trader where " + strFieldName + " = '" + traderId + "'");
+                List<Trader> listTrader = dao.findAllHSQL("select o from Trader o where " + strFieldName + " = '" + traderId + "'");
                 if (listTrader != null) {
                     if (!listTrader.isEmpty()) {
                         cus = listTrader.get(0);

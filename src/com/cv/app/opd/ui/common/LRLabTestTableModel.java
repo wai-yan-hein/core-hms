@@ -5,9 +5,9 @@
 package com.cv.app.opd.ui.common;
 
 import com.cv.app.common.Global;
+import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.LabMachine;
 import com.cv.app.opd.database.entity.OPDDetailHis;
-import com.cv.app.opd.database.entity.Pathologiest;
 import com.cv.app.opd.database.view.VOpd;
 import com.cv.app.opd.ui.util.JavaFXHTMLEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -65,7 +65,7 @@ public class LRLabTestTableModel extends AbstractTableModel {
             case 2: //Doctor
                 return record.getReferDrName();
             case 3: //Patho
-                return record.getPathologyName();
+                return record.getTechName();
             case 4: //Print
                 return record.getPrint();
             case 5: //Lab Machine
@@ -108,14 +108,15 @@ public class LRLabTestTableModel extends AbstractTableModel {
                             dao.close();
                         }
                     } else {
-                        Pathologiest patho = (Pathologiest) value;
+                        Doctor patho = (Doctor) value;
                         try {
                             OPDDetailHis odh = (OPDDetailHis) dao.find(OPDDetailHis.class, detailId);
                             if (odh != null) {
-                                odh.setPathoId(patho.getPathoId());
+                                odh.setTechnician(patho);
+                                //odh.setPathoId(patho.getPathoId());
                                 dao.save(odh);
-                                record.setPathoId(patho.getPathoId());
-                                record.setPathologyName(patho.getPathologyName());
+                                record.setTechId(patho.getDoctorId());
+                                record.setTechName(patho.getDoctorName());
                             }
                         } catch (Exception ex) {
                             log.error("Patho assign : " + ex.getMessage());

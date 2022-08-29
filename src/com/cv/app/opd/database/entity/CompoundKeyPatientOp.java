@@ -25,6 +25,7 @@ public class CompoundKeyPatientOp implements Serializable{
     private Date opDate;
     private Currency currency;
     private PaymentType billType;
+    private String patientType; //OPD or In Patient
     
     public CompoundKeyPatientOp(){
         
@@ -72,5 +73,14 @@ public class CompoundKeyPatientOp implements Serializable{
 
     public void setBillType(PaymentType billType) {
         this.billType = billType;
+    }
+
+    @Column(name="patient_type", length=15)
+    public String getPatientType() {
+        return patientType;
+    }
+
+    public void setPatientType(String patientType) {
+        this.patientType = patientType;
     }
 }

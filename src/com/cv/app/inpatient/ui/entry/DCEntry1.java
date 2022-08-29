@@ -3746,16 +3746,18 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
     private void cboPaymentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentTypeActionPerformed
         if (cboBindStatus) {
-            /*PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
-            double discount = NumberUtil.NZero(txtDiscA.getValue());
-            double tax = NumberUtil.NZero(txtTaxA.getValue());
-            double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+            if (!Util1.getPropValue("system.payment.cash").equals("Y")) {
+                PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+                double discount = NumberUtil.NZero(txtDiscA.getValue());
+                double tax = NumberUtil.NZero(txtTaxA.getValue());
+                double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
 
-            if (pt.getPaymentTypeId() == 1) {
-                txtPaid.setValue((vouTotal + tax) - discount);
-            } else {
-                txtPaid.setValue(0);
-            }*/
+                if (pt.getPaymentTypeId() == 1) {
+                    txtPaid.setValue((vouTotal + tax) - discount);
+                } else {
+                    txtPaid.setValue(0);
+                }
+            }
             calcBalance();
         }
     }//GEN-LAST:event_cboPaymentTypeActionPerformed

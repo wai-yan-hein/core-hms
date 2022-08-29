@@ -205,7 +205,7 @@ public class BuildingStructureSetup extends javax.swing.JPanel implements TreeSe
 
     private void removeGrouping(int groupId) {
         try {
-            String strSqlDelete = "delete from building_sturcture where id = " + groupId;
+            String strSqlDelete = "delete from building_structure where id = " + groupId;
             dao.execSql(strSqlDelete);
         } catch (Exception ex) {
             log.error("remove : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);

@@ -37,7 +37,7 @@
                   <Group type="102" attributes="0">
                       <Component id="jLabel1" linkSize="3" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="txtId" pref="557" max="32767" attributes="0"/>
+                      <Component id="txtId" pref="284" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jLabel8" linkSize="3" min="-2" max="-2" attributes="0"/>
@@ -110,7 +110,7 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="butBusiness" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="jScrollPane2" alignment="0" pref="557" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" alignment="0" pref="284" max="32767" attributes="0"/>
                           <Component id="txtCreditDays" alignment="0" max="32767" attributes="0"/>
                           <Component id="txtCreditLimit" alignment="0" max="32767" attributes="0"/>
                           <Component id="txtEMail" alignment="0" max="32767" attributes="0"/>
@@ -237,7 +237,7 @@
                           <Component id="butGCC" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="butUploadAll" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="55" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -262,7 +262,6 @@
               <Connection code="tableModel" type="code"/>
             </Property>
             <Property name="rowHeight" type="int" value="23"/>
-            <Property name="showVerticalLines" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>

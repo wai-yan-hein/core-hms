@@ -4,6 +4,8 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
+import com.cv.app.common.Global;
+import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.CompoundKeyTraderOp;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -25,20 +27,21 @@ import org.apache.log4j.Logger;
 public class TraderOpTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(TraderOpTableModel.class.getName());
-    private final String[] columnNames = {"Date", "Currency", "Amount"};
+    private final String[] columnNames = {"Date", "Currency", "Desp", "Amount"};
     private List<TraderOpening> listOp = new ArrayList();
     private List<TraderOpening> listDeleteOp = new ArrayList();
     private Trader trader = new Trader();
     private boolean editable;
-    
-    public TraderOpTableModel(){
+    private final AbstractDataAccess dao = Global.dao;
+
+    public TraderOpTableModel() {
         editable = false;
     }
-    
-    public TraderOpTableModel(boolean editable){
+
+    public TraderOpTableModel(boolean editable) {
         this.editable = editable;
     }
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -56,7 +59,9 @@ public class TraderOpTableModel extends AbstractTableModel {
                 return String.class;
             case 1: //Currency
                 return Currency.class;
-            case 2: //Amount
+            case 2: //Desp
+                return String.class;
+            case 3: //Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -65,73 +70,82 @@ public class TraderOpTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int column) {
-        if(listOp == null){
+        if (listOp == null) {
             return null;
         }
-        
-        if(listOp.isEmpty()){
-            return null;
-        }
-        
-        try{
-        TraderOpening record = listOp.get(row);
 
-        switch (column) {
-            case 0: //Date
-                return DateUtil.toDateStr(record.getKey().getOpDate());
-            case 1: //Currency
-                return record.getKey().getCurrency();
-            case 2: //Amount
-                return record.getAmount();
-            default:
-                return new Object();
+        if (listOp.isEmpty()) {
+            return null;
         }
-        }catch(Exception ex){
+
+        try {
+            TraderOpening record = listOp.get(row);
+
+            switch (column) {
+                case 0: //Date
+                    return DateUtil.toDateStr(record.getKey().getOpDate());
+                case 1: //Currency
+                    return record.getKey().getCurrency();
+                case 2: //Desp
+                    return record.getKey().getDesp();
+                case 3: //Amount
+                    return record.getAmount();
+                default:
+                    return new Object();
+            }
+        } catch (Exception ex) {
             log.error("getValueAt : " + ex.getMessage());
         }
-        
+
         return null;
     }
 
     @Override
     public void setValueAt(Object value, int row, int column) {
-        if(listOp == null){
+        if (listOp == null) {
             return;
         }
-        
-        if(listOp.isEmpty()){
-            return;
-        }
-        
-        try{
-        TraderOpening record = listOp.get(row);
 
-        switch (column) {
-            case 0: //Date
-                if(value != null){
-                    Date tmpDate = DateUtil.toDate(value.toString());
-                    
-                    if(tmpDate == null){
-                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
-                        "Opening date", JOptionPane.ERROR_MESSAGE);
-                    }else{
-                        record.getKey().setOpDate(tmpDate);
-                    }
-                }
-                
-                if (!hasEmptyRow()) {
-                    addEmptyRow();
-                }
-                break;
-            case 1: //Currency
-                record.getKey().setCurrency((Currency) value);
-                break;
-            case 2: //Amount
-                record.setAmount((Double) value);
-            default:
-                System.out.println("invalid index");
+        if (listOp.isEmpty()) {
+            return;
         }
-        }catch(HeadlessException ex){
+
+        try {
+            TraderOpening record = listOp.get(row);
+
+            switch (column) {
+                case 0: //Date
+                    if (value != null) {
+                        Date tmpDate = DateUtil.toDate(value.toString());
+
+                        if (tmpDate == null) {
+                            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
+                                    "Opening date", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            record.getKey().setOpDate(tmpDate);
+                        }
+                    }
+
+                    if (!hasEmptyRow()) {
+                        addEmptyRow();
+                    }
+                    break;
+                case 1: //Currency
+                    record.getKey().setCurrency((Currency) value);
+                    break;
+                case 2: //Desp
+                    if (value == null) {
+                        record.getKey().setDesp("-");
+                    } else {
+                        record.getKey().setDesp(value.toString());
+                    }
+                    break;
+                case 3: //Amount
+                    record.setAmount((Double) value);
+                default:
+                    System.out.println("invalid index");
+            }
+        } catch (HeadlessException ex) {
             log.error("setValueAt : " + ex.getMessage());
         }
 
@@ -140,7 +154,7 @@ public class TraderOpTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        if(listOp == null){
+        if (listOp == null) {
             return 0;
         }
         return listOp.size();
@@ -152,7 +166,7 @@ public class TraderOpTableModel extends AbstractTableModel {
     }
 
     public boolean hasEmptyRow() {
-        if(listOp == null){
+        if (listOp == null) {
             return false;
         }
         if (listOp.isEmpty()) {
@@ -164,34 +178,42 @@ public class TraderOpTableModel extends AbstractTableModel {
     }
 
     public void addEmptyRow() {
-        if(listOp != null){
-        if(editable){
-            TraderOpening record = new TraderOpening(new CompoundKeyTraderOp(trader));
-            listOp.add(record);
-            fireTableRowsInserted(listOp.size() - 1, listOp.size() - 1);
-        }
+        if (listOp != null) {
+            if (editable) {
+                TraderOpening record = new TraderOpening(new CompoundKeyTraderOp(trader));
+                listOp.add(record);
+                fireTableRowsInserted(listOp.size() - 1, listOp.size() - 1);
+            }
         }
     }
 
     public void delete(int row) {
-        if(listOp == null){
+        if (listOp == null) {
             return;
         }
-        
-        if(listOp.isEmpty()){
+
+        if (listOp.isEmpty()) {
             return;
         }
-        
+
         TraderOpening op = listOp.get(row);
-        
+
         if (op.getKey().getCurrency() != null) {
             int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
-                            "Are you sure to delete?",
-                            "Sale item delete", JOptionPane.YES_NO_OPTION);
-            
-            if(yes_no == 0){
-                if(!editable){
-                    listDeleteOp.add(op);
+                    "Are you sure to delete?",
+                    "Sale item delete", JOptionPane.YES_NO_OPTION);
+
+            if (yes_no == 0) {
+                if (!editable) {
+                    try {
+                        dao.delete(op);
+                        listDeleteOp.add(op);
+                    } catch (Exception ex) {
+                        log.error("delete : " + op.getKey().getTrader() + " : "
+                                + ex.getMessage());
+                    }finally{
+                        dao.close();
+                    }
                 }
 
                 listOp.remove(row);
@@ -206,11 +228,11 @@ public class TraderOpTableModel extends AbstractTableModel {
 
     public void setTrader(Trader trader) {
         this.trader = trader;
-        if(listOp != null){
-        listOp.removeAll(listOp);
+        if (listOp != null) {
+            listOp.removeAll(listOp);
         }
         fireTableDataChanged();
-        
+
         if (!hasEmptyRow()) {
             addEmptyRow();
         }
@@ -226,23 +248,23 @@ public class TraderOpTableModel extends AbstractTableModel {
     }
 
     public void clear() {
-        if(listOp != null){
-        listOp.removeAll(listOp);
+        if (listOp != null) {
+            listOp.removeAll(listOp);
         }
-        if(listDeleteOp != null){
-        listDeleteOp.removeAll(listDeleteOp);
+        if (listDeleteOp != null) {
+            listDeleteOp.removeAll(listDeleteOp);
         }
-        
+
         fireTableDataChanged();
     }
 
     public boolean isValidEntry() {
         boolean status = true;
-        
-        if(listOp == null){
+
+        if (listOp == null) {
             return false;
         }
-        
+
         for (int i = 0; i < listOp.size() - 1; i++) {
             TraderOpening traderOP = listOp.get(i);
 
@@ -251,23 +273,23 @@ public class TraderOpTableModel extends AbstractTableModel {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid opening date.",
                         "Date null.", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
-            }else if(traderOP.getKey().getCurrency() == null){
+            } else if (traderOP.getKey().getCurrency() == null) {
                 status = false;
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid currency.",
                         "Currency null", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
-            }else if(traderOP.getAmount() == null){
+            } else if (traderOP.getAmount() == null) {
                 status = false;
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid amount.",
                         "Amount null", JOptionPane.ERROR_MESSAGE);
                 i = listOp.size();
             }
         }
-        
+
         return status;
     }
-    
-    public List<TraderOpening> getDeleteList(){
+
+    public List<TraderOpening> getDeleteList() {
         return listDeleteOp;
     }
 }
