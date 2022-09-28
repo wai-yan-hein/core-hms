@@ -15,7 +15,6 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.border.Border;

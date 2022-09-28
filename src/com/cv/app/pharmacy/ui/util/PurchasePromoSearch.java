@@ -4,11 +4,11 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;

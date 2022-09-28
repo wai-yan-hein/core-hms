@@ -31,7 +31,8 @@ public class Global {
     public static Properties systemProperties;
     public static Font lableFont;
     public static Font textFont;
-    public static Font menuFont = new java.awt.Font("Zawgyi-One", 1, 15);
+    public static Font menuFont = new java.awt.Font("Zawgyi-One", 0, 16);
+    public static Font sysFont = new java.awt.Font("Zawgyi-One", 1, 14);
     public static ServerSocket sock;
     public static ActiveMQConnection mqConnection;
     public static String programId = "INVENTORY";

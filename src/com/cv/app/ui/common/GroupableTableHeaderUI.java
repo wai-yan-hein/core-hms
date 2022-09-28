@@ -4,11 +4,11 @@
  */
 package com.cv.app.ui.common;
 
-import java.util.*;
 import java.awt.*;
+import java.util.*;
 import javax.swing.*;
-import javax.swing.table.*;
 import javax.swing.plaf.basic.*;
+import javax.swing.table.*;
 
 /**
  *

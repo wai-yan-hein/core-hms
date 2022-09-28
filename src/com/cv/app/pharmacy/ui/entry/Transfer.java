@@ -4,18 +4,18 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.pharmacy.database.entity.TransferHis;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.TransferDetailHis;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.TransferDetailHis;
+import com.cv.app.pharmacy.database.entity.TransferHis;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.view.VReOrderLevel;

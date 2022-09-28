@@ -6,7 +6,6 @@ package com.cv.app.common;
 
 import com.cv.app.util.Util1;
 import java.util.List;
-
 import org.flexdock.perspective.LayoutSequence;
 import org.flexdock.perspective.Perspective;
 import org.flexdock.perspective.PerspectiveFactory;

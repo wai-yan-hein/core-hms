@@ -16,8 +16,8 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Properties;
-import org.springframework.richclient.application.Application;
 import org.apache.log4j.Logger;
+import org.springframework.richclient.application.Application;
 
 /**
  *

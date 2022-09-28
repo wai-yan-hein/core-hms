@@ -11,6 +11,7 @@ import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.opd.database.entity.OPDCategory;
 import com.cv.app.opd.database.entity.OPDGroup;
 import com.cv.app.opd.database.entity.Service;
+import com.cv.app.opd.ui.common.OPDCategoryTableModel1;
 import com.cv.app.opd.ui.common.OPDMedUsageTableModel;
 import com.cv.app.opd.ui.common.ServiceTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -30,7 +31,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
-import com.cv.app.opd.ui.common.OPDCategoryTableModel1;
 
 /**
  *

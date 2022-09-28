@@ -10,23 +10,23 @@
  */
 package com.cv.app.pharmacy.ui.setup;
 
-import com.cv.app.pharmacy.database.entity.PackingTemplate;
-import com.cv.app.pharmacy.database.entity.ItemBrand;
-import com.cv.app.pharmacy.database.entity.Category;
-import com.cv.app.pharmacy.database.entity.ItemType;
-import com.cv.app.pharmacy.database.entity.CharacterNo;
-import com.cv.app.pharmacy.database.entity.PackingTemplateDetail;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
-import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.view.VMedicine1;
+import com.cv.app.pharmacy.database.entity.Category;
+import com.cv.app.pharmacy.database.entity.CharacterNo;
+import com.cv.app.pharmacy.database.entity.ItemBrand;
+import com.cv.app.pharmacy.database.entity.ItemType;
+import com.cv.app.pharmacy.database.entity.ItemUnit;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PackingTemplate;
+import com.cv.app.pharmacy.database.entity.PackingTemplateDetail;
 import com.cv.app.pharmacy.database.entity.PharmacySystem;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
+import com.cv.app.pharmacy.database.view.VMedicine1;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.ItemSetupLocationItemMappingTableModel;
 import com.cv.app.pharmacy.ui.common.ItemTableModel;
@@ -1424,6 +1424,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
 
     private void initTableRelationGroup() {
         try {
+            tblRelationPrice.setCellSelectionEnabled(true);
             tblRelationPrice.getTableHeader().setFont(Global.lableFont);
             tblRelationPrice.getColumnModel().getColumn(0).setCellEditor(
                     new BestTableCellEditor(this));
@@ -1440,7 +1441,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             tblRelationPrice.getColumnModel().getColumn(7).setCellEditor(
                     new BestTableCellEditor(this));
             tblRelationPrice.getColumnModel().getColumn(1).setCellEditor(
-                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
+                    new TableUnitCellEditor(dao.findAll("ItemUnit"), this));
 
             //Adjust table column width
             TableColumn column = tblRelationPrice.getColumnModel().getColumn(0);

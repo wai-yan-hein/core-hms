@@ -30,10 +30,9 @@
 
 package com.cv.app.ui.theme;
 
+import com.jgoodies.looks.plastic.PlasticScrollBarUI;
 import javax.swing.UIDefaults;
 import javax.swing.plaf.ColorUIResource;
-
-import com.jgoodies.looks.plastic.PlasticScrollBarUI;
 
 /**
  * A theme with low saturated yellow primary colors and a light brown

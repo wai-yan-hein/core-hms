@@ -6,11 +6,11 @@ package com.cv.app.opd.ui.common;
 
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.Booking;
+import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.view.VBooking;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.opd.database.entity.Patient;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

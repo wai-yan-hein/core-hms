@@ -4,7 +4,6 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.view.VPatientBillPayment;
 import com.cv.app.util.DateUtil;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import javax.swing.table.AbstractTableModel;
 public class BillPaymentSearchTableModel extends AbstractTableModel {
 
     private List<VPatientBillPayment> listVPBP = new ArrayList();
-    private String[] columnNames = {"Reg No.","Date", "Patient Name", "Bill Type", "Remark", "Pay Amount"};
+    private String[] columnNames = {"Reg No.", "Date", "Patient Name", "Bill Type", "Remark", "Pay Amount"};
 
     @Override
     public String getColumnName(int column) {
@@ -54,12 +53,12 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
             case 0: //Reg No.
                 return record.getRegNo();
             case 1://date
-                if(record.getCreatedDate()!=null){
-                return DateUtil.toDateStr(record.getCreatedDate());
-                }else{
-                return record.getCreatedDate();
+                if (record.getCreatedDate() != null) {
+                    return DateUtil.toDateStr(record.getCreatedDate());
+                } else {
+                    return record.getCreatedDate();
                 }
-                
+
             case 2: //Patient Name
                 return record.getPatientName();
             case 3: //Bill Type
@@ -75,7 +74,7 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int column) {
-        
+
     }
 
     @Override
@@ -95,5 +94,14 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
     public void setListVPBP(List<VPatientBillPayment> listVPBP) {
         this.listVPBP = listVPBP;
         fireTableDataChanged();
+    }
+
+    public Integer getBillId(int row) {
+        return listVPBP.get(row).getId();
+    }
+
+    public void remove(int row) {
+        listVPBP.remove(row);
+        fireTableRowsDeleted(row, row);
     }
 }

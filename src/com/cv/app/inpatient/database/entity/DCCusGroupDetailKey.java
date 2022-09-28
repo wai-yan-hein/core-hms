@@ -5,7 +5,6 @@
  */
 package com.cv.app.inpatient.database.entity;
 
-import com.cv.app.opd.database.entity.*;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.CascadeType;

@@ -5,7 +5,6 @@
 package com.cv.app.opd.ui.common;
 
 import com.cv.app.opd.database.view.VOPDGroupService;
-import com.cv.app.ot.database.view.VOTGroupService;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;

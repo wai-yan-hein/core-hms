@@ -4,18 +4,18 @@
  */
 package com.cv.app.ui.setup;
 
-import com.cv.app.pharmacy.database.entity.VouStatus;
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Currency;
-import com.cv.app.pharmacy.database.entity.UserRole;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Privilege;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.UserRoleTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.ItemTypeMapping;
+import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.Privilege;
+import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.UserRole;
+import com.cv.app.pharmacy.database.entity.VouStatus;
 import com.cv.app.pharmacy.ui.common.ItemTypeMappingTableModel;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.ui.common.JTreeTable;

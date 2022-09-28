@@ -4,13 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.database.entity.VouStatus;
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Session;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
@@ -20,19 +13,26 @@ import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.controller.SchoolDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
+import com.cv.app.pharmacy.database.entity.CustomerGroup;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.MachineInfo;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.Session;
+import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.VouStatus;
+import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.database.view.VMarchant;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import com.cv.app.pharmacy.ui.common.SaleVouSearchTableModel1;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.pharmacy.database.helper.VoucherSearch;
-import com.cv.app.pharmacy.ui.common.SaleVouSearchTableModel1;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -46,7 +46,6 @@ import java.util.Date;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -466,6 +465,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
         tblMedicine.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        tblMedicine.getTableHeader().setFont(Global.lableFont);
     }
 
     private void initTableVoucher() {
@@ -478,19 +478,15 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         tblVoucher.getColumnModel().getColumn(6).setPreferredWidth(25);
 
         tblVoucher.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        tblVoucher.getTableHeader().setFont(Global.lableFont);
     }
 
     private void addSelectionListenerVoucher() {
         //Define table selection model to single row selection.
         tblVoucher.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
-        tblVoucher.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                selectedRow = tblVoucher.getSelectedRow();
-            }
+        tblVoucher.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            selectedRow = tblVoucher.getSelectedRow();
         });
     }
 
@@ -1390,7 +1386,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
         });
         jScrollPane2.setViewportView(tblVoucher);
 
-        butSelect.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSelect.setFont(Global.lableFont);
         butSelect.setText("Select");
         butSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1398,7 +1394,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
             }
         });
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1411,14 +1407,17 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
             }
         });
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText("Total Records : 0");
 
+        lblTotalAmount.setFont(Global.lableFont);
         lblTotalAmount.setText("Total Amount : ");
 
         txtTotalAmount.setEditable(false);
         txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtTotalAmount.setFont(Global.lableFont);
 
+        lblTotalAmount1.setFont(Global.lableFont);
         lblTotalAmount1.setText("Grand Amount : ");
 
         txtGrandTotal.setEditable(false);
@@ -1458,7 +1457,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butSelect)
@@ -1514,7 +1513,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
     private void butSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSearchActionPerformed
         search();
         tblVoucher.requestFocus();
-        if (tableVouModel.getListVS().size() > 0) {
+        if (!tableVouModel.getListVS().isEmpty()) {
             tblVoucher.setRowSelectionInterval(0, 0);
         }
     }//GEN-LAST:event_butSearchActionPerformed

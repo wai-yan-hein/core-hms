@@ -17,7 +17,6 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.util.List;
 import javax.swing.RowFilter;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;

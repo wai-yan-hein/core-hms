@@ -5,7 +5,6 @@
  */
 package com.cv.app.opd.database.entity;
 
-import com.cv.app.ot.database.entity.OTProcedure;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.CascadeType;

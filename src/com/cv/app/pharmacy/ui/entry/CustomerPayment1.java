@@ -9,7 +9,6 @@ import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
-//import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;

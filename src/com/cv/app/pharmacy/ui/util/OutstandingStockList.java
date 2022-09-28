@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.LoginDialog;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;

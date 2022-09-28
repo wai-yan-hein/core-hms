@@ -18,15 +18,15 @@ import java.util.List;
 public class AmountLinkDialog extends javax.swing.JDialog {
 
     private final AmountLinkTableModel tblAmountLinkTableModel = new AmountLinkTableModel();
-    
-    public AmountLinkDialog(List<TempAmountLink> listTAL){
+
+    public AmountLinkDialog(List<TempAmountLink> listTAL) {
         super(Util1.getParent(), true);
         initComponents();
         initTable();
         setLocationRelativeTo(null);
         tblAmountLinkTableModel.setListTAL(listTAL);
     }
-    
+
     /**
      * Creates new form AmountLinkDialog
      */
@@ -35,21 +35,25 @@ public class AmountLinkDialog extends javax.swing.JDialog {
         initComponents();
     }
 
-    public double getTtlAmt(){
-        if(tblAmountLinkTableModel != null){
+    public double getTtlAmt() {
+        if (tblAmountLinkTableModel != null) {
             return tblAmountLinkTableModel.getTotalAmount();
-        }else{
+        } else {
             return 0.0;
         }
     }
-    
-    private void initTable(){
+
+    public double getTtlDisount() {
+        return tblAmountLinkTableModel.getTotalDiscount();
+    }
+
+    private void initTable() {
         tblAmountLink.getColumnModel().getColumn(0).setPreferredWidth(40);//Option
         tblAmountLink.getColumnModel().getColumn(1).setPreferredWidth(100);//Vou No
         tblAmountLink.getColumnModel().getColumn(2).setPreferredWidth(60);//Amount
         tblAmountLink.getColumnModel().getColumn(3).setPreferredWidth(20);//Status
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -31,7 +31,6 @@
 package com.cv.app.ui.theme;
 
 import java.awt.Color;
-
 import javax.swing.plaf.ColorUIResource;
 
 /**

@@ -39,8 +39,8 @@ package com.cv.app.ui.common;
  * intended for use in the design, construction, operation or
  * maintenance of any nuclear facility.
  */
-import java.awt.Dimension;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import javax.swing.JTable;
 import javax.swing.JTree;

@@ -4,14 +4,10 @@
  */
 package com.cv.app.inpatient.ui.util;
 
-import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.ui.common.RoomBookingSearchTableModel;
-import com.cv.app.opd.database.entity.City;
-import com.cv.app.opd.database.entity.Gender;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;

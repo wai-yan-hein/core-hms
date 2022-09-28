@@ -4,10 +4,12 @@
  */
 package com.cv.app.pharmacy.ui.setup;
 
-import com.cv.app.opd.ui.setup.CitySetup;
 import com.cv.app.inpatient.ui.setup.DiagnosisSetup;
+import com.cv.app.opd.ui.setup.CitySetup;
 import com.cv.app.opd.ui.setup.PatientOpSetup;
+import com.cv.app.util.Util1;
 import java.awt.Container;
+import java.awt.Dimension;
 
 /**
  *
@@ -30,46 +32,69 @@ public class SetupDialog extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         Container contentPane = getContentPane();
 
-        if (panelName.equals("Item Type Setup")) {
-            contentPane.add(new ItemTypeSetup());
-        } else if (panelName.equals("Item Unit Setup")) {
-            contentPane.add(new ItemUnitSetup());
-        } else if (panelName.equals("Packing Template Setup")) {
-            contentPane.add(new PackingTemplateSetup());
-        } else if (panelName.equals("Category Setup")) {
-            contentPane.add(new CategorySetup());
-        } else if (panelName.equals("Character No Setup")) {
-            contentPane.add(new CharacterNoSetup());
-        } else if (panelName.equals("Currency Setup")) {
-            contentPane.add(new CurrencySetup());
-        } else if (panelName.equals("Customer Group Setup")) {
-            contentPane.add(new CustomerGroupSetup());
-        } else if (panelName.equals("Location Setup")) {
-            contentPane.add(new LocationSetup());
-        } else if (panelName.equals("Payment Type Setup")) {
-            contentPane.add(new PaymentTypeSetup());
-        } else if (panelName.equals("Session Setup")) {
-            contentPane.add(new SessionSetup());
-        } else if (panelName.equals("Charge Type Setup")) {
-            contentPane.add(new ChargeTypeSetup());
-        } else if (panelName.equals("Expense Type Setup")) {
-            contentPane.add(new ExpenseTypeSetup());
-        } else if (panelName.equals("Voucher Status Setup")) {
-            contentPane.add(new VouStatusSetup());
-        } else if (panelName.equals("Adjustment Type Setup")) {
-            contentPane.add(new AdjTypeSetup());
-        } else if (panelName.equals("Trader Opening Setup")) {
-            contentPane.add(new TraderOpSetup());
-        } else if (panelName.equals("Brand Setup")) {
-            contentPane.add(new ItemBrandSetup());
-        }else if (panelName.equals("City Setup")) {
-            contentPane.add(new CitySetup());
-        }else if (panelName.equals("Patient Opening Setup")) {
-            contentPane.add(new PatientOpSetup());
-        }else if (panelName.equals("Diagnosis")) {
-            contentPane.add(new DiagnosisSetup());
+        switch (panelName) {
+            case "Item Type Setup":
+                contentPane.add(new ItemTypeSetup());
+                break;
+            case "Item Unit Setup":
+                contentPane.add(new ItemUnitSetup());
+                break;
+            case "Packing Template Setup":
+                contentPane.add(new PackingTemplateSetup());
+                break;
+            case "Category Setup":
+                contentPane.add(new CategorySetup());
+                break;
+            case "Character No Setup":
+                contentPane.add(new CharacterNoSetup());
+                break;
+            case "Currency Setup":
+                contentPane.add(new CurrencySetup());
+                break;
+            case "Customer Group Setup":
+                contentPane.add(new CustomerGroupSetup());
+                break;
+            case "Location Setup":
+                contentPane.add(new LocationSetup());
+                break;
+            case "Payment Type Setup":
+                contentPane.add(new PaymentTypeSetup());
+                break;
+            case "Session Setup":
+                contentPane.add(new SessionSetup());
+                break;
+            case "Charge Type Setup":
+                contentPane.add(new ChargeTypeSetup());
+                break;
+            case "Expense Type Setup":
+                contentPane.add(new ExpenseTypeSetup());
+                break;
+            case "Voucher Status Setup":
+                contentPane.add(new VouStatusSetup());
+                break;
+            case "Adjustment Type Setup":
+                contentPane.add(new AdjTypeSetup());
+                break;
+            case "Trader Opening Setup":
+                contentPane.add(new TraderOpSetup());
+                break;
+            case "Brand Setup":
+                contentPane.add(new ItemBrandSetup());
+                break;
+            case "City Setup":
+                contentPane.add(new CitySetup());
+                break;
+            case "Patient Opening Setup":
+                contentPane.add(new PatientOpSetup());
+                break;
+            case "Diagnosis":
+                contentPane.add(new DiagnosisSetup());
+                break;
+            default:
+                break;
         }
-        
-        pack();
+        Dimension screen = Util1.getScreenSize();
+        setSize(screen.width / 2, screen.height / 2);
+        setLocationRelativeTo(null);
     }// </editor-fold>    
 }

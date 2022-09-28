@@ -4,6 +4,7 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
+import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.ui.common.ItemUnitAutoCompleteTableModel;
 import java.awt.Color;
@@ -28,6 +29,7 @@ import org.apache.log4j.Logger;
  * @author winswe
  */
 public class ItemUnitAutoCompleter implements KeyListener {
+
     static Logger log = Logger.getLogger(ItemUnitAutoCompleter.class.getName());
     private JTable table = new JTable();
     private JPopupMenu popup = new JPopupMenu();
@@ -43,15 +45,15 @@ public class ItemUnitAutoCompleter implements KeyListener {
         this.textComp = comp;
         this.editor = editor;
         textComp.putClientProperty(AUTOCOMPLETER, this);
-        textComp.setFont(new java.awt.Font("Zawgyi-One", 0, 11));
+        textComp.setFont(Global.textFont);
         acTableModel = new ItemUnitAutoCompleteTableModel(list);
         table.setModel(acTableModel);
-        table.setFont(new java.awt.Font("Zawgyi-One", 0, 11)); // NOI18N
+        table.setFont(Global.textFont); // NOI18N
         sorter = new TableRowSorter(table.getModel());
         table.setRowSorter(sorter);
+        table.setRowHeight(24);
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(null);
-
         table.setFocusable(false);
         table.getColumnModel().getColumn(0).setPreferredWidth(20);//Unit
         table.getColumnModel().getColumn(1).setPreferredWidth(80);//Description
@@ -95,7 +97,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
 
         table.setRequestFocusEnabled(false);
     }
-    
+
     private Action acceptAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -112,7 +114,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
             editor.stopCellEditing();
         }
     };
-    
+
     DocumentListener documentListener = new DocumentListener() {
         @Override
         public void insertUpdate(DocumentEvent e) {
@@ -156,7 +158,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
         }
         textComp.requestFocus();
     }
-    
+
     static Action showAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -171,7 +173,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
             }
         }
     };
-    
+
     static Action upAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -184,7 +186,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
             }
         }
     };
-    
+
     static Action hidePopupAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -201,7 +203,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
         if (si < acTableModel.getSize() - 1) {
             table.setRowSelectionInterval(si + 1, si + 1);
         }
-        
+
         //This code for auto scroll
         Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
         table.scrollRectToVisible(rect);
@@ -217,7 +219,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
         if (si > 0) {
             table.setRowSelectionInterval(si - 1, si - 1);
         }
-        
+
         //This code for auto scroll
         Rectangle rect = table.getCellRect(table.getSelectedRow(), 0, true);
         table.scrollRectToVisible(rect);
@@ -244,7 +246,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         System.out.println("keyPressed");
-        if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             editor.stopCellEditing();
         }
     }
@@ -256,7 +258,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
     public void keyReleased(KeyEvent e) {
         System.out.println("keyReleased");
         String filter = textComp.getText();
-        
+
         if (filter.length() == 0) {
             sorter.setRowFilter(null);
         } else {
@@ -264,7 +266,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
             sorter.setRowFilter(startsWithFilter);
         }
     }
-    
+
     private RowFilter<Object, Object> startsWithFilter = new RowFilter<Object, Object>() {
         @Override
         public boolean include(RowFilter.Entry<? extends Object, ? extends Object> entry) {
@@ -283,7 +285,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
                     return true;
                 }
             }*/
-            
+
             for (int i = 0; i < entry.getValueCount(); i++) {
                 //String tmp = entry.getStringValue(i);
                 if (entry.getStringValue(i).toUpperCase().startsWith(
@@ -291,7 +293,7 @@ public class ItemUnitAutoCompleter implements KeyListener {
                     return true;
                 }
             }
-            
+
             return false;
         }
     };

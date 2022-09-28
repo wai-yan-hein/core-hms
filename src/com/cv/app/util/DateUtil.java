@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import org.springframework.richclient.application.Application;
 
 /**
@@ -189,9 +188,6 @@ public class DateUtil {
             }
         } catch (ParseException ex) {
             status = false;
-            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid date format. You should enter '"
-                    + Global.dateFormat + "' format pattern.",
-                    "Invalid date.", JOptionPane.ERROR_MESSAGE);
         }
 
         return status;

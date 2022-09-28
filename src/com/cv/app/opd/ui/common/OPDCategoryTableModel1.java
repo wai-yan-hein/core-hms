@@ -4,11 +4,11 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.OPDCategory;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.common.Global;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;

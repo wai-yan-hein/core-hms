@@ -4,6 +4,7 @@
  */
 package com.cv.app.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import java.awt.Component;
 import java.awt.event.KeyEvent;
@@ -37,30 +38,30 @@ public class BestTableCellEditor extends javax.swing.AbstractCellEditor implemen
             boolean isSelected, int rowIndex, int vColIndex) {
         oldValue = value;
         JTextField jtf = new JTextField();
-        jtf.setFont(new java.awt.Font("Zawgyi-One", 0, 12));
-        if(value != null){
+        jtf.setFont(Global.textFont);
+        if (value != null) {
             jtf.setText(value.toString());
         }
         jtf.selectAll();
-        
+
         if (kp != null) {
             KeyListener keyListener = new KeyListener() {
                 @Override
                 public void keyPressed(KeyEvent keyEvent) {
                     int keyCode = keyEvent.getKeyCode();
-                    
-                    if ((keyEvent.isControlDown() && (keyCode == KeyEvent.VK_F8)) ||
-                            (keyEvent.isShiftDown() && (keyCode == KeyEvent.VK_F8)) ||
-                            (keyCode == KeyEvent.VK_F5) ||
-                            (keyCode == KeyEvent.VK_F7) ||
-                            (keyCode == KeyEvent.VK_F9) ||
-                            (keyCode == KeyEvent.VK_F10) ||
-                            (keyCode == KeyEvent.VK_ESCAPE)) {
+
+                    if ((keyEvent.isControlDown() && (keyCode == KeyEvent.VK_F8))
+                            || (keyEvent.isShiftDown() && (keyCode == KeyEvent.VK_F8))
+                            || (keyCode == KeyEvent.VK_F5)
+                            || (keyCode == KeyEvent.VK_F7)
+                            || (keyCode == KeyEvent.VK_F9)
+                            || (keyCode == KeyEvent.VK_F10)
+                            || (keyCode == KeyEvent.VK_ESCAPE)) {
                         stopCellEditing();
                         kp.keyEvent(keyEvent);
                     }
                 }
-                
+
                 @Override
                 public void keyReleased(KeyEvent keyEvent) {
                 }
@@ -69,16 +70,15 @@ public class BestTableCellEditor extends javax.swing.AbstractCellEditor implemen
                 public void keyTyped(KeyEvent keyEvent) {
                 }
             };
-            
+
             jtf.addKeyListener(keyListener);
         }
-        
+
         if (value != null) {
             jtf.setText(value.toString());
             jtf.selectAll();
         }
         component = jtf;
-
         return component;
     }
 
@@ -92,7 +92,7 @@ public class BestTableCellEditor extends javax.swing.AbstractCellEditor implemen
 
         return obj;
     }
-    
+
     /*
      * To prevent mouse click cell editing
      */
@@ -100,7 +100,7 @@ public class BestTableCellEditor extends javax.swing.AbstractCellEditor implemen
     public boolean isCellEditable(EventObject anEvent) {
         if (anEvent instanceof MouseEvent) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }

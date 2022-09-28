@@ -10,10 +10,8 @@ import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.SaleHis;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -22,7 +20,6 @@ import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.KeyStroke;
-import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 

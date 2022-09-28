@@ -10,9 +10,9 @@ import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.controller.BestDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
+import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.ExchangeRate;
 import com.cv.app.pharmacy.database.entity.Session;
-import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.SysProperty;
 import com.cv.app.pharmacy.database.entity.UserRole;
 import com.cv.app.util.BindingUtil;
@@ -54,7 +54,6 @@ public class LoginDialog extends javax.swing.JDialog {
         super(parent, modal);
         runAlready(parent);
         initComponents();
-
         try {
             dao.open();
             initCombo();

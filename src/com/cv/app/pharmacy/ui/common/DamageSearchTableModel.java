@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
-import com.cv.app.pharmacy.database.entity.DamageHis;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;

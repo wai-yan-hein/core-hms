@@ -6,7 +6,6 @@ package com.cv.app.pharmacy.database.entity;
 
 import java.util.Date;
 import javax.persistence.*;
-import static javax.persistence.GenerationType.IDENTITY;
 import org.hibernate.annotations.GenerationTime;
 
 /**

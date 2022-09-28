@@ -5,10 +5,6 @@
 package com.cv.app.opd.ui.setup;
 
 import com.cv.app.common.AutoClearEditor;
-import com.cv.app.opd.database.entity.Patient;
-import com.cv.app.opd.database.entity.City;
-import com.cv.app.opd.database.entity.Gender;
-import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -16,15 +12,19 @@ import com.cv.app.common.RegNo;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.opd.database.entity.Booking;
+import com.cv.app.opd.database.entity.City;
+import com.cv.app.opd.database.entity.Doctor;
+import com.cv.app.opd.database.entity.Gender;
+import com.cv.app.opd.database.entity.Patient;
+import com.cv.app.opd.database.view.VBooking;
 import com.cv.app.opd.ui.common.AvailableDoctorTableModel;
 import com.cv.app.opd.ui.common.BookingTableModel;
 import com.cv.app.opd.ui.util.DoctorSearchFilterDialog;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.CompoundKey;
 import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.pharmacy.database.entity.Township;
-import com.cv.app.opd.database.view.VBooking;
-import com.cv.app.pharmacy.database.entity.CompoundKey;
 import com.cv.app.pharmacy.database.entity.VouId;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.ui.common.TableDateFieldRenderer;
@@ -239,7 +239,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     if (!Util1.getPropValue("system.opd.showregno").equals("Y")) {
                         JOptionPane.showMessageDialog(Util1.getParent(),
                                 "Patient registeration number is " + currPatient.getRegNo(), "Registeration No",
-                                JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
                 if (print) {
@@ -1285,7 +1285,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Contact No");
 
-        txtContactNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtContactNo.setFont(Global.textFont);
         txtContactNo.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtContactNoFocusGained(evt);
@@ -1333,6 +1333,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
+        butBillID.setFont(Global.lableFont);
         butBillID.setText("Bill ID");
         butBillID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1454,19 +1455,19 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                                     .addComponent(txtRegDateTime))
                                 .addGroup(jPanel3Layout.createSequentialGroup()
                                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(cboDoctor, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(cboDoctor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addGroup(jPanel3Layout.createSequentialGroup()
-                                            .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(cboTownship, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addGap(18, 18, 18)
                                             .addComponent(jLabel16)))
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGap(18, 18, 18)
+                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                         .addGroup(jPanel3Layout.createSequentialGroup()
                                             .addComponent(jLabel18)
                                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(lblAgeStr, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addContainerGap()))))))))
+                                            .addComponent(lblAgeStr, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addContainerGap()))))))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2});

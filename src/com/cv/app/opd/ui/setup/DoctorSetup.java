@@ -4,13 +4,6 @@
  */
 package com.cv.app.opd.ui.setup;
 
-import com.cv.app.opd.database.entity.Initial;
-import com.cv.app.opd.database.entity.Speciality;
-import com.cv.app.opd.database.entity.DoctorFeesMapping;
-import com.cv.app.opd.database.entity.DoctorFeesMappingDC;
-import com.cv.app.opd.database.entity.DoctorFeesMappingOT;
-import com.cv.app.opd.database.entity.Gender;
-import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -18,12 +11,19 @@ import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.inpatient.database.entity.DCHis;
 import com.cv.app.inpatient.ui.common.DCTableCellEditor;
+import com.cv.app.opd.database.entity.Doctor;
+import com.cv.app.opd.database.entity.DoctorFeesMapping;
+import com.cv.app.opd.database.entity.DoctorFeesMappingDC;
+import com.cv.app.opd.database.entity.DoctorFeesMappingOT;
+import com.cv.app.opd.database.entity.Gender;
+import com.cv.app.opd.database.entity.Initial;
 import com.cv.app.opd.database.entity.OPDHis;
+import com.cv.app.opd.database.entity.Speciality;
 import com.cv.app.opd.ui.common.DCDoctorFeesMapTableModel;
-import com.cv.app.opd.ui.common.OTDoctorFeesMapTableModel;
 import com.cv.app.opd.ui.common.DoctorFeesMapTableModel;
 import com.cv.app.opd.ui.common.DoctorTableModel;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
+import com.cv.app.opd.ui.common.OTDoctorFeesMapTableModel;
 import com.cv.app.opd.ui.util.DoctorSetupFilterDialog;
 import com.cv.app.ot.database.entity.OTHis;
 import com.cv.app.ot.ui.common.OTTableCellEditor;

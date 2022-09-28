@@ -10,17 +10,17 @@
  */
 package com.cv.app.pharmacy.ui.setup.mapping;
 
-import com.cv.app.pharmacy.ui.setup.*;
-import com.cv.app.pharmacy.database.entity.PackingTemplate;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.PackingTemplate;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.ItemTableModel;
 import com.cv.app.pharmacy.ui.common.RelationPriceTableModel;
+import com.cv.app.pharmacy.ui.setup.*;
 import com.cv.app.pharmacy.ui.util.ItemSetupFilterDialog;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;

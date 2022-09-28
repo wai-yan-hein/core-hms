@@ -6,14 +6,9 @@ package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.PurDetailHis;
 import com.cv.app.pharmacy.database.entity.PurchaseIMEINo;
-import com.cv.app.pharmacy.database.entity.PurchaseIMEINoKey;
-import com.cv.app.util.NumberUtil;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;

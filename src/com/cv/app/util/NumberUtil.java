@@ -22,9 +22,9 @@ public class NumberUtil {
             if (number == null) {
                 return 0l;
             } else {
-                return Long.parseLong(number.toString());
+                return Long.valueOf(number.toString());
             }
-        } catch (Exception ex) {
+        } catch (NumberFormatException ex) {
             System.out.println("NumberUtil.NZero : " + ex.getMessage());
             return 0l;
         }
@@ -35,9 +35,9 @@ public class NumberUtil {
             if (number == null) {
                 return 0d;
             } else {
-                return Double.parseDouble(number.toString().replace(",", ""));
+                return Double.valueOf(number.toString().replace(",", ""));
             }
-        } catch (Exception ex) {
+        } catch (NumberFormatException ex) {
             System.out.println("NumberUtil.NZero : " + ex.getMessage());
             return 0d;
         }

@@ -4,12 +4,12 @@
  */
 package com.cv.app.ot.ui.common;
 
-import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.common.Global;
 import com.cv.app.ot.database.entity.DrDetailId;
 import com.cv.app.ot.database.entity.DrDetailIdKey;
-import com.cv.app.ot.database.view.VOTDrDetailId;
 import com.cv.app.ot.database.entity.OTProcedure;
+import com.cv.app.ot.database.view.VOTDrDetailId;
+import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;

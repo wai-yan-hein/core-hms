@@ -4,11 +4,6 @@
  */
 package com.cv.app.inpatient.ui.setup;
 
-import com.cv.app.inpatient.database.entity.RBooking;
-import com.cv.app.opd.database.entity.Patient;
-import com.cv.app.opd.database.entity.City;
-import com.cv.app.opd.database.entity.Gender;
-import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -18,23 +13,28 @@ import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.database.entity.BuildingStructure;
 import com.cv.app.inpatient.database.entity.DCHis;
+import com.cv.app.inpatient.database.entity.DCRoomTransferHis;
+import com.cv.app.inpatient.database.entity.RBooking;
+import com.cv.app.inpatient.database.entity.ReCoverAdmissionDeleteLog;
 import com.cv.app.inpatient.ui.util.AdmissionSearch;
+import com.cv.app.opd.database.entity.City;
+import com.cv.app.opd.database.entity.Doctor;
+import com.cv.app.opd.database.entity.Gender;
 import com.cv.app.opd.database.entity.OPDHis;
+import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.ot.database.entity.OTHis;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.CompoundKey;
 import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.pharmacy.database.entity.SaleHis;
 import com.cv.app.pharmacy.database.entity.Township;
+import com.cv.app.pharmacy.database.entity.VouId;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.inpatient.database.entity.DCRoomTransferHis;
-import com.cv.app.inpatient.database.entity.ReCoverAdmissionDeleteLog;
-import com.cv.app.pharmacy.database.entity.CompoundKey;
-import com.cv.app.pharmacy.database.entity.VouId;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
@@ -303,11 +303,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 dao.save(pt);
 
                 try {
-                    if (currPatient.getBuildingStructure() != null) {
-                        String strSql = "update building_structure set reg_no = '" + currPatient.getKey().getRegister().getRegNo() + "' "
-                                + " where id =" + currPatient.getBuildingStructure().getId();
-                        dao.execSql(strSql);
-                    }
+
                     if (cboBooking.getSelectedItem() != null) {
                         String strSql = "update booking_room set check_status = 0 "
                                 + " where booking_id =" + ((RBooking) cboBooking.getSelectedItem()).getBookingId();
@@ -525,6 +521,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboRoom.setSelectedItem(null);
             cboRoom.setEnabled(true);
         } else if (source.equals("AdmissionSearch")) {
+            verifyRoom();
             lblStatus.setText("EDIT");
             currPatient = (Ams) selectObj;
             txtAmsNo.setText(currPatient.getKey().getAmsNo());
@@ -548,7 +545,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboTownship.setSelectedItem(currPatient.getTownship());
             cboType.setSelectedItem(currPatient.getPtType());
             cboRoom.setSelectedItem(currPatient.getBuildingStructure());
-            cboRoom.setEnabled(false);
+            cboRoom.setEnabled(currPatient.getBuildingStructure() == null);
             dao.close();
         }
     }
@@ -921,6 +918,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 BuildingStructure fromRoom = (BuildingStructure) cboRTFromRoom.getSelectedItem();
                 admission.setBuildingStructure(toRoom);
                 toRoom.setRegNo(tmpRegNo);
+
                 if (fromRoom != null) {
                     fromRoom.setRegNo(null);
                     his.setFromRoom(fromRoom.getId());
@@ -931,12 +929,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 his.setTranDate(new Date());
                 his.setUserId(Global.loginUser.getUserId());
 
-                //dao.open();
-                //dao.beginTran();
-                if (fromRoom != null) {
-                    dao.save(fromRoom);
-                }
                 if (isValidRoom(toRoom)) {
+                    dao.save(fromRoom);
                     dao.save(toRoom);
                     dao.save(his);
                     dao.save(admission);

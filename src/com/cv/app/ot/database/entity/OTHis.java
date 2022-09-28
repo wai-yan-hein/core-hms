@@ -8,7 +8,6 @@ import com.cv.app.opd.database.entity.*;
 import com.cv.app.pharmacy.database.entity.Appuser;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
-import javax.persistence.Transient;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.Column;
@@ -19,6 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 /**
  *

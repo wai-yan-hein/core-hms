@@ -175,7 +175,7 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
             tblRelation.getColumnModel().getColumn(6).setCellEditor(
                     new BestTableCellEditor(this));
             tblRelation.getColumnModel().getColumn(1).setCellEditor(
-                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
+                    new TableUnitCellEditor(dao.findAll("ItemUnit"), this));
 
             //Adjust table column width
             TableColumn column = tblRelation.getColumnModel().getColumn(0);

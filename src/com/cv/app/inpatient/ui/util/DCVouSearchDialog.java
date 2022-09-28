@@ -4,7 +4,6 @@
  */
 package com.cv.app.inpatient.ui.util;
 
-import com.cv.app.opd.ui.util.*;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
@@ -14,6 +13,7 @@ import com.cv.app.inpatient.ui.common.DCTableCellEditor;
 import com.cv.app.inpatient.ui.common.DCVouTableModel;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
+import com.cv.app.opd.ui.util.*;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
 import com.cv.app.pharmacy.database.entity.Currency;
@@ -27,7 +27,6 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -139,10 +138,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         timerFocus();
 
         Dimension screen = Util1.getScreenSize();
-        int x = (screen.width - this.getWidth()) / 2;
-        int y = (screen.height - this.getHeight()) / 2;
-        setLocation(x, y);
-
+        setSize(screen.width - 200, screen.height - 200);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
@@ -227,14 +224,11 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
     }
 
     private void timerFocus() {
-        Timer timer = new Timer(500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("DC Voucher");
-                tblVou.requestFocus();
-                if (vouTableModel.getListOPDHis().size() > 0) {
-                    tblVou.setRowSelectionInterval(0, 0);
-                }
+        Timer timer = new Timer(500, (ActionEvent e) -> {
+            System.out.println("DC Voucher");
+            tblVou.requestFocus();
+            if (!vouTableModel.getListOPDHis().isEmpty()) {
+                tblVou.setRowSelectionInterval(0, 0);
             }
         });
         timer.setRepeats(false);
@@ -338,13 +332,14 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
             srvFilterTableModel.addEmptyRow();
             tblService.getColumnModel().getColumn(0).setCellEditor(
                     new DCTableCellEditor(dao));
+            tblService.getTableHeader().setFont(Global.lableFont);
 
             tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
             tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
             tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
             tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
             tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
-
+            tblVou.getTableHeader().setFont(Global.lableFont);
             //Define table selection model to single row selection.
             tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adding table row selection listener.
@@ -638,9 +633,10 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         });
         jScrollPane2.setViewportView(tblVou);
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText("Total Records :");
 
-        butSelect.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSelect.setFont(Global.lableFont);
         butSelect.setText("Select");
         butSelect.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -648,7 +644,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
             }
         });
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -894,7 +890,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -902,7 +898,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                         .addComponent(butSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butSelect))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 699, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 711, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -918,7 +914,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                         .addGap(8, 8, 8))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(lblTotalRec)
                             .addComponent(butSelect)

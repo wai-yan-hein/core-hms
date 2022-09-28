@@ -9,6 +9,7 @@ import com.cv.app.opd.ui.util.PatientList;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
 import java.awt.Container;
+import java.awt.Dimension;
 
 /**
  *
@@ -21,9 +22,10 @@ public class UtilDialog extends javax.swing.JDialog {
     private final AbstractDataAccess dao;
     //private String filter;
     private int locationId;
-    
+
     /**
      * Creates new form UtilDialog
+     *
      * @param parent
      * @param modal
      * @param observer
@@ -39,7 +41,7 @@ public class UtilDialog extends javax.swing.JDialog {
         this.observer = observer;
         this.dao = dao;
         this.locationId = locationId;
-        
+
         initComponents();
 
         /*Dimension screen = Util1.getScreenSize();
@@ -60,6 +62,7 @@ public class UtilDialog extends javax.swing.JDialog {
         //this.filter = filter;
 
         initComponents();
+
         //setVisible(true);
     }
 
@@ -73,7 +76,6 @@ public class UtilDialog extends javax.swing.JDialog {
     private void initComponents() {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         Container contentPane = getContentPane();
-
         switch (panelName) {
             case "Customer List":
             case "Supplier List":
@@ -91,16 +93,16 @@ public class UtilDialog extends javax.swing.JDialog {
                 break;
             case "Purchase Voucher Search":
                 //if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
-                    contentPane.add(new PurchaseVouSearch1(this, observer, dao));
+                contentPane.add(new PurchaseVouSearch1(this, observer, dao));
                 //} else {*/
-                    //contentPane.add(new PurchaseVouSearch(this, observer, dao));
+                //contentPane.add(new PurchaseVouSearch(this, observer, dao));
                 //}
                 break;
             case "Return In Voucher Search":
                 //if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 //    contentPane.add(new RetInVouSearch1(this, observer, dao));
                 //} else {
-                    contentPane.add(new RetInVouSearch(this, observer, dao));
+                contentPane.add(new RetInVouSearch(this, observer, dao));
                 //}
                 break;
             case "Return Out Voucher Search":
@@ -125,6 +127,9 @@ public class UtilDialog extends javax.swing.JDialog {
                 contentPane.add(new PurchasePromoSearch(this, observer, dao));
                 break;
         }
-        pack();
+        Dimension screen = Util1.getScreenSize();
+        setSize(screen.width - 200, screen.height - 200);
+        setLocationRelativeTo(null);
+        //pack();
     }// </editor-fold>
 }

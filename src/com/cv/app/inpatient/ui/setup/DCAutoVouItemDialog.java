@@ -6,11 +6,11 @@
 package com.cv.app.inpatient.ui.setup;
 
 import com.cv.app.common.Global;
-import com.cv.app.util.*;
+import com.cv.app.inpatient.database.view.VDCAutoVouItem;
 import com.cv.app.inpatient.ui.common.DCAutoVouItemSetupModel;
 import com.cv.app.inpatient.ui.common.DCTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.inpatient.database.view.VDCAutoVouItem;
+import com.cv.app.util.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.AbstractAction;

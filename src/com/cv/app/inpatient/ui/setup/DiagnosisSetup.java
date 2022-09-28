@@ -9,7 +9,6 @@ import com.cv.app.common.Global;
 import com.cv.app.inpatient.database.entity.Diagnosis;
 import com.cv.app.inpatient.ui.common.DiagnosisTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.controller.BestDataAccess;
 import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.Dimension;

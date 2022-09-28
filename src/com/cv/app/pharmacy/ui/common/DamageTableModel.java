@@ -5,22 +5,20 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.DamageDetailHis;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
-import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.helper.CurrencyTtl;
 import com.cv.app.pharmacy.database.tempentity.StockCosting;
 import com.cv.app.pharmacy.database.tempentity.StockCostingDetail;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
-import static com.cv.app.pharmacy.ui.common.IssueTableModel.log;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.DateUtil;
+import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.util.JoSQLUtil;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;

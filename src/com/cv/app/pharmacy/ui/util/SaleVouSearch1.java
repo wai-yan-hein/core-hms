@@ -4,13 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.database.entity.VouStatus;
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Session;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
@@ -21,7 +14,14 @@ import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.controller.SchoolDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
+import com.cv.app.pharmacy.database.entity.CustomerGroup;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.MachineInfo;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.Session;
+import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.VouStatus;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;

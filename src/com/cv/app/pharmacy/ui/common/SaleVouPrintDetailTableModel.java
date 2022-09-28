@@ -6,7 +6,6 @@ package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.pharmacy.database.helper.SaleDetailHis;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;

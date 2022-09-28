@@ -4,8 +4,8 @@
  */
 package com.cv.app.opd.database.entity;
 
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.*;
+import static javax.persistence.GenerationType.IDENTITY;
 /**
  *
  * @author WSwe

@@ -5,10 +5,7 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.pharmacy.database.entity.PurHis;
 import com.cv.app.pharmacy.database.view.VPurPromo;
-import com.cv.app.util.NumberUtil;
-import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

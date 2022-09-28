@@ -20,7 +20,8 @@ import javax.persistence.TemporalType;
  */
 @Entity
 @Table(name = "v_opd_patient_bill_payment")
-public class VPatientBillPayment implements Serializable{
+public class VPatientBillPayment implements Serializable {
+
     private Integer id;
     private String regNo;
     private Integer billTypeId;
@@ -35,8 +36,10 @@ public class VPatientBillPayment implements Serializable{
     private String billName;
     private String userName;
     private String userShort;
+    private boolean deleted;
 
-    @Id @Column(name="id", unique=true, nullable=false)
+    @Id
+    @Column(name = "id", unique = true, nullable = false)
     public Integer getId() {
         return id;
     }
@@ -45,7 +48,7 @@ public class VPatientBillPayment implements Serializable{
         this.id = id;
     }
 
-    @Column(name="reg_no")
+    @Column(name = "reg_no")
     public String getRegNo() {
         return regNo;
     }
@@ -54,7 +57,7 @@ public class VPatientBillPayment implements Serializable{
         this.regNo = regNo;
     }
 
-    @Column(name="bill_type_id")
+    @Column(name = "bill_type_id")
     public Integer getBillTypeId() {
         return billTypeId;
     }
@@ -63,7 +66,7 @@ public class VPatientBillPayment implements Serializable{
         this.billTypeId = billTypeId;
     }
 
-    @Column(name="currency_id")
+    @Column(name = "currency_id")
     public String getCurrency() {
         return currency;
     }
@@ -72,7 +75,7 @@ public class VPatientBillPayment implements Serializable{
         this.currency = currency;
     }
 
-    @Column(name="pay_amt")
+    @Column(name = "pay_amt")
     public Double getPayAmt() {
         return payAmt;
     }
@@ -82,7 +85,7 @@ public class VPatientBillPayment implements Serializable{
     }
 
     @Temporal(TemporalType.DATE)
-    @Column(name="pay_date")
+    @Column(name = "pay_date")
     public Date getPayDate() {
         return payDate;
     }
@@ -91,7 +94,7 @@ public class VPatientBillPayment implements Serializable{
         this.payDate = payDate;
     }
 
-    @Column(name="remark")
+    @Column(name = "remark")
     public String getRemark() {
         return remark;
     }
@@ -100,7 +103,7 @@ public class VPatientBillPayment implements Serializable{
         this.remark = remark;
     }
 
-    @Column(name="created_by")
+    @Column(name = "created_by")
     public String getUserId() {
         return userId;
     }
@@ -110,7 +113,7 @@ public class VPatientBillPayment implements Serializable{
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="created_date")
+    @Column(name = "created_date")
     public Date getCreatedDate() {
         return createdDate;
     }
@@ -119,7 +122,7 @@ public class VPatientBillPayment implements Serializable{
         this.createdDate = createdDate;
     }
 
-    @Column(name="patient_name")
+    @Column(name = "patient_name")
     public String getPatientName() {
         return patientName;
     }
@@ -128,7 +131,7 @@ public class VPatientBillPayment implements Serializable{
         this.patientName = patientName;
     }
 
-    @Column(name="father_name")
+    @Column(name = "father_name")
     public String getFatherName() {
         return fatherName;
     }
@@ -137,7 +140,7 @@ public class VPatientBillPayment implements Serializable{
         this.fatherName = fatherName;
     }
 
-    @Column(name="payment_type_name")
+    @Column(name = "payment_type_name")
     public String getBillName() {
         return billName;
     }
@@ -146,7 +149,7 @@ public class VPatientBillPayment implements Serializable{
         this.billName = billName;
     }
 
-    @Column(name="user_name")
+    @Column(name = "user_name")
     public String getUserName() {
         return userName;
     }
@@ -155,7 +158,7 @@ public class VPatientBillPayment implements Serializable{
         this.userName = userName;
     }
 
-    @Column(name="user_short_name")
+    @Column(name = "user_short_name")
     public String getUserShort() {
         return userShort;
     }
@@ -163,4 +166,14 @@ public class VPatientBillPayment implements Serializable{
     public void setUserShort(String userShort) {
         this.userShort = userShort;
     }
+
+    @Column(name = "deleted")
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
 }

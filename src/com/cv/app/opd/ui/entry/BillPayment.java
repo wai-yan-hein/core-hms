@@ -172,7 +172,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                         Double totalBalance = 0.0;
                         String appCurr = Util1.getPropValue("system.app.currency");
                         try ( //dao.open();
-                                ResultSet resultSet = dao.getPro("patient_bill_payment",
+                                 ResultSet resultSet = dao.getPro("patient_bill_payment",
                                         patient.getRegNo(), DateUtil.toDateStrMYSQL(txtPayDate.getText()), appCurr,
                                         Global.machineId)) {
                             while (resultSet.next()) {
@@ -297,7 +297,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void search() {
-        String strFilter = "";
+        String strFilter = "o.deleted = 0 ";
 
         if (txtFrom.getText() != null && txtTo.getText() != null) {
             if (strFilter.isEmpty()) {
@@ -359,6 +359,19 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         }
     }
 
+    private void deleteBill() {
+        int row = tblBillPaymentSearch.convertRowIndexToModel(tblBillPaymentSearch.getSelectedRow());
+        if (row >= 0) {
+            int y = JOptionPane.showConfirmDialog(this, "Are you sure to delete?");
+            if (y == JOptionPane.YES_OPTION) {
+                int billId = tblBillPaymentSearchTableModel.getBillId(row);
+                String sql = "update opd_patient_bill_payment set deleted = 1 where id=" + billId + "";
+                dao.execSql(sql);
+                tblBillPaymentSearchTableModel.remove(row);
+            }
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -405,6 +418,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         txtSTotalPaid = new javax.swing.JFormattedTextField();
         jLabel11 = new javax.swing.JLabel();
         btnPrint = new javax.swing.JButton();
+        butSearch1 = new javax.swing.JButton();
 
         jButton1.setText("jButton1");
 
@@ -444,6 +458,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
         });
 
+        butSave.setFont(Global.lableFont);
         butSave.setText("Save");
         butSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -451,6 +466,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
         });
 
+        butClear.setFont(Global.lableFont);
         butClear.setText("Clear");
         butClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -593,6 +609,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
 
         txtSPtName.setFont(Global.textFont);
 
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -603,6 +620,11 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         tblBillPaymentSearch.setFont(Global.textFont);
         tblBillPaymentSearch.setModel(tblBillPaymentSearchTableModel);
         tblBillPaymentSearch.setRowHeight(23);
+        tblBillPaymentSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tblBillPaymentSearchKeyReleased(evt);
+            }
+        });
         jScrollPane2.setViewportView(tblBillPaymentSearch);
 
         txtSTotalPaid.setEditable(false);
@@ -612,10 +634,19 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Total : ");
 
+        btnPrint.setFont(Global.lableFont);
         btnPrint.setText("Print");
         btnPrint.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPrintActionPerformed(evt);
+            }
+        });
+
+        butSearch1.setFont(Global.lableFont);
+        butSearch1.setText("Delete");
+        butSearch1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butSearch1ActionPerformed(evt);
             }
         });
 
@@ -646,9 +677,11 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel10)
                         .addGap(2, 2, 2)
-                        .addComponent(txtSPtName, javax.swing.GroupLayout.DEFAULT_SIZE, 46, Short.MAX_VALUE)
-                        .addGap(12, 12, 12)
+                        .addComponent(txtSPtName, javax.swing.GroupLayout.PREFERRED_SIZE, 46, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
                         .addComponent(butSearch)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butSearch1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnPrint))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
@@ -677,7 +710,8 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                     .addComponent(jLabel10)
                     .addComponent(txtSPtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butSearch)
-                    .addComponent(btnPrint))
+                    .addComponent(btnPrint)
+                    .addComponent(butSearch1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 122, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -809,12 +843,22 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
 
     }//GEN-LAST:event_btnPrintActionPerformed
 
+    private void tblBillPaymentSearchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tblBillPaymentSearchKeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tblBillPaymentSearchKeyReleased
+
+    private void butSearch1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSearch1ActionPerformed
+        // TODO add your handling code here:
+        deleteBill();
+    }//GEN-LAST:event_butSearch1ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnPrint;
     private javax.swing.JButton butClear;
     private javax.swing.JButton butSave;
     private javax.swing.JButton butSearch;
+    private javax.swing.JButton butSearch1;
     private javax.swing.JComboBox cboBillTo;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;

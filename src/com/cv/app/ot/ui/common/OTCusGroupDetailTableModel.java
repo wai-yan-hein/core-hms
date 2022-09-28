@@ -5,9 +5,9 @@
 package com.cv.app.ot.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.ot.database.entity.OTCusGroupDetail;
 import com.cv.app.ot.database.entity.OTProcedureGroup;
+import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JTable;

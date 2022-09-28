@@ -5,7 +5,6 @@
 package com.cv.app.opd.ui.util;
 
 import com.cv.app.common.Global;
-import com.cv.app.opd.database.entity.Service;
 import com.cv.app.opd.database.entity.Technician;
 import com.cv.app.opd.ui.common.TechnicianAutoCompleteTableModel;
 import com.cv.app.util.Util1;

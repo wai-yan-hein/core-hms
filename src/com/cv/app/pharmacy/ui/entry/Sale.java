@@ -5,27 +5,6 @@
 package com.cv.app.pharmacy.ui.entry;
 
 import com.cv.app.common.ActiveMQConnection;
-import com.cv.app.pharmacy.ui.common.SaleExpTableModel;
-import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
-import com.cv.app.pharmacy.ui.common.TTranDetailTableModel;
-import com.cv.app.pharmacy.ui.common.MedInfo;
-import com.cv.app.pharmacy.ui.common.TransactionTableModel;
-import com.cv.app.pharmacy.ui.common.FormAction;
-import com.cv.app.pharmacy.ui.common.SaleTableModel;
-import com.cv.app.pharmacy.database.entity.TraderPayHis;
-import com.cv.app.pharmacy.database.entity.SaleDetailHis;
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.SaleOutstand;
-import com.cv.app.pharmacy.database.entity.VouStatus;
-import com.cv.app.pharmacy.database.entity.Currency;
-import com.cv.app.pharmacy.database.entity.SaleWarranty;
-import com.cv.app.pharmacy.database.entity.Customer;
-import com.cv.app.pharmacy.database.entity.SaleExpense;
-import com.cv.app.pharmacy.database.entity.SaleHis;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -45,25 +24,46 @@ import com.cv.app.opd.ui.util.DoctorSearchNameFilterDialog;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.controller.SchoolDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.database.entity.Customer;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.MachineInfo;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.PurchaseIMEINo;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
+import com.cv.app.pharmacy.database.entity.SaleDetailHis;
+import com.cv.app.pharmacy.database.entity.SaleExpense;
+import com.cv.app.pharmacy.database.entity.SaleHis;
+import com.cv.app.pharmacy.database.entity.SaleOutstand;
+import com.cv.app.pharmacy.database.entity.SaleWarranty;
+import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.entity.Trader1;
+import com.cv.app.pharmacy.database.entity.TraderPayHis;
+import com.cv.app.pharmacy.database.entity.VouStatus;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.helper.TTranDetail;
 import com.cv.app.pharmacy.database.helper.TraderTransaction;
 import com.cv.app.pharmacy.database.tempentity.TraderUnpaidVou;
 import com.cv.app.pharmacy.database.view.VMarchant;
 import com.cv.app.pharmacy.database.view.VMedicine1;
+import com.cv.app.pharmacy.ui.common.FormAction;
+import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.PatientBillTableModel;
+import com.cv.app.pharmacy.ui.common.SaleExpTableModel;
 import com.cv.app.pharmacy.ui.common.SaleStockTableModel;
+import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import com.cv.app.pharmacy.ui.common.SaleTableModel;
+import com.cv.app.pharmacy.ui.common.TTranDetailTableModel;
+import com.cv.app.pharmacy.ui.common.TransactionTableModel;
+import com.cv.app.pharmacy.ui.util.MarchantSearch;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.MedPriceAutoCompleter;
 import com.cv.app.pharmacy.ui.util.PaymentListDialog;
+import com.cv.app.pharmacy.ui.util.PriceChangeDialog;
 import com.cv.app.pharmacy.ui.util.SaleConfirmDialog1;
 import com.cv.app.pharmacy.ui.util.SaleOutstandingDialog;
 import com.cv.app.pharmacy.ui.util.SaleWarrantyDialog;
-import com.cv.app.pharmacy.ui.util.MarchantSearch;
-import com.cv.app.pharmacy.ui.util.PriceChangeDialog;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -105,10 +105,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
@@ -216,7 +216,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
      */
     public Sale() {
         initComponents();
-
+        initButtonGroup();
         try {
             txtVouNo.setFormatterFactory(new VouFormatFactory());
             dao.open();
@@ -357,6 +357,13 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
             }
         }
+    }
+
+    private void initButtonGroup() {
+        ButtonGroup g = new ButtonGroup();
+        g.add(chkA4);
+        g.add(chkVouComp);
+        g.add(chkPrintOption);
     }
 
     private void initForFocus() {
@@ -739,10 +746,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
                     if (ptt.getOtId() != null) {
                         butOTID.setEnabled(false);
-                        lblOTID.setText(ptt.getOtId());
+                        txtBill.setText(ptt.getOtId());
                     } else {
                         butOTID.setEnabled(true);
-                        lblOTID.setText(null);
+                        txtBill.setText(null);
                     }
                     getPatientBill(ptt.getRegNo());
 
@@ -1118,10 +1125,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         - NumberUtil.NZero(txtCusLastBalance.getValue()));
                 txtTotalItem.setText(String.valueOf(listDetail.size()));
 
-                lblOTID.setText(currSaleVou.getOtId());
-                if (lblOTID.getText() == null) {
+                txtBill.setText(currSaleVou.getOtId());
+                if (txtBill.getText() == null) {
                     butOTID.setEnabled(true);
-                } else if (!lblOTID.getText().isEmpty()) {
+                } else if (!txtBill.getText().isEmpty()) {
                     butOTID.setEnabled(false);
                 } else {
                     butOTID.setEnabled(true);
@@ -1297,7 +1304,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             tblSale.getColumnModel().getColumn(10).setPreferredWidth(70);//Amount
             tblSale.getColumnModel().getColumn(11).setPreferredWidth(70);//Location
             tblSale.getColumnModel().getColumn(12).setPreferredWidth(70);//STK-Balance
-
             //tblSale.getColumnModel().getColumn(11).setMinWidth(0);
             //tblSale.getColumnModel().getColumn(11).setMaxWidth(0);
             //tblSale.getColumnModel().getColumn(11).setWidth(0);
@@ -1366,7 +1372,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private void addSaleTableModelListener() {
         tblSale.getModel().addTableModelListener((TableModelEvent e) -> {
             int column = e.getColumn();
-            
+
             if (column >= 0) {
                 switch (column) {
                     case 0: //Code
@@ -2086,7 +2092,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
         chkVouComp.setSelected(false);
         butOTID.setEnabled(false);
-        lblOTID.setText(null);
+        txtBill.setText(null);
     }
 
     private void initTextBoxAlign() {
@@ -3425,12 +3431,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }*/
             currSaleVou.setAdmissionNo(txtAdmissionNo.getText());
 
-            if (lblOTID.getText() == null) {
+            if (txtBill.getText() == null) {
                 currSaleVou.setOtId(null);
-            } else if (lblOTID.getText().isEmpty()) {
+            } else if (txtBill.getText().isEmpty()) {
                 currSaleVou.setOtId(null);
             } else {
-                currSaleVou.setOtId(lblOTID.getText());
+                currSaleVou.setOtId(txtBill.getText());
             }
 
             currSaleVou.setStuName(txtCusName.getText());
@@ -3948,25 +3954,21 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblTransaction.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         //Adding table row selection listener.
-        tblTransaction.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (tblTransaction.getSelectedRow() >= 0) {
-                    int selRow = tblTransaction.convertRowIndexToModel(
-                            tblTransaction.getSelectedRow());
-                    TraderTransaction tt = tranTableModel.getTransaction(selRow);
+        tblTransaction.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+            if (tblTransaction.getSelectedRow() >= 0) {
+                int selRow = tblTransaction.convertRowIndexToModel(
+                        tblTransaction.getSelectedRow());
+                TraderTransaction tt = tranTableModel.getTransaction(selRow);
 
-                    if (!tt.getTranOption().equals("Payment")) {
-                        applyTblTranDetailFilter("tranOption = '" + tt.getTranOption().trim()
-                                + "' AND tranDate = '" + tt.getTranDate().toString() + "'");
-                        lblDate.setText(DateUtil.toDateStr(tt.getTranDate()));
-                        lblTranOption.setText(tt.getTranOption());
-                    } else {
-                        lblDate.setText("");
-                        lblTranOption.setText("");
-                        ttdTableModel.clear();
-                    }
+                if (!tt.getTranOption().equals("Payment")) {
+                    applyTblTranDetailFilter("tranOption = '" + tt.getTranOption().trim()
+                            + "' AND tranDate = '" + tt.getTranDate().toString() + "'");
+                    lblDate.setText(DateUtil.toDateStr(tt.getTranDate()));
+                    lblTranOption.setText(tt.getTranOption());
+                } else {
+                    lblDate.setText("");
+                    lblTranOption.setText("");
+                    ttdTableModel.clear();
                 }
             }
         });
@@ -4130,7 +4132,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         }*/
                         mq.sendMessage(Global.queueName, msg);
                         log.info("uploadToAccount: Sale : " + sh.getSaleInvId());
-                    } catch (Exception ex) {
+                    } catch (JMSException ex) {
                         log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + sh.getSaleInvId() + " - " + ex);
                     }
                 } else {
@@ -4208,7 +4210,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -4554,7 +4556,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         butAdmit = new javax.swing.JButton();
         lblDueRemark = new javax.swing.JLabel();
         butOTID = new javax.swing.JButton();
-        lblOTID = new javax.swing.JLabel();
+        txtBill = new javax.swing.JTextField();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblSale = new javax.swing.JTable(saleTableModel);
@@ -4608,6 +4610,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         butSaveTemp = new javax.swing.JButton();
         butTempList = new javax.swing.JButton();
         cboEntryUser = new javax.swing.JComboBox<>();
+        chkA4 = new javax.swing.JCheckBox();
         jPanel9 = new javax.swing.JPanel();
         txtTax = new javax.swing.JFormattedTextField();
         jLabel9 = new javax.swing.JLabel();
@@ -5002,20 +5005,21 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(18, 18, 18)
                 .add(jPanel8, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                        .add(jPanel1Layout.createSequentialGroup()
+                            .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 97, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                            .add(butAdmit)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(lblDueRemark)))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(butOTID)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(lblOTID, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 146, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 97, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .add(butAdmit)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(lblDueRemark)))
-                .add(9, 9, 9))
+                        .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 151, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5036,11 +5040,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             .add(lblDueRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 29, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(butAdmit, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(butOTID)
-                            .add(jPanel1Layout.createSequentialGroup()
-                                .add(5, 5, 5)
-                                .add(lblOTID, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap())))
         );
 
@@ -5070,7 +5072,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel2Layout.createSequentialGroup()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 154, Short.MAX_VALUE)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -5342,12 +5344,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(butWarranty)
                     .add(butOutstanding))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jScrollPane5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 104, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jScrollPane5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 98, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel4)))
         );
+
+        jPanel13.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
         lblStatus.setFont(new java.awt.Font("Velvenda Cooler", 0, 40)); // NOI18N
         lblStatus.setText("NEW");
@@ -5390,15 +5394,18 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         cboEntryUser.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        chkA4.setText("A4");
+
         org.jdesktop.layout.GroupLayout jPanel13Layout = new org.jdesktop.layout.GroupLayout(jPanel13);
         jPanel13.setLayout(jPanel13Layout);
         jPanel13Layout.setHorizontalGroup(
             jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel13Layout.createSequentialGroup()
-                .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(chkPrintOption)
-                    .add(chkAmount)
-                    .add(chkVouComp))
+                .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(chkPrintOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(chkAmount, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(chkVouComp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(chkA4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .add(0, 0, Short.MAX_VALUE))
             .add(lblStatus, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(jPanel13Layout.createSequentialGroup()
@@ -5435,6 +5442,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(chkAmount)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(chkVouComp)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(chkA4)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel23)
@@ -5584,7 +5593,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(txtVouBalance, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jLabel11))
-                .addContainerGap(75, Short.MAX_VALUE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel9Layout.linkSize(new java.awt.Component[] {txtGrandTotal, txtVouPaid}, org.jdesktop.layout.GroupLayout.VERTICAL);
@@ -5635,7 +5644,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 167, Short.MAX_VALUE)
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -5716,7 +5725,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             currSaleVou.setStuName(null);
             currSaleVou.setStuNo(null);
             butOTID.setEnabled(false);
-            lblOTID.setText(null);
+            txtBill.setText(null);
             codeCellEditor.setCusGroup(null);
             //txtCusId.requestFocus();
         } else {
@@ -5972,7 +5981,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 pt.setOtId(regNo.getRegNo());
                 dao.save(pt);
                 regNo.updateRegNo();
-                lblOTID.setText(pt.getOtId());
+                txtBill.setText(pt.getOtId());
                 butOTID.setEnabled(false);
             }
         } catch (Exception ex) {
@@ -6135,6 +6144,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JComboBox cboLocation;
     private javax.swing.JComboBox cboPayment;
     private javax.swing.JComboBox cboVouStatus;
+    private javax.swing.JCheckBox chkA4;
     private javax.swing.JCheckBox chkAmount;
     private javax.swing.JCheckBox chkPrintOption;
     private javax.swing.JCheckBox chkVouComp;
@@ -6187,7 +6197,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel lblDueRemark;
     private javax.swing.JLabel lblExpTotal;
     private javax.swing.JLabel lblLastBalance;
-    private javax.swing.JLabel lblOTID;
     private javax.swing.JLabel lblPatient;
     private javax.swing.JLabel lblRemark;
     private javax.swing.JLabel lblRemark1;
@@ -6202,6 +6211,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JTable tblTranDetail;
     private javax.swing.JTable tblTransaction;
     private javax.swing.JTextField txtAdmissionNo;
+    private javax.swing.JTextField txtBill;
     private javax.swing.JFormattedTextField txtBillTotal;
     private javax.swing.JFormattedTextField txtCreditLimit;
     private javax.swing.JTextField txtCusAddress;

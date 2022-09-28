@@ -30,12 +30,10 @@
 
 package com.cv.app.ui.theme;
 
+import com.jgoodies.looks.plastic.PlasticTheme;
 import java.awt.Color;
-
 import javax.swing.UIDefaults;
 import javax.swing.plaf.ColorUIResource;
-
-import com.jgoodies.looks.plastic.PlasticTheme;
 
 /**
  * The abstract superclass of all inverted Plastic themes,

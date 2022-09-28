@@ -114,6 +114,7 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
     public void onWindowOpened(ApplicationWindow window) {
         //window.getControl().setExtendedState(Frame.MAXIMIZED_BOTH);
         log.info("onWindowOpened( windowNumber=" + window.getNumber() + " )");
+
         org.springframework.richclient.application.Application.instance()
                 .getActiveWindow().getStatusBar()
                 .setMessage(Global.loginUser.getUserName() + " (" + Global.sessionName + ")");
@@ -139,6 +140,7 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
      */
     @Override
     public void onPostStartup() {
+        this.getOpeningWindow().getControl().setExtendedState(JFrame.MAXIMIZED_BOTH);
         log.info("onPostStartup()");
     }
 

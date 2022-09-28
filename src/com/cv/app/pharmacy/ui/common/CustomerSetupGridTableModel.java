@@ -12,7 +12,6 @@ import com.cv.app.pharmacy.database.entity.CustomerWithParent;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.TraderType;
 import com.cv.app.util.Util1;
-import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;

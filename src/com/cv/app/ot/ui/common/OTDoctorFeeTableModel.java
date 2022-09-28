@@ -5,8 +5,8 @@
 package com.cv.app.ot.ui.common;
 
 import com.cv.app.opd.database.entity.Doctor;
-import com.cv.app.ot.database.entity.OTDoctorFee;
 import com.cv.app.opd.database.entity.DoctorFeesMappingOT;
+import com.cv.app.ot.database.entity.OTDoctorFee;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;

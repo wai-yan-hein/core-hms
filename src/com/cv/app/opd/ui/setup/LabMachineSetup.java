@@ -11,7 +11,6 @@ import com.cv.app.opd.ui.common.LabMachineTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
 import java.util.HashSet;

@@ -30,7 +30,6 @@ import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
-import java.awt.BorderLayout;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;

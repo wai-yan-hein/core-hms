@@ -4,8 +4,8 @@
  */
 package com.cv.app.pharmacy.database.tempentity;
 
-import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
+import com.cv.app.pharmacy.database.entity.Medicine;
 import java.util.Date;
 import javax.persistence.*;
 import static javax.persistence.GenerationType.IDENTITY;

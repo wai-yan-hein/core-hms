@@ -5,7 +5,6 @@
 package com.cv.app.ot.database.entity;
 
 import com.cv.app.pharmacy.database.entity.ChargeType;
-import javax.persistence.Transient;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 /**
  *

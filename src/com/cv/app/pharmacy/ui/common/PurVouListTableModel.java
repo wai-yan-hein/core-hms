@@ -5,7 +5,6 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.pharmacy.database.helper.PurchaseVoucher;
-import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

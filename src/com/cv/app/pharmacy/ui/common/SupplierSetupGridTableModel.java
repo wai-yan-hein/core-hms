@@ -6,11 +6,8 @@ package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.BusinessType;
 import com.cv.app.pharmacy.database.entity.Customer;
 import com.cv.app.pharmacy.database.entity.SupplierWithParent;
-import com.cv.app.pharmacy.database.entity.Township;
-import com.cv.app.pharmacy.database.entity.TraderType;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;

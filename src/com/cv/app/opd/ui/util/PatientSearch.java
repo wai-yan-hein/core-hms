@@ -45,62 +45,21 @@ public class PatientSearch extends javax.swing.JDialog {
         initComponents();
         this.dao = dao;
         this.observer = observer;
+        initDate();
         initCombo();
-        //getPrvFilter();
         initTable();
+        search();
         sorter = new TableRowSorter(tblPatient.getModel());
         tblPatient.setRowSorter(sorter);
-        txtFrom.setText(DateUtil.getTodayDateStr());
-        txtTo.setText(DateUtil.getTodayDateStr());
-
         Dimension screen = Util1.getScreenSize();
-        int x = (screen.width - this.getWidth()) / 2;
-        int y = (screen.height - this.getHeight()) / 2;
-
-        setLocation(x, y);
+        setSize(screen.width - 300, screen.height - 300);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    private void getPrvFilter() {
-        try {
-            VouFilter tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'PatientSearch'"
-                    + " and key.userId = '" + Global.machineId + "'");
-
-            if (tmpFilter == null) {
-                vouFilter = new VouFilter();
-                vouFilter.getKey().setTranOption("PatientSearch");
-                vouFilter.getKey().setUserId(Global.machineId);
-
-                //txtFrom.setText(DateUtil.getTodayDateStr());
-                //txtTo.setText(DateUtil.getTodayDateStr());
-            } else {
-                vouFilter = tmpFilter;
-                txtFrom.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
-                txtTo.setText(DateUtil.toDateStr(vouFilter.getToDate()));
-
-                if (vouFilter.getPtName() != null) {
-                    if (!vouFilter.getPtName().isEmpty()) {
-                        txtName.setText(vouFilter.getPtName());
-                    }
-                }
-
-                if (vouFilter.getRemark() != null) {
-                    if (!vouFilter.getRemark().isEmpty()) {
-                        txtFatherName.setText(vouFilter.getRemark());
-                    }
-                }
-
-                if (vouFilter.getVouNo() != null) {
-                    if (!vouFilter.getVouNo().isEmpty()) {
-                        txtRegNo.setText(vouFilter.getVouNo());
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            log.error("getPrvFilter : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
+    private void initDate() {
+        txtFrom.setText(DateUtil.getTodayDateStr());
+        txtTo.setText(DateUtil.getTodayDateStr());
     }
 
     private void initCombo() {
@@ -121,11 +80,12 @@ public class PatientSearch extends javax.swing.JDialog {
     }
 
     private void initTable() {
-        tblPatient.getColumnModel().getColumn(0).setPreferredWidth(15);
+        tblPatient.getColumnModel().getColumn(0).setPreferredWidth(5);
         tblPatient.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblPatient.getColumnModel().getColumn(2).setPreferredWidth(15);
         tblPatient.getColumnModel().getColumn(3).setPreferredWidth(150);
         tblPatient.getColumnModel().getColumn(4).setPreferredWidth(30);
+        tblPatient.getColumnModel().getColumn(5).setPreferredWidth(150);
         tblPatient.getTableHeader().setFont(Global.lableFont);
         //Define table selection model to single row selection.
         tblPatient.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -268,26 +228,20 @@ public class PatientSearch extends javax.swing.JDialog {
     }
 
     private void search() {
-        if (txtName.getText().isEmpty() && txtFatherName.getText().isEmpty() && txtRegNo.getText().isEmpty()
-                && txtFrom.getText().isEmpty() && txtTo.getText().isEmpty() && txtPhoneNo.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(Util1.getParent(), "Please enter some characterss of patient name "
-                    + "or father name.",
-                    "No Filter", JOptionPane.ERROR_MESSAGE);
-        } else {
-            String strSql = getHSQL();
 
-            if (strSql != null) {
-                try {
-                    dao.open();
-                    tableModel.setListPatient(dao.findAllHSQL(strSql));
-                    dao.close();
-                } catch (Exception ex) {
-                    log.error("search : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-                }
-
-                lblTotalRec.setText("Total Records : " + tableModel.getRowCount());
+        String strSql = getHSQL();
+        if (strSql != null) {
+            try {
+                dao.open();
+                tableModel.setListPatient(dao.findAllHSQL(strSql));
+                dao.close();
+            } catch (Exception ex) {
+                log.error("search : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
+
+            lblTotalRec.setText("Total Records : " + tableModel.getRowCount());
         }
+
     }
 
     /**
@@ -463,10 +417,10 @@ public class PatientSearch extends javax.swing.JDialog {
                                 .addComponent(jLabel4)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(txtPhoneNo)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(butSearch)
-                            .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(lblTotalRec, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))))
                 .addContainerGap())
         );
 

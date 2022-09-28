@@ -6,9 +6,7 @@ package com.cv.app.opd.ui.util;
 
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.LabResultAutoText;
-import com.cv.app.opd.database.entity.Service;
 import com.cv.app.opd.ui.common.AutoCompleteTextTableModel;
-import com.cv.app.opd.ui.common.OPDAutoCompleteTableModel;
 import com.cv.app.util.Util1;
 import java.awt.Color;
 import java.awt.Rectangle;

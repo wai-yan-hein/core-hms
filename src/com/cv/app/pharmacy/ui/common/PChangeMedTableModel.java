@@ -4,12 +4,12 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
-import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.ItemUnit;
+import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.PriceChangeMedHis;
 import com.cv.app.pharmacy.database.entity.PriceChangeUnitHis;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.pharmacy.util.MedicineUtil;

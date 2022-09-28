@@ -36,7 +36,7 @@ public class AmountLinkTableModel extends AbstractTableModel {
 
     @Override
     public Class getColumnClass(int column) {
-        switch(column){
+        switch (column) {
             case 0: //Tran Option
                 return String.class;
             case 1: //Vou No.
@@ -82,8 +82,8 @@ public class AmountLinkTableModel extends AbstractTableModel {
             TempAmountLink record = listTAL.get(row);
             try {
                 if (value != null) {
-                    record.setPrintStatus((boolean)value);
-                }else{
+                    record.setPrintStatus((boolean) value);
+                } else {
                     record.setPrintStatus(false);
                 }
                 dao.save(record);
@@ -114,20 +114,32 @@ public class AmountLinkTableModel extends AbstractTableModel {
         this.listTAL = listTAL;
         fireTableDataChanged();
     }
-    
-    public double getTotalAmount(){
+
+    public double getTotalAmount() {
         double ttlAmt = 0;
-        if(listTAL != null){
-            for(TempAmountLink tal : listTAL){
-                if(tal.isPrintStatus()){
+        if (listTAL != null) {
+            for (TempAmountLink tal : listTAL) {
+                if (tal.isPrintStatus()) {
                     ttlAmt += NumberUtil.NZero(tal.getAmount());
                 }
             }
         }
         return ttlAmt;
     }
-    
-    public void clear(){
+
+    public double getTotalDiscount() {
+        double ttlAmt = 0;
+        if (listTAL != null) {
+            for (TempAmountLink tal : listTAL) {
+                if (tal.isPrintStatus()) {
+                    ttlAmt += NumberUtil.NZero(tal.getDiscount());
+                }
+            }
+        }
+        return ttlAmt;
+    }
+
+    public void clear() {
         listTAL = new ArrayList();
         fireTableDataChanged();
         System.gc();

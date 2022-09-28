@@ -13,7 +13,6 @@ import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
 import com.cv.app.pharmacy.ui.common.CodeTableModel;
 import com.cv.app.pharmacy.ui.common.StockReceiveSearchTableModel;
-import static com.cv.app.pharmacy.ui.util.DamageSearch.log;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;

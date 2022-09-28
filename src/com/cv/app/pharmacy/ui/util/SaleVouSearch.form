@@ -51,7 +51,7 @@
           <Component id="jPanel1" max="32767" attributes="0"/>
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jScrollPane2" pref="557" max="32767" attributes="0"/>
+              <Component id="jScrollPane2" pref="553" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="butSelect" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -549,8 +549,8 @@
     </Container>
     <Component class="javax.swing.JButton" name="butSelect">
       <Properties>
-        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Zawgyi-One" size="12" style="0"/>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
         </Property>
         <Property name="text" type="java.lang.String" value="Select"/>
       </Properties>
@@ -560,8 +560,8 @@
     </Component>
     <Component class="javax.swing.JButton" name="butSearch">
       <Properties>
-        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Zawgyi-One" size="12" style="0"/>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
         </Property>
         <Property name="text" type="java.lang.String" value="Search"/>
       </Properties>
@@ -572,11 +572,17 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblTotalRec">
       <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Total Records : 0"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblTotalAmount">
       <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Total Amount : "/>
       </Properties>
     </Component>
@@ -591,6 +597,9 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblTotalAmount1">
       <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="Global.lableFont" type="code"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Grand Amount : "/>
       </Properties>
     </Component>

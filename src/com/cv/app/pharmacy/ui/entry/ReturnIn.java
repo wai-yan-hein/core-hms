@@ -5,11 +5,6 @@
 package com.cv.app.pharmacy.ui.entry;
 
 import com.cv.app.common.ActiveMQConnection;
-import com.cv.app.util.BindingUtil;
-import com.cv.app.util.Util1;
-import com.cv.app.util.DateUtil;
-import com.cv.app.util.ReportUtil;
-import com.cv.app.util.NumberUtil;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -35,9 +30,9 @@ import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.RetInTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import com.cv.app.pharmacy.ui.util.MarchantSearch;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.ReturnInItemSearchDialog;
-import com.cv.app.pharmacy.ui.util.MarchantSearch;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -45,6 +40,11 @@ import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.ui.common.VouFormatFactory;
+import com.cv.app.util.BindingUtil;
+import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
+import com.cv.app.util.ReportUtil;
+import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.KeyboardFocusManager;
@@ -872,7 +872,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
                 String vouNo = currRetIn.getRetInId();
                 try {
-                    dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_his = '" + vouNo + "'");
+                    dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_id = '" + vouNo + "'");
                     //For upload to account
                     uploadToAccount(currRetIn);
                 } catch (Exception ex) {

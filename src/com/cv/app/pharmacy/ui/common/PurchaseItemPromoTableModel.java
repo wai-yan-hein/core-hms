@@ -5,15 +5,9 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.pharmacy.database.entity.PurDetailHis;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
-import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
-import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
-import com.cv.app.util.Util1;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;

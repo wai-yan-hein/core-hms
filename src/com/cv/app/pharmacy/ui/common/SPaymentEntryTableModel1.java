@@ -6,14 +6,14 @@
 package com.cv.app.pharmacy.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.opd.ui.common.*;
 import com.cv.app.common.SelectionObserver;
+import com.cv.app.opd.ui.common.*;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
 import com.cv.app.pharmacy.database.entity.Currency;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.PaymentVou;
 import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.TraderPayHis;
 import com.cv.app.pharmacy.database.helper.VoucherPayment;
 import com.cv.app.util.NumberUtil;

@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.LoginDialog;
 import com.cv.app.ui.common.MedPriceList;
 import java.awt.Color;
 import java.awt.event.ActionEvent;

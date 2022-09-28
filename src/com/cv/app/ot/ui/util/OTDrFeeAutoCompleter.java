@@ -6,7 +6,6 @@ package com.cv.app.ot.ui.util;
 
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.Doctor;
-import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.ot.ui.common.OTDrFeeAutoCompleteTableModel;
 import com.cv.app.util.Util1;
 import java.awt.Color;

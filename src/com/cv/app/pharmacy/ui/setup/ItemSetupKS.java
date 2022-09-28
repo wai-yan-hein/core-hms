@@ -10,21 +10,21 @@
  */
 package com.cv.app.pharmacy.ui.setup;
 
-import com.cv.app.pharmacy.database.entity.PackingTemplate;
-import com.cv.app.pharmacy.database.entity.ItemBrand;
-import com.cv.app.pharmacy.database.entity.Category;
-import com.cv.app.pharmacy.database.entity.ItemType;
-import com.cv.app.pharmacy.database.entity.CharacterNo;
-import com.cv.app.pharmacy.database.entity.PackingTemplateDetail;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.RelationGroup;
-import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Category;
+import com.cv.app.pharmacy.database.entity.CharacterNo;
+import com.cv.app.pharmacy.database.entity.ItemBrand;
+import com.cv.app.pharmacy.database.entity.ItemType;
+import com.cv.app.pharmacy.database.entity.ItemUnit;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PackingTemplate;
+import com.cv.app.pharmacy.database.entity.PackingTemplateDetail;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.view.VMedicine1;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.ItemSetupLocationItemMappingTableModel;
@@ -57,12 +57,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-//import java.util.*;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
@@ -528,7 +526,7 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
 
@@ -1391,23 +1389,20 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
             tblRelationPrice.getColumnModel().getColumn(7).setCellEditor(
                     new BestTableCellEditor(this));
             tblRelationPrice.getColumnModel().getColumn(1).setCellEditor(
-                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
+                    new TableUnitCellEditor(dao.findAll("ItemUnit"), this));
 
             //Adjust table column width
             TableColumn column = tblRelationPrice.getColumnModel().getColumn(0);
             column.setPreferredWidth(30);
 
-            tblRelationPrice.getModel().addTableModelListener(new TableModelListener() {
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    List<RelationGroup> listRG = rpTableMode.getRelationGroup();
-
-                    listItemUnit.removeAll(listItemUnit);
-                    for (RelationGroup rg : listRG) {
-                        listItemUnit.add(rg.getUnitId());
-                    }
-                    BindingUtil.BindCombo(cboPurUnit, listItemUnit);
+            tblRelationPrice.getModel().addTableModelListener((TableModelEvent e) -> {
+                List<RelationGroup> listRG = rpTableMode.getRelationGroup();
+                
+                listItemUnit.removeAll(listItemUnit);
+                for (RelationGroup rg : listRG) {
+                    listItemUnit.add(rg.getUnitId());
                 }
+                BindingUtil.BindCombo(cboPurUnit, listItemUnit);
             });
         } catch (Exception ex) {
             log.error("initTableRelationGroup : " + ex.getMessage());

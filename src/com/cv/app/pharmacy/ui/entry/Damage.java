@@ -5,16 +5,16 @@
 package com.cv.app.pharmacy.ui.entry;
 
 import com.cv.app.common.ActiveMQConnection;
-import com.cv.app.common.SelectionObserver;
-import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
+import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
+import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.DamageDetailHis;
 import com.cv.app.pharmacy.database.entity.DamageHis;
 import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;

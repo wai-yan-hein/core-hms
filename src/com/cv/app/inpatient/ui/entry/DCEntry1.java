@@ -78,9 +78,7 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.log4j.Logger;
 import org.josql.Query;
@@ -212,10 +210,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
             try {
                 if (currVou.getDcStatus() != null) {
-                    String strSql = " update building_structure bs inner join admission a on bs.id = "
-                            + " a.building_structure_id set bs.reg_no = null "
-                            + " where a.ams_no ='" + currVou.getAdmissionNo() + "'";
-                    dao.execSql(strSql);
+                    AdmissionKey key = new AdmissionKey();
+                    key.setRegister(currVou.getPatient());
+                    key.setAmsNo(currVou.getAdmissionNo());
+                    Ams ams = (Ams) dao.find(Ams.class, key);
+                    if (ams.getBuildingStructure() != null) {
+                        String strSql = " update building_structure set reg_no = null "
+                                + " where id =" + ams.getBuildingStructure().getId() + "";
+                        dao.execSql(strSql);
+                    }
                 }
 
                 if (lblStatus.getText().equals("NEW")) {
@@ -435,21 +438,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
                     //dao.open();
                     //dao.beginTran();
-                    Patient pt = currVou.getPatient();
-                    String admNo = currVou.getAdmissionNo();
-                    log.info("admNo : " + admNo);
-                    pt.setAdmissionNo(admNo);
-                    dao.save(pt);
-                    log.error("dc delete after patient save.");
-
-                    AdmissionKey key = new AdmissionKey();
-                    key.setAmsNo(admNo);
-                    key.setRegister(pt);
-                    Ams ams = (Ams) dao.find(Ams.class,
-                            key);
-                    ams.setDcStatus(null);
-                    dao.save(ams);
-                    log.error("dc delete after admission save.");
+                    if (currVou.getDcStatus() != null) {
+                        String regNo = currVou.getPatient().getRegNo();
+                        String admNo = currVou.getAdmissionNo();
+                        String sql = "update admission set dc_status = null where ams_no = '" + admNo + "'";
+                        String sql1 = "update patient_detail set admission_no='" + admNo + "' where reg_no='" + regNo + "'";
+                        dao.execSql(sql, sql1);
+                    }
                     //dao.save(currVou);
                     String vouNo = currVou.getOpdInvId();
                     dao.execSql("update dc_his set deleted = true, intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
@@ -1580,6 +1575,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
     private void initTable() {
         try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblService.setCellSelectionEnabled(true);
+            }
             tblService.setCellSelectionEnabled(true);
             tblService.getTableHeader().setFont(Global.lableFont);
             //Adjust column width
@@ -1595,7 +1593,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     new DCTableCellEditor(dao));
             tblService.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
             tblService.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
-
+            tblService.getTableHeader().setFont(Global.lableFont);
             JComboBox cboChargeType = new JComboBox();
             BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
             tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
@@ -1648,18 +1646,13 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            tblService.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-                }
+            tblService.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
             });
 
             tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
             tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
-
+            tblPatientBill.getTableHeader().setFont(Global.lableFont);
             tblAmountLink.getColumnModel().getColumn(0).setPreferredWidth(40);//Option
             tblAmountLink.getColumnModel().getColumn(1).setPreferredWidth(100);//Vou No
             tblAmountLink.getColumnModel().getColumn(2).setPreferredWidth(60);//Amount
@@ -3259,12 +3252,15 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         });
         jScrollPane1.setViewportView(tblService);
 
+        lblStatus.setFont(new java.awt.Font("Arial", 0, 36)); // NOI18N
         lblStatus.setText("NEW");
 
+        jLabel23.setFont(Global.lableFont);
         jLabel23.setForeground(new java.awt.Color(182, 175, 175));
         jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel23.setText("Rec No : ");
 
+        jLabel22.setFont(Global.lableFont);
         jLabel22.setForeground(new java.awt.Color(182, 175, 175));
         jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel22.setText("Total Item : ");
@@ -3318,9 +3314,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
         txtBillTotal.setEditable(false);
         txtBillTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txtBillTotal.setFont(Global.textFont);
+        txtBillTotal.setFont(Global.lableFont);
 
-        lblTotal.setFont(Global.textFont);
+        lblTotal.setFont(Global.lableFont);
         lblTotal.setText("Total Balance : ");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -3348,6 +3344,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 .addContainerGap())
         );
 
+        jLabel19.setFont(Global.lableFont);
         jLabel19.setText("Package : ");
 
         txtPkgName.setEditable(false);
@@ -3365,10 +3362,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         });
 
+        jLabel20.setFont(Global.lableFont);
         jLabel20.setText("Price : ");
 
         txtPkgPrice.setEditable(false);
 
+        jLabel14.setFont(Global.lableFont);
         jLabel14.setText("Admission Date : ");
 
         butCheckBill.setText("Check Bill");
@@ -3379,6 +3378,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         });
 
+        butPkgEdit.setFont(Global.lableFont);
         butPkgEdit.setText("Pkg Edit");
         butPkgEdit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3386,6 +3386,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         });
 
+        butBillDetail.setFont(Global.lableFont);
         butBillDetail.setText("Bill Detail");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -3447,8 +3448,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        chkDetails.setFont(Global.lableFont);
         chkDetails.setText("Details");
 
+        chkA5.setFont(Global.lableFont);
         chkA5.setText("A5");
         chkA5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3556,6 +3559,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        chkSummary.setFont(Global.lableFont);
         chkSummary.setText("Summary");
 
         tblAmountLink.setFont(Global.textFont);
@@ -3566,6 +3570,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         txtLinkTotal.setEditable(false);
         txtLinkTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
+        jLabel21.setFont(Global.lableFont);
         jLabel21.setText("Total : ");
 
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);

@@ -5,17 +5,6 @@
 package com.cv.app.opd.ui.entry;
 
 import com.cv.app.common.ActiveMQConnection;
-import com.cv.app.util.BindingUtil;
-import com.cv.app.util.Util1;
-import com.cv.app.util.DateUtil;
-import com.cv.app.util.ReportUtil;
-import com.cv.app.util.NumberUtil;
-import com.cv.app.opd.database.entity.OPDDetailHis;
-import com.cv.app.opd.database.entity.OPDHis;
-import com.cv.app.opd.database.entity.Patient;
-import com.cv.app.opd.database.entity.DoctorFeesMapping;
-import com.cv.app.opd.database.entity.Doctor;
-import com.cv.app.opd.database.entity.ClinicPackage;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -25,6 +14,12 @@ import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.ui.util.PackageSearchDialog;
 import com.cv.app.opd.database.entity.Booking;
+import com.cv.app.opd.database.entity.ClinicPackage;
+import com.cv.app.opd.database.entity.Doctor;
+import com.cv.app.opd.database.entity.DoctorFeesMapping;
+import com.cv.app.opd.database.entity.OPDDetailHis;
+import com.cv.app.opd.database.entity.OPDHis;
+import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.entity.Service;
 import com.cv.app.opd.database.tempentity.TempAmountLink;
@@ -49,6 +44,11 @@ import com.cv.app.pharmacy.util.GenVouNoImpl;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.ui.common.VouFormatFactory;
+import com.cv.app.util.BindingUtil;
+import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
+import com.cv.app.util.ReportUtil;
+import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -73,7 +73,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -336,7 +335,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         tblPatientBillTableModel.setListPBP(new ArrayList());
         butAdmit.setEnabled(false);
         txtPatientNo.requestFocus();
-        lblOTID.setText(null);
+        txtBill.setText(null);
         tableModel.setReaderDoctor("-");
         txtPackageName.setText("");
         txtPrice.setValue(0);
@@ -676,6 +675,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         Map<String, Object> params = new HashMap();
         //Properties prop = ReportUtil.loadReportPathProperties();
         String reportName = Util1.getPropValue("report.file.opd");
+
         //For package report
         Long pkgId = currVou.getPkgId();
         if (pkgId != null) {
@@ -684,9 +684,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
         //================================
 
-        String reportPath = Util1.getAppWorkFolder()
-                + Util1.getPropValue("report.folder.path")
-                + reportName;
         String printerName = Util1.getPropValue("report.vou.printer");
         params.put("link_amt_status", "N");
         params.put("link_amt", 0);
@@ -695,18 +692,18 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             try {
                 String delSql = "delete from tmp_amount_link where user_id = '"
                         + Global.machineId + "'";
-                String strSql = "INSERT INTO tmp_amount_link(user_id,tran_option,inv_id,amount,print_status)\n"
-                        + "  select '" + Global.machineId + "', tran_source, inv_id, balance, true\n"
+                String strSql = "INSERT INTO tmp_amount_link(user_id,tran_option,inv_id,amount,discount,print_status)\n"
+                        + "  select '" + Global.machineId + "', tran_source, inv_id, balance,discount, true\n"
                         + "    from (select date(sale_date) tran_date, reg_no cus_id, currency_id currency, "
                         + "                 'Pharmacy' as tran_source, sale_inv_id inv_id,\n"
-                        + "                 ifnull(paid_amount,0) balance\n"
+                        + "                 ifnull(paid_amount,0) balance,discount\n"
                         + "            from sale_his\n"
                         + "   where ifnull(paid_amount,0) <> 0 and deleted = false and reg_no = '"
                         + currVou.getPatient().getRegNo() + "'\n"
                         + "and date(sale_date) = '" + DateUtil.toDateStr(currVou.getInvDate(), "yyyy-MM-dd") + "'\n"
                         + "		   union all\n"
                         + "		  select date(tran_date) tran_date, patient_id cus_id, currency_id currency, \n"
-                        + "				 tran_option tran_source, opd_inv_id inv_id, sum(ifnull(paid,0)) balance\n"
+                        + "				 tran_option tran_source, opd_inv_id inv_id, sum(ifnull(paid,0)) balance,disc_a\n"
                         + "			from v_session_clinic\n"
                         + "		   where ifnull(paid,0) <> 0 and tran_option in ('OPD') and deleted = false\n"
                         + "		   group by date(tran_date), patient_id, currency_id, tran_option, opd_inv_id) a\n"
@@ -721,8 +718,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 if (listTAL != null) {
                     if (!listTAL.isEmpty()) {
                         AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
-                        dialog.setVisible(true);
+                        if (!chkA5.isSelected()) {
+                            dialog.setVisible(true);
+                        }
                         double ttlLinkAmt = dialog.getTtlAmt();
+                        double ttlDiscount = dialog.getTtlDisount();
+                        params.put("p_ttl_discount", ttlDiscount + NumberUtil.NZero(currVou.getDiscountA()));
                         if (ttlLinkAmt != 0) {
                             params.put("link_amt_status", "Y");
                             params.put("link_amt", ttlLinkAmt + currVou.getPaid());
@@ -741,12 +742,18 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String phoneNo = Util1.getPropValue("report.phone");
         String imagePath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path") + "img/logo.jpg";
-
         params.put("imagePath", imagePath);
         params.put("invoiceNo", currVou.getOpdInvId());
         params.put("comp_name", Util1.getPropValue("report.company.name1"));
         params.put("category", Util1.getPropValue("report.company.cat"));
         params.put("comp_address", Util1.getPropValue("report.address"));
+        if (chkA5.isSelected()) {
+            reportName = "W/OPDVoucherInvoiceA5";
+            printMode = "View";
+        }
+        String reportPath = Util1.getAppWorkFolder()
+                + Util1.getPropValue("report.folder.path")
+                + reportName;
         if (currVou.getPatient() != null) {
             params.put("customerName", currVou.getPatient().getPatientName());
             Date regDate = currVou.getPatient().getRegDate();
@@ -777,6 +784,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             params.put("age", "");
         }
         params.put("saleDate", currVou.getInvDate());
+        params.put("opd_date", DateUtil.toDateStr(currVou.getInvDate(), "yyyy-MM-dd"));
         if (pkgId != null) {
             List<OPDDetailHis> listOPDDetailHis = currVou.getListOPDDetailHis();
             double ttlExtraAmt = 0.0;
@@ -916,6 +924,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void initTable() {
         try {
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblService.setCellSelectionEnabled(true);
+            }
             tblService.getTableHeader().setFont(Global.lableFont);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
@@ -956,17 +967,13 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            tblService.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-                }
+            tblService.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
             });
 
             tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
             tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getTableHeader().setFont(Global.lableFont);
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {
@@ -1179,6 +1186,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         cboPaymentType.setSelectedIndex(0);
         vouEngine.setPeriod(DateUtil.getPeriod(txtDate.getText()));
         cboPaymentType.setSelectedItem(ptCash);
+        chkA5.setSelected(Util1.getPropValue("chk.opd.A5").equals("Y"));
         genVouNo();
     }
 
@@ -1302,10 +1310,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 currVou.setSession(Global.sessionId);
             }
 
-            if (lblOTID.getText() == null) {
+            if (txtBill.getText() == null) {
                 currVou.setOtId(null);
-            } else if (!lblOTID.getText().isEmpty()) {
-                currVou.setOtId(lblOTID.getText());
+            } else if (!txtBill.getText().isEmpty()) {
+                currVou.setOtId(txtBill.getText());
             } else {
                 currVou.setOtId(null);
             }
@@ -1431,9 +1439,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     txtPatientName.setEditable(false);
                     txtDoctorNo.requestFocus();
                     if (Util1.nullToBlankStr(patient.getAdmissionNo()).isEmpty()) {
-                        lblOTID.setText(patient.getOtId());
+                        txtBill.setText(patient.getOtId());
                     } else {
-                        lblOTID.setText(null);
+                        txtBill.setText(null);
                     }
                     getPatientBill(patient.getRegNo());
 
@@ -1541,7 +1549,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 txtTaxA.setValue(currVou.getTaxA());
                 txtPaid.setValue(currVou.getPaid());
                 txtVouBalance.setValue(currVou.getVouBalance());
-                lblOTID.setText(currVou.getOtId());
+                txtBill.setText(currVou.getOtId());
 
                 setEditStatus(currVou.getOpdInvId());
                 applySecurityPolicy();
@@ -2056,6 +2064,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtRecNo = new javax.swing.JTextField();
         txtTotalItem = new javax.swing.JTextField();
         chkAmount = new javax.swing.JCheckBox();
+        chkA5 = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblPatientBill = new javax.swing.JTable();
@@ -2069,7 +2078,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel17 = new javax.swing.JLabel();
         txtAge = new javax.swing.JTextField();
         jLabel18 = new javax.swing.JLabel();
-        lblOTID = new javax.swing.JLabel();
         txtMonth = new javax.swing.JTextField();
         txtDay = new javax.swing.JTextField();
         jLabel19 = new javax.swing.JLabel();
@@ -2081,6 +2089,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel25 = new javax.swing.JLabel();
         butRemove = new javax.swing.JButton();
         txtPrice = new javax.swing.JFormattedTextField();
+        txtBill = new javax.swing.JTextField();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Vou No ");
@@ -2236,27 +2245,36 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel16.setText("Vou Balance :");
 
+        lblStatus.setFont(new java.awt.Font("Arial", 1, 36)); // NOI18N
         lblStatus.setText("NEW");
 
+        jLabel23.setFont(Global.lableFont);
         jLabel23.setForeground(new java.awt.Color(182, 175, 175));
         jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel23.setText("Rec No : ");
 
+        jLabel22.setFont(Global.lableFont);
         jLabel22.setForeground(new java.awt.Color(182, 175, 175));
         jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel22.setText("Total Item : ");
 
         txtRecNo.setEditable(false);
+        txtRecNo.setFont(Global.lableFont);
         txtRecNo.setForeground(new java.awt.Color(181, 175, 175));
         txtRecNo.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtRecNo.setBorder(null);
 
         txtTotalItem.setEditable(false);
+        txtTotalItem.setFont(Global.lableFont);
         txtTotalItem.setForeground(new java.awt.Color(181, 175, 175));
         txtTotalItem.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtTotalItem.setBorder(null);
 
+        chkAmount.setFont(Global.lableFont);
         chkAmount.setText("Check Amount");
+
+        chkA5.setFont(Global.lableFont);
+        chkA5.setText("A5");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -2275,7 +2293,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                 .addComponent(jLabel23)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtRecNo, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(chkAmount))
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(chkA5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(chkAmount, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -2288,6 +2308,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkAmount)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkA5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel23)
@@ -2308,7 +2330,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtBillTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtBillTotal.setFont(Global.textFont);
 
-        jLabel13.setFont(Global.textFont);
+        jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Total : ");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -2369,7 +2391,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             }
         });
 
-        jLabel18.setText("OT ID");
+        jLabel18.setFont(Global.lableFont);
+        jLabel18.setText("Bill ID");
 
         txtMonth.setFont(Global.textFont);
 
@@ -2381,6 +2404,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         jLabel21.setText("D");
 
+        jLabel24.setFont(Global.lableFont);
         jLabel24.setText("Package : ");
 
         txtPackageName.setEditable(false);
@@ -2390,8 +2414,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             }
         });
 
+        jLabel25.setFont(Global.lableFont);
         jLabel25.setText("Price : ");
 
+        butRemove.setFont(Global.lableFont);
         butRemove.setText("-");
         butRemove.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2435,6 +2461,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 88, Short.MAX_VALUE))
         );
+
+        txtBill.setEditable(false);
+        txtBill.setFont(Global.lableFont);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -2493,8 +2522,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel18)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblOTID, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtBill, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addGap(92, 92, 92))
@@ -2522,7 +2551,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(10, 10, 10)
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 96, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel14, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -2582,16 +2611,16 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblOTID, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel4)
                         .addComponent(txtDoctorNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txtDoctorName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel5)
                         .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel18)))
+                        .addComponent(jLabel18)
+                        .addComponent(txtBill, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -2872,6 +2901,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JButton butRemove;
     private javax.swing.JComboBox cboCurrency;
     private javax.swing.JComboBox cboPaymentType;
+    private javax.swing.JCheckBox chkA5;
     private javax.swing.JCheckBox chkAmount;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
@@ -2903,12 +2933,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JLabel lblOTID;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblPatientBill;
     private javax.swing.JTable tblService;
     private javax.swing.JTextField txtAdmissionNo;
     private javax.swing.JTextField txtAge;
+    private javax.swing.JTextField txtBill;
     private javax.swing.JFormattedTextField txtBillTotal;
     private javax.swing.JFormattedTextField txtDate;
     private javax.swing.JTextField txtDay;

@@ -15,16 +15,18 @@ import javax.persistence.Table;
  * @author MyintMo
  */
 @Entity
-@Table(name="tmp_amount_link")
-public class TempAmountLink implements java.io.Serializable{
+@Table(name = "tmp_amount_link")
+public class TempAmountLink implements java.io.Serializable {
+
     private TempAmountLinkKey key;
     private Double amount;
+    private Double discount;
     private boolean printStatus;
 
-    public TempAmountLink(){
+    public TempAmountLink() {
         key = new TempAmountLinkKey();
     }
-    
+
     @EmbeddedId
     public TempAmountLinkKey getKey() {
         return key;
@@ -34,7 +36,7 @@ public class TempAmountLink implements java.io.Serializable{
         this.key = key;
     }
 
-    @Column(name="amount")
+    @Column(name = "amount")
     public Double getAmount() {
         return amount;
     }
@@ -43,7 +45,7 @@ public class TempAmountLink implements java.io.Serializable{
         this.amount = amount;
     }
 
-    @Column(name="print_status")
+    @Column(name = "print_status")
     public boolean isPrintStatus() {
         return printStatus;
     }
@@ -51,4 +53,14 @@ public class TempAmountLink implements java.io.Serializable{
     public void setPrintStatus(boolean printStatus) {
         this.printStatus = printStatus;
     }
+
+    @Column(name = "discount")
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
+    }
+
 }

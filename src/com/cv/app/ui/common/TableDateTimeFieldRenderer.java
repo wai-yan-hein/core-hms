@@ -4,7 +4,6 @@
  */
 package com.cv.app.ui.common;
 
-import com.cv.app.common.Global;
 import java.awt.Component;
 import java.text.SimpleDateFormat;
 import java.util.Date;

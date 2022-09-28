@@ -4,8 +4,8 @@
  */
 package com.cv.app.ui.common;
 
-import java.util.*;
 import java.awt.*;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
 

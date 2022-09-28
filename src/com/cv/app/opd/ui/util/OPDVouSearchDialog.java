@@ -27,17 +27,16 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -139,9 +138,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         timerFocus();
 
         Dimension screen = Util1.getScreenSize();
-        int x = (screen.width - this.getWidth()) / 2;
-        int y = (screen.height - this.getHeight()) / 2;
-        setLocation(x, y);
+        setSize(screen.width - 200, screen.height - 200);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
@@ -226,14 +224,11 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     }
 
     private void timerFocus() {
-        Timer timer = new Timer(500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("OPD Voucher");
-                tblVou.requestFocus();
-                if (vouTableModel.getListOPDHis().size() > 0) {
-                    tblVou.setRowSelectionInterval(0, 0);
-                }
+        Timer timer = new Timer(500, (ActionEvent e) -> {
+            System.out.println("OPD Voucher");
+            tblVou.requestFocus();
+            if (!vouTableModel.getListOPDHis().isEmpty()) {
+                tblVou.setRowSelectionInterval(0, 0);
             }
         });
         timer.setRepeats(false);
@@ -342,7 +337,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             srvFilterTableModel.addEmptyRow();
             tblService.getColumnModel().getColumn(0).setCellEditor(
                     new OPDTableCellEditor(dao));
-
+            tblService.getTableHeader().setFont(Global.lableFont);
             tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
             tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
             tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
@@ -352,14 +347,10 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             //Define table selection model to single row selection.
             tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adding table row selection listener.
-            tblVou.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    selectedRow = tblVou.getSelectedRow();
-                }
+            tblVou.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                selectedRow = tblVou.getSelectedRow();
             });
+            tblVou.getTableHeader().setFont(Global.lableFont);
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {
@@ -492,7 +483,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     private List<VoucherSearch> getSearchVoucher() {
         String strSql = getHSQL();
         List<VoucherSearch> listVS = null;
-
+        double ttlAmt = 0.0;
         try {
             ResultSet rs = dao.execSQL(strSql);
             listVS = new ArrayList();
@@ -509,10 +500,14 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                     vs.setVouTotal(rs.getDouble("vou_total"));
                     vs.setDcStatus(rs.getInt("package_id"));
                     listVS.add(vs);
+                    if (vs.getIsDeleted()) {
+                        ttlAmt += vs.getVouTotal();
+                    }
                 }
             }
+            txtTotalAmount.setValue(ttlAmt);
 
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             log.error("getSearchVoucher : " + ex.toString());
         } finally {
             dao.close();
@@ -627,6 +622,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         cboMachine = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
         cboUser = new javax.swing.JComboBox<>();
+        txtTotalAmount = new javax.swing.JFormattedTextField();
+        lblTotalAmount = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("OPD Vou Search");
@@ -647,9 +644,10 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         });
         jScrollPane2.setViewportView(tblVou);
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText("Total Records :");
 
-        butSelect.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSelect.setFont(Global.lableFont);
         butSelect.setText("Select");
         butSelect.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -657,7 +655,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             }
         });
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -889,8 +887,16 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                     .addComponent(jLabel10)
                     .addComponent(cboUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 151, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addContainerGap())
         );
+
+        txtTotalAmount.setEditable(false);
+        txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtTotalAmount.setFont(Global.lableFont);
+
+        lblTotalAmount.setFont(Global.lableFont);
+        lblTotalAmount.setText("Total Amount : ");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -899,15 +905,19 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblTotalAmount)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(butSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butSelect))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 699, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2))
                 .addContainerGap())
         );
 
@@ -922,13 +932,17 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                         .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(8, 8, 8))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(lblTotalRec)
-                            .addComponent(butSelect)
-                            .addComponent(butSearch))
-                        .addGap(11, 11, 11)))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 453, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblTotalAmount)
+                                .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(lblTotalRec)
+                                .addComponent(butSelect)
+                                .addComponent(butSearch)))
+                        .addGap(10, 10, 10)))
                 .addContainerGap())
         );
 
@@ -1102,6 +1116,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblTotalAmount;
     private javax.swing.JLabel lblTotalRec;
     private javax.swing.JTable tblService;
     private javax.swing.JTable tblVou;
@@ -1112,5 +1127,6 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     private javax.swing.JTextField txtPtNo;
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtTo;
+    private javax.swing.JFormattedTextField txtTotalAmount;
     // End of variables declaration//GEN-END:variables
 }

@@ -6,7 +6,6 @@ package com.cv.app.opd.ui.util;
 
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.Doctor;
-import com.cv.app.opd.database.entity.Pathologiest;
 import com.cv.app.opd.ui.common.PathoAutoCompleteTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;

@@ -30,9 +30,8 @@
 
 package com.cv.app.ui.theme;
 
-import javax.swing.plaf.ColorUIResource;
-
 import com.jgoodies.looks.plastic.PlasticLookAndFeel;
+import javax.swing.plaf.ColorUIResource;
 
 /**
  * A theme with metal blue primary colors and a light gray window background.

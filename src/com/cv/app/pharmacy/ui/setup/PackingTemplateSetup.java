@@ -12,6 +12,7 @@ package com.cv.app.pharmacy.ui.setup;
 
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.Global;
+import com.cv.app.common.KeyPropagate;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.PackingTemplate;
 import com.cv.app.pharmacy.database.entity.PackingTemplateDetail;
@@ -37,7 +38,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -50,7 +50,7 @@ import org.jdesktop.swingbinding.SwingBindings;
  *
  * @author winswe
  */
-public class PackingTemplateSetup extends javax.swing.JPanel {
+public class PackingTemplateSetup extends javax.swing.JPanel implements KeyPropagate{
 
     static Logger log = Logger.getLogger(PackingTemplateSetup.class.getName());
     private java.util.List<PackingTemplate> listPackingTemplate
@@ -386,7 +386,7 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
             tblRelation.getColumnModel().getColumn(0).setCellEditor(
                     new BestTableCellEditor());
             tblRelation.getColumnModel().getColumn(1).setCellEditor(
-                    new TableUnitCellEditor(dao.findAll("ItemUnit")));
+                    new TableUnitCellEditor(dao.findAll("ItemUnit"),this));
         } catch (Exception ex) {
             log.error("initTableRelation : " + ex.getMessage());
         } finally {
@@ -395,11 +395,8 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
     }
 
     private void addTableModelListener() {
-        tblRelation.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                txtRelationString.setText(tableModel.getRelCodeAndRelStr());
-            }
+        tblRelation.getModel().addTableModelListener((TableModelEvent e) -> {
+            txtRelationString.setText(tableModel.getRelCodeAndRelStr());
         });
     }
 
@@ -445,4 +442,8 @@ public class PackingTemplateSetup extends javax.swing.JPanel {
     private javax.swing.JTable tblTemplate;
     private javax.swing.JTextField txtRelationString;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void keyEvent(KeyEvent e) {
+    }
 }

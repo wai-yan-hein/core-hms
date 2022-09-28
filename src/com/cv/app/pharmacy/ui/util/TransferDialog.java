@@ -6,8 +6,8 @@
 package com.cv.app.pharmacy.ui.util;
 
 import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.ui.entry.Transfer;
 import com.cv.app.pharmacy.database.view.VReOrderLevel;
+import com.cv.app.pharmacy.ui.entry.Transfer;
 import com.cv.app.util.Util1;
 import java.awt.Container;
 import java.awt.Dimension;

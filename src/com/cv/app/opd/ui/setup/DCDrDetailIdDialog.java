@@ -7,10 +7,10 @@ package com.cv.app.opd.ui.setup;
 
 import com.cv.app.common.Global;
 import com.cv.app.inpatient.database.view.VDCDrDetailId;
-import com.cv.app.util.*;
 import com.cv.app.inpatient.ui.common.DCDrDetailSetupModel;
 import com.cv.app.inpatient.ui.common.DCTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.util.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.AbstractAction;

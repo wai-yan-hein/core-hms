@@ -6,13 +6,13 @@
 package com.cv.app.ot.ui.setup;
 
 import com.cv.app.common.Global;
+import com.cv.app.ot.database.entity.OTCusGroup;
+import com.cv.app.ot.database.entity.OTCusGroupDetail;
+import com.cv.app.ot.ui.common.OTCusGroupDetailTableModel;
+import com.cv.app.ot.ui.common.OTCusGroupTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
-import com.cv.app.ot.database.entity.OTCusGroup;
-import com.cv.app.ot.ui.common.OTCusGroupTableModel;
-import com.cv.app.ot.ui.common.OTCusGroupDetailTableModel;
-import com.cv.app.ot.database.entity.OTCusGroupDetail;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.AbstractAction;

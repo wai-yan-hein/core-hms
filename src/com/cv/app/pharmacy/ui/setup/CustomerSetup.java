@@ -5,11 +5,6 @@
 package com.cv.app.pharmacy.ui.setup;
 
 import com.cv.app.common.ActiveMQConnection;
-import com.cv.app.pharmacy.database.entity.PayMethod;
-import com.cv.app.pharmacy.database.entity.Township;
-import com.cv.app.pharmacy.database.entity.Customer;
-import com.cv.app.pharmacy.database.entity.TraderType;
-import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -18,8 +13,13 @@ import com.cv.app.common.NumberKeyListener;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.BusinessType;
+import com.cv.app.pharmacy.database.entity.Customer;
+import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.PayMethod;
+import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.TraderType;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.TraderTableModel;
 import com.cv.app.pharmacy.ui.util.GenChildCustomer;

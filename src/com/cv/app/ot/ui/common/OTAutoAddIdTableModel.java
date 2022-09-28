@@ -5,7 +5,6 @@
 package com.cv.app.ot.ui.common;
 
 import com.cv.app.common.Global;
-import com.cv.app.inpatient.database.entity.DCAutoAddIdMapping;
 import com.cv.app.ot.database.entity.OTAutoAddIdMapping;
 import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;

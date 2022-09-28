@@ -30,12 +30,11 @@
 
 package com.cv.app.ui.theme;
 
-import javax.swing.UIDefaults;
-import javax.swing.plaf.ColorUIResource;
-
 import com.jgoodies.looks.plastic.PlasticLookAndFeel;
 import com.jgoodies.looks.plastic.PlasticScrollBarUI;
 import com.jgoodies.looks.plastic.PlasticTheme;
+import javax.swing.UIDefaults;
+import javax.swing.plaf.ColorUIResource;
 
 /**
  * A theme with medium blue primary colors and a light gray window background.

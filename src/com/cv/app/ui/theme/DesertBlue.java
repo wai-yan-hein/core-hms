@@ -30,11 +30,10 @@
 
 package com.cv.app.ui.theme;
 
-import javax.swing.UIDefaults;
-import javax.swing.plaf.ColorUIResource;
-
 import com.jgoodies.looks.plastic.PlasticLookAndFeel;
 import com.jgoodies.looks.plastic.PlasticScrollBarUI;
+import javax.swing.UIDefaults;
+import javax.swing.plaf.ColorUIResource;
 
 
 /**

@@ -9,7 +9,6 @@ import com.cv.app.common.Global;
 import com.cv.app.emr.database.entity.AgeRange;
 import com.cv.app.emr.ui.common.AgeRangeTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.controller.BestDataAccess;
 import com.cv.app.util.Util1;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;

@@ -4,11 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
-import com.cv.app.ot.database.entity.OTDoctorFee;
-import com.cv.app.util.JoSQLUtil;
-import com.cv.app.util.NumberUtil;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;

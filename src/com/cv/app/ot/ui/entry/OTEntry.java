@@ -70,7 +70,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -1220,7 +1219,9 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
     private void initTable() {
         try {
-            tblService.setCellSelectionEnabled(true);
+            if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
+                tblService.setCellSelectionEnabled(true);
+            }
             tblService.getTableHeader().setFont(Global.lableFont);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
@@ -1293,17 +1294,13 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            tblService.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-                }
+            tblService.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
             });
 
             tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
             tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
+            tblPatientBill.getTableHeader().setFont(Global.lableFont);
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {
@@ -1971,12 +1968,15 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             }
         });
 
+        lblStatus.setFont(new java.awt.Font("Arial", 0, 36)); // NOI18N
         lblStatus.setText("NEW");
 
+        jLabel23.setFont(Global.lableFont);
         jLabel23.setForeground(new java.awt.Color(182, 175, 175));
         jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel23.setText("Rec No : ");
 
+        jLabel22.setFont(Global.lableFont);
         jLabel22.setForeground(new java.awt.Color(182, 175, 175));
         jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         jLabel22.setText("Total Item : ");
@@ -1991,17 +1991,16 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         txtTotalItem.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtTotalItem.setBorder(null);
 
+        chkVouPrinter.setFont(Global.lableFont);
         chkVouPrinter.setText("Vou Printer");
 
+        chkCloseBill.setFont(Global.lableFont);
         chkCloseBill.setText("Close Bill");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -2015,6 +2014,9 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     .addComponent(chkVouPrinter)
                     .addComponent(chkCloseBill))
                 .addGap(8, 29, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(lblStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2123,9 +2125,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         txtBillTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtBillTotal.setFont(Global.textFont);
 
-        jLabel11.setFont(Global.textFont);
+        jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Total :");
 
+        butAdmit.setFont(Global.lableFont);
         butAdmit.setText("Admit");
         butAdmit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

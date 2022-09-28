@@ -7,10 +7,10 @@ package com.cv.app.opd.ui.setup;
 
 import com.cv.app.common.Global;
 import com.cv.app.ot.database.view.VOTDrDetailId;
-import com.cv.app.util.*;
 import com.cv.app.ot.ui.common.OTDrDetailSetupModel;
 import com.cv.app.ot.ui.common.OTTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.util.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.AbstractAction;

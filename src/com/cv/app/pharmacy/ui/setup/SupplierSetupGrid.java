@@ -7,7 +7,6 @@ package com.cv.app.pharmacy.ui.setup;
 
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
-//import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Appuser;
@@ -19,8 +18,8 @@ import com.cv.app.pharmacy.database.entity.PaymentVou;
 import com.cv.app.pharmacy.database.entity.SupplierWithParent;
 import com.cv.app.pharmacy.database.entity.TraderPayHis;
 import com.cv.app.pharmacy.database.helper.VoucherPayment;
-import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.pharmacy.ui.common.SupplierSetupGridTableModel;
+import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;

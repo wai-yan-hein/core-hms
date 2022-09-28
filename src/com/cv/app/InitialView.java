@@ -16,15 +16,12 @@
 package com.cv.app;
 
 import java.awt.BorderLayout;
-import java.io.IOException;
-
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
-
 import org.springframework.core.io.Resource;
 import org.springframework.richclient.application.support.AbstractView;
 import org.springframework.richclient.application.support.DefaultViewDescriptor;

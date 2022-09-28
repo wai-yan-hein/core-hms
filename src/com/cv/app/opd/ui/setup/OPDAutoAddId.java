@@ -11,7 +11,6 @@ import com.cv.app.opd.database.view.VOPDGroupService;
 import com.cv.app.opd.ui.common.OPDAutoAddIdTableModel;
 import com.cv.app.opd.ui.common.OPDGroupServiceTableModel;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
-//import com.cv.app.ot.ui.common.OPDGroupServiceTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;

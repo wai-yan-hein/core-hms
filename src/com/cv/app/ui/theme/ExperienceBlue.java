@@ -27,45 +27,43 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.cv.app.ui.theme;
 
+import com.cv.app.common.Global;
+import com.jgoodies.looks.plastic.PlasticScrollBarUI;
 import javax.swing.UIDefaults;
 import javax.swing.plaf.ColorUIResource;
-
-import com.jgoodies.looks.plastic.PlasticScrollBarUI;
+import javax.swing.plaf.FontUIResource;
 
 /**
- * A theme with low saturated blue primary colors and a light brown
- * window background. It has been optimized to work with Windows XP
- * default desktop settings.
+ * A theme with low saturated blue primary colors and a light brown window
+ * background. It has been optimized to work with Windows XP default desktop
+ * settings.
  *
  * @author Karsten Lentzsch
  * @version $Revision: 1.9 $
  */
 public class ExperienceBlue extends DesertBluer {
 
-
     @Override
     public String getName() {
         return "Experience Blue";
     }
 
-    protected static final ColorUIResource LUNA_BACKGROUND =
-        new ColorUIResource(236, 233, 216);
+    protected static final ColorUIResource LUNA_BACKGROUND
+            = new ColorUIResource(236, 233, 216);
 
-    protected static final ColorUIResource LUNA_BACKGROUND_DARKER =
-        new ColorUIResource(189, 190, 176);
+    protected static final ColorUIResource LUNA_BACKGROUND_DARKER
+            = new ColorUIResource(189, 190, 176);
 
+    private static final ColorUIResource SECONDARY1
+            = Colors.GRAY_MEDIUM;
 
-    private static final ColorUIResource SECONDARY1 =
-        Colors.GRAY_MEDIUM;
+    private static final ColorUIResource SECONDARY2
+            = LUNA_BACKGROUND_DARKER;
 
-    private static final ColorUIResource SECONDARY2 =
-        LUNA_BACKGROUND_DARKER;
-
-    private static final ColorUIResource SECONDARY3 =
-        LUNA_BACKGROUND;
+    private static final ColorUIResource SECONDARY3
+            = LUNA_BACKGROUND;
 
     @Override
     protected ColorUIResource getPrimary1() {
@@ -111,6 +109,7 @@ public class ExperienceBlue extends DesertBluer {
     public ColorUIResource getMenuSelectedBackground() {
         return getPrimary1();
     }
+
     @Override
     public ColorUIResource getMenuSelectedForeground() {
         return WHITE;
@@ -129,14 +128,48 @@ public class ExperienceBlue extends DesertBluer {
     @Override
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
-        Object[] uiDefaults =
-            {
-                "ScrollBar.thumbHighlight",
-                getPrimaryControlHighlight(),
-                PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY,
-                22,
-                };
+        Object[] uiDefaults
+                = {
+                    "ScrollBar.thumbHighlight",
+                    getPrimaryControlHighlight(),
+                    PlasticScrollBarUI.MAX_BUMPS_WIDTH_KEY,
+                    22,};
         table.putDefaults(uiDefaults);
+    }
+
+    @Override
+    public FontUIResource getMenuTextFont() {
+        return new FontUIResource(Global.menuFont);
+    }
+
+    @Override
+    public FontUIResource getWindowTitleFont() {
+        return new FontUIResource(Global.sysFont);
+    }
+
+    @Override
+    public FontUIResource getUserTextFont() {
+        return new FontUIResource(Global.sysFont);
+    }
+
+    @Override
+    public FontUIResource getSystemTextFont() {
+        return new FontUIResource(Global.sysFont);
+    }
+
+    @Override
+    public FontUIResource getSubTextFont() {
+        return new FontUIResource(Global.sysFont);
+    }
+
+    @Override
+    public FontUIResource getControlTextFont() {
+        return new FontUIResource(Global.menuFont);
+    }
+
+    @Override
+    public FontUIResource getTitleTextFont() {
+        return new FontUIResource(Global.sysFont);
     }
 
 }

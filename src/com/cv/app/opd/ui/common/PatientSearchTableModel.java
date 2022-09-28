@@ -13,10 +13,11 @@ import javax.swing.table.AbstractTableModel;
  *
  * @author WSwe
  */
-public class PatientSearchTableModel extends AbstractTableModel{
+public class PatientSearchTableModel extends AbstractTableModel {
+
     private List<Patient> listPatient = new ArrayList();
-    private String[] columnNames = {"Reg-No", "Name", "Adm-No","Father Name", "City"};
-    
+    private String[] columnNames = {"Reg-No", "Name", "Adm-No", "Father Name", "City", "Doctor"};
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -46,11 +47,16 @@ public class PatientSearchTableModel extends AbstractTableModel{
             case 3: //Father Name
                 return record.getFatherName();
             case 4: //City
-                if(record.getCity() != null){
+                if (record.getCity() != null) {
                     return record.getCity().getCityName();
-                }else{
+                } else {
                     return null;
                 }
+            case 5:
+                if (record.getDoctor() != null) {
+                    return record.getDoctor().getDoctorName();
+                }
+                return null;
             default:
                 return null;
         }
@@ -78,8 +84,8 @@ public class PatientSearchTableModel extends AbstractTableModel{
         this.listPatient = listPatient;
         fireTableDataChanged();
     }
-    
-    public Patient getPatient(int row){
+
+    public Patient getPatient(int row) {
         return listPatient.get(row);
     }
 }

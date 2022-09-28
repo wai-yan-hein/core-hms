@@ -4,17 +4,17 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.database.entity.VouStatus;
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Session;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
-import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.CustomerGroup;
+import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.Session;
+import com.cv.app.pharmacy.database.entity.Trader;
+import com.cv.app.pharmacy.database.entity.VouStatus;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
@@ -173,6 +173,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(190);
         tblMedicine.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        tblMedicine.getTableHeader().setFont(Global.lableFont);
     }
 
     private void initTableVoucher() {
@@ -185,6 +186,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         tblVoucher.getColumnModel().getColumn(6).setPreferredWidth(30);
 
         tblVoucher.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        tblVoucher.getTableHeader().setFont(Global.lableFont);
     }
 
     private void addSelectionListenerVoucher() {
@@ -817,7 +819,6 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
 
         tblMedicine.setFont(Global.textFont);
         tblMedicine.setRowHeight(23);
-        tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -940,14 +941,13 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                     .addComponent(jLabel13)
                     .addComponent(txtDesp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 155, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblVoucher.setModel(purVouTableModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblVoucherMouseClicked(evt);
@@ -955,7 +955,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
         });
         jScrollPane2.setViewportView(tblVoucher);
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -963,7 +963,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
-        butSelect.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSelect.setFont(Global.lableFont);
         butSelect.setText("Select");
         butSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -971,7 +971,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
-        butPromo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butPromo.setFont(Global.lableFont);
         butPromo.setText("Promo List");
         butPromo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -979,26 +979,35 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
             }
         });
 
+        jLabel11.setFont(Global.lableFont);
         jLabel11.setText("VTotal  : ");
 
         txtVouTotal.setEditable(false);
         txtVouTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtVouTotal.setFont(Global.lableFont);
 
         txtDiscount.setEditable(false);
         txtDiscount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtDiscount.setFont(Global.lableFont);
 
         txtPaid.setEditable(false);
         txtPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtPaid.setFont(Global.lableFont);
 
         txtBalance.setEditable(false);
         txtBalance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtBalance.setFont(Global.lableFont);
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText("Total Records : 0");
 
+        jLabel15.setFont(Global.lableFont);
         jLabel15.setText("Disc : ");
 
+        jLabel16.setFont(Global.lableFont);
         jLabel16.setText("Paid : ");
 
+        jLabel17.setFont(Global.lableFont);
         jLabel17.setText("Balance : ");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -1030,7 +1039,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                         .addComponent(jLabel17)
                         .addGap(7, 7, 7)
                         .addComponent(txtBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 96, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(butPromo)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butSearch)
@@ -1047,7 +1056,7 @@ public class PurchaseVouSearch1 extends javax.swing.JPanel implements SelectionO
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 540, Short.MAX_VALUE))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 547, Short.MAX_VALUE))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)

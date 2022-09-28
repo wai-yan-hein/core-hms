@@ -8,7 +8,6 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
-import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.Point;

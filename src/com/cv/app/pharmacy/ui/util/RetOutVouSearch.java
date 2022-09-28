@@ -4,15 +4,15 @@
  */
 package com.cv.app.pharmacy.ui.util;
 
-import com.cv.app.pharmacy.database.entity.PaymentType;
-import com.cv.app.pharmacy.database.entity.Session;
-import com.cv.app.pharmacy.database.entity.Location;
-import com.cv.app.pharmacy.database.entity.Trader;
-import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
+import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.Session;
+import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.VouCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.VouFilter;
@@ -164,6 +164,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         tblMedicine.getColumnModel().getColumn(1).setPreferredWidth(200);
         tblMedicine.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        tblMedicine.getTableHeader().setFont(Global.lableFont);
     }
 
     private void initTableVoucher() {
@@ -211,6 +212,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         tblVoucher.getColumnModel().getColumn(4).setPreferredWidth(30);
 
         tblVoucher.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        tblVoucher.getTableHeader().setFont(Global.lableFont);
     }
 
     private void addSelectionListenerVoucher() {
@@ -621,6 +623,11 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         jLabel3.setText("Customer");
 
         txtCusCode.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtCusCode.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtCusCodeFocusLost(evt);
+            }
+        });
         txtCusCode.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtCusCodeMouseClicked(evt);
@@ -629,11 +636,6 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         txtCusCode.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtCusCodeActionPerformed(evt);
-            }
-        });
-        txtCusCode.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                txtCusCodeFocusLost(evt);
             }
         });
 
@@ -667,7 +669,6 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
 
         tblMedicine.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblMedicine.setRowHeight(23);
-        tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -745,7 +746,6 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblVoucher.setModel(vouTableModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblVoucherMouseClicked(evt);
@@ -753,9 +753,10 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
         });
         jScrollPane2.setViewportView(tblVoucher);
 
+        lblTotalRec.setFont(Global.lableFont);
         lblTotalRec.setText("Total Records : 0");
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -763,7 +764,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
             }
         });
 
-        butSelect.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSelect.setFont(Global.lableFont);
         butSelect.setText("Select");
         butSelect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -781,12 +782,12 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(10, 10, 10)
-                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblTotalRec, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(butSearch)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 464, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 735, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -797,8 +798,8 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 413, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 553, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(butSelect)

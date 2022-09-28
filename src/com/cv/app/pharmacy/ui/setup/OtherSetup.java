@@ -7,7 +7,6 @@ package com.cv.app.pharmacy.ui.setup;
 import com.cv.app.pharmacy.ui.util.FillVouPaymentDialog;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
-import java.awt.Toolkit;
 
 /**
  *

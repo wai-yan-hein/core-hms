@@ -5,8 +5,8 @@
 package com.cv.app.inpatient.ui.common;
 
 import com.cv.app.common.SelectionObserver;
-import com.cv.app.inpatient.database.entity.MedUsageKey;
 import com.cv.app.inpatient.database.entity.InpMedUsage;
+import com.cv.app.inpatient.database.entity.MedUsageKey;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;

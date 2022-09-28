@@ -4,8 +4,8 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.opd.database.entity.DoctorFeesMappingOT;
+import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
