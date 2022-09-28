@@ -68,6 +68,7 @@ public class OPDHis implements java.io.Serializable {
     private Long pkgId;
     private String pkgName;
     private Double pkgPrice;
+    private String btId; //Bill transfer id
     
     @Id
     @Column(name = "opd_inv_id", unique = true, nullable = false, length = 15)
@@ -435,5 +436,14 @@ public class OPDHis implements java.io.Serializable {
 
     public void setPkgPrice(Double pkgPrice) {
         this.pkgPrice = pkgPrice;
+    }
+    
+    @Column(name="bt_id", length=15)
+    public String getBtId() {
+        return btId;
+    }
+
+    public void setBtId(String btId) {
+        this.btId = btId;
     }
 }

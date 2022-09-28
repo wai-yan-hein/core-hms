@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReOrderLevel" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b2596107-ee83-4489-9bde-88bfe75060ec">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<parameter name="all_bal" class="java.lang.String"/>
 	<parameter name="p_loc" class="java.lang.String"/>
@@ -22,7 +25,7 @@ rol.balance_str,rol.bal_max_str, rol.bal_min_str, rol.main_bal_str, loc.location
 loc.location_id
 from re_order_level rol
 join medicine med on rol.item_id = med.med_id
-join location loc on rol.location_id = loc.location_id
+left join location loc on rol.location_id = loc.location_id
 left join item_type it on med.med_type_id = it.item_type_code
 where rol.location_id = $P{p_loc}
 and (ifnull(rol.max_unit_qty,0)<>0 or ifnull(rol.min_unit_qty,0)<>0 or ifnull(rol.balance,0)<>0 or

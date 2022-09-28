@@ -217,7 +217,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                 return dao.findAllHSQL(
                         "select o from Location o where o.locationId in ("
                         + "select a.key.locationId from UserLocationMapping a "
-                        + "where a.key.userId = '" + Global.machineId
+                        + "where a.key.userId = '" + Global.loginUser.getUserId()
                         + "' and a.isAllowCusPayVou = true) order by o.locationName");
             } else {
                 return dao.findAll("Location");
@@ -249,8 +249,26 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     + "	  from v_opening_balance vob\n"
                     + "	  join trader t on vob.trader_id = t.trader_id\n"
                     + "	  left join customer_group cg on t.group_id = cg.group_id\n"
-                    + "	 where bal > 0 and (t.group_id = '" + strCusGroup + "' or '" + strCusGroup + "' = '-')"
-                    + " union all "
+                    + "	 where bal > 0 and (t.group_id = '" + strCusGroup + "' or '" + strCusGroup + "' = '-') \n"
+                    + " union all \n"
+                    + "select bth.tran_date as sale_date, bth_id as vou_no, bth.trader_id as cus_id,\n"
+                    + "       t.trader_name, bth.tran_option as vou_type, date_add(bth.tran_date, interval ifnull(t.credit_days,0) day) due_date,\n"
+                    + "       'Patient Bill Transfer' as ref_no, bth.total_amt as vou_total, ifnull(pah.pay_amt,0) as ttl_paid,\n"
+                    + "       0 as discount, (bth.total_amt - ifnull(pah.pay_amt,0)) as balance, (bth.total_amt - ifnull(pah.pay_amt,0)) as bal, \n"
+                    + "       if(ifnull(bth.tran_date,'-')='-',0,if(DATEDIFF(sysdate(),bth.tran_date)<0,0,DATEDIFF(sysdate(),bth.tran_date))) as ttl_overdue, \n"
+                    + "	   t.stu_no \n"
+                    + "  from bill_transfer_his bth\n"
+                    + "  join trader t on bth.trader_id = t.trader_id\n"
+                    + "	 left join customer_group cg on t.group_id = cg.group_id\n"
+                    + "  left join (select pv.vou_no, sum(ifnull(pv.vou_paid,0)+ifnull(pv.discount,0)) pay_amt, pv.vou_type\n"
+                    + "			   from payment_his ph, pay_his_join phj, payment_vou pv\n"
+                    + "			  where ph.payment_id = phj.payment_id and phj.tran_id = pv.tran_id\n"
+                    + "				and ph.deleted = false\n"
+                    + "				and pv.vou_type = 'BILLTRANSFER'\n"
+                    + "			  group by pv.vou_no, pv.vou_type) pah on bth.bth_id = pah.vou_no and bth.tran_option = pah.vou_type\n"
+                    + " where bth.tran_option = 'BILLTRANSFER' and (bth.total_amt - ifnull(pah.pay_amt,0)) <> 0 \n"
+                    + "   and (t.group_id = '" + strCusGroup + "' or '" + strCusGroup + "' = '-') \n"
+                    + " union all \n"
                     + "select sh.sale_date, sale_inv_id vou_no, sh.cus_id, t.trader_name, 'SALE' vou_type,\n"
                     + "       sh.due_date, sh.remark ref_no, sh.vou_total, (sh.paid_amount+ifnull(pah.pay_amt,0)) as ttl_paid, "
                     + "sh.discount, sh.balance,\n"
@@ -258,7 +276,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue, \n"
                     + "     t.stu_no \n"
                     + "from sale_his sh\n"
-                    + "left join trader t on sh.cus_id = t.trader_id\n"
+                    + "join trader t on sh.cus_id = t.trader_id\n"
                     + "left join (select pv.vou_no, sum(ifnull(pv.vou_paid,0)+ifnull(pv.discount,0)) pay_amt, pv.vou_type\n"
                     + "			   from payment_his ph, pay_his_join phj, payment_vou pv\n"
                     + "			  where ph.payment_id = phj.payment_id and phj.tran_id = pv.tran_id\n"
@@ -272,7 +290,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                 strLocation = ((Location) cboLocation.getSelectedItem()).getLocationId().toString();
                 strSql = strSql + " and sh.location_id = " + strLocation;
             }
-            strSql = strSql + " group by sh.sale_inv_id, sh.sale_date,sh.vou_total, sh.paid_amount, sh.discount, sh.balance) a\n"
+            strSql = strSql + "\n group by sh.sale_inv_id, sh.sale_date,sh.vou_total, sh.paid_amount, sh.discount, sh.balance) a\n"
                     + "where a.bal > 0 order by a.ttl_overdue desc, a.sale_date, a.vou_no";
 
             ResultSet rs = dao.execSQL(strSql);
@@ -332,9 +350,11 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
             strSql = strSql + " and p.traderId = '" + txtCode.getText() + "'";
         }
 
-        if (((Location) cboLocation1.getSelectedItem()).getLocationId() != 0) {
-            Location location = (Location) cboLocation1.getSelectedItem();
-            strSql = strSql + " and p.location = " + location.getLocationId();
+        if (cboLocation1.getSelectedItem() != null) {
+            if (((Location) cboLocation1.getSelectedItem()).getLocationId() != 0) {
+                Location location = (Location) cboLocation1.getSelectedItem();
+                strSql = strSql + " and p.location = " + location.getLocationId();
+            }
         }
 
         if (!((Appuser) cboUser.getSelectedItem()).getUserId().equals("000")) {
@@ -830,7 +850,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butSearch))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 29, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -949,7 +969,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 117, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -967,7 +987,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 901, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

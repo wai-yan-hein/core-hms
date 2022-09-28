@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleSummary" language="groovy" pageWidth="595" pageHeight="842" columnWidth="585" leftMargin="5" rightMargin="5" topMargin="5" bottomMargin="5" uuid="17b16060-d7e7-43e5-86b3-3f3958c7548d">
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleSummary" pageWidth="595" pageHeight="842" columnWidth="585" leftMargin="5" rightMargin="5" topMargin="5" bottomMargin="5" uuid="17b16060-d7e7-43e5-86b3-3f3958c7548d">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="118"/>
 	<property name="ireport.y" value="0"/>
@@ -10,7 +11,7 @@
 	<parameter name="sess_id" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
-	<parameter name="tran_type" class="java.lang.String">
+	<parameter name="prm_tran_type" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<queryString>
@@ -19,7 +20,7 @@ payment_type_name, user_short_name,discount,balance
 from v_session
 where date(tran_date) between $P{prm_from} and $P{prm_to} and deleted = false
 and (session_id = $P{sess_id} or $P{sess_id} = '-')
-and (source = $P{tran_type} or $P{tran_type} = '-')
+and (source = $P{prm_tran_type} or $P{prm_tran_type} = '-')
 order by tran_date, inv_id, session_id) vs left join
 (select sh.sale_inv_id , dd.doctor_id,dd.doctor_name from sale_his sh, doctor dd where
 sh.doctor_id = dd.doctor_id) tmp

@@ -127,6 +127,7 @@ public class StockList {
                                                     break;
                                                 } else if ((tmpBalance * -1) == qty) {
                                                     minusList.remove(0);
+                                                    qty = 0;
                                                     break;
                                                 } else {
                                                     minusList.remove(0);

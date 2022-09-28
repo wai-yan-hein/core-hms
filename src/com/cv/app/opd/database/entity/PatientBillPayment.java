@@ -37,6 +37,7 @@ public class PatientBillPayment implements java.io.Serializable{
     private Double amount;
     private Double balance;
     private String admissionNo;
+    private String ptType;
     
     @Id @GeneratedValue(strategy=IDENTITY)
     @Column(name="id", unique=true, nullable=false)
@@ -156,5 +157,14 @@ public class PatientBillPayment implements java.io.Serializable{
 
     public void setAdmissionNo(String admissionNo) {
         this.admissionNo = admissionNo;
+    }
+
+    @Column(name="patient_type", length=15)
+    public String getPtType() {
+        return ptType;
+    }
+
+    public void setPtType(String ptType) {
+        this.ptType = ptType;
     }
 }

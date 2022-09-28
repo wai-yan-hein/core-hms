@@ -68,6 +68,7 @@ public class DCHis implements java.io.Serializable {
     private String pkgName;
     private Double pkgPrice;
     private String intgUpdStatus;
+    private String btId; //Bill transfer id
     
     @Id
     @Column(name = "dc_inv_id", unique = true, nullable = false, length = 15)
@@ -410,5 +411,14 @@ public class DCHis implements java.io.Serializable {
 
     public void setIntgUpdStatus(String intgUpdStatus) {
         this.intgUpdStatus = intgUpdStatus;
+    }
+    
+    @Column(name="bt_id", length=15)
+    public String getBtId() {
+        return btId;
+    }
+
+    public void setBtId(String btId) {
+        this.btId = btId;
     }
 }

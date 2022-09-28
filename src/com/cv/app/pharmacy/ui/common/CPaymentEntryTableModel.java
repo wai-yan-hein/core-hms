@@ -298,6 +298,9 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
             tph.setListDetail(listPV);
 
             Location location = getLocation(tph.getTrader().getTraderId());
+            if(location == null){
+                location = Global.loginUser.getDefLocation();
+            }
             tph.setLocation(location);
 
             dao.save(tph);

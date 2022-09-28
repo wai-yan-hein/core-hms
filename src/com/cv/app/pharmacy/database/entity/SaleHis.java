@@ -72,7 +72,8 @@ public class SaleHis implements java.io.Serializable {
     private String visitId;
     private Boolean isPrinted;
     private Long exrId;
-
+    private String btId; //Bill transfer id
+    
     public SaleHis() {
     }
 
@@ -598,5 +599,14 @@ public class SaleHis implements java.io.Serializable {
 
     public void setExrId(Long exrId) {
         this.exrId = exrId;
+    }
+
+    @Column(name="bt_id", length=15)
+    public String getBtId() {
+        return btId;
+    }
+
+    public void setBtId(String btId) {
+        this.btId = btId;
     }
 }

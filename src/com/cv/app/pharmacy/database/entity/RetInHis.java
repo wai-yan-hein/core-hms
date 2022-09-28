@@ -49,6 +49,7 @@ public class RetInHis implements java.io.Serializable{
     private String intgUpdStatus;
     private String otId;
     private Long exrId;
+    private String btId; //Bill transfer id
     
     @Column(name="balance")
     public Double getBalance() {
@@ -317,5 +318,14 @@ public class RetInHis implements java.io.Serializable{
 
     public void setExrId(Long exrId) {
         this.exrId = exrId;
+    }
+    
+    @Column(name="bt_id", length=15)
+    public String getBtId() {
+        return btId;
+    }
+
+    public void setBtId(String btId) {
+        this.btId = btId;
     }
 }

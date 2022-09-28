@@ -499,11 +499,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String vouNo = vouEngine.getVouNo();
             txtVouNo.setText(vouNo);
             if (vouNo.equals("-")) {
-                log.error("DC voucher error : " + txtVouNo.getText() + " @ "
+                log.error("Voucher error : " + txtVouNo.getText() + " @ "
                         + txtSaleDate.getText() + " @ " + vouEngine.getVouInfo());
                 JOptionPane.showMessageDialog(Util1.getParent(),
-                        "DC vou no error. Exit the program and try again.",
-                        "DC Vou No", JOptionPane.ERROR_MESSAGE);
+                        "Vou no error. Exit the program and try again.",
+                        "Vou No", JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             } else {
                 List<SaleHis> listSH = dao.findAllHSQL(

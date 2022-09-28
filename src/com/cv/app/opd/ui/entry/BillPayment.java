@@ -70,9 +70,15 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             List<PatientBillPayment> listPBP = tblBillPaymentTableModel.getSavePBP();
             if (txtAdmissionNo.getText() != null) {
                 if (!txtAdmissionNo.getText().trim().isEmpty()) {
-                    String admissionNo = txtAdmissionNo.getText().trim();
+                    String admissionNo = txtAdmissionNo.getText();
+                    String ptType = "OPD";
+                    if(!admissionNo.isEmpty()){
+                        ptType = "ADMISSION";
+                    }
                     for (PatientBillPayment pbp : listPBP) {
                         pbp.setAdmissionNo(admissionNo);
+                        pbp.setPtType(admissionNo);
+                        pbp.setPtType(ptType);
                     }
                 }
             }
@@ -255,6 +261,13 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void initTable() {
+        tblBillPaymentSearch.getColumnModel().getColumn(0).setPreferredWidth(30);//Reg No
+        tblBillPaymentSearch.getColumnModel().getColumn(1).setPreferredWidth(30);//Date
+        tblBillPaymentSearch.getColumnModel().getColumn(2).setPreferredWidth(250);//Patient Name
+        tblBillPaymentSearch.getColumnModel().getColumn(3).setPreferredWidth(150);//Bill Type
+        tblBillPaymentSearch.getColumnModel().getColumn(4).setPreferredWidth(200);//Remark
+        tblBillPaymentSearch.getColumnModel().getColumn(5).setPreferredWidth(50);//Amount
+        
         tblBillPayment.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         //tblBillPayment.getColumnModel().getColumn(0).setPreferredWidth(50);//Bill Type

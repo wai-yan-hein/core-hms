@@ -107,7 +107,7 @@ public class TmpEXRateTableModel extends AbstractTableModel {
                         Currency curr = (Currency)value;
                         record.getKey().setFromCurr(curr.getCurrencyCode());
                         record.getKey().setToCurr(fromCurr);
-                        record.getKey().setUserId(Global.loginUser.getUserId());
+                        record.getKey().setUserId(Global.machineId);
                     } else {
                         record.getKey().setFromCurr(null);
                         record.getKey().setToCurr(null);

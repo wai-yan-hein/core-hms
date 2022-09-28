@@ -1841,6 +1841,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
                 "select o from SessionCheckCheckpoint o where o.tranOption = 'OPD' "
                 + " and o.tranInvId = '" + invId + "'");*/
+        
         canEdit = Util1.hashPrivilege("OPDVoucherEditChange");
         boolean isAllowEdit = Util1.hashPrivilege("OPDCreditVoucherEdit");
         double vouPaid = NumberUtil.NZero(currVou.getPaid());

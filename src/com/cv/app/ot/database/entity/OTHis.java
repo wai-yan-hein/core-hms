@@ -60,6 +60,7 @@ public class OTHis implements java.io.Serializable {
     private String migId;
     private String otId;
     private String intgUpdStatus;
+    private String btId; //Bill transfer id
     
     @Id
     @Column(name = "ot_inv_id", unique = true, nullable = false, length = 15)
@@ -354,5 +355,14 @@ public class OTHis implements java.io.Serializable {
 
     public void setIntgUpdStatus(String intgUpdStatus) {
         this.intgUpdStatus = intgUpdStatus;
+    }
+    
+    @Column(name="bt_id", length=15)
+    public String getBtId() {
+        return btId;
+    }
+
+    public void setBtId(String btId) {
+        this.btId = btId;
     }
 }

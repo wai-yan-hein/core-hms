@@ -798,6 +798,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         execTraderBalanceDetail();
                         break;
                     case "CustomerInOutBalanceDetailA4":
+                        case "CustomerInOutBalanceDetailA4BT":
                         execTraderBalance();
                         break;
                     case "SupplierInOutBalance":
@@ -2908,6 +2909,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                             break;
                                         } else if ((tmpBalance * -1) == qty) {
                                             minusList.remove(0);
+                                            qty = tmpBalance + qty;
                                             break;
                                         } else {
                                             minusList.remove(0);
