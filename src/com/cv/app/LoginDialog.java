@@ -395,8 +395,8 @@ public class LoginDialog extends javax.swing.JDialog {
                 initPrivilege(Global.loginUser.getUserRole().getRoleId());
                 initDefaultValue(Global.loginUser.getUserRole());
                 Global.defaultValue.put("Location", Global.loginUser.getDefLocation());
-                Global.lableFont = new java.awt.Font("Zawgyi-One", 1, 14);
-                Global.textFont = new java.awt.Font("Zawgyi-One", 0, 14);
+                Global.lableFont = new java.awt.Font("Zawgyi-One", 1, 12);
+                Global.textFont = new java.awt.Font("Zawgyi-One", 0, 12);
                 Global.dateFormat = "dd/MM/yyyy";
                 initExchangeRate();
                 this.dispose();

@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustomerBalance" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="082af7d9-2519-4223-9be8-15fb35add365">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="user_id" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<parameter name="data_date" class="java.lang.String"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select if(ifnull(v_cs.sys_p,'-')='Y', v_cs.stu_no, ttbd.trader_id) as trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name, v_cs.discriminator, tow.township_name
+		<![CDATA[select if(ifnull(v_cs.stu_no,'')='', ttbd.trader_id, v_cs.stu_no) as trader_id, v_cs.trader_name, ttbd.amount, ttbd.curr_id, curr.cur_name, v_cs.discriminator, tow.township_name
 from tmp_trader_bal_date ttbd
 join v_cs on ttbd.trader_id = v_cs.trader_id
 join currency curr on ttbd.curr_id = curr.cur_code
@@ -52,7 +55,7 @@ order by v_cs.trader_name]]>
 					</textElement>
 					<text><![CDATA[Currency : ]]></text>
 				</staticText>
-				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 					<reportElement x="60" y="0" width="91" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 					<textElement verticalAlignment="Middle">
 						<font fontName="Arial" size="8" isBold="true"/>
@@ -133,7 +136,7 @@ order by v_cs.trader_name]]>
 				</textElement>
 				<text><![CDATA[Date :]]></text>
 			</staticText>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="31" y="45" width="178" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
@@ -209,14 +212,14 @@ order by v_cs.trader_name]]>
 					<pen lineWidth="0.5" lineStyle="Dotted" lineColor="#544E4E"/>
 				</graphicElement>
 			</line>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement x="110" y="0" width="207" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{trader_name}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="0" y="0" width="92" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
@@ -230,7 +233,7 @@ order by v_cs.trader_name]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="333" y="0" width="109" height="15" uuid="debe0185-87bc-48cf-82d8-ae582d4f4de1"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>

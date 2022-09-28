@@ -18,7 +18,8 @@ import javax.persistence.Table;
 public class PatientOpening implements java.io.Serializable{
     private CompoundKeyPatientOp key;
     private Double amount;
-
+    private String admissionNo;
+    
     public PatientOpening(){}
     
     public PatientOpening(CompoundKeyPatientOp key){
@@ -41,5 +42,14 @@ public class PatientOpening implements java.io.Serializable{
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    @Column(name="admission_no", length=15)
+    public String getAdmissionNo() {
+        return admissionNo;
+    }
+
+    public void setAdmissionNo(String admissionNo) {
+        this.admissionNo = admissionNo;
     }
 }

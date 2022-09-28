@@ -572,7 +572,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     if (canEdit) {
 
                         dao.open();
-                        dao.beginTran();
+                        //dao.beginTran();
                         String vouNo = currVou.getOpdInvId();
                         List<OTDetailHis> listDetail = currVou.getListOPDDetailHis();
                         for (OTDetailHis odh : listDetail) {
@@ -592,15 +592,15 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                                         if (odf.getDrFeeId() == null) {
                                             odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                         }
-                                        dao.save1(odf);
+                                        dao.save(odf);
                                     }
                                 }
                             }
 
-                            dao.save1(odh);
+                            dao.save(odh);
                         }
-                        dao.save1(currVou);
-                        dao.commit();
+                        dao.save(currVou);
+                        //dao.commit();
 
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
@@ -2384,7 +2384,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
     private void cboPaymentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentTypeActionPerformed
         if (cboBindStatus) {
-            if (!isPaid) {
+            //if (!isPaid) {
                 PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
                 double discount = NumberUtil.NZero(txtDiscA.getValue());
                 double tax = NumberUtil.NZero(txtTaxA.getValue());
@@ -2396,7 +2396,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     txtPaid.setValue(0);
                 }
                 calcBalance();
-            }
+            //}
         }
     }//GEN-LAST:event_cboPaymentTypeActionPerformed
 

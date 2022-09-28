@@ -235,4 +235,20 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
     public Double getTotal() {
         return total;
     }
+    
+    public int getCount(){
+        if(listBal != null){
+            return listBal.size();
+        }else{
+            return 0;
+        }
+    }
+    
+    public CurrPTBalance getPatientBalance(int index){
+        if(listBal != null){
+            return listBal.get(index);
+        }else{
+            return null;
+        }
+    }
 }

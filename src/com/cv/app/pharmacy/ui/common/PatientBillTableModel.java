@@ -90,4 +90,9 @@ public class PatientBillTableModel extends AbstractTableModel{
         
         return 0.0;
     }
+    
+    public void clear(){
+        listPBP = new ArrayList();
+        fireTableDataChanged();
+    }
 }

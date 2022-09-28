@@ -76,7 +76,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
         initCombo();
         actionMapping();
         deleteTmpData();
-
+        
         txtTotalCost.setHorizontalAlignment(JFormattedTextField.RIGHT);
         //txtTotalCost.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtCostDate.setText(DateUtil.getTodayDateStr());
