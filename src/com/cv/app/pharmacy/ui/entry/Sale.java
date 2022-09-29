@@ -361,7 +361,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     private void initButtonGroup() {
         ButtonGroup g = new ButtonGroup();
-        g.add(chkA4);
+        g.add(chkA5);
         g.add(chkVouComp);
         g.add(chkPrintOption);
     }
@@ -424,12 +424,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         Object tmpObj;
         String tmpCusId = "-";
         //tmpObj = Util1.getDefaultValue("Trader");
-        if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-            cboPayment.setSelectedItem(ptCash);
-        } else if (Util1.getPropValue("system.app.usage.type").equals("School")) {
-
-        } else {
-            try {
+        switch (Util1.getPropValue("system.app.usage.type")) {
+            case "Hospital":
+                cboPayment.setSelectedItem(ptCash);
+                break;
+            case "School":
+                break;
+            default:
+                try {
                 tmpObj = dao.find(Trader.class, Util1.getPropValue("system.default.customer"));
                 if (tmpObj != null) {
                     tmpCusId = ((Trader) tmpObj).getTraderId();
@@ -451,6 +453,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 cboPayment.setSelectedItem(Global.loginUser.getUserRole().getPaymentType());
                 isBind = false;
             }
+            break;
         }
 
         tmpObj = Util1.getDefaultValue("Currency");
@@ -498,7 +501,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (tmpObj != null) {
             chkPrintOption.setSelected((Boolean) tmpObj);
         }
-
+        chkA5.setSelected(Util1.getPropValue("chk.sale.A5").equals("Y"));
     }
 
     private void genVouNo() {
@@ -3094,13 +3097,17 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                 }
             }
+            String printerName = Util1.getPropValue("report.vou.printer");
+            String compName = Util1.getPropValue("report.company.name");
+            String bankInfo = Util1.getPropValue("report.bankinfo");
+            String printMode = Util1.getPropValue("report.vou.printer.mode");
+            if (chkA5.isSelected()) {
+                reportName = "W/SaleVoucherInvoiceA5";
+                printMode = "View";
+            }
             String reportPath = Util1.getAppWorkFolder()
                     + Util1.getPropValue("report.folder.path")
                     + reportName;
-            String printerName = Util1.getPropValue("report.vou.printer");
-            String compName = Util1.getPropValue("report.company.name");
-            String printMode = Util1.getPropValue("report.vou.printer.mode");
-            String bankInfo = Util1.getPropValue("report.bankinfo");
 
             Map<String, Object> params = new HashMap();
             params.put("p_bank_desp", bankInfo);
@@ -3261,6 +3268,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     + Util1.getPropValue("report.folder.path"));
             params.put("IMAGE_PATH", Util1.getAppWorkFolder()
                     + Util1.getPropValue("report.folder.path"));
+            String imagePath = Util1.getAppWorkFolder()
+                    + Util1.getPropValue("report.folder.path") + "img/logo.jpg";
+            params.put("imagePath", imagePath);
             params.put("comp_name", Util1.getPropValue("report.company.name1"));
             params.put("category", Util1.getPropValue("report.company.cat"));
             params.put("remark", txtRemark.getText());
@@ -3497,7 +3507,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         txtSaleDate.setText(DateUtil.getTodayDateStr());
         saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-
         //Location location = (Location) cboLocation.getSelectedItem();
         //saleTableModel.setLocation(location);
         //codeCellEditor.setLocationId(location.getLocationId());
@@ -4610,7 +4619,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         butSaveTemp = new javax.swing.JButton();
         butTempList = new javax.swing.JButton();
         cboEntryUser = new javax.swing.JComboBox<>();
-        chkA4 = new javax.swing.JCheckBox();
+        chkA5 = new javax.swing.JCheckBox();
         jPanel9 = new javax.swing.JPanel();
         txtTax = new javax.swing.JFormattedTextField();
         jLabel9 = new javax.swing.JLabel();
@@ -5394,48 +5403,46 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         cboEntryUser.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
-        chkA4.setText("A4");
+        chkA5.setText("A5");
 
         org.jdesktop.layout.GroupLayout jPanel13Layout = new org.jdesktop.layout.GroupLayout(jPanel13);
         jPanel13.setLayout(jPanel13Layout);
         jPanel13Layout.setHorizontalGroup(
             jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel13Layout.createSequentialGroup()
-                .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(chkPrintOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(chkAmount, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(chkVouComp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(chkA4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .add(0, 0, Short.MAX_VALUE))
-            .add(lblStatus, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .add(jPanel13Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel13Layout.createSequentialGroup()
-                        .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(jPanel13Layout.createSequentialGroup()
+                    .add(chkAmount, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel13Layout.createSequentialGroup()
+                        .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, chkPrintOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, lblStatus, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, cboEntryUser, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel13Layout.createSequentialGroup()
+                                .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(jPanel13Layout.createSequentialGroup()
+                                        .add(jLabel22)
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(txtTotalItem, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE))
+                                    .add(butSaveTemp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .add(butTempList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .add(0, 0, Short.MAX_VALUE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel13Layout.createSequentialGroup()
                                 .add(jLabel23)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(txtRecNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 47, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(jPanel13Layout.createSequentialGroup()
-                                .add(jLabel22)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(txtTotalItem, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 47, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(butSaveTemp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(butTempList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .add(0, 0, Short.MAX_VALUE))
-                    .add(cboEntryUser, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                                .add(txtRecNo))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, chkA5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(chkVouComp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap())))
         );
 
         jPanel13Layout.linkSize(new java.awt.Component[] {jLabel22, jLabel23}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
 
-        jPanel13Layout.linkSize(new java.awt.Component[] {chkAmount, chkPrintOption, chkVouComp}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
-
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel13Layout.createSequentialGroup()
-                .add(lblStatus)
+                .addContainerGap()
+                .add(lblStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 46, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(chkPrintOption)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -5443,7 +5450,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(chkVouComp)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(chkA4)
+                .add(chkA5)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel23)
@@ -6144,7 +6151,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JComboBox cboLocation;
     private javax.swing.JComboBox cboPayment;
     private javax.swing.JComboBox cboVouStatus;
-    private javax.swing.JCheckBox chkA4;
+    private javax.swing.JCheckBox chkA5;
     private javax.swing.JCheckBox chkAmount;
     private javax.swing.JCheckBox chkPrintOption;
     private javax.swing.JCheckBox chkVouComp;

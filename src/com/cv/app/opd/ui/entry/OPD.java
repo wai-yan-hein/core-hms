@@ -687,6 +687,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String printerName = Util1.getPropValue("report.vou.printer");
         params.put("link_amt_status", "N");
         params.put("link_amt", 0);
+        params.put("p_ttl_discount", 0.0);
         if (Util1.getPropValue("system.link.amount").equals("OPD")
                 && currVou.getPatient() != null) {
             try {
@@ -1849,7 +1850,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
                 "select o from SessionCheckCheckpoint o where o.tranOption = 'OPD' "
                 + " and o.tranInvId = '" + invId + "'");*/
-        
+
         canEdit = Util1.hashPrivilege("OPDVoucherEditChange");
         boolean isAllowEdit = Util1.hashPrivilege("OPDCreditVoucherEdit");
         double vouPaid = NumberUtil.NZero(currVou.getPaid());
