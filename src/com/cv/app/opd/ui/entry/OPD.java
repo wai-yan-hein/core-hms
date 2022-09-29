@@ -1253,7 +1253,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         txtVouTotal.setValue(modelTtl);
         calcBalance();
-
+        double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
+        
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());
             status = false;
@@ -1264,11 +1265,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        }/* else if(modelTtl == 0){
-            JOptionPane.showMessageDialog(Util1.getParent(), "No data to save.",
-                    "No Data", JOptionPane.ERROR_MESSAGE);
+        } else if(vouBalance != 0 && currVou.getPatient() == null){
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
+                    "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
-        }*/ else {
+            txtPatientNo.requestFocusInWindow();
+        } else {
             currVou.setOpdInvId(txtVouNo.getText());
             if (lblStatus.getText().equals("NEW")) {
                 currVou.setInvDate(DateUtil.toDateTime(txtDate.getText()));
@@ -1370,7 +1372,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 List<DoctorFeesMapping> listDFM = dao.findAllHSQL(
                         "select o from DoctorFeesMapping o where o.drId = '" + doctor.getDoctorId() + "'");
                 if (listDFM != null) {
-                    if (listDFM.size() > 0) {
+                    if (!listDFM.isEmpty()) {
                         HashMap<Integer, Double> doctFees = new HashMap();
 
                         for (DoctorFeesMapping dfm : listDFM) {

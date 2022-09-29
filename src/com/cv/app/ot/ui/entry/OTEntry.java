@@ -1356,7 +1356,8 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         double modelTotal = tableModel.getTotal();
         txtVouTotal.setValue(modelTotal);
         calcBalance();
-
+        double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
+        
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OT date error : " + txtVouNo.getText());
             status = false;
@@ -1367,6 +1368,11 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
+        } else if(vouBalance != 0 && currVou.getPatient() == null) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
+                    "Reg No", JOptionPane.ERROR_MESSAGE);
+            status = false;
+            txtPatientNo.requestFocusInWindow();
         } else {
             currVou.setOpdInvId(txtVouNo.getText());
             if (lblStatus.getText().equals("NEW")) {

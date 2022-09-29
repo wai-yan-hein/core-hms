@@ -1646,17 +1646,17 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         if (menu != null) {
             int index = tblReport.convertRowIndexToModel(tblReport.getSelectedRow());
             if (index >= 0) {
-                /*switch (menu.getMenuClass()) {
-                 case "OPD":
-                 insertOPDFilter();
-                 break;
-                 case "DC":
-                 insertDCFilter();
-                 break;
-                 case "OT":
-                 insertOTFilter();
-                 break;
-                 }*/
+                switch (menu.getMenuClass()) {
+                    case "OPD":
+                        insertOPDFilter();
+                        break;
+                    case "DC":
+                        insertDCFilter();
+                        break;
+                    case "OT":
+                        insertOTFilter();
+                        break;
+                }
 
                 Menu report = tableModel.getSelectedReport(index);
                 if (executeProcedure(report.getMenuClass())) {

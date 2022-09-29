@@ -3327,7 +3327,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private boolean isValidEntry() {
         boolean status = true;
         calculateTotalAmount();
-
+        double vouBal = NumberUtil.NZero(txtVouBalance.getText());
+        
         if (!Util1.hashPrivilege("CanEditSaleCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -3383,6 +3384,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     "No vou status.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboVouStatus.requestFocusInWindow();
+        } else if (vouBal != 0 && currSaleVou.getRegNo() == null) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
+                    "Reg No", JOptionPane.ERROR_MESSAGE);
+            status = false;
+            txtCusId.requestFocusInWindow();
         } else {
             try {
                 if (tblSale.getCellEditor() != null) {
