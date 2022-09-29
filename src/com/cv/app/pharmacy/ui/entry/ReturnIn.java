@@ -1046,7 +1046,8 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
 
     private boolean isValidEntry() {
         boolean status = true;
-
+        double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
+        
         if (!Util1.hashPrivilege("CanEditReturnCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1084,7 +1085,12 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     "No payment type.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboPayment.requestFocusInWindow();
-        } else {
+        } else if (vouBalance != 0 && currRetIn.getRegNo() == null){
+            JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
+                    "Reg No", JOptionPane.ERROR_MESSAGE);
+            status = false;
+            txtCusId.requestFocusInWindow();
+        }else {
             try {
                 if (tblRetIn.getCellEditor() != null) {
                     tblRetIn.getCellEditor().stopCellEditing();
