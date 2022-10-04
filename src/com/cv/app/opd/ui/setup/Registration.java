@@ -1159,6 +1159,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel32 = new javax.swing.JLabel();
         cboDr = new javax.swing.JComboBox<>();
         jButton1 = new javax.swing.JButton();
+        txtFromDate = new com.toedter.calendar.JDateChooser();
+        txtToDate = new com.toedter.calendar.JDateChooser();
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Registration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
@@ -1790,6 +1792,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
+        txtFromDate.setFont(Global.textFont);
+
+        txtToDate.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1810,9 +1816,12 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGap(152, 152, 152)
+                                .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(jLabel31)
-                                .addGap(152, 152, 152)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(cboDr, 0, 103, Short.MAX_VALUE)
@@ -1834,7 +1843,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addComponent(cboDr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel32)
                         .addComponent(butRefresh)
-                        .addComponent(jButton1)))
+                        .addComponent(jButton1))
+                    .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2172,6 +2183,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JFormattedTextField txtDOB;
     private javax.swing.JTextField txtDay;
     private javax.swing.JTextField txtFatherName;
+    private com.toedter.calendar.JDateChooser txtFromDate;
     private javax.swing.JTextField txtMonth;
     private javax.swing.JTextField txtNIRC;
     private javax.swing.JTextField txtName;
@@ -2180,6 +2192,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JTextField txtRegNo;
     private javax.swing.JTextField txtReligion;
     private javax.swing.JFormattedTextField txtSearch;
+    private com.toedter.calendar.JDateChooser txtToDate;
     private javax.swing.JFormattedTextField txtTotalRecord;
     // End of variables declaration//GEN-END:variables
 }
