@@ -1154,13 +1154,13 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         txtTotalRecord = new javax.swing.JFormattedTextField();
         jLabel29 = new javax.swing.JLabel();
         butRefresh = new javax.swing.JButton();
-        txtFromDate = new com.toedter.calendar.JDateChooser();
         jLabel30 = new javax.swing.JLabel();
         jLabel31 = new javax.swing.JLabel();
-        txtToDate = new com.toedter.calendar.JDateChooser();
         jLabel32 = new javax.swing.JLabel();
         cboDr = new javax.swing.JComboBox<>();
         jButton1 = new javax.swing.JButton();
+        txtFromDate = new com.toedter.calendar.JDateChooser();
+        txtToDate = new com.toedter.calendar.JDateChooser();
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Registration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
@@ -1767,27 +1767,11 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
-        txtFromDate.setDateFormatString("dd/MM/yyyy");
-        txtFromDate.setFont(Global.textFont);
-        txtFromDate.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-            public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                txtFromDatePropertyChange(evt);
-            }
-        });
-
         jLabel30.setFont(Global.lableFont);
         jLabel30.setText("From Date");
 
         jLabel31.setFont(Global.lableFont);
         jLabel31.setText("To Date");
-
-        txtToDate.setDateFormatString("dd/MM/yyyy");
-        txtToDate.setFont(Global.textFont);
-        txtToDate.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-            public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                txtToDatePropertyChange(evt);
-            }
-        });
 
         jLabel32.setFont(Global.lableFont);
         jLabel32.setText("Doctor");
@@ -1807,6 +1791,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 jButton1ActionPerformed(evt);
             }
         });
+
+        txtFromDate.setFont(Global.textFont);
+
+        txtToDate.setFont(Global.textFont);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1828,12 +1816,12 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(txtFromDate, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel31)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtToDate, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel31)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(cboDr, 0, 103, Short.MAX_VALUE)
@@ -1849,15 +1837,15 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel30)
                     .addComponent(jLabel31)
-                    .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(cboDr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel32)
                         .addComponent(butRefresh)
-                        .addComponent(jButton1)))
+                        .addComponent(jButton1))
+                    .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
