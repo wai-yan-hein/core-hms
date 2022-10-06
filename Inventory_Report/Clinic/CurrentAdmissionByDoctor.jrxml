@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -26,12 +26,12 @@
 	<queryString>
 		<![CDATA[select pd.reg_no, pd.patient_name, g.description sex, date(pd.ams_date) ams_date, ifnull(c.city_name,'-') city_name , d.doctor_name,ifnull(bs.description,'-') room_no,pd.ams_no,
 (datediff(now(), date(pd.ams_date))+1) as ttl_hps
-from admission pd left join gender g on pd.sex = g.gender_id
-left join city c on pd.city_id = c.city_id left join doctor d on pd.doctor_id = d.doctor_id left join building_structure bs on
-pd.building_structure_id = bs. id
+from admission pd 
+left join gender g on pd.sex = g.gender_id
+left join city c on pd.city_id = c.city_id 
+left join doctor d on pd.doctor_id = d.doctor_id 
+left join building_structure bs on pd.building_structure_id = bs. id
 where pd.dc_status is null
-and (pd.sex = $P{gender} or $P{gender} = '-')
-and (pd.city_id = $P{city} or $P{city} = -1)
 and (pd.doctor_id = $P{doctor} or $P{doctor} = '-')
 group by pd.reg_no, pd.patient_name, g.description,date(pd.ams_date), c.city_name , d.doctor_name,bs.description,pd.ams_no
 order by d.doctor_name,date(ams_date),pd.patient_name]]>

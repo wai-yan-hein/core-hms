@@ -155,7 +155,7 @@ public class DateUtil {
 
         try {
             date = formatter.parse(strDate.toString());
-        } catch (ParseException ex) {
+        } catch (Exception ex) {
             //System.out.println("toDateStr : " + ex.getMessage());
         }
 
