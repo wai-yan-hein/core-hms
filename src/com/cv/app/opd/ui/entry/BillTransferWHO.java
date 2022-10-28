@@ -169,7 +169,8 @@ public class BillTransferWHO extends javax.swing.JPanel implements SelectionObse
                             rs.getString("pd_status"),
                             rs.getString("admission_no"),
                             rs.getString("age"),
-                            rs.getDouble("ttl_amt")
+                            rs.getDouble("ttl_amt"),
+                            0
                     );
 
                     list.add(btd);

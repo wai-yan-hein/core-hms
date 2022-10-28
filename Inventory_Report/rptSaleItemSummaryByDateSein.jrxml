@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleItemSummary" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b09d6a1a-0c64-4541-8bc9-e407e0c34e79">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<parameter name="data_date" class="java.lang.String"/>
 	<parameter name="user_id" class="java.lang.String"/>
@@ -14,31 +16,31 @@
 	<parameter name="session" class="java.lang.String"/>
 	<parameter name="prm_payment" class="java.lang.Integer"/>
 	<queryString>
-		<![CDATA[select date(vs.sale_date) sale_date,rg.item_unit, vs.med_id,vs.med_name,med.rel_str,it.item_type_name,
-it.item_type_code,sum(ifnull(sale_smallest_qty,0)) sale_smallest,get_qty_in_str(sum(ifnull(sale_smallest_qty,0)), med.unit_smallest, med.unit_str) ttl_qty,
-sum(vs.sale_amount) amount,
-get_qty_in_str(sum(ifnull(vs.foc_smallest_qty,0)), med.unit_smallest, med.unit_str) foc_qty,
-get_qty_in_str(sum(ifnull(sale_smallest_qty,0)+ifnull(vs.foc_smallest_qty,0)), med.unit_smallest, med.unit_str) ttl,
-sum(vs.sale_amount)/sum(ifnull(sale_smallest_qty,1)) sale_price
-  from v_sale vs, currency cur, v_med_unit_smallest_rel med,medicine m,item_type it,payment_type pt,v_med_rel_smallest_unit vmrsu,relation_group rg
- where vs.currency_id = cur.cur_code
-   and vs.med_id = vmrsu.med_id and vmrsu.rel_group_id = rg.rel_group_id
-   and vs.med_id = med.med_id and vs.deleted = false and vs.med_id = m.med_id and m.med_type_id = it.item_type_code and
-   vs.payment_type_id = pt.payment_type_id
-   and date(vs.sale_date) between $P{prm_from} and $P{prm_to}
-   and (vs.location_id = $P{prm_location} or $P{prm_location} = 0)
-   and (vs.currency_id = $P{prm_currency} or $P{prm_currency} = 'All')
-   and (vs.session_id = $P{session} or $P{session} = '-')
-   and (vs.payment_type_id = $P{prm_payment} or $P{prm_payment} = 0)
-   and (vs.med_id in (select distinct med_id from tmp_stock_filter where user_id = $P{user_id}))
-group by date(vs.sale_date),it.item_type_name,
-vs.med_id,vs.med_name,med.rel_str,it.item_type_code,rg.item_unit
-order by date(vs.sale_date),it.item_type_code,vs.med_name]]>
+		<![CDATA[select vs.sale_date, it.item_type_code, vs.med_id,m.med_name,med.rel_str,it.item_type_name,vs.sale_price,
+       get_qty_in_str(vs.sale_small_qty, med.unit_smallest, med.unit_str) ttl_qty,
+       vs.amount, vs.sale_small_qty,
+       get_qty_in_str(vs.foc_qty, med.unit_smallest, med.unit_str) foc_qty,
+       get_qty_in_str(vs.sale_small_qty+vs.foc_qty, med.unit_smallest, med.unit_str) ttl,
+       vs.opd_sale, vs.adm_sale
+  from (select date(vs.sale_date) sale_date, vs.med_id, vs.currency_id, vs.sale_price, sum(ifnull(vs.sale_smallest_qty,0)) sale_small_qty,
+			   sum(ifnull(vs.foc_smallest_qty,0)) foc_qty, sum(vs.sale_amount) amount,
+			   sum(if(ifnull(vs.admission_no,'')='',vs.sale_amount,0)) opd_sale,
+			   sum(if(ifnull(vs.admission_no,'')='',0,vs.sale_amount)) adm_sale
+		  from v_sale1 vs
+		 where vs.deleted = false
+           and date(vs.sale_date) between $P{prm_from} and $P{prm_to}
+		   and (vs.location_id = $P{prm_location} or $P{prm_location} = 0)
+		   and (vs.currency_id = $P{prm_currency} or $P{prm_currency} = 'All')
+		   and (vs.session_id = $P{session} or $P{session} = '-')
+		   and (vs.med_id in (select distinct med_id from tmp_stock_filter where user_id = $P{user_id}))
+	     group by date(vs.sale_date), vs.med_id, vs.currency_id, vs.sale_price) vs
+   join currency cur on vs.currency_id = cur.cur_code
+   join v_med_unit_smallest_rel med on vs.med_id = med.med_id
+   join medicine m on vs.med_id = m.med_id and m.med_id = med.med_id
+   join item_type it on m.med_type_id = it.item_type_code
+   order by date(vs.sale_date),it.item_type_code,m.med_name]]>
 	</queryString>
 	<field name="sale_date" class="java.sql.Date">
-		<fieldDescription><![CDATA[]]></fieldDescription>
-	</field>
-	<field name="item_unit" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
 	<field name="med_id" class="java.lang.String"/>
@@ -50,7 +52,7 @@ order by date(vs.sale_date),it.item_type_code,vs.med_name]]>
 	<field name="item_type_code" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="sale_smallest" class="java.lang.Double"/>
+	<field name="sale_small_qty" class="java.lang.Double"/>
 	<field name="ttl_qty" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
@@ -307,7 +309,7 @@ order by date(vs.sale_date),it.item_type_code,vs.med_name]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{sale_smallest}+" "+$F{item_unit}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{sale_small_qty}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;(-#,##0.00)">
 				<reportElement x="254" y="1" width="52" height="17" uuid="7f90f13b-e812-4cee-b150-9b89aeeb7848"/>

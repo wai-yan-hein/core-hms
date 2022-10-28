@@ -9,7 +9,9 @@ import datechooser.beans.DateChooserDialog;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,6 +25,8 @@ import org.springframework.richclient.application.Application;
  * @author WSwe
  */
 public class DateUtil {
+
+    static private LocalTime startTime;
 
     public static Date getDateDialog() {
         Date selectedDate = null;
@@ -639,5 +643,19 @@ public class DateUtil {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         return sdf.format(d1).equals(sdf.format(d2));
+    }
+
+    public static void setStartTime() {
+        startTime = LocalTime.now();
+    }
+
+    public static long getDuration() {
+        if (startTime == null) {
+            return -1;
+        } else {
+            LocalTime endTime = LocalTime.now();
+            Duration diff = Duration.between(startTime, endTime);
+            return diff.getSeconds();
+        }
     }
 }

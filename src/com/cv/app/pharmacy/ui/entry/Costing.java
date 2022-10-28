@@ -27,6 +27,7 @@ import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.StockCostingDetailTableModel;
 import com.cv.app.pharmacy.ui.common.StockCostingTableModel;
+import static com.cv.app.pharmacy.ui.entry.Report.log;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -363,21 +364,12 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "             union all \n"
                 + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                 + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
-                + "              from v_lab_med_usage vlmu, tmp_stock_filter tsf\n"
+                + "              from v_med_usage vlmu, tmp_stock_filter tsf\n"
                 + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
                 + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
                 + "               and date(vlmu.opd_date) <= prm_stock_date \n"
                 + "               and (vlmu.location_id = prm_location or prm_location = 0)\n"
                 + "             group by vlmu.location_id, vlmu.med_id \n"
-                + "             union all \n"
-                + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
-                + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
-                + "              from v_investigation_med_usage vlmu, tmp_stock_filter tsf\n"
-                + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
-                + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
-                + "               and date(vlmu.opd_date) <= prm_stock_date \n"
-                + "               and (vlmu.location_id = prm_location or prm_location = 0)\n"
-                + "             group by vlmu.location_id, vlmu.med_id\n"
                 + "             union all\n"
                 + "	       select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                 + "                   a.location_id, a.med_id, null exp_date, (sum(a.ttl)*-1) as ttl_qty\n"
@@ -1318,7 +1310,9 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
   }//GEN-LAST:event_txtCostDateMouseClicked
 
     private void butCalculateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCalculateActionPerformed
+        DateUtil.setStartTime();
         calculate();
+        log.info("calculate duration : " + DateUtil.getDuration());
     }//GEN-LAST:event_butCalculateActionPerformed
 
   private void cboItemTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboItemTypeActionPerformed

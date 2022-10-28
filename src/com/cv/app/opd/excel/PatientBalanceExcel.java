@@ -99,7 +99,7 @@ public class PatientBalanceExcel extends GenExcel {
 "	     from tmp_bill_payment tbp join (\n" +
 "                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0))) amt\n" +
 "		  from opd_patient_bill_payment\n" +
-"		 where reg_no is not null\n" +
+"		 where reg_no is not null and deleted = false\n" +
 "		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no \n" +
 "                 and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}\n" +
 "	     where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})\n" +

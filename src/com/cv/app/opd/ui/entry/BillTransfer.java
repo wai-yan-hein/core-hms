@@ -7,6 +7,7 @@ package com.cv.app.opd.ui.entry;
 import com.cv.app.common.Global;
 import static com.cv.app.common.Global.dao;
 import com.cv.app.common.SelectionObserver;
+import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.opd.database.entity.BTDKey;
 import com.cv.app.opd.database.entity.BillTransferDetailHis;
 import com.cv.app.opd.database.entity.BillTransferHis;
@@ -18,6 +19,7 @@ import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.ui.util.TraderSearchDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
+import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.ui.common.VouFormatFactory;
 import com.cv.app.util.BindingUtil;
@@ -29,6 +31,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
 
 /**
@@ -42,6 +47,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     private GenVouNoImpl vouEngine = null;
     private Trader cus = null;
     private BillTransferTableModel model = new BillTransferTableModel();
+    private final TableRowSorter<TableModel> sorter;
+    private final StartWithRowFilter swrf;
 
     /**
      * Creates new form BillTransfer
@@ -62,6 +69,10 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         } finally {
             dao.close();
         }
+
+        swrf = new StartWithRowFilter(txtFilter);
+        sorter = new TableRowSorter(tblTransaction.getModel());
+        tblTransaction.setRowSorter(sorter);
     }
 
     private void initCombo() {
@@ -206,7 +217,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 + "				 union all\n"
                 + "				select reg_no, ifnull(admission_no,'') as admission_no, currency_id, bill_type_id as pay_type, sum(pay_amt)*-1 amt\n"
                 + "				  from opd_patient_bill_payment \n"
-                + "				 where date(pay_date)<=$P{to_date} \n"
+                + "				 where date(pay_date)<=$P{to_date} and deleted = false \n"
                 + "				   and (ifnull(reg_no,'-') =  $P{reg_no} or '-'= $P{reg_no})\n"
                 + "                                and (bill_type_id = $P{payment} or $P{payment} = 0) \n"
                 + "				   and (currency_id = $P{currency_id}) \n"
@@ -253,7 +264,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                             pdStatus,
                             rs.getString("admission_no"),
                             rs.getString("payment_type_name"),
-                            rs.getDouble("amt")
+                            rs.getDouble("amt"),
+                            rs.getInt("pay_type")
                     );
 
                     list.add(btd);
@@ -308,6 +320,10 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             status = false;
             JOptionPane.showMessageDialog(Util1.getParent(), "Please select customer.",
                     "Customer", JOptionPane.ERROR_MESSAGE);
+        } else if (!(cboBillType.getSelectedItem() instanceof PaymentType)) {
+            status = false;
+            JOptionPane.showMessageDialog(Util1.getParent(), "Please select bill type.",
+                    "Bill Type", JOptionPane.ERROR_MESSAGE);
         }
 
         return status;
@@ -315,7 +331,15 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
 
     private void save() {
         try {
-            
+            Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
+            Date lockDate = PharmacyUtil.getLockDate(dao);
+            if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                        + DateUtil.toDateStr(lockDate) + ".",
+                        "Locked Data", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             Integer billType = ((PaymentType) cboBillType.getSelectedItem()).getPaymentTypeId();
             String billTypeDesp = ((PaymentType) cboBillType.getSelectedItem()).getPaymentTypeName();
             Date createdDate = new Date();
@@ -334,21 +358,24 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 dao.save(btdh);
 
                 PatientBillPayment pbp = new PatientBillPayment();
-                if (Util1.getNullTo(btd.getAdmissionNo(),"-").equals("-")) {
+                if (Util1.getNullTo(btd.getAdmissionNo(), "-").equals("-")) {
                     pbp.setAdmissionNo(null);
                     pbp.setPtType("OPD");
                 } else {
                     pbp.setAdmissionNo(btd.getAdmissionNo());
                     pbp.setPtType("ADMISSION");
                 }
+                
+                pbp.setDelete(Boolean.FALSE);
                 pbp.setBillTypeDesp(billTypeDesp);
-                pbp.setBillTypeId(billType);
+                pbp.setBillTypeId(btd.getPayTypeId());
                 pbp.setCreatedBy(Global.loginUser.getUserId());
                 pbp.setCreatedDate(createdDate);
                 pbp.setCurrency("MMK");
                 pbp.setPayAmt(btd.getAmount());
                 pbp.setPayDate(DateUtil.toDate(txtTranDate.getText()));
                 pbp.setRegNo(btd.getRegNo());
+                
                 if (chkFixbalance.isSelected()) {
                     pbp.setRemark(vouNo + "@Fix Balance");
                 } else {
@@ -379,9 +406,93 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
 
             vouEngine.updateVouNo();
 
-            //updateToTran(vouNo);
+            genVouNo();
+            search();
         } catch (Exception ex) {
             log.error("save : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    public void save(BillTransferDetail btd) {
+        try {
+
+            Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
+            Date lockDate = PharmacyUtil.getLockDate(dao);
+            if (vouSaleDate.before(lockDate) || vouSaleDate.equals(lockDate)) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Data is locked at "
+                        + DateUtil.toDateStr(lockDate) + ".",
+                        "Locked Data", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            Integer billType = btd.getPayTypeId();
+            String billTypeDesp = btd.getStrAge();
+            Date createdDate = new Date();
+            String vouNo = txtTranVouNo.getText();
+
+            BTDKey key = new BTDKey();
+            key.setBthId(txtTranVouNo.getText());
+            key.setRegNo(Util1.isNull(btd.getRegNo(), "-"));
+
+            BillTransferDetailHis btdh = new BillTransferDetailHis();
+            btdh.setKey(key);
+            btdh.setAmount(btd.getAmount());
+
+            dao.save(btdh);
+
+            PatientBillPayment pbp = new PatientBillPayment();
+            if (Util1.getNullTo(btd.getAdmissionNo(), "-").equals("-")) {
+                pbp.setAdmissionNo(null);
+                pbp.setPtType("OPD");
+            } else {
+                pbp.setAdmissionNo(btd.getAdmissionNo());
+                pbp.setPtType("ADMISSION");
+            }
+            
+            pbp.setDelete(Boolean.FALSE);
+            pbp.setBillTypeDesp(billTypeDesp);
+            pbp.setBillTypeId(billType);
+            pbp.setCreatedBy(Global.loginUser.getUserId());
+            pbp.setCreatedDate(createdDate);
+            pbp.setCurrency("MMK");
+            pbp.setPayAmt(btd.getAmount());
+            pbp.setPayDate(DateUtil.toDate(txtTranDate.getText()));
+            pbp.setRegNo(btd.getRegNo());
+            if (chkFixbalance.isSelected()) {
+                pbp.setRemark(vouNo + "@Fix Balance");
+            } else {
+                pbp.setRemark(vouNo + "@Bill Transfer");
+            }
+
+            dao.save(pbp);
+
+            BillTransferHis bth = new BillTransferHis();
+            bth.setBillType(billType);
+            bth.setBthId(vouNo);
+            bth.setCreatedDate(createdDate);
+            bth.setDataFrom(DateUtil.toDate(txtDataFrom.getText()));
+            //bth.setDataTo(DateUtil.toDate(txtDataTo.getText()));
+            bth.setMacId(Integer.parseInt(Global.machineId));
+            bth.setRemark(txtRemark.getText());
+            bth.setTranDate(DateUtil.toDate(txtTranDate.getText()));
+            bth.setUserId(Global.loginUser.getUserId());
+            bth.setTotalAmt(NumberUtil.NZero(txtTotal.getValue()));
+            if (chkFixbalance.isSelected()) {
+                bth.setTranOption("FIXBALANCE");
+            } else {
+                bth.setTranOption("BILLTRANSFER");
+                bth.setTraderId(cus.getTraderId());
+            }
+            dao.save(bth);
+
+            vouEngine.updateVouNo();
+
+            genVouNo();
+            search();
+        } catch (Exception ex) {
+            log.error("save1 : " + ex.getMessage());
         } finally {
             dao.close();
         }
@@ -412,6 +523,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         txtRemark = new javax.swing.JTextField();
         chkFixbalance = new javax.swing.JCheckBox();
         cboCurrency = new javax.swing.JComboBox<>();
+        jLabel3 = new javax.swing.JLabel();
+        txtFilter = new javax.swing.JTextField();
 
         txtDataFrom.setBorder(javax.swing.BorderFactory.createTitledBorder("Balance Date"));
         txtDataFrom.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -468,6 +581,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         tblTransaction.setFont(Global.textFont);
         tblTransaction.setModel(model);
         tblTransaction.setRowHeight(23);
+        tblTransaction.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblTransactionMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblTransaction);
 
         txtTotal.setEditable(false);
@@ -491,6 +609,15 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
 
         cboCurrency.setBorder(javax.swing.BorderFactory.createTitledBorder("Currency"));
 
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel3.setText("Filter : ");
+
+        txtFilter.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtFilterKeyReleased(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -503,7 +630,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                         .addComponent(jLabel2)
                         .addGap(2, 2, 2)
                         .addComponent(txtTotalRecords, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -522,7 +653,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtCustomer)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtRemark, javax.swing.GroupLayout.DEFAULT_SIZE, 12, Short.MAX_VALUE)
+                        .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, 12, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkFixbalance, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -555,7 +686,9 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                     .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
-                    .addComponent(txtTotalRecords, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtTotalRecords, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -624,6 +757,30 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         }
     }//GEN-LAST:event_chkFixbalanceActionPerformed
 
+    private void tblTransactionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTransactionMouseClicked
+        if (evt.getClickCount() == 2) {
+            if (cus == null && !chkFixbalance.isSelected()) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Please select customer.",
+                        "Customer", JOptionPane.ERROR_MESSAGE);
+            } else {
+                int selectIndex = tblTransaction.getSelectedRow();
+                selectIndex = tblTransaction.convertRowIndexToModel(selectIndex);
+                BillTransferDetail btd = model.getSelectedData(selectIndex);
+                save(btd);
+            }
+        }
+    }//GEN-LAST:event_tblTransactionMouseClicked
+
+    private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
+        if (txtFilter.getText().isEmpty()) {
+            sorter.setRowFilter(null);
+        } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
+            sorter.setRowFilter(swrf);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
+        }
+    }//GEN-LAST:event_txtFilterKeyReleased
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butSearch;
@@ -633,10 +790,12 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JCheckBox chkFixbalance;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblTransaction;
     private javax.swing.JTextField txtCustomer;
     private javax.swing.JFormattedTextField txtDataFrom;
+    private javax.swing.JTextField txtFilter;
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtTotal;
     private javax.swing.JFormattedTextField txtTotalRecords;

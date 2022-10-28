@@ -295,7 +295,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 + "join location l on sh.location = l.location_id \n"
                 + "left join patient_detail pd on sh.reg_no = pd.reg_no \n"
                 + "left join trader tr on sh.cus_id = tr.trader_id "
-                + "where sh.ret_in_date between '" + DateUtil.toDateStrMYSQL(txtFromDate.getText()) + "' and '"
+                + "where date(sh.ret_in_date) between '" + DateUtil.toDateStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQL(txtToDate.getText()) + "'";
         
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
@@ -769,7 +769,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                     .addComponent(jLabel10)
                     .addComponent(txtDesp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 311, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -823,7 +823,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTotalAmount, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(318, 318, 318)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 21, Short.MAX_VALUE)
                         .addComponent(butSearch)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butSelect, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -838,7 +838,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGap(13, 13, 13)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 540, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)

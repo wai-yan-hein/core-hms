@@ -31,6 +31,9 @@ public class RetInDetailHis implements java.io.Serializable{
     private String vouNo;
     private Double costPrice;
     
+    private ItemUnit saleUnit;
+    private Double salePrice;
+    
     @Column(name="ret_in_amount")
     public Double getAmount() {
         return amount;
@@ -159,5 +162,23 @@ public class RetInDetailHis implements java.io.Serializable{
 
     public void setCostPrice(Double costPrice) {
         this.costPrice = costPrice;
+    }
+
+    @Transient
+    public ItemUnit getSaleUnit() {
+        return saleUnit;
+    }
+
+    public void setSaleUnit(ItemUnit saleUnit) {
+        this.saleUnit = saleUnit;
+    }
+
+    @Transient
+    public Double getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(Double salePrice) {
+        this.salePrice = salePrice;
     }
 }
