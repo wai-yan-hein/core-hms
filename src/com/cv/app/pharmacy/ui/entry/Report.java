@@ -93,6 +93,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -111,8 +113,15 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableCellEditor;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
+import org.json.JSONObject;
 
 /**
  *
@@ -3916,27 +3925,27 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     private void butRemotePrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRemotePrintActionPerformed
         try {
-            /*     CloseableHttpClient client = HttpClients.createDefault();
+            CloseableHttpClient client = HttpClients.createDefault();
             HttpPost req = new HttpPost("http://localhost:8089/HMSPrintApi/printPharmacyReport");
             req.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-            
+
             JSONObject parameters = new JSONObject();
             parameters.put("valueA", 1);
             parameters.put("valueB", 2);
-            
+
             StringEntity se = new StringEntity(parameters.toString());
             req.setEntity(se);
-            
+
             CloseableHttpResponse res = client.execute(req);
-            
+
             log.info("Status : " + res.getCode());
-            
+
             BufferedReader br = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
             String output;
             while ((output = br.readLine()) != null) {
-            log.info("return from server : " + output);
-            }*/
- /*RestTemplate restTemplate = new RestTemplate();
+                log.info("return from server : " + output);
+            }
+            /*RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
