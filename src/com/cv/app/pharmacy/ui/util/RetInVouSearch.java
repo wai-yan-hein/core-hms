@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
  * @author winswe
  */
 public class RetInVouSearch extends javax.swing.JPanel implements SelectionObserver {
-    
+
     static Logger log = Logger.getLogger(RetInVouSearch.class.getName());
     private AbstractDataAccess dao;
     private Object parent;
@@ -64,11 +64,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
      */
     public RetInVouSearch(Object parent, SelectionObserver observer, AbstractDataAccess dao) {
         initComponents();
-        
+
         this.parent = parent;
         this.observer = observer;
         this.dao = dao;
-        
+
         try {
             //tblMedicineModel = new CodeTableModel(dao, true, "RetInSearch");
             dao.open();
@@ -80,7 +80,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
 
         //Search history
         getPrvFilter();
-        
+
         search();
         initTableMedicine();
         sorter = new TableRowSorter(tblVoucher.getModel());
@@ -88,7 +88,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         actionMapping();
         initTableVoucher();
         addSelectionListenerVoucher();
-        
+
         String propValue = Util1.getPropValue("system.date.mouse.click");
         if (propValue != null) {
             if (!propValue.equals("-")) {
@@ -100,16 +100,16 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 }
             }
         }
-        
+
         txtTotalAmount.setFormatterFactory(NumberUtil.getDecimalFormat());
     }
-    
+
     @Override
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
             case "CustomerList":
                 Trader cus = (Trader) selectObj;
-                
+
                 if (cus != null) {
                     if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
                         txtCusCode.setText(cus.getStuCode());
@@ -121,11 +121,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 } else {
                     vouFilter.setTrader(null);
                 }
-                
+
                 break;
         }
     }
-    
+
     private void getCustomerList() {
         int locationId = -1;
         if (cboLocation.getSelectedItem() instanceof Location) {
@@ -144,11 +144,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             BindingUtil.BindComboFilter(cboPayment, dao.findAll("PaymentType"));
             BindingUtil.BindComboFilter(cboLocation, dao.findAll("Location"));
             BindingUtil.BindComboFilter(cboSession, dao.findAll("Session"));
-            
+
             new ComBoBoxAutoComplete(cboPayment);
             new ComBoBoxAutoComplete(cboLocation);
             new ComBoBoxAutoComplete(cboSession);
-            
+
             cboPayment.setSelectedIndex(0);
             cboLocation.setSelectedIndex(0);
             cboSession.setSelectedIndex(0);
@@ -177,7 +177,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 new SaleTableCodeCellEditor(dao));
         tblMedicine.getTableHeader().setFont(Global.lableFont);
     }
-    
+
     private void initTableVoucher() {
         tblVoucher.getColumnModel().getColumn(0).setPreferredWidth(30);
         tblVoucher.getColumnModel().getColumn(1).setPreferredWidth(60);
@@ -185,11 +185,11 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         tblVoucher.getColumnModel().getColumn(3).setPreferredWidth(20);
         tblVoucher.getColumnModel().getColumn(4).setPreferredWidth(30);
         tblVoucher.getColumnModel().getColumn(5).setPreferredWidth(30);
-        
+
         tblVoucher.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
         tblVoucher.getTableHeader().setFont(Global.lableFont);
     }
-    
+
     private void addSelectionListenerVoucher() {
         //Define table selection model to single row selection.
         tblVoucher.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -199,7 +199,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         });
     }
     private Action actionMedList = new AbstractAction() {
-        
+
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
@@ -218,7 +218,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         try {
             Medicine medicine = (Medicine) dao.find("Medicine", "medId = '"
                     + medCode + "' and active = true");
-            
+
             if (medicine != null) {
                 selected("MedicineList", medicine);
             } else {
@@ -246,7 +246,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             }
         }*/
         MedListDialog1 dialog = new MedListDialog1(dao, filter, locationId, cusGroup);
-        
+
         if (dialog.getSelect() != null) {
             selected("MedicineList", dialog.getSelect());
         }
@@ -267,7 +267,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         //tblSale.getActionMap().put("ENTER-Action", actionTblSaleEnterKey);
     }// </editor-fold>
     private Action actionMedDelete = new AbstractAction() {
-        
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (tblMedicine.getSelectedRow() >= 0) {
@@ -275,7 +275,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             }
         }
     };
-    
+
     private String getHSQL() {
         /*String strSql = "select distinct v from RetInHis v join v.listDetail h where v.retInDate between '"
                 + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
@@ -295,12 +295,12 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 + "join location l on sh.location = l.location_id \n"
                 + "left join patient_detail pd on sh.reg_no = pd.reg_no \n"
                 + "left join trader tr on sh.cus_id = tr.trader_id "
-                + "where sh.ret_in_date between '" + DateUtil.toDateStrMYSQL(txtFromDate.getText()) + "' and '"
+                + "where date(sh.ret_in_date) between '" + DateUtil.toDateStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQL(txtToDate.getText()) + "'";
-        
+
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));
         vouFilter.setToDate(DateUtil.toDate(txtToDate.getText()));
-        
+
         if (txtCusCode.getText() != null && !txtCusCode.getText().isEmpty()) {
             if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                 strSql = strSql + " and sh.reg_no = '" + txtCusCode.getText() + "'";
@@ -310,7 +310,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } else {
             vouFilter.setTrader(null);
         }
-        
+
         if (cboLocation.getSelectedItem() instanceof Location) {
             Location location = (Location) cboLocation.getSelectedItem();
             strSql = strSql + " and sh.location = " + location.getLocationId();
@@ -323,7 +323,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                         + "' and a.allow_sale = true)";
             }
         }
-        
+
         if (cboSession.getSelectedItem() instanceof Session) {
             Session session = (Session) cboSession.getSelectedItem();
             strSql = strSql + " and sh.session_id = " + session.getSessionId();
@@ -331,7 +331,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } else {
             vouFilter.setSession(null);
         }
-        
+
         if (cboPayment.getSelectedItem() instanceof PaymentType) {
             PaymentType paymentType = (PaymentType) cboPayment.getSelectedItem();
             strSql = strSql + " and sh.payment_type = " + paymentType.getPaymentTypeId();
@@ -339,7 +339,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } else {
             vouFilter.setPaymentType(null);
         }
-        
+
         if (txtCode.getText() != null) {
             if (!txtCode.getText().trim().isEmpty()) {
                 String itemCode = txtCode.getText().trim().toUpperCase();
@@ -351,7 +351,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } else {
             vouFilter.setItemCode(null);
         }
-        
+
         if (txtDesp.getText() != null) {
             if (!txtDesp.getText().trim().isEmpty()) {
                 String itemDesp = txtDesp.getText().trim().toUpperCase();
@@ -376,13 +376,13 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } catch (Exception ex) {
             log.error("getHSQL : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-        
+
         List<VouCodeFilter> listMedicine = tblMedicineModel.getListCodeFilter();
-        
+
         if (listMedicine.size() > 1) {
             strSql = strSql + " and sdh.med_id in (";
             String medList = "";
-            
+
             for (VouCodeFilter filter : listMedicine) {
                 if (filter.getKey() != null) {
                     if (medList.length() > 0) {
@@ -392,17 +392,17 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                     }
                 }
             }
-            
+
             strSql = strSql + medList + ")";
         }
-        
+
         return strSql + " order by date(sh.ret_in_date) desc, sh.ret_in_id";
     }
-    
+
     private List<VoucherSearch> getSearchVoucher() {
         String strSql = getHSQL();
         List<VoucherSearch> listVS = null;
-        
+
         try {
             ResultSet rs = dao.execSQL(strSql);
             listVS = new ArrayList();
@@ -423,31 +423,31 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                     vs.setTranDate(rs.getDate("ret_in_date"));
                     vs.setUserName(rs.getString("user_name"));
                     vs.setVouTotal(rs.getDouble("vou_total"));
-                    
+
                     listVS.add(vs);
                 }
             }
-            
+
         } catch (Exception ex) {
             log.error("getSearchVoucher : " + ex.toString());
         } finally {
             dao.close();
         }
-        
+
         return listVS;
     }
-    
+
     private void search() {
         vouTableModel.setListRetInHis(getSearchVoucher());
         txtTotalAmount.setValue(vouTableModel.getTotal());
         lblTotalRec.setText("Total Records : " + vouTableModel.getRowCount());
     }
-    
+
     private void select() {
         if (selectedRow >= 0) {
             observer.selected("RetInVouList",
                     vouTableModel.getSelectVou(tblVoucher.convertRowIndexToModel(selectedRow)));
-            
+
             if (parent instanceof JDialog) {
                 ((JDialog) parent).dispose();
             }
@@ -456,7 +456,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                     "No Selection", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private void getPrvFilter() {
         try {
             VouFilter tmpFilter;
@@ -468,7 +468,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 tmpFilter = (VouFilter) dao.find("VouFilter", "key.tranOption = 'RetInVouSearch'"
                         + " and key.userId = '" + Global.machineId + "'");
             }
-            
+
             if (tmpFilter == null) {
                 vouFilter = new VouFilter();
                 vouFilter.getKey().setTranOption("RetInVouSearch");
@@ -477,14 +477,14 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                 } else {
                     vouFilter.getKey().setUserId(Global.machineId);
                 }
-                
+
                 txtFromDate.setText(DateUtil.getTodayDateStr());
                 txtToDate.setText(DateUtil.getTodayDateStr());
             } else {
                 vouFilter = tmpFilter;
                 txtFromDate.setText(DateUtil.toDateStr(vouFilter.getFromDate()));
                 txtToDate.setText(DateUtil.toDateStr(vouFilter.getToDate()));
-                
+
                 if (vouFilter.getTrader() != null) {
                     if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
                         txtCusCode.setText(vouFilter.getTrader().getStuCode());
@@ -493,26 +493,26 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
                     }
                     txtCusName.setText(vouFilter.getTrader().getTraderName());
                 }
-                
+
                 if (vouFilter.getLocation() != null) {
                     cboLocation.setSelectedItem(vouFilter.getLocation());
                 }
-                
+
                 if (vouFilter.getSession() != null) {
                     cboSession.setSelectedItem(vouFilter.getSession());
                 }
-                
+
                 if (vouFilter.getPaymentType() != null) {
                     cboPayment.setSelectedItem(vouFilter.getPaymentType());
                 }
-                
+
                 txtVouNo.setText(vouFilter.getVouNo());
             }
         } catch (Exception ex) {
             log.error("getPrvFilter : " + ex.getMessage());
         }
     }
-    
+
     private Trader getTrader(String traderId) {
         Trader cus = null;
         try {
@@ -520,7 +520,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
             if (Util1.getPropValue("system.sale.emitted.prifix").equals("Y")) {
                 strFieldName = "o.stuCode";
             }
-            
+
             if (Util1.getPropValue("system.location.trader.filter").equals("Y")) {
                 int locationId;
                 String strSql;
@@ -561,7 +561,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
         } finally {
             dao.close();
         }
-        
+
         return cus;
     }
 
@@ -855,7 +855,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private void txtFromDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFromDateMouseClicked
         if (evt.getClickCount() == mouseClick) {
             String strDate = DateUtil.getDateDialogStr();
-            
+
             if (strDate != null) {
                 txtFromDate.setText(strDate);
             }
@@ -865,7 +865,7 @@ public class RetInVouSearch extends javax.swing.JPanel implements SelectionObser
     private void txtToDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtToDateMouseClicked
         if (evt.getClickCount() == mouseClick) {
             String strDate = DateUtil.getDateDialogStr();
-            
+
             if (strDate != null) {
                 txtToDate.setText(strDate);
             }

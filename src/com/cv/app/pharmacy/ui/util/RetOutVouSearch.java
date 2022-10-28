@@ -325,7 +325,7 @@ public class RetOutVouSearch extends javax.swing.JPanel implements SelectionObse
                 + "join appuser usr on sh.created_by = usr.user_id\n"
                 + "join location l on sh.location = l.location_id \n"
                 + "left join trader tr on sh.cus_id = tr.trader_id "
-                + "where sh.ret_out_date between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
+                + "where date(sh.ret_out_date) between '" + DateUtil.toDateTimeStrMYSQL(txtFromDate.getText()) + "' and '"
                 + DateUtil.toDateStrMYSQLEnd(txtToDate.getText()) + "'";
 
         vouFilter.setFromDate(DateUtil.toDate(txtFromDate.getText()));

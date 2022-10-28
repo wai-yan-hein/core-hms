@@ -687,7 +687,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String printerName = Util1.getPropValue("report.vou.printer");
         params.put("link_amt_status", "N");
         params.put("link_amt", 0);
-        params.put("p_ttl_discount", 0.0);
+        params.put("p_ttl_discount", NumberUtil.NZero(currVou.getDiscountA()));
         if (Util1.getPropValue("system.link.amount").equals("OPD")
                 && currVou.getPatient() != null) {
             try {
@@ -1254,7 +1254,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtVouTotal.setValue(modelTtl);
         calcBalance();
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        
+
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());
             status = false;
@@ -1265,7 +1265,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        } else if(vouBalance != 0 && currVou.getPatient() == null){
+        } else if (vouBalance != 0 && currVou.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;

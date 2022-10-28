@@ -500,7 +500,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                     vs.setVouTotal(rs.getDouble("vou_total"));
                     vs.setDcStatus(rs.getInt("package_id"));
                     listVS.add(vs);
-                    if (vs.getIsDeleted()) {
+                    if (!vs.getIsDeleted()) {
                         ttlAmt += vs.getVouTotal();
                     }
                 }
