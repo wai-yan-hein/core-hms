@@ -20,6 +20,7 @@ import javax.persistence.Table;
 public class OPDGroup implements java.io.Serializable{
     private Integer groupId;
     private String groupName;
+    private Integer locationId;
     
     @Id @GeneratedValue(strategy=IDENTITY)
     @Column(name="group_id", unique=true, nullable=false)
@@ -43,5 +44,14 @@ public class OPDGroup implements java.io.Serializable{
     @Override
     public String toString(){
         return groupName;
+    }
+
+    @Column(name="location_id")
+    public Integer getLocationId() {
+        return locationId;
+    }
+
+    public void setLocationId(Integer locationId) {
+        this.locationId = locationId;
     }
 }

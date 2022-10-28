@@ -310,7 +310,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void search() {
-        String strFilter = "o.deleted = 0 ";
+        String strFilter = "o.deleted = false ";
 
         if (txtFrom.getText() != null && txtTo.getText() != null) {
             if (strFilter.isEmpty()) {

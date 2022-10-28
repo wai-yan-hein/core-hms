@@ -95,6 +95,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
     }
 
     private void getData() {
+        DateUtil.setStartTime();
         clear();
         String strSql = "select vcp.tran_option, vcp.tran_date, vcp.expense_name, vcp.doctor_id, dr.doctor_name,\n"
                 + "vcp.expense_type_id, \n"
@@ -172,6 +173,7 @@ public class UnPaidPayable extends javax.swing.JPanel {
         } finally {
             dao.close();
         }
+        log.info("getData duration : " + DateUtil.getDuration());
     }
 
     private void clear() {

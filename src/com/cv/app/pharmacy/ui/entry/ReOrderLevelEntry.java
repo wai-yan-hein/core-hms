@@ -894,9 +894,11 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
 
     private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
         if (bindStatus) {
+            DateUtil.setStartTime();
             getReOrderLevel();
             applyFilter();
             cboTrLocation.setSelectedItem(null);
+            log.info("duration : " + DateUtil.getDuration());
         }
     }//GEN-LAST:event_cboLocationActionPerformed
 

@@ -202,9 +202,23 @@ public class RetInTableModel extends AbstractTableModel {
                         record.setUnit(medUp.getUnitList(medId).get(0));
                     }
 
+                    ItemUnit prvUnit = record.getSaleUnit();
+                    double prvPrice = NumberUtil.NZero(record.getSalePrice());
                     if (record.getUnit() != null) {
-                        String key = medId + "-" + record.getUnit().getItemUnitCode();
-                        record.setPrice(medUp.getPrice(key, cusType, record.getQty()));
+                        if(prvPrice == 0){
+                            String key = medId + "-" + record.getUnit().getItemUnitCode();
+                            record.setPrice(medUp.getPrice(key, cusType, record.getQty()));
+                        }else{
+                            String key = medId + "-" + prvUnit.getItemUnitCode();
+                            float oldSmallQty = medUp.getQtyInSmallest(key);
+                            key = medId + "-" + record.getUnit().getItemUnitCode();
+                            float newSmallQty = medUp.getQtyInSmallest(key);
+                            
+                            if(!prvUnit.getItemUnitCode().equals(record.getUnit().getItemUnitCode())){
+                                double newPrice = prvPrice*(newSmallQty/oldSmallQty);
+                                record.setPrice(newPrice);
+                            }
+                        }
                     }
                     
                     try {
@@ -438,12 +452,14 @@ public class RetInTableModel extends AbstractTableModel {
         ridh.setSaleIvId(retInItem.getKey().getSaleInvId());
         ridh.setMedicineId(retInItem.getKey().getItem());
         ridh.setExpireDate(retInItem.getExpDate());
-        ridh.setQty(retInItem.getQtyFoc());
+        ridh.setQty(retInItem.getSaleQty());
         ridh.setPrice(retInItem.getSalePrice());
         ridh.setUnit(retInItem.getSaleUnit());
         ridh.setAmount(retInItem.getSaleQty() * retInItem.getSalePrice());
         ridh.setSmallestQty(retInItem.getSaleQtySmallest());
-
+        ridh.setSalePrice(retInItem.getSalePrice());
+        ridh.setSaleUnit(retInItem.getSaleUnit());
+        
         listDetail.add(index, ridh);
         fireTableRowsInserted(listDetail.size() - 2, listDetail.size() - 1);
     }

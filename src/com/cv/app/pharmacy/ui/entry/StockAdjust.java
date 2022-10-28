@@ -191,6 +191,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         setFocus();
 
         tmpExrTableModel.clear();
+        adjTableModel.setEditStatus(false);
         tmpExrTableModel.addEmptyRow();
         deleteExRateTmp();
 
@@ -370,8 +371,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
                 if (Util1.getNullTo(currAdjust.isDeleted())) {
                     lblStatus.setText("DELETED");
+                    adjTableModel.setEditStatus(true);
                 } else {
                     lblStatus.setText("EDIT");
+                    adjTableModel.setEditStatus(true);
                 }
 
                 log.info("selected : AdjVouList : 1");

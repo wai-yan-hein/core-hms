@@ -10,6 +10,7 @@ import com.cv.app.opd.database.entity.OPDGroup;
 import com.cv.app.opd.ui.common.OPDGroupTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
+import com.cv.app.util.NumberUtil;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
@@ -78,6 +79,11 @@ public class OPDGroupSetup extends javax.swing.JDialog {
     private void setRecord(OPDGroup oPDGroup) {
         currOPDGroup = oPDGroup;
         txtGroupName.setText(oPDGroup.getGroupName());
+        if (oPDGroup.getLocationId() == null) {
+            txtLocationId.setText(null);
+        } else {
+            txtLocationId.setText(oPDGroup.getLocationId().toString());
+        }
         lblStatus.setText("EDIT");
     }
 
@@ -109,7 +115,9 @@ public class OPDGroupSetup extends javax.swing.JDialog {
         selectRow = -1;
         currOPDGroup = new OPDGroup();
         txtGroupName.setText(null);
+        txtLocationId.setText(null);
         lblStatus.setText("NEW");
+        
         System.gc();
     }
 
@@ -123,6 +131,11 @@ public class OPDGroupSetup extends javax.swing.JDialog {
             txtGroupName.requestFocusInWindow();
         } else {
             currOPDGroup.setGroupName(txtGroupName.getText());
+            if(Util1.getNullTo(txtLocationId.getText(), "").isEmpty()){
+                currOPDGroup.setLocationId(null);
+            }else{
+                currOPDGroup.setLocationId(NumberUtil.NZeroInt(txtLocationId.getText()));
+            }
         }
 
         return status;
@@ -167,11 +180,13 @@ public class OPDGroupSetup extends javax.swing.JDialog {
         butClear = new javax.swing.JButton();
         butSave = new javax.swing.JButton();
         lblStatus = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        txtLocationId = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("OPD Group Setup");
 
-        tblGroup.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblGroup.setFont(Global.textFont);
         tblGroup.setModel(tableModel);
         tblGroup.setRowHeight(23);
         jScrollPane1.setViewportView(tblGroup);
@@ -179,7 +194,7 @@ public class OPDGroupSetup extends javax.swing.JDialog {
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Group Name ");
 
-        txtGroupName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtGroupName.setFont(Global.textFont);
 
         butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         butClear.setText("Clear");
@@ -198,6 +213,11 @@ public class OPDGroupSetup extends javax.swing.JDialog {
         });
 
         lblStatus.setText("NEW");
+
+        jLabel2.setFont(Global.lableFont);
+        jLabel2.setText("Location Id ");
+
+        txtLocationId.setFont(Global.textFont);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -219,11 +239,17 @@ public class OPDGroupSetup extends javax.swing.JDialog {
                         .addComponent(butClear))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtLocationId)))
                 .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -234,11 +260,15 @@ public class OPDGroupSetup extends javax.swing.JDialog {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(txtGroupName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(txtLocationId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(butClear)
                             .addComponent(butSave))
-                        .addGap(24, 24, 24)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -260,9 +290,11 @@ public class OPDGroupSetup extends javax.swing.JDialog {
     private javax.swing.JButton butClear;
     private javax.swing.JButton butSave;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblGroup;
     private javax.swing.JTextField txtGroupName;
+    private javax.swing.JTextField txtLocationId;
     // End of variables declaration//GEN-END:variables
 }

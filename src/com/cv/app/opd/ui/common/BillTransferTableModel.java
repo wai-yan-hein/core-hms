@@ -99,4 +99,14 @@ public class BillTransferTableModel extends AbstractTableModel{
         fireTableDataChanged();
         System.gc();
     }
+    
+    public BillTransferDetail getSelectedData(int index){
+        if(listBTD == null){
+            return null;
+        }else if(listBTD.isEmpty()){
+            return null;
+        }else{
+            return listBTD.get(index);
+        }
+    }
 }

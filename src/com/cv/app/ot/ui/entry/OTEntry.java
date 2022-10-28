@@ -243,7 +243,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 }
 
                 deleteDetail();
-                updateVouTotal(currVou.getOpdInvId());
+                //updateVouTotal(currVou.getOpdInvId());
 
                 String desp = "-";
                 if (currVou.getPatient() != null) {
@@ -607,7 +607,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         }
 
                         deleteDetail();
-                        updateVouTotal(currVou.getOpdInvId());
+                        //updateVouTotal(currVou.getOpdInvId());
 
                         String desp = "-";
                         if (currVou.getPatient() != null) {
@@ -1353,7 +1353,16 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
 
         boolean status = true;
+        double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTotal = tableModel.getTotal();
+        
+        if (vouTtl != modelTotal) {
+            log.error(txtVouNo.getText().trim() + " OT Voucher Total Error : vouTtl : "
+                    + vouTtl + " modelTtl : " + modelTotal);
+            JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
+                    "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
         txtVouTotal.setValue(modelTotal);
         calcBalance();
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());

@@ -19,9 +19,10 @@ public class BillTransferDetail {
     private String admissionNo;
     private String strAge;
     private Double amount;
+    private Integer payTypeId;
     
     public BillTransferDetail(Date tranDate, String regNo, String name, String status,
-            String admissionNo, String strAge, Double amount) {
+            String admissionNo, String strAge, Double amount, Integer payTypeId) {
         this.tranDate = tranDate;
         this.regNo = regNo;
         this.name = name;
@@ -29,6 +30,7 @@ public class BillTransferDetail {
         this.admissionNo = admissionNo;
         this.strAge = strAge;
         this.amount = amount;
+        this.payTypeId = payTypeId;
     }
 
     public Date getTranDate() {
@@ -85,6 +87,14 @@ public class BillTransferDetail {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public Integer getPayTypeId() {
+        return payTypeId;
+    }
+
+    public void setPayTypeId(Integer payTypeId) {
+        this.payTypeId = payTypeId;
     }
 
 }

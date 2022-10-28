@@ -266,8 +266,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     vouEngine.updateVouNo();
                 }
 
-                updateVouTotal(currVou.getOpdInvId());
-
+                //updateVouTotal(currVou.getOpdInvId());
                 String desp = "-";
                 if (currVou.getPatient() != null) {
                     desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
@@ -689,7 +688,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         }
                         log.error("dc vou print after new vou generate : " + currVou.getOpdInvId());
                         deleteDetail();
-                        updateVouTotal(currVou.getOpdInvId());
+                        //updateVouTotal(currVou.getOpdInvId());
 
                         String desp = "-";
                         if (currVou.getPatient() != null) {
@@ -994,7 +993,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
                     dao.close();
                     ReportUtil.viewReport(reportPath, params, dao.getConnection());
-                    dao.commit();
+                    //dao.commit();
                 } catch (Exception ex) {
                     log.error("print : " + ex.getMessage());
                 } finally {
@@ -1479,9 +1478,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             double tax = NumberUtil.NZero(txtTaxA.getValue());
             double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
 
-            if (pt.getPaymentTypeId() == 1) {
-                txtPaid.setValue((vouTotal + tax) - discount);
-            }
+            /*if (pt.getPaymentTypeId() == 1) {
+                if (vouTotal != 0) {
+                    txtPaid.setValue((vouTotal + tax) - discount);
+                }
+            }*/
             double paid = NumberUtil.NZero(txtPaid.getValue());
             txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
         } else {
@@ -1623,12 +1624,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             + "service.serviceId in (" + depositeId + "," + paidId + ")";
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
                     double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
+                    log.info("Paid : " + vTotalPaid);
                     txtPaid.setValue(vTotalPaid);
 
                     strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
                             + "service.serviceId in (" + refundId + ")";
                     qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
                     double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
+                    log.info("Refund : " + vTotalRefund);
                     txtPaid.setValue(vTotalPaid - vTotalRefund);
 
                     strFilter = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDetailHis WHERE "
@@ -1898,8 +1901,18 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         if (tblService.getCellEditor() != null) {
             tblService.getCellEditor().stopCellEditing();
         }
+        
         boolean status = true;
+        double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTotal = tableModel.getTotal();
+        
+        if (vouTtl != modelTotal) {
+            log.error(txtVouNo.getText().trim() + " DC Voucher Total Error : vouTtl : "
+                    + vouTtl + " modelTtl : " + modelTotal);
+            JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
+                    "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
         txtVouTotal.setValue(modelTotal);
         calcBalance();
 
@@ -3750,7 +3763,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     }//GEN-LAST:event_cboDCStatusFocusGained
 
     private void cboPaymentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentTypeActionPerformed
-        if (cboBindStatus) {
+        /*if (cboBindStatus) {
             if (!Util1.getPropValue("system.payment.cash").equals("Y")) {
                 PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
                 double discount = NumberUtil.NZero(txtDiscA.getValue());
@@ -3764,7 +3777,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
             }
             calcBalance();
-        }
+        }*/
     }//GEN-LAST:event_cboPaymentTypeActionPerformed
 
     private void txtRemarkFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRemarkFocusGained

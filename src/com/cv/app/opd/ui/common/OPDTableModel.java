@@ -47,7 +47,8 @@ public class OPDTableModel extends AbstractTableModel {
     private int maxUniqueId = 1;
     private double pkgTotal = 0.0;
     private double extraTotal = 0.0;
-
+    String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
+    
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
         this.observer = observer;
@@ -421,7 +422,6 @@ public class OPDTableModel extends AbstractTableModel {
         OPDDetailHis record = listOPDDetailHis.get(row);
         Double amount = null;
         boolean isAmount = false;
-        String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
 
         if (record.getChargeType() != null) {
             int chargeType = record.getChargeType().getChargeTypeId();
@@ -455,24 +455,60 @@ public class OPDTableModel extends AbstractTableModel {
         record.setAmount(amount);
     }
 
+    private void calculateAmount(OPDDetailHis record){
+        Double amount = null;
+        boolean isAmount = false;
+
+        if (record.getChargeType() != null) {
+            int chargeType = record.getChargeType().getChargeTypeId();
+
+            switch (chargeType) {
+                case 1: //Normal
+                    amount = NumberUtil.NZeroInt(record.getQuantity())
+                            * NumberUtil.NZero(record.getPrice());
+                    break;
+                case 2: //FOC
+                    break;
+                default:
+                    if (useOPDFactor.equals("Y")) {
+                        float factor = NumberUtil.FloatZero(record.getChargeType().getFactor());
+                        if (record.getChargeType() != null) {
+                            isAmount = record.getChargeType().getIsAmount();
+                        }
+                        if (isAmount) {
+                            double tmpPrice = NumberUtil.NZero(record.getPrice()) + factor;
+                            record.setPrice(tmpPrice);
+                        } else {
+                            double tmpPercentAmt = (NumberUtil.NZero(record.getPrice()) * factor) / 100;
+                            double tmpPrice = NumberUtil.NZero(record.getPrice()) + tmpPercentAmt;
+                            record.setPrice(tmpPrice);
+                        }
+                    }
+                    amount = NumberUtil.NZeroInt(record.getQuantity())
+                            * NumberUtil.NZero(record.getPrice());
+            }
+        }
+        record.setAmount(amount);
+    }
+    
     public double getTotal() {
-        /*String strSql = "SELECT * FROM com.cv.app.opd.database.entity.OPDDetailHis"
-                + " WHERE service IS NOT NULL EXECUTE ON ALL sum(amount) AS total";
-        Object total = JoSQLUtil.getSaveValue(listOPDDetailHis, strSql, "total");
-
-        if (total == null) {
-            return 0;
-        } else {
-            return Double.parseDouble(total.toString());
-        }*/
-
         double total = 0.0;
         if (listOPDDetailHis != null) {
+            if (!listOPDDetailHis.isEmpty()) {
+                for(OPDDetailHis odh : listOPDDetailHis){
+                    calculateAmount(odh);
+                    total += NumberUtil.NZero(odh.getAmount());
+                }
+            }
+        }
+        
+        /*if (listOPDDetailHis != null) {
             if (!listOPDDetailHis.isEmpty()) {
                 total = listOPDDetailHis.stream().map(odh -> NumberUtil.NZero(odh.getAmount()))
                         .reduce(total, (accumulator, _item) -> accumulator + _item);
             }
-        }
+        }*/
+        
         return total;
     }
 

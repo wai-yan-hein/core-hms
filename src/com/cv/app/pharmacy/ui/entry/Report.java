@@ -130,6 +130,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private final String strCodeFilter = Util1.getPropValue("system.item.location.filter");
     private int mouseClick = 2;
     private final String prefix = Util1.getPropValue("system.sale.emitted.prifix");
+    private final String remotePrint = Util1.getPropValue("system.remote.print");
 
     /**
      * Creates new form Report
@@ -159,6 +160,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         lblDueDate.setVisible(false);
         txtDueDate.setVisible(false);
         txtDueTo.setVisible(false);
+        if (remotePrint.equals("Y")) {
+            butRemotePrint.setVisible(true);
+        } else {
+            butRemotePrint.setVisible(false);
+        }
     }
 
     private void initCombo() {
@@ -381,14 +387,15 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + Global.machineId + "'";
-        String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
+        /*String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
                 + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
                 + "' from v_med_loc m left join "
                 + "(select location_id, med_id, max(op_date) op_date from med_op_date "
-                + " where op_date <= '" + strOpDate + "'";
-
-        strSQL = strSQL + " group by location_id, med_id) meod on m.med_id = meod.med_id "
-                + " and m.location_id = meod.location_id where m.calc_stock = true";
+                + " where op_date <= '" + strOpDate + "'";*/
+        String strSQL = "insert into tmp_stock_filter\n"
+                + "select m.location_id, m.med_id, '1900-01-01', '" + Global.machineId + "' \n"
+                + "from v_med_loc m\n"
+                + "where m.calc_stock = true";
 
         if (cboLocation.getSelectedItem() instanceof Location) {
             locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
@@ -399,14 +406,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         //Need to change
-        if (strCodeFilter.equals("Y")) {
+        /*if (strCodeFilter.equals("Y")) {
             if (locationId == 0) {
                 strSQL = strSQL + " and m.med_id in ()";
             } else {
 
             }
-        }
-
+        }*/
         if (cboItemType.getSelectedItem() instanceof ItemType) {
             ItemType itemType = (ItemType) cboItemType.getSelectedItem();
             strSQL = strSQL + " and m.med_type_id = '" + itemType.getItemTypeCode() + "'";
@@ -463,7 +469,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
             dao.open();
             dao.execSql(strSQL);
-            //dao.execSql(strSQLDelete, strSQL);
+            String strSql = "update tmp_stock_filter tsf join (select location_id, med_id, max(op_date) op_date from med_op_date \n"
+                    + "where op_date <= '" + strOpDate + "' \n"
+                    + "	group by location_id, med_id) meod on tsf.med_id = meod.med_id  and tsf.location_id = meod.location_id\n"
+                    + "set tsf.op_date = meod.op_date\n"
+                    + "where tsf.user_id = '" + Global.machineId + "'";
+            dao.execSql(strSql);
         } catch (Exception ex) {
             log.error("insertStockFilterCode : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
@@ -618,9 +629,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         if (!strFilter.isEmpty()) {
             strSQL = strSQL + " where " + strFilter;
         }
-        
-        strSQL = strSQL  + " group by t.trader_id, t.cur_code,  ifnull(trop.op_date, '1900-01-01')";
-        
+
+        strSQL = strSQL + " group by t.trader_id, t.cur_code,  ifnull(trop.op_date, '1900-01-01')";
+
         try {
             dao.open();
             dao.execSql(strSQLDelete);
@@ -755,6 +766,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "StockBalanceKS":
                     case "StockBalanceAllLoc":
                     case "StockBalanceSystem":
+                        DateUtil.setStartTime();
                         execStockBalanceExp(txtTo.getText());
                         //String strDueFrom = Util1.nullToBlankStr(txtDueDate.getText());
                         String strDueTo = Util1.nullToBlankStr(txtDueTo.getText());
@@ -768,63 +780,86 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 log.error("delete : " + ex.getMessage());
                             }
                         }
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "StockExpireList":
+                        DateUtil.setStartTime();
                         execStockBalanceExp(DateUtil.toDateStr(new Date()));
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "StockMovementExp":
                     case "StockMovementExpKS":
                     case "StockMovement":
                     case "StockMovementKS":
                     case "stockMovementPurchaseOnly":
-                        //execStockBalanceExp();
+                        DateUtil.setStartTime();
                         execStockMovementExp();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "StockMovementExpKSReOrder":
                     case "StockMovementExpKSReOrderNoSale":
                     case "StockMovementExpKSReOrderNoPur":
                     case "StockMovementExpKSReOrderChem":
+                        DateUtil.setStartTime();
                         execStockMovementExp1(report.getMenuClass());
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerBalance":
                     case "CustomerBalanceByLocation":
                     case "CustomerBalanceByTownship":
                     case "SupplierBalance":
                     case "CustomerBalance_Tsp":
+                        DateUtil.setStartTime();
                         execTraderBalanceDate();
                         deleteTraderBalanceZero();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerInOutBalance":
+                        DateUtil.setStartTime();
                         execTraderBalanceDetail();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerInOutBalanceDetailA4":
-                        case "CustomerInOutBalanceDetailA4BT":
+                    case "CustomerInOutBalanceDetailA4BT":
+                        DateUtil.setStartTime();
                         execTraderBalance();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "SupplierInOutBalance":
                     case "SupplierInOutBalanceDetailA4":
+                        DateUtil.setStartTime();
                         supplierTraderBalanceDetail();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "SupplierInOutBalanceSummaryA4":
+                        DateUtil.setStartTime();
                         supplierTraderBalanceSummary();
                         //execTraderInOutSummary();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerInOutBalanceDetail":
+                        DateUtil.setStartTime();
                         execTraderBalance();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "rptCusBalanceRemark":
-                        //aaa
+                        DateUtil.setStartTime();
                         execTraderBalanceDetailRemark();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerInOutBalSummary":
                     case "SupplierInOutBalSummary":
                     case "CustomerInOutBalSummaryByDaily":
                     case "BIDCustomer":
+                        DateUtil.setStartTime();
                         execTraderInOutSummary();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "StockInOut":
                     case "StockInOutKS":
+                        DateUtil.setStartTime();
                         execStockInOutBal();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "rptBarCode":
                     case "rptBarCodeMO":
@@ -834,25 +869,33 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         insertBarcodeFilter();
                         break;
                     case "CustomerBalanceUPV":
+                        DateUtil.setStartTime();
                         execTraderBalanceWithUPV();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "rptGroundDifference":
+                        DateUtil.setStartTime();
                         execStockBalanceExp(txtTo.getText());
                         fixMinusBalance(txtTo.getText());
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "rptDailyTransaction":
+                        DateUtil.setStartTime();
                         printSessionRpt();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "rptSaleDoctorDetail":
                     case "rptSaleDoctorSummary":
                         break;
                     case "ControlDrugForm3WS":
                         try {
+                        DateUtil.setStartTime();
                         dao.execProc("control_drug_in_out1",
                                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                                 getLocationId().toString(),
                                 Global.machineId);
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                     } catch (Exception ex) {
                         log.error("ControlDrugForm3WS control_drug_in_out1 : " + ex.toString());
                     } finally {
@@ -862,11 +905,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     case "ControlDrugForm3":
                     case "ControlDrugForm3MO":
                         try {
+                        DateUtil.setStartTime();
                         dao.execProc("control_drug_in_out",
                                 DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                 DateUtil.toDateStrMYSQL(txtTo.getText()),
                                 getLocationId().toString(),
                                 Global.machineId);
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                     } catch (Exception ex) {
                         log.error("ControlDrugForm3MO control_drug_in_out : " + ex.toString());
                     } finally {
@@ -874,15 +919,21 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     }
                     break;
                     case "BorrowBalance":
+                        DateUtil.setStartTime();
                         calculateBorrowBalance();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerBalanceNoSale":
+                        DateUtil.setStartTime();
                         execTraderBalanceDateNoSale();
                         deleteTraderBalanceZero();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     case "CustomerBalanceNoPay":
+                        DateUtil.setStartTime();
                         execTraderBalanceDateNoPay();
                         deleteTraderBalanceZero();
+                        log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                         break;
                     default:
                         System.out.println("Invalid Report");
@@ -1067,7 +1118,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                     + "                   vs.location_id, vs.med_id, vs.expire_date exp_date,\n"
                     + "                   sum((ifnull(vs.sale_smallest_qty, 0)+ifnull(vs.foc_smallest_qty,0))*-1) ttl_qty\n"
-                    + "              from v_sale vs, tmp_stock_filter tsf\n"
+                    + "              from v_sale1 vs, tmp_stock_filter tsf\n"
                     + "             where vs.location_id = tsf.location_id and vs.med_id = tsf.med_id\n"
                     + "               and date(vs.sale_date) >= tsf.op_date and date(vs.sale_date) <= prm_stock_date\n"
                     + "               and vs.deleted = false and vs.vou_status = 1 and tsf.user_id = prm_user_id\n"
@@ -1167,21 +1218,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + "             union all \n"
                     + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                     + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
-                    + "              from v_lab_med_usage vlmu, tmp_stock_filter tsf\n"
+                    + "              from v_med_usage vlmu, tmp_stock_filter tsf\n"
                     + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
                     + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
                     + "               and date(vlmu.opd_date) <= prm_stock_date \n"
                     + "               and (vlmu.location_id = prm_location or prm_location = 0)\n"
                     + "             group by vlmu.location_id, vlmu.med_id "
-                    + "             union all \n"
-                    + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
-                    + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
-                    + "              from v_investigation_med_usage vlmu, tmp_stock_filter tsf\n"
-                    + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
-                    + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
-                    + "               and date(vlmu.opd_date) <= prm_stock_date \n"
-                    + "               and (vlmu.location_id = prm_location or prm_location = 0)\n"
-                    + "             group by vlmu.location_id, vlmu.med_id"
                     + ") A,\n"
                     + "            v_med_unit_smallest_rel B\n"
                     + "     where A.med_id = B.med_id\n"
@@ -3037,10 +3079,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
-    private void listMethod(){
+    private void listMethod() {
         //Method methods[];
-        
-        try{
+
+        try {
             Class obj = this.getClass();
             Method mt = obj.getMethod("generateExcel", null);
             mt.invoke(obj.newInstance(), null);
@@ -3049,10 +3091,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 String name = mt.getName();
                 log.info("Method Name : " + name);
             }*/
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("listMethod : " + ex.getMessage());
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -3071,6 +3114,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         butExcel = new javax.swing.JButton();
         jLabel21 = new javax.swing.JLabel();
         cboItemStatus = new javax.swing.JComboBox<>();
+        butRemotePrint = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         cboReportType = new javax.swing.JComboBox();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -3174,6 +3218,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         cboItemStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "All", "Active", "In Active" }));
 
+        butRemotePrint.setFont(Global.lableFont);
+        butRemotePrint.setText("Remote Print");
+        butRemotePrint.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRemotePrintActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -3182,6 +3234,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(butRemotePrint)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butExcel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butPrint))
@@ -3211,7 +3265,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     .addComponent(cboItemStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(butExcel)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(butExcel)
+                        .addComponent(butRemotePrint))
                     .addComponent(butPrint))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -3234,9 +3290,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(cboReportType, 0, 302, Short.MAX_VALUE)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(cboReportType, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -3539,10 +3596,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel18))
-                .addContainerGap(69, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Item Code Filter"));
+        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Item Code Filter"));
 
         tblItemCodeFilter.setFont(Global.textFont);
         tblItemCodeFilter.setModel(codeTableModel);
@@ -3857,10 +3914,51 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         codeTableModel.setCostList(getCopyData());
     }//GEN-LAST:event_butItemPasteActionPerformed
 
+    private void butRemotePrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRemotePrintActionPerformed
+        try {
+            /*     CloseableHttpClient client = HttpClients.createDefault();
+            HttpPost req = new HttpPost("http://localhost:8089/HMSPrintApi/printPharmacyReport");
+            req.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+            
+            JSONObject parameters = new JSONObject();
+            parameters.put("valueA", 1);
+            parameters.put("valueB", 2);
+            
+            StringEntity se = new StringEntity(parameters.toString());
+            req.setEntity(se);
+            
+            CloseableHttpResponse res = client.execute(req);
+            
+            log.info("Status : " + res.getCode());
+            
+            BufferedReader br = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
+            String output;
+            while ((output = br.readLine()) != null) {
+            log.info("return from server : " + output);
+            }*/
+ /*RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            JSONObject parameters = new JSONObject();
+            parameters.put("valueA", 1);
+            parameters.put("valueB", 2);
+
+            RequestEntity requestEntity = new RequestEntity(parameters.toString(), 
+                    headers, HttpMethod.GET, URI.create("http://localhost:8089/printPharmacyReport"));
+            ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);*/
+
+            //log.info("JSONObject : " + parameters.toString(3));
+        } catch (Exception ex) {
+            log.error("butRemotePrint : " + ex.getMessage());
+        }
+    }//GEN-LAST:event_butRemotePrintActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butExcel;
     private javax.swing.JButton butItemPaste;
     private javax.swing.JButton butPrint;
+    private javax.swing.JButton butRemotePrint;
     private javax.swing.JComboBox cboBrand;
     private javax.swing.JComboBox cboCategory;
     private javax.swing.JComboBox cboCurrency;

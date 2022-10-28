@@ -38,6 +38,7 @@ public class PatientBillPayment implements java.io.Serializable{
     private Double balance;
     private String admissionNo;
     private String ptType;
+    private Boolean delete;
     
     @Id @GeneratedValue(strategy=IDENTITY)
     @Column(name="id", unique=true, nullable=false)
@@ -166,5 +167,14 @@ public class PatientBillPayment implements java.io.Serializable{
 
     public void setPtType(String ptType) {
         this.ptType = ptType;
+    }
+
+    @Column(name="deleted")
+    public Boolean getDelete() {
+        return delete;
+    }
+
+    public void setDelete(Boolean delete) {
+        this.delete = delete;
     }
 }

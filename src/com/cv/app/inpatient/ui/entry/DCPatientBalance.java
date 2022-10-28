@@ -118,7 +118,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
     }
 
     private void getBalance() {
-        ptBalTableModel.getData();
+        ptBalTableModel.getData1();
         txtTtlBal.setValue(ptBalTableModel.getTotal());
         txtTotalRecords.setValue(ptBalTableModel.getCount());
     }
@@ -206,7 +206,16 @@ public class DCPatientBalance extends javax.swing.JPanel {
                                 + "from sale_his sh, sale_detail_his sdh, location loc, medicine med\n"
                                 + "where sh.sale_inv_id = sdh.vou_no and sh.location_id = loc.location_id and sdh.med_id = med.med_id \n"
                                 + "and sh.deleted = false and sh.reg_no = '" + regNo + "' and sh.admission_no = '" + admNo + "' \n"
-                                + "and date(sh.sale_date) between '" + admitDate + "' and '" + tranDate + "') a \n"
+                                + "and date(sh.sale_date) between '" + admitDate + "' and '" + tranDate + "'\n"
+                                + "union all \n"
+                                + "select 'Return In' as tran_option, date(rih.ret_in_date) as tran_date, rih.ret_in_id as vou_no,\n"
+                                + "concat(ridh.med_id, '-', med.med_name) as item_name, concat(ridh.ret_in_qty,ridh.item_unit) as qty,\n"
+                                + "ridh.ret_in_price as price, (ridh.ret_in_amount*-1) as amount, ridh.unique_id, 'Return In' as group_name\n"
+                                + "from ret_in_his rih, ret_in_detail_his ridh, medicine med\n"
+                                + "where rih.deleted = false and rih.ret_in_id = ridh.vou_no\n"
+                                + "and ridh.med_id = med.med_id and rih.reg_no = '" + regNo + "' and rih.admission_no = '" + admNo + "' \n"
+                                + "and date(rih.ret_in_date) between '" + admitDate + "' and '" + tranDate + "' "
+                                + ") a \n"
                                 + "order by a.group_name, a.tran_option, a.tran_date, a.vou_no, a.unique_id";
                         ResultSet rs = dao.execSQL(strSql);
                         if (rs != null) {
@@ -377,7 +386,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 + "  from (select 'Sale' as tran_option, 'Sale - Balance Error' as err_desp, date(sale_date) as tran_date, \n"
                 + "			   sale_inv_id as vou_no, vou_total, sum(sale_amount) as detail_total, balance, sale_exp_total as ttl_exp,\n"
                 + "			   paid_amount as paid, tax_amt, discount\n"
-                + "		  from v_sale\n"
+                + "		  from v_sale1 \n"
                 + "		 where deleted = false and reg_no = '@regNo' and admission_no = '@admNo' and date(sale_date) between '@from' and '@to'\n"
                 + "	     group by date(sale_date), sale_inv_id, vou_total, balance, sale_exp_total, paid_amount, tax_amt) a \n"
                 + " where (a.vou_total <> a.detail_total or a.balance <> (a.detail_total+a.ttl_exp+a.tax_amt-a.paid-a.discount))\n"
@@ -425,7 +434,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 .replace("@admNo", admNo)
                 .replace("@from", admitDate)
                 .replace("@to", tranDate);
-        //log.info("strSql : " + strSql);
+        log.info("strSql : " + strSql);
         String strSql1 = "select 'Sale' as tran_option, 'Invalid Admission' as err_desp, date(sale_date) as tran_date,\n"
                 + "       sale_inv_id as vou_no, vou_total, balance\n"
                 + "  from sale_his\n"
@@ -446,7 +455,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 + "  from ot_his\n"
                 + " where deleted = false and patient_id = '@regNo' and if(admission_no='', null, admission_no) is null and ifnull(vou_balance,0) <> 0";
         strSql1 = strSql1.replace("@regNo", regNo);
-        
+
         try {
             List<CurrPTBalanceTran> list = new ArrayList();
             ResultSet rs = dao.execSQL(strSql);
@@ -464,10 +473,10 @@ public class DCPatientBalance extends javax.swing.JPanel {
                     list.add(cptbt);
                 }
             }
-            
+
             ResultSet rs1 = dao.execSQL(strSql1);
-            if(rs1 != null){
-                while(rs1.next()){
+            if (rs1 != null) {
+                while (rs1.next()) {
                     CurrPTBalanceTran cptbt = new CurrPTBalanceTran(
                             rs.getString("tran_option"),
                             rs.getDate("tran_date"),
@@ -480,7 +489,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                     list.add(cptbt);
                 }
             }
-            
+
             errVouTableModel.setList(list);
         } catch (Exception ex) {
             log.error("getErrorVou : " + ex.getMessage());
