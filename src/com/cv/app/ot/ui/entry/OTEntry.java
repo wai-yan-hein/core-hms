@@ -1361,6 +1361,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     + vouTtl + " modelTtl : " + modelTotal);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         
         txtVouTotal.setValue(modelTotal);

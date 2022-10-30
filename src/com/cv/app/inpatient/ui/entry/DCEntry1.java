@@ -1911,6 +1911,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     + vouTtl + " modelTtl : " + modelTotal);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         
         txtVouTotal.setValue(modelTotal);

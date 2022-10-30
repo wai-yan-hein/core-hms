@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
@@ -106,7 +106,7 @@ from tmp_bill_payment where user_id = $P{user_id}) tbp join (
 from tmp_bill_payment where user_id = $P{user_id}) tbp join (
                      select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0))) amt
 		  from opd_patient_bill_payment
-		 where reg_no is not null
+		 where reg_no is not null and deleted = false
 		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no
                  and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}
 	     where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})

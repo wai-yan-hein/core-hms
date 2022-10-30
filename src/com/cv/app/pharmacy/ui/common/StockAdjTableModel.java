@@ -509,6 +509,7 @@ public class StockAdjTableModel extends AbstractTableModel {
     }
 
     private void assignPrice(AdjDetailHis adh) {
+        DateUtil.setStartTime();
         Medicine med = adh.getMedicineId();
         String key;
 
@@ -645,6 +646,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                 }
             }
         }
+        log.info("assignPrice time taken : " + DateUtil.getDuration());
     }
 
     public double getTotalAmount() {
@@ -665,6 +667,7 @@ public class StockAdjTableModel extends AbstractTableModel {
     }
 
     private void assignBalance(AdjDetailHis record) {
+        DateUtil.setStartTime();
         String medId = record.getMedicineId().getMedId();
         try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
@@ -687,6 +690,7 @@ public class StockAdjTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             log.error("assignBalance : " + ex.getMessage());
         }
+        log.info("assignBalance time taken : " + DateUtil.getDuration());
     }
 
     public List<AdjDetailHis> getListDetail() {
