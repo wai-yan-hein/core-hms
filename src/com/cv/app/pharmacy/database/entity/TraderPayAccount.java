@@ -23,7 +23,7 @@ public class TraderPayAccount implements java.io.Serializable {
     private Boolean status;
 
     @Id
-    @Column(name = "acc_id", nullable = false, length = 15)
+    @Column(name = "pay_id", nullable = false, length = 15)
     public String getAccount() {
         return account;
     }

@@ -280,7 +280,7 @@ public class TraderPayHis implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name = "acc_id")
+    @JoinColumn(name = "pay_id")
     public TraderPayAccount getPayAccount() {
         return payAccount;
     }
