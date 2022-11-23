@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptBillPayment" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="fe80a5c1-f40a-45a0-93ab-f26625ccdb12">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="New Data Adapter "/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
@@ -15,9 +16,11 @@
 	<parameter name="prm_toDate" class="java.lang.String"/>
 	<parameter name="data_date" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select reg_no,pay_date, patient_name, payment_type_name, pay_amt, ifnull(remark,'_') remark
+		<![CDATA[select reg_no,pay_date, patient_name, payment_type_name, pay_amt, ifnull(remark,'_') remark,
+discount
 from v_opd_patient_bill_payment
 where (reg_no = $P{prm_reg_no} or $P{prm_reg_no} = '-')
+and deleted = false
 and (bill_type_id = $P{prm_btype_id} or $P{prm_btype_id} = 0)
 and (patient_name = $P{prm_patient_name} or $P{prm_patient_name} = '-')
 and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
@@ -50,8 +53,12 @@ and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
 		<property name="com.jaspersoft.studio.field.tree.path" value="v_opd_patient_bill_payment"/>
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
+	<field name="discount" class="java.lang.Double"/>
 	<variable name="ttl_amount" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{pay_amt}]]></variableExpression>
+	</variable>
+	<variable name="ttl_discount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{discount}]]></variableExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -98,28 +105,30 @@ and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
 	<pageHeader>
 		<band height="17" splitType="Stretch">
 			<staticText>
-				<reportElement x="50" y="1" width="70" height="15" uuid="21361a26-c09b-4330-88e3-01fab84728c7"/>
+				<reportElement x="50" y="1" width="60" height="15" uuid="21361a26-c09b-4330-88e3-01fab84728c7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Reg No.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="120" y="1" width="149" height="15" uuid="5b706c6f-6912-4352-9d0f-dce37bd422c0"/>
+				<reportElement x="111" y="1" width="129" height="15" uuid="5b706c6f-6912-4352-9d0f-dce37bd422c0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Patient Name]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="269" y="1" width="94" height="15" uuid="7083bd38-99aa-4c7f-a111-55d85de4626f"/>
+				<reportElement x="241" y="1" width="94" height="15" uuid="7083bd38-99aa-4c7f-a111-55d85de4626f"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Bill Type]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="363" y="1" width="121" height="15" uuid="575dccf1-9659-4d37-a434-b840538aaa1d"/>
+				<reportElement x="335" y="1" width="94" height="15" uuid="575dccf1-9659-4d37-a434-b840538aaa1d"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
@@ -151,33 +160,47 @@ and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</line>
+			<staticText>
+				<reportElement x="430" y="1" width="52" height="15" uuid="d20e5c8e-7489-4802-a5d8-adc0c0e5e644">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Discount]]></text>
+			</staticText>
 		</band>
 	</pageHeader>
 	<detail>
 		<band height="16" splitType="Stretch">
 			<textField>
-				<reportElement x="50" y="0" width="70" height="15" uuid="331649e3-a5f5-48ff-b971-bef9eea9fd79"/>
+				<reportElement x="50" y="0" width="60" height="15" uuid="331649e3-a5f5-48ff-b971-bef9eea9fd79">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{reg_no}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="120" y="0" width="149" height="15" uuid="e3e5a4ac-cf05-4b8e-890f-cda158dc5784"/>
+				<reportElement x="111" y="0" width="129" height="15" uuid="e3e5a4ac-cf05-4b8e-890f-cda158dc5784"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="269" y="0" width="94" height="15" uuid="b74fb196-e6a0-434f-be89-8d08c049c452"/>
+				<reportElement x="241" y="0" width="94" height="15" uuid="b74fb196-e6a0-434f-be89-8d08c049c452"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{payment_type_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="363" y="0" width="121" height="15" uuid="3b1e36f1-42be-4aaf-9062-9daca17f9ce8"/>
+				<reportElement x="335" y="0" width="94" height="15" uuid="3b1e36f1-42be-4aaf-9062-9daca17f9ce8">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
@@ -203,19 +226,30 @@ and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
 					<pen lineWidth="0.5" lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="430" y="0" width="52" height="15" uuid="14d2795e-9b99-4a6b-9d29-350a58486ac3">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{discount}]]></textFieldExpression>
+			</textField>
 		</band>
 	</detail>
 	<summary>
 		<band height="16" splitType="Stretch">
 			<textField pattern="#,##0;(#,##0)">
-				<reportElement x="463" y="1" width="92" height="15" uuid="3030a4db-6f12-47f8-93df-f546622f14a0"/>
+				<reportElement x="482" y="1" width="72" height="15" uuid="3030a4db-6f12-47f8-93df-f546622f14a0"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{ttl_amount}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="413" y="1" width="50" height="15" uuid="d775f748-b168-48d1-b7d6-03fc4ecce87e"/>
+				<reportElement x="378" y="1" width="50" height="15" uuid="d775f748-b168-48d1-b7d6-03fc4ecce87e"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="8" isBold="true"/>
 				</textElement>
@@ -227,6 +261,17 @@ and pay_date between  $P{prm_fDate} and $P{prm_toDate}]]>
 					<pen lineWidth="0.5" lineStyle="Solid"/>
 				</graphicElement>
 			</line>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="430" y="1" width="52" height="15" uuid="22aabcfb-f407-48c0-b49e-8deeca853833">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_discount}]]></textFieldExpression>
+			</textField>
 		</band>
 	</summary>
 </jasperReport>

@@ -5,6 +5,7 @@
  */
 package com.cv.app.pharmacy.excel;
 
+import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 
 /**
@@ -42,7 +43,7 @@ public abstract class GenExcel {
     private String chargeType = "-1";
     private String city = "-1";
     private String gender = "-";
-    
+
     public GenExcel(AbstractDataAccess dao) {
         this.dao = dao;
     }
@@ -52,11 +53,11 @@ public abstract class GenExcel {
     public void insertStockFilterCode() throws Exception {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + userId + "'";
-        String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
-                + " ifnull(meod.op_date, '1900-01-01'),'" + userId
-                + "' from v_med_loc m left join "
-                + "(select location_id, med_id, max(op_date) op_date from med_op_date "
-                + " where op_date <= '" + strOpDate + "'";
+        
+        String strSQL = "insert into tmp_stock_filter\n"
+                + "select m.location_id, m.med_id, '1900-01-01', '" + userId + "' \n"
+                + "from v_med_loc m\n"
+                + "where m.calc_stock = true";
 
         strSQL = strSQL + " group by location_id, med_id) meod on m.med_id = meod.med_id "
                 + " and m.location_id = meod.location_id where m.calc_stock = true";
@@ -88,11 +89,11 @@ public abstract class GenExcel {
                     + itemGroup + ")";
         }
 
-        if(!customG.equals("-")){
+        if (!customG.equals("-")) {
             strSQL = strSQL + " and m.med_id in (select item_id from item_group_detail where group_id = "
                     + customG + ")";
         }
-        
+
         if (!itemActive.equals("All")) {
             if (itemActive.equals("Active")) {
                 strSQL = strSQL + " and m.active = true";
@@ -100,13 +101,22 @@ public abstract class GenExcel {
                 strSQL = strSQL + " and m.active = false";
             }
         }
-        
+
         dao.open();
         dao.execSql(strSQLDelete);
         dao.close();
 
         dao.open();
         dao.execSql(strSQL);
+        dao.close();
+
+        String strSql = "update tmp_stock_filter tsf join (select location_id, med_id, max(op_date) op_date from med_op_date \n"
+                + "where op_date <= '" + strOpDate + "' \n"
+                + "	group by location_id, med_id) meod on tsf.med_id = meod.med_id  and tsf.location_id = meod.location_id\n"
+                + "set tsf.op_date = meod.op_date\n"
+                + "where tsf.user_id = '" + userId + "'";
+        dao.open();
+        dao.execSql(strSql);
         dao.close();
     }
 

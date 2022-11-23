@@ -419,17 +419,20 @@ public class OTTableModel extends AbstractTableModel {
         record.setAmount(amount);
     }
 
+    private void calculateAmount(OTDetailHis record){
+        Double amount = null;
+
+        if (record.getChargeType() != null) {
+            if (record.getChargeType().getChargeTypeId() == 1) {
+                amount = NumberUtil.NZeroInt(record.getQuantity())
+                        * NumberUtil.NZero(record.getPrice());
+            }
+        }
+
+        record.setAmount(amount);
+    }
+    
     public double getTotal() {
-        /*String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis"
-         + " WHERE service IS NOT NULL EXECUTE ON ALL sum(amount) AS total";
-         Object total = JoSQLUtil.getSaveValue(listOPDDetailHis, strSql, "total");
-
-         if (total == null) {
-         return 0;
-         } else {
-         return Double.parseDouble(total.toString());
-         }*/
-
         int dcDepositId = NumberUtil.NZeroInt(Util1.getPropValue("system.ot.deposite.id"));
         int dcDiscountId = NumberUtil.NZeroInt(Util1.getPropValue("system.ot.disc.id"));
         int dcPaidId = NumberUtil.NZeroInt(Util1.getPropValue("system.ot.paid.id"));
@@ -444,6 +447,7 @@ public class OTTableModel extends AbstractTableModel {
                             && serviceId != dcDiscountId
                             && serviceId != dcPaidId
                             && serviceId != dcRefundId) {
+                        calculateAmount(oth);
                         total += NumberUtil.NZero(oth.getAmount());
                     }
                 }

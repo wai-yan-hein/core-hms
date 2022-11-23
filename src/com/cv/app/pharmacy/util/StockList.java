@@ -9,6 +9,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.helper.Stock;
+import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -68,8 +69,10 @@ public class StockList {
                 if (location != null) {
                     strLocation = Integer.toString(location.getLocationId());
                 }
+                DateUtil.setStartTime();
                 ResultSet resultSet = dao.getPro("get_stock_balance_code",
                         strLocation, med.getMedId(), Global.machineId);
+                log.info("Stock Calculation time taken : " + DateUtil.getDuration());
                 if (resultSet != null) {
                     HashMap<Integer, List<Stock>> minusHM = new HashMap();
                     List<Stock> listStock = new ArrayList();

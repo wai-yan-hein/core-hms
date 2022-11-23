@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -26,20 +26,27 @@
 		<![CDATA[select tran_type,tran_date,desp,sum(qty) qty,sum(amount) amount,sum(amount1) amount1,
 TRAN_OPTION,TRAN_OPTION1
 from (
-select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sale_date) tran_date, sale_inv_id desp, sum(sale_qty) qty, sum(sale_amount) amount, sum(sale_amount) amount1,
+	select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sh.sale_date) tran_date, sh.sale_inv_id desp, 
+sum(sdh.sale_qty) qty, sum(sdh.sale_amount) amount, sum(sdh.sale_amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
-from v_sale,location loc
-where deleted = false and admission_no = $P{adm_no}
-and v_sale.location_id = loc.location_id
-and date(sale_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(sale_date), sale_inv_id,loc.location_name
+from sale_his sh
+join sale_detail_his sdh on sh.sale_inv_id = sdh.vou_no
+join location loc on sh.location_id = loc.location_id
+where sh.deleted = false
+and admission_no = $P{adm_no} and date(sale_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(sh.sale_date), sh.sale_inv_id,loc.location_name
 union all
-select og.group_name as tran_type, date(vo.opd_date) tran_date, vo.service_name desp, sum(qty) qty, sum(vo.amount) amount, sum(vo.amount) amount1,
+select og.group_name as tran_type, date(oh.opd_date) tran_date, os.service_name desp, sum(odh.qty) qty, sum(odh.amount) amount, sum(odh.amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
-from v_opd vo, opd_group og
-where vo.group_id = og.group_id and deleted = false and admission_no = $P{adm_no}
-and date(vo.opd_date) between date($P{adm_date}) and date($P{tran_date})
-group by og.group_name, date(vo.opd_date), vo.service_name
+from opd_his oh
+join opd_details_his odh on oh.opd_inv_id = odh.vou_no
+join opd_service os on odh.service_id = os.service_id
+join opd_category oc on os.cat_id = oc.cat_id
+join opd_group og on oc.group_id = og.group_id
+where oh.deleted = false
+and admission_no = $P{adm_no}
+and date(oh.opd_date) between date($P{adm_date}) and date($P{tran_date})
+group by og.group_name, date(oh.opd_date), os.service_name
 union all
 select 'DC' as tran_type, date(dc_date) tran_date,service_name  desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1

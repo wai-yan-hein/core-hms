@@ -7,6 +7,7 @@ package com.cv.app.opd.ui.entry;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
+import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.database.entity.InpCategory;
 import com.cv.app.inpatient.ui.common.DCTableCellEditor;
 import com.cv.app.inpatient.ui.common.RptDCServiceFilterTableModel;
@@ -316,6 +317,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 } else {
                     txtRegNo.setText(pt.getRegNo());
                     txtPtName.setText(pt.getPatientName());
+                    txtAdmNo.setText(pt.getAdmissionNo());
                 }
             } catch (Exception ex) {
                 log.error("getPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -1123,6 +1125,66 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         return cityId;
     }
 
+    private void getAdmPatient() {
+        if (txtAdmNo.getText() != null && !txtAdmNo.getText().isEmpty()) {
+            try {
+                dao.open();
+                List<Ams> listAms = dao.findAllHSQL(
+                        "select o from Ams o where o.key.amsNo = '" + txtAdmNo.getText().trim() + "'"
+                );
+                Ams ams = null;
+                if (listAms != null) {
+                    if (!listAms.isEmpty()) {
+                        ams = listAms.get(0);
+                    }
+                }
+                dao.close();
+
+                if (ams == null) {
+                    txtAdmNo.setText(null);
+
+                    JOptionPane.showMessageDialog(Util1.getParent(),
+                            "Invalid admitted patient code.",
+                            "Admitted Patient Code", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    txtAdmNo.setText(ams.getKey().getAmsNo());
+                    txtPtName.setText(ams.getPatientName());
+                    txtRegNo.setText(ams.getKey().getRegister().getRegNo());
+                }
+            } catch (Exception ex) {
+                log.error("getAdmPatient : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
+        } else {
+            txtAdmNo.setText(null);
+            txtPtName.setText(null);
+            txtRegNo.setText(null);
+        }
+    }
+    
+    private boolean isValidAdm(Map<String, Object> params){
+        boolean status = true;
+        String imagePath = Util1.getAppWorkFolder()
+                + Util1.getPropValue("report.folder.path");
+        params.put("IMAGE_PATH", imagePath);
+        params.put("bed_no", "-");
+        params.put("sex", "-");
+        params.put("age", "-");
+        params.put("dc_status", "-");
+        params.put("address", "-");
+        params.put("dr_name", "-");
+        params.put("pt_name", txtPtName.getText().trim());
+        params.put("adm_date", DateUtil.toDateStrMYSQL(txtFrom.getText().trim()));
+        params.put("tran_date", DateUtil.toDateStrMYSQL(txtTo.getText().trim()));
+        params.put("adm_no", txtAdmNo.getText().trim());
+        String compName = Util1.getPropValue("report.company.name");
+        String phoneNo = Util1.getPropValue("report.phone");
+        String address = Util1.getPropValue("report.address");
+        params.put("compName", compName);
+        params.put("phoneNo", phoneNo);
+        params.put("comAddress", address);
+        
+        return status;
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1146,6 +1208,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         butCraftRpt = new javax.swing.JButton();
         butExcel = new javax.swing.JButton();
         butPrint = new javax.swing.JButton();
+        jLabel14 = new javax.swing.JLabel();
+        cboPtType = new javax.swing.JComboBox<>();
         jScrollPane4 = new javax.swing.JScrollPane();
         tblOTService = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
@@ -1175,8 +1239,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboGender = new javax.swing.JComboBox<>();
         cboSession = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
-        cboPtType = new javax.swing.JComboBox<>();
         jLabel15 = new javax.swing.JLabel();
         cboOPDCG = new javax.swing.JComboBox<>();
         jLabel18 = new javax.swing.JLabel();
@@ -1185,6 +1247,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboType = new javax.swing.JComboBox<>();
         jLabel20 = new javax.swing.JLabel();
         cboOPDHead = new javax.swing.JComboBox();
+        jLabel21 = new javax.swing.JLabel();
+        txtAdmNo = new javax.swing.JTextField();
         cboReportType = new javax.swing.JComboBox();
 
         tblReport.setFont(Global.textFont);
@@ -1237,6 +1301,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         });
 
+        jLabel14.setFont(Global.lableFont);
+        jLabel14.setText("Pt-Type");
+
+        cboPtType.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1245,20 +1314,22 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 74, Short.MAX_VALUE)
+                        .addGap(0, 123, Short.MAX_VALUE)
                         .addComponent(butCraftRpt)
-                        .addGap(55, 55, 55)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butExcel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(butPrint))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel16)
-                            .addComponent(jLabel17))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(18, 18, 18)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(cboOPDLG, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cboChargeType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(cboChargeType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cboPtType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
 
@@ -1275,6 +1346,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel17)
                     .addComponent(cboChargeType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(cboPtType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butPrint)
@@ -1372,11 +1447,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Session");
 
-        jLabel14.setFont(Global.lableFont);
-        jLabel14.setText("Pt-Type");
-
-        cboPtType.setFont(Global.textFont);
-
         jLabel15.setFont(Global.lableFont);
         jLabel15.setText("OPD CG");
 
@@ -1398,6 +1468,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         cboOPDHead.setFont(Global.textFont);
 
+        jLabel21.setFont(Global.lableFont);
+        jLabel21.setText("Adm No.");
+
+        txtAdmNo.setFont(Global.textFont);
+        txtAdmNo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtAdmNoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1412,77 +1492,78 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGap(10, 10, 10)
                 .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel18)
+                            .addGap(18, 18, 18)
+                            .addComponent(cboPayable, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel5)
+                                .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addGap(18, 18, 18)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(cboPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel19)
+                            .addGap(18, 18, 18)
+                            .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel11)
+                            .addGap(18, 18, 18)
+                            .addComponent(cboCity, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel10)
+                            .addGap(18, 18, 18)
+                            .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel12)
+                                .addComponent(jLabel13))
+                            .addGap(18, 18, 18)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(cboGender, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel9)
+                                .addComponent(jLabel15))
+                            .addGap(18, 18, 18)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(txtRegNo)
+                                .addComponent(cboOPDCG, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel7)
+                            .addGap(18, 18, 18)
+                            .addComponent(cboDCGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addComponent(jLabel8)
+                            .addGap(18, 18, 18)
+                            .addComponent(cboOTGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel6)
+                                .addComponent(jLabel20))
+                            .addGap(18, 18, 18)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(cboOPDHead, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cboOPDGroup, 0, 174, Short.MAX_VALUE))))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel18)
+                        .addComponent(jLabel21)
                         .addGap(18, 18, 18)
-                        .addComponent(cboPayable, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(cboPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel19)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel11)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboCity, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel10)
-                        .addGap(18, 18, 18)
-                        .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel13))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(cboGender, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9)
-                            .addComponent(jLabel15))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(txtRegNo)
-                            .addComponent(cboOPDCG, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel14)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboPtType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboDCGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel8)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboOTGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 174, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel20))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(cboOPDHead, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cboOPDGroup, 0, 174, Short.MAX_VALUE))))
+                        .addComponent(txtAdmNo)))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtFrom, txtTo});
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboCity, cboCurrency, cboDCGroup, cboDoctor, cboGender, cboOPDCG, cboOPDGroup, cboOTGroup, cboPayable, cboPayment, cboPtType, cboSession, cboType, txtPtName, txtRegNo});
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboCity, cboCurrency, cboDCGroup, cboDoctor, cboGender, cboOPDCG, cboOPDGroup, cboOTGroup, cboPayable, cboPayment, cboSession, cboType, txtPtName, txtRegNo});
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel12, jLabel13, jLabel14, jLabel15, jLabel18, jLabel19, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel12, jLabel13, jLabel15, jLabel18, jLabel19, jLabel21, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
 
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1539,6 +1620,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel21)
+                    .addComponent(txtAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel10)
                     .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1553,11 +1638,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel13))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel14)
-                    .addComponent(cboPtType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
 
         cboReportType.setFont(Global.textFont);
@@ -1590,24 +1671,23 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addGap(31, 31, 31))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(cboReportType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(60, 60, 60))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1663,11 +1743,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     Map<String, Object> params = getParameters();
                     switch (report.getMenuClass()) {
                         case "DiagnosisMonthly":
+                            DateUtil.setStartTime();
                             insertMonthFilterDiag(txtFrom.getText(), txtTo.getText(),
                                     Global.machineId, params);
+                            log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                             break;
                         case "PatientBalance":
                         case "CurrentPatientBalance":
+                            DateUtil.setStartTime();
                             String regNo = "-";
                             if (!txtRegNo.getText().trim().isEmpty()) {
                                 regNo = txtRegNo.getText().trim();
@@ -1686,10 +1769,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                     + "where tbp.user_id = '" + Global.machineId
                                     + "' and tbp.reg_no = dc.patient_id and tbp.admission_no is null";
                             dao.execSql(strSQLs);
+                            log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                             break;
                         case "InpatientSummary":
+                            DateUtil.setStartTime();
                             dao.execProc("rpt_inp", DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                     DateUtil.toDateStrMYSQL(txtTo.getText()), Global.machineId);
+                            log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                             break;
                         case "PatientInOutBalance":
                             String appCurr = Util1.getPropValue("system.app.currency");
@@ -1704,6 +1790,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                         "Invalid Patient", JOptionPane.ERROR_MESSAGE);
                                 return;
                             } else {
+                                DateUtil.setStartTime();
                                 dao.execProc("patient_balance_detail", txtRegNo.getText().trim(),
                                         DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                         DateUtil.toDateStrMYSQL(txtTo.getText()),
@@ -1723,6 +1810,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 } catch (SQLException ex) {
                                     log.error("PatientInOutBalance : " + ex.getMessage());
                                 }
+                                log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
                                 params.put("p_op_balance", opBalance);
                             }
                             break;
@@ -1748,14 +1836,21 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         case "OTPayableDetail":
                             insertOTFilter();
                             break;
+                        case "DCDailySDM":
+                            if(!isValidAdm(params)){
+                                return;
+                            }
+                            break;
                     }
 
                     String reportPath = Util1.getAppWorkFolder()
                             + Util1.getPropValue("report.folder.path")
-                            + "Clinic/"
+                            + "clinic/"
                             + report.getMenuUrl();
                     dao.close();
+                    DateUtil.setStartTime();
                     ReportUtil.viewReport(reportPath, params, dao.getConnection());
+                    log.info(report.getMenuClass() + " view time taken : " + DateUtil.getDuration());
                     dao.commit();
                 }
             } else {
@@ -1783,6 +1878,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             log.error("butCraftRptActionPerformed : " + ex.getMessage());
         }
     }//GEN-LAST:event_butCraftRptActionPerformed
+
+    private void txtAdmNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtAdmNoActionPerformed
+        getAdmPatient();
+    }//GEN-LAST:event_txtAdmNoActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butCraftRpt;
@@ -1818,6 +1917,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1835,6 +1935,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JTable tblOTService;
     private javax.swing.JTable tblReport;
     private javax.swing.JTable tblService;
+    private javax.swing.JTextField txtAdmNo;
     private javax.swing.JFormattedTextField txtFrom;
     private javax.swing.JTextField txtPtName;
     private javax.swing.JTextField txtRegNo;

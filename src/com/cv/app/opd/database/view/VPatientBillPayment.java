@@ -37,6 +37,7 @@ public class VPatientBillPayment implements Serializable {
     private String userName;
     private String userShort;
     private boolean deleted;
+    private Double discount;
 
     @Id
     @Column(name = "id", unique = true, nullable = false)
@@ -174,6 +175,15 @@ public class VPatientBillPayment implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    @Column(name="discount")
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
     }
 
 }

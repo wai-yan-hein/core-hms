@@ -930,7 +930,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 his.setUserId(Global.loginUser.getUserId());
 
                 if (isValidRoom(toRoom)) {
-                    dao.save(fromRoom);
+                    if(fromRoom != null){
+                        dao.save(fromRoom);
+                    }
                     dao.save(toRoom);
                     dao.save(his);
                     dao.save(admission);
@@ -1013,6 +1015,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Recover Success.", "Admission Recover",
                             JOptionPane.ERROR_MESSAGE);
+                    
+                    txtRCARegNo.setText(null);
+                    txtRCADAdmNo.setText(null);
                 }
             }
         } catch (Exception ex) {

@@ -2200,7 +2200,9 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     }// </editor-fold>//GEN-END:initComponents
 
   private void butSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSearchActionPerformed
+      DateUtil.setStartTime();
       search();
+      log.info("search duration : " + DateUtil.getDuration());
   }//GEN-LAST:event_butSearchActionPerformed
 
   private void txtFromMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFromMouseClicked

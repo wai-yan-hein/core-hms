@@ -1047,7 +1047,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private boolean isValidEntry() {
         boolean status = true;
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        
+
         if (!Util1.hashPrivilege("CanEditReturnCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1085,12 +1085,12 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     "No payment type.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboPayment.requestFocusInWindow();
-        } else if (vouBalance != 0 && currRetIn.getRegNo() == null){
+        } else if (vouBalance != 0 && currRetIn.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
             txtCusId.requestFocusInWindow();
-        }else {
+        } else {
             try {
                 if (tblRetIn.getCellEditor() != null) {
                     tblRetIn.getCellEditor().stopCellEditing();
@@ -1186,6 +1186,19 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         txtCusId.setText(ptt.getRegNo());
                         txtCusName.setText(ptt.getPatientName());
                         lblOTID.setText(ptt.getOtId());
+                        
+                        if (currRetIn.getAdmissionNo() != null) {
+                            if (currRetIn.getAdmissionNo().isEmpty()) {
+                                cboPayment.setSelectedItem(ptCash);
+                                retInTableModel.setCusType("A");
+                            } else {
+                                cboPayment.setSelectedItem(ptCredit);
+                                retInTableModel.setCusType("N");
+                            }
+                        } else {
+                            cboPayment.setSelectedItem(ptCash);
+                            retInTableModel.setCusType("A");
+                        }
                     }
                 } else if (Util1.getPropValue("system.app.usage.type").equals("School")) {
                     //String url = Util1.getPropValue("system.app.school.url");
@@ -1750,6 +1763,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
             }
         });
 
+        txtAdmissionNo.setEditable(false);
         txtAdmissionNo.setFont(Global.textFont);
 
         jLabel4.setText("Bill ID ");

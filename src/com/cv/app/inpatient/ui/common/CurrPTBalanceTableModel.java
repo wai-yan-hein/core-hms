@@ -26,7 +26,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
     private final String[] columnNames = {"Reg No.", "Adm No", "Patient", "Balance"};
     private final AbstractDataAccess dao = Global.dao;
     private Double total = 0.0;
-    
+
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
@@ -112,7 +112,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
             String userId = Global.machineId;
             dao.execProc("patient_balance", DateUtil.getTodayDateStrMYSQL(),
                     appCurr, userId, regNo);
-            
+
             String strSQLs = "update tmp_bill_payment tbp, (\n"
                     + "select dh.patient_id, max(dh.admission_no) admission_no, max(dh.dc_date) dc_date\n"
                     + "from dc_his dh\n"
@@ -192,7 +192,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                     + "	     from tmp_bill_payment tbp join (\n"
                     + "                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0))) amt\n"
                     + "		  from opd_patient_bill_payment\n"
-                    + "		 where reg_no is not null\n"
+                    + "		 where reg_no is not null and delete = false\n"
                     + "		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no\n"
                     + "                 and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}\n"
                     + "	     where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})\n"
@@ -209,10 +209,10 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                     .replace("$P{reg_no}", "'" + regNo + "'")
                     .replace("$P{user_id}", "'" + userId + "'");
             ResultSet rs = dao.execSQL(strSQLs);
-            if(rs != null){
+            if (rs != null) {
                 listBal = new ArrayList();
                 total = 0.0;
-                while(rs.next()){
+                while (rs.next()) {
                     CurrPTBalance cpb = new CurrPTBalance(
                             rs.getString("reg_no"),
                             rs.getString("ams_no"),
@@ -232,22 +232,117 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
         }
     }
 
+    public void getData1() {
+        String strSql = "select b.*, pd.patient_name, ifnull(max(ad.ams_no),'-') ams_no\n"
+                + "  from (select reg_no, currency_id, round(sum(amt),0) amt\n"
+                + "	      from (select reg_no, currency_id, sum(balance) amt\n"
+                + "				  from sale_his \n"
+                + "				 where deleted = 0 and date(sale_date)<= $P{to_date} and balance <> 0\n"
+                + "				   and (reg_no = $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by reg_no, currency_id\n"
+                + "				 union all\n"
+                + "				select reg_no, currency, sum(balance)*-1 amt\n"
+                + "				  from ret_in_his \n"
+                + "				 where deleted = 0 and date(ret_in_date) <= $P{to_date} and balance <> 0\n"
+                + "				   and (reg_no = $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by reg_no, currency\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(vou_balance) amt\n"
+                + "				  from opd_his \n"
+                + "				 where deleted = 0 and date(opd_date) <= $P{to_date} and vou_balance <> 0\n"
+                + "				   and (patient_id = $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(vou_total) amt\n"
+                + "				  from ot_his \n"
+                + "				 where deleted = 0 \n"
+                + "				   and date(ot_date) <= $P{to_date} and (patient_id = $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(paid)*-1 amt\n"
+                + "				  from ot_his \n"
+                + "				 where deleted = 0 and date(ot_date) <= $P{to_date} \n"
+                + "				   and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(disc_a)*-1 amt\n"
+                + "				  from ot_his \n"
+                + "				 where deleted = 0 and date(ot_date) <= $P{to_date} and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(vou_total) amt\n"
+                + "				  from dc_his \n"
+                + "				 where deleted = 0 and date(dc_date) <= $P{to_date} and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select patient_id, currency_id, sum(disc_a)*-1 amt\n"
+                + "				  from dc_his \n"
+                + "				 where deleted = 0 and date(dc_date) <= $P{to_date} and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all \n"
+                + "				select patient_id, currency_id, sum(paid)*-1 amt\n"
+                + "				  from dc_his \n"
+                + "				 where deleted = 0 and date(dc_date) <= $P{to_date} and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
+                + "				 group by patient_id, currency_id\n"
+                + "				 union all\n"
+                + "				select reg_no, currency_id, sum(ifnull(pay_amt,0)+ifnull(discount,0))*-1 amt\n"
+                + "				  from opd_patient_bill_payment \n"
+                + "				 where date(pay_date) <= $P{to_date} and (reg_no =  $P{reg_no} or '-'= $P{reg_no}) and deleted = false\n"
+                + "				 group by reg_no,currency_id)a\n"
+                + "			   where amt <> 0\n"
+                + "		 group by reg_no,currency_id)b\n"
+                + "  left join patient_detail pd on b.reg_no = pd.reg_no\n"
+                + "  left join admission ad on pd.reg_no = ad.reg_no\n"
+                + " where ad.dc_status is null \n"
+                + "   and ad.ams_no is not null and ifnull(b.reg_no,'') <> '' \n"
+                + " group by b.reg_no, b.currency_id\n"
+                + " order by pd.patient_name";
+        String strDate = DateUtil.getTodayDateStrMYSQL();
+        String regNo = "-";
+        strSql = strSql.replace("$P{to_date}", "'" + strDate + "'")
+                .replace("$P{reg_no}", "'" + regNo + "'");
+        
+        try{
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                listBal = new ArrayList();
+                total = 0.0;
+                while (rs.next()) {
+                    CurrPTBalance cpb = new CurrPTBalance(
+                            rs.getString("reg_no"),
+                            rs.getString("ams_no"),
+                            rs.getString("patient_name"),
+                            rs.getDouble("amt")
+                    );
+                    total += cpb.getBalance();
+                    listBal.add(cpb);
+                }
+                rs.close();
+                fireTableDataChanged();
+            }
+        }catch(Exception ex){
+            log.error("getData1 : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+    }
+
     public Double getTotal() {
         return total;
     }
-    
-    public int getCount(){
-        if(listBal != null){
+
+    public int getCount() {
+        if (listBal != null) {
             return listBal.size();
-        }else{
+        } else {
             return 0;
         }
     }
-    
-    public CurrPTBalance getPatientBalance(int index){
-        if(listBal != null){
+
+    public CurrPTBalance getPatientBalance(int index) {
+        if (listBal != null) {
             return listBal.get(index);
-        }else{
+        } else {
             return null;
         }
     }

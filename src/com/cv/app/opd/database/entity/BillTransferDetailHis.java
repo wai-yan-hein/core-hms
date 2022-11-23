@@ -20,7 +20,10 @@ public class BillTransferDetailHis implements Serializable{
     private BTDKey key;
     private String admissionNo;
     private Double amount;
-
+    private Double discount;
+    private Double paid;
+    private Double balance;
+    
     @EmbeddedId
     public BTDKey getKey() {
         return key;
@@ -47,6 +50,31 @@ public class BillTransferDetailHis implements Serializable{
     public void setAmount(Double amount) {
         this.amount = amount;
     }
-    
-    
+
+    @Column(name="discount")
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
+    }
+
+    @Column(name="paid")
+    public Double getPaid() {
+        return paid;
+    }
+
+    public void setPaid(Double paid) {
+        this.paid = paid;
+    }
+
+    @Column(name="balance")
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
 }

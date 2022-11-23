@@ -211,8 +211,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     "Check Point", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        log.info("Validation start. : " + new Date());
         if (isValidEntry()) {
-            System.out.println("Validation end. : " + new Date());
+            log.info("Validation end. : " + new Date());
             boolean status;
 
             Date vouSaleDate = DateUtil.toDate(txtDate.getText());
@@ -232,6 +233,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             }
 
             if (status) {
+                log.info("Backup start. : " + new Date());
                 try {
                     Date d = new Date();
                     String strVouTotal = NumberUtil.NZero(currVou.getVouTotal()).toString();
@@ -252,8 +254,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 } finally {
                     dao.close();
                 }
-                System.out.println("Backup end." + new Date());
+                log.info("Backup end. : " + new Date());
+                
                 try {
+                    log.info("Save start. : " + new Date());
                     if (lblStatus.getText().equals("NEW")) {
                         currVou.setCreatedBy(Global.loginUser);
                         currVou.setCreatedDate(new Date());
@@ -281,18 +285,19 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     }
 
                     deleteDetail();
-                    System.out.println("Before updateVouTotal Vou Save end." + new Date());
-                    updateVouTotal(currVou.getOpdInvId());
-                    System.out.println("After updateVouTotal Vou Save end." + new Date());
+                    log.info("Save end. : " + new Date());
+                    //System.out.println("Before updateVouTotal Vou Save end." + new Date());
+                    //updateVouTotal(currVou.getOpdInvId());
+                    //System.out.println("After updateVouTotal Vou Save end." + new Date());
                     String desp = "-";
                     if (currVou.getPatient() != null) {
                         desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                     }
-                    System.out.println("Before uploadToAccount." + new Date());
+                    log.info("Before uploadToAccount." + new Date());
                     uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
                             currVou.getPaid(), currVou.getTaxA(), desp);
-                    System.out.println("After uploadToAccount." + new Date());
+                    log.info("After uploadToAccount." + new Date());
 
                     newForm();
                 } catch (Exception ex) {
@@ -642,7 +647,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             }
 
                             deleteDetail();
-                            updateVouTotal(currVou.getOpdInvId());
+                            //updateVouTotal(currVou.getOpdInvId());
 
                             String desp = "-";
                             if (currVou.getPatient() != null) {
@@ -687,7 +692,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String printerName = Util1.getPropValue("report.vou.printer");
         params.put("link_amt_status", "N");
         params.put("link_amt", 0);
-        params.put("p_ttl_discount", 0.0);
+        params.put("p_ttl_discount", NumberUtil.NZero(currVou.getDiscountA()));
         if (Util1.getPropValue("system.link.amount").equals("OPD")
                 && currVou.getPatient() != null) {
             try {
@@ -1192,12 +1197,13 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     }
 
     private void calcBalance() {
+        double discount = NumberUtil.NZero(txtDiscA.getValue());
+        double tax = NumberUtil.NZero(txtTaxA.getValue());
+        double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+        double paid = NumberUtil.NZero(txtPaid.getValue());
+        
         if (cboPaymentType.getSelectedItem() != null) {
             PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
-            double discount = NumberUtil.NZero(txtDiscA.getValue());
-            double tax = NumberUtil.NZero(txtTaxA.getValue());
-            double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-            double paid = NumberUtil.NZero(txtPaid.getValue());
 
             if (currVou.getPkgId() != null) {
                 tableModel.calculatePkgTotal();
@@ -1245,16 +1251,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTtl = tableModel.getTotal();
         if (vouTtl != modelTtl) {
-            log.error(txtVouNo.getText().trim() + " Voucher Total Error : vouTtl : "
+            log.error(txtVouNo.getText().trim() + " OPD Voucher Total Error : vouTtl : "
                     + vouTtl + " modelTtl : " + modelTtl);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
 
         txtVouTotal.setValue(modelTtl);
         calcBalance();
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        
+
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());
             status = false;
@@ -1265,7 +1272,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        } else if(vouBalance != 0 && currVou.getPatient() == null){
+        } else if (vouBalance != 0 && currVou.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;

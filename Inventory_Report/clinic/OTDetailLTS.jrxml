@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OTDetailSDM" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
@@ -28,10 +28,10 @@ TRAN_OPTION,TRAN_OPTION1
 from (
 	select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sale_date) tran_date, sale_inv_id desp, sum(sale_qty) qty, sum(sale_amount) amount, sum(sale_amount) amount1,
 		   'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
-	  from v_sale, location loc
-	 where deleted = false and bill_id = $P{bill_id} and v_sale.location_id = loc.location_id 
+	  from v_sale1, location loc
+	 where deleted = false and ot_id = $P{bill_id} and v_sale1.location_id = loc.location_id 
 	   and date(sale_date) between date($P{pt_op_date}) and date($P{tran_date})
-	   and v_sale.location_id in (select location_id from loc_group_mapping where group_id = 1)
+	   and v_sale1.location_id in (select location_id from loc_group_mapping where group_id = 1)
 	 group by date(sale_date), sale_inv_id
 	 union all
 	select og.group_name as tran_type, date(vo.opd_date) tran_date, vo.service_name desp, sum(qty) qty, sum(vo.amount) amount, sum(vo.amount) amount1,

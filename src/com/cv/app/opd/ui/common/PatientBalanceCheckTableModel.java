@@ -203,8 +203,8 @@ public class PatientBalanceCheckTableModel extends AbstractTableModel {
                         + "union all \n"
                         + "select (sum(ifnull(pay_amt,0))*-1) as balance\n"
                         + "from opd_patient_bill_payment \n"
-                        + "where reg_no = '" + regNo
-                        + "' and currency_id = '" + currId + "' and date(pay_date) between '"
+                        + "where reg_no = '" + regNo + "' and deleted = fasle \n"
+                        + " and currency_id = '" + currId + "' and date(pay_date) between '"
                         + strOPDate + "' and '" + DateUtil.toDateStrMYSQL(tranDate) + "' \n"
                         + ") a";
                 try {

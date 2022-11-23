@@ -53,7 +53,8 @@ public class StockAdjTableModel extends AbstractTableModel {
     private int maxUniqueId = 0;
     private String deletedList;
     private String currency;
-
+    private boolean editStatus = false;
+    
     public StockAdjTableModel(List<AdjDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo) {
         this.listDetail = listDetail;
@@ -244,6 +245,9 @@ public class StockAdjTableModel extends AbstractTableModel {
                 case 4: //Sys-Balance
                     break;
                 case 5: //Usr-Balance
+                    if(editStatus){
+                        record.setOldSmallestQty(record.getSmallestQty());
+                    }
                     if (value == null) {
                         record.setUsrBalQty(null);
                         record.setUsrBalUnit(null);
@@ -295,6 +299,9 @@ public class StockAdjTableModel extends AbstractTableModel {
                     }
                     break;
                 case 8: //Qty
+                    if(editStatus){
+                        record.setOldSmallestQty(record.getSmallestQty());
+                    }
                     String tmpQtyStr = NumberUtil.getEngNumber(value.toString().trim());
                     record.setQty(NumberUtil.NZeroFloat(tmpQtyStr));
                     //For unit popup
@@ -502,6 +509,7 @@ public class StockAdjTableModel extends AbstractTableModel {
     }
 
     private void assignPrice(AdjDetailHis adh) {
+        DateUtil.setStartTime();
         Medicine med = adh.getMedicineId();
         String key;
 
@@ -638,6 +646,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                 }
             }
         }
+        log.info("assignPrice time taken : " + DateUtil.getDuration());
     }
 
     public double getTotalAmount() {
@@ -658,6 +667,7 @@ public class StockAdjTableModel extends AbstractTableModel {
     }
 
     private void assignBalance(AdjDetailHis record) {
+        DateUtil.setStartTime();
         String medId = record.getMedicineId().getMedId();
         try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
@@ -680,6 +690,7 @@ public class StockAdjTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             log.error("assignBalance : " + ex.getMessage());
         }
+        log.info("assignBalance time taken : " + DateUtil.getDuration());
     }
 
     public List<AdjDetailHis> getListDetail() {
@@ -947,5 +958,13 @@ public class StockAdjTableModel extends AbstractTableModel {
             }
         }
         return cost;
+    }
+
+    public boolean isEditStatus() {
+        return editStatus;
+    }
+
+    public void setEditStatus(boolean editStatus) {
+        this.editStatus = editStatus;
     }
 }

@@ -67,13 +67,14 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
 
         VoucherPayment record = listVP.get(row);
         switch (column) {
-            case 8:
-                return record.getPayDate() == null;
-            case 9:
-                return false;
-            case 10:
+            case 8://Pay Date
+                //return record.getPayDate() == null;
+                return true;
+            case 9://AC
+                return true;
+            case 10://Paid
                 return record.getCurrentPaid() == null;
-            case 11:
+            case 11://Discount
                 return record.getCurrentDiscount() == null;
             case 13:
                 return !record.isIsFullPaid();

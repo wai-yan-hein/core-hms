@@ -34,9 +34,10 @@ public class AdjDetailHis implements java.io.Serializable {
     private Float sysBalance;
     private String strSysBalance;
     private String currencyId;
-    
+    private Float oldSmallestQty;
+
     @Id
-    @Column(name = "adj_detail_id", unique = true, nullable = false, length=25)
+    @Column(name = "adj_detail_id", unique = true, nullable = false, length = 25)
     public String getAdjDetailId() {
         return adjDetailId;
     }
@@ -130,7 +131,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.amount = amount;
     }
 
-    @Column(name="balance_str", length=50)
+    @Column(name = "balance_str", length = 50)
     public String getStrBalance() {
         return strBalance;
     }
@@ -139,7 +140,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.strBalance = strBalance;
     }
 
-    @Column(name="balance")
+    @Column(name = "balance")
     public Float getBalance() {
         return balance;
     }
@@ -148,7 +149,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.balance = balance;
     }
 
-    @Column(name="vou_no", length=15)
+    @Column(name = "vou_no", length = 15)
     public String getVouNo() {
         return vouNo;
     }
@@ -157,7 +158,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.vouNo = vouNo;
     }
 
-    @Column(name="usr_balance")
+    @Column(name = "usr_balance")
     public Float getUsrBalQty() {
         return usrBalQty;
     }
@@ -176,7 +177,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.usrBalUnit = usrBalUnit;
     }
 
-    @Column(name="usr_balance_smallest")
+    @Column(name = "usr_balance_smallest")
     public Float getUsrBalsmallest() {
         return usrBalsmallest;
     }
@@ -185,7 +186,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.usrBalsmallest = usrBalsmallest;
     }
 
-    @Column(name="sys_balance")
+    @Column(name = "sys_balance")
     public Float getSysBalance() {
         return sysBalance;
     }
@@ -194,7 +195,7 @@ public class AdjDetailHis implements java.io.Serializable {
         this.sysBalance = sysBalance;
     }
 
-    @Column(name="sys_balance_str", length=50)
+    @Column(name = "sys_balance_str", length = 50)
     public String getStrSysBalance() {
         return strSysBalance;
     }
@@ -203,12 +204,32 @@ public class AdjDetailHis implements java.io.Serializable {
         this.strSysBalance = strSysBalance;
     }
 
-    @Column(name="currency_id", length=15)
+    @Column(name = "currency_id", length = 15)
     public String getCurrencyId() {
         return currencyId;
     }
 
     public void setCurrencyId(String currencyId) {
         this.currencyId = currencyId;
+    }
+
+    @Transient
+    public Float getOldSmallestQty() {
+        return oldSmallestQty;
+    }
+
+    public void setOldSmallestQty(Float oldSmallestQty) {
+        if (this.oldSmallestQty == null) {
+            this.oldSmallestQty = oldSmallestQty;
+        }
+    }
+
+    @Transient
+    public Float getDifference() {
+        if (oldSmallestQty == null) {
+            return null;
+        } else {
+            return smallestQty - oldSmallestQty;
+        }
     }
 }
