@@ -285,7 +285,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                 + "				 where deleted = 0 and date(dc_date) <= $P{to_date} and (patient_id =  $P{reg_no} or '-' = $P{reg_no})\n"
                 + "				 group by patient_id, currency_id\n"
                 + "				 union all\n"
-                + "				select reg_no, currency_id, sum(pay_amt)*-1 amt\n"
+                + "				select reg_no, currency_id, sum(ifnull(pay_amt,0)+ifnull(discount,0))*-1 amt\n"
                 + "				  from opd_patient_bill_payment \n"
                 + "				 where date(pay_date) <= $P{to_date} and (reg_no =  $P{reg_no} or '-'= $P{reg_no}) and deleted = false\n"
                 + "				 group by reg_no,currency_id)a\n"

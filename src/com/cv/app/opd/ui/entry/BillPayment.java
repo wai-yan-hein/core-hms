@@ -72,7 +72,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                 if (!txtAdmissionNo.getText().trim().isEmpty()) {
                     String admissionNo = txtAdmissionNo.getText();
                     String ptType = "OPD";
-                    if(!admissionNo.isEmpty()){
+                    if (!admissionNo.isEmpty()) {
                         ptType = "ADMISSION";
                     }
                     for (PatientBillPayment pbp : listPBP) {
@@ -266,8 +266,9 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         tblBillPaymentSearch.getColumnModel().getColumn(2).setPreferredWidth(250);//Patient Name
         tblBillPaymentSearch.getColumnModel().getColumn(3).setPreferredWidth(150);//Bill Type
         tblBillPaymentSearch.getColumnModel().getColumn(4).setPreferredWidth(200);//Remark
-        tblBillPaymentSearch.getColumnModel().getColumn(5).setPreferredWidth(50);//Amount
-        
+        tblBillPaymentSearch.getColumnModel().getColumn(5).setPreferredWidth(50);//Discount
+        tblBillPaymentSearch.getColumnModel().getColumn(6).setPreferredWidth(50);//Amount
+
         tblBillPayment.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         //tblBillPayment.getColumnModel().getColumn(0).setPreferredWidth(50);//Bill Type
@@ -374,14 +375,19 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
 
     private void deleteBill() {
         int row = tblBillPaymentSearch.convertRowIndexToModel(tblBillPaymentSearch.getSelectedRow());
-        if (row >= 0) {
-            int y = JOptionPane.showConfirmDialog(this, "Are you sure to delete?");
-            if (y == JOptionPane.YES_OPTION) {
-                int billId = tblBillPaymentSearchTableModel.getBillId(row);
-                String sql = "update opd_patient_bill_payment set deleted = 1 where id=" + billId + "";
-                dao.execSql(sql);
-                tblBillPaymentSearchTableModel.remove(row);
+        if (tblBillPaymentSearchTableModel.isCanDelete(row)) {
+            if (row >= 0) {
+                int y = JOptionPane.showConfirmDialog(this, "Are you sure to delete?");
+                if (y == JOptionPane.YES_OPTION) {
+                    int billId = tblBillPaymentSearchTableModel.getBillId(row);
+                    String sql = "update opd_patient_bill_payment set deleted = 1 where id=" + billId + "";
+                    dao.execSql(sql);
+                    tblBillPaymentSearchTableModel.remove(row);
+                }
             }
+        } else {
+            JOptionPane.showMessageDialog(Util1.getParent(), "You cannot delete bill transfer.",
+                    "Bill Delete", JOptionPane.ERROR_MESSAGE);
         }
     }
 

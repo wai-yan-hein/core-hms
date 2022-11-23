@@ -344,8 +344,15 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 + "from sale_his sh, location loc \n"
                 + "where sh.location_id = loc.location_id \n"
                 + "and sh.deleted = false and sh.reg_no = '" + regNo + "' and sh.admission_no = '" + admNo + "' \n"
-                + "and date(sh.sale_date) between '" + admitDate + "' and '" + tranDate
-                + "') a \n"
+                + "and date(sh.sale_date) between '" + admitDate + "' and '" + tranDate + "' \n"
+                + "union all\n"
+                + "select 'Bill Payment' as tran_option, pay_date as tran_date, remark as vou_no,\n"
+                + "'Bill Payment' as item_name, 1 as qty, (ifnull(pay_amt,0)+ifnull(discount,0)) as price,\n"
+                + "(ifnull(pay_amt,0)+ifnull(discount,0)) as amount, 1 as unique_id, 'Bill Payment' as group_name\n"
+                + "from v_opd_patient_bill_payment\n"
+                + "where deleted = false and reg_no = '" + regNo + "' and admission_no = '" + admNo + "' \n" 
+                + "and pay_date between '" + admitDate + "' and '" + tranDate + "' \n"
+                + ") a \n"
                 + " where a.amount <> 0 \n"
                 + "order by a.group_name, a.tran_option, a.tran_date, a.vou_no, a.unique_id";
         //log.info("strSql : " + strSql);

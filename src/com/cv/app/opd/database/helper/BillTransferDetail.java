@@ -20,6 +20,9 @@ public class BillTransferDetail {
     private String strAge;
     private Double amount;
     private Integer payTypeId;
+    private Double discount;
+    private Double paid;
+    private Double balance;
     
     public BillTransferDetail(Date tranDate, String regNo, String name, String status,
             String admissionNo, String strAge, Double amount, Integer payTypeId) {
@@ -97,4 +100,27 @@ public class BillTransferDetail {
         this.payTypeId = payTypeId;
     }
 
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
+    }
+
+    public Double getPaid() {
+        return paid;
+    }
+
+    public void setPaid(Double paid) {
+        this.paid = paid;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
 }
