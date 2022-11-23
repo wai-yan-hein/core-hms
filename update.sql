@@ -255,7 +255,13 @@ ALTER TABLE `tmp_amount_link`
 ADD COLUMN `discount` DOUBLE NULL AFTER `print_status`;
 
 ALTER TABLE `sale_his` 
-ADD COLUMN `bt_id` VARCHAR(15) NULL AFTER `exr_id`;
+ADD COLUMN `bt_id` VARCHAR(15);
 
 ALTER TABLE `opd_his` 
-ADD COLUMN `bt_id` VARCHAR(15) NULL AFTER `package_price`;
+ADD COLUMN `bt_id` VARCHAR(15);
+
+ALTER TABLE `dc_his` 
+ADD COLUMN `bt_id` VARCHAR(15);
+
+ALTER TABLE `ot_his` 
+ADD COLUMN `bt_id` VARCHAR(15);

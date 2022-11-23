@@ -53,7 +53,7 @@ public class TraderPayHis implements java.io.Serializable {
     private Double discount;
     private String intgUpdStatus;
     private TraderPayAccount payAccount;
-    
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "payment_id", unique = true, nullable = false)
@@ -280,7 +280,7 @@ public class TraderPayHis implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name = "acc_id")
+    @JoinColumn(name = "pay_id")
     public TraderPayAccount getPayAccount() {
         return payAccount;
     }
