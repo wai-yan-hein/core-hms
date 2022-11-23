@@ -692,7 +692,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String printerName = Util1.getPropValue("report.vou.printer");
         params.put("link_amt_status", "N");
         params.put("link_amt", 0);
-        params.put("p_ttl_discount", 0.0);
+        params.put("p_ttl_discount", NumberUtil.NZero(currVou.getDiscountA()));
         if (Util1.getPropValue("system.link.amount").equals("OPD")
                 && currVou.getPatient() != null) {
             try {
@@ -1255,6 +1255,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     + vouTtl + " modelTtl : " + modelTtl);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
 
         txtVouTotal.setValue(modelTtl);

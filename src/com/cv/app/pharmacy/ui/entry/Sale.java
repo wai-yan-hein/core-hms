@@ -3329,6 +3329,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     + vouTtl + " modelTtl : " + totalAmount);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         calculateTotalAmount();
         double vouBal = NumberUtil.NZero(txtVouBalance.getText());

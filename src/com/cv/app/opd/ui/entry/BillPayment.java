@@ -194,7 +194,8 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                                     pbp.setRegNo(resultSet.getString("reg_no"));
                                     pbp.setAmount(resultSet.getDouble("balance"));
                                     pbp.setBalance(resultSet.getDouble("balance"));
-
+                                    pbp.setDelete(Boolean.FALSE);
+                                    
                                     totalBalance += pbp.getAmount();
                                     listPBP.add(pbp);
                                 }

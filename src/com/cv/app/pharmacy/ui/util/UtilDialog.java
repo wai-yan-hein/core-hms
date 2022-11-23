@@ -128,7 +128,7 @@ public class UtilDialog extends javax.swing.JDialog {
                 break;
         }
         Dimension screen = Util1.getScreenSize();
-        setSize(screen.width - 200, screen.height - 200);
+        setSize(screen.width - 100, screen.height - 100);
         setLocationRelativeTo(null);
         //pack();
     }// </editor-fold>
