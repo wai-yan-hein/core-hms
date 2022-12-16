@@ -28,11 +28,13 @@ import com.cv.app.pharmacy.database.entity.PharmacySystem;
 import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.VouStatus;
+import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.helper.StockExp;
 import com.cv.app.pharmacy.database.tempentity.BarcodeFilter;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt;
 import com.cv.app.pharmacy.database.tempentity.TmpCostDetails;
 import com.cv.app.pharmacy.database.tempentity.TmpMinusFixed;
+import com.cv.app.pharmacy.database.tempentity.TmpMinusFixedKey;
 import com.cv.app.pharmacy.database.tempentity.TmpMonthFilter;
 import com.cv.app.pharmacy.database.tempentity.TmpStockBalOuts;
 import com.cv.app.pharmacy.database.tempentity.TmpStockBalOutsKey;
@@ -78,8 +80,10 @@ import com.cv.app.pharmacy.ui.common.ReportListTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableModel;
+import static com.cv.app.pharmacy.ui.entry.StockOpening.log;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.pharmacy.util.MedicineUtil;
+import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
@@ -136,7 +140,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private ReportItemCodeFilterTableModel codeTableModel = new ReportItemCodeFilterTableModel(dao, true, medUp);
     private TraderFilterTableModel traderTableModel = new TraderFilterTableModel(dao);
     private DoctorFilterTableModel doctorFilterTableModel = new DoctorFilterTableModel(dao);
-    private final String strCodeFilter = Util1.getPropValue("system.item.location.filter");
+    //private final String strCodeFilter = Util1.getPropValue("system.item.location.filter");
     private int mouseClick = 2;
     private final String prefix = Util1.getPropValue("system.sale.emitted.prifix");
     private final String remotePrint = Util1.getPropValue("system.remote.print");
@@ -491,7 +495,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
-    private void insertItemFilterCode() {
+    /*private void insertItemFilterCode() {
         String strDelSql = "delete from tmp_code_filter where user_id = '"
                 + Global.machineId + "'";
         String strSql = "insert into tmp_code_filter(item_code, user_id) "
@@ -554,8 +558,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } finally {
             dao.close();
         }
-    }
-
+    }*/
     private void insertTraderFilterCode(String disc) {
         String currencyId;
         String strSQLDelete = "delete from tmp_trader_bal_filter where user_id = '"
@@ -656,14 +659,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
-    private String getUserLocationFilterSql(String option) {
+    /*private String getUserLocationFilterSql(String option) {
         return null;
-    }
+    }*/
 
-    /*
+ /*
      * option = -1 for sale outstand option = -2 for purchase outstand
      */
-    private void insertStockOutsFilterCode(int option) {
+ /*private void insertStockOutsFilterCode(int option) {
         String filter = "";
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + Global.machineId + "' and location_id = " + option;
@@ -730,8 +733,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } finally {
             dao.close();
         }
-    }
-
+    }*/
     private void reportGeneration() {
         try {
             if (tblDoctorFilter.getCellEditor() != null) {
@@ -1341,7 +1343,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         fixedMinus(Global.machineId);
     }
 
-    private void execTraderBalanceWithoutPay() {
+    /*private void execTraderBalanceWithoutPay() {
         String strSql = "delete from tmp_trader_bal_date where user_id = '"
                 + Global.machineId + "' and trader_id in (select distinct trader_id \n"
                 + "from payment_his where pay_date between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
@@ -1373,8 +1375,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } finally {
             dao.close();
         }
-    }
-
+    }*/
     private void execTraderBalanceDate() {
         try {
             dao.execProc("trader_balance_date",
@@ -1919,7 +1920,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         dao.execSql(strSql1, strSql2, strSql3);
     }
 
-    private void fillBarcode() {
+    /*private void fillBarcode() {
         String strSQL = "delete from tmp_barcode_filter where user_id = '"
                 + Global.machineId + "'";
         HashMap<String, Integer> listCopy = new HashMap();
@@ -1958,8 +1959,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } catch (Exception ex) {
             log.error("fillBarcode : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-    }
-
+    }*/
     private void insertBarcodeFilter() {
         List<ItemCodeFilterRpt> listCodeFilter = codeTableModel.getListCodeFilter();
         List<BarcodeFilter> listBarcodeFilter = new ArrayList();
@@ -2878,7 +2878,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 DateUtil.toDateStrMYSQL(txtTo.getText()));
     }
 
-    private void fixedMinus(String userId) {
+    /*private void fixedMinus(String userId) {
         String strSql = "select location_id, med_id, exp_date, bal_qty\n"
                 + "from tmp_stock_balance_exp\n"
                 + "where user_id = '" + userId + "' and bal_qty <> 0\n"
@@ -2996,6 +2996,85 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } finally {
             dao.close();
         }
+    }*/
+    private void fixedMinus(String userId) {
+        String strSql = "select location_id, med_id, exp_date, bal_qty\n"
+                + "from tmp_stock_balance_exp\n"
+                + "where user_id = '" + userId + "' and bal_qty <> 0\n"
+                + "order by location_id, med_id, exp_date, bal_qty";
+        String prvMedId = "-";
+
+        try {
+            dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                List<Stock> listMinusStock = new ArrayList();
+                List<Stock> listPlusStock = new ArrayList();
+                Medicine med = null;
+                while (rs.next()) {
+                    float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
+                    String medId = rs.getString("med_id");
+                    int locationId = rs.getInt("location_id");
+
+                    if (prvMedId.equals("-")) {
+                        prvMedId = medId;
+                        med = (Medicine) dao.find(Medicine.class, medId);
+                    }
+
+                    if (!prvMedId.equals(medId)) {
+                        listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
+                        for (Stock s : listPlusStock) {
+                            TmpMinusFixedKey key = new TmpMinusFixedKey();
+                            key.setExpDate(s.getExpDate());
+                            key.setItemId(s.getMed().getMedId());
+                            key.setLocationId(s.getLocationId());
+                            key.setUserId(userId);
+                            TmpMinusFixed tmf = new TmpMinusFixed();
+                            tmf.setKey(key);
+                            tmf.setBalance(Math.round(s.getBalance()));
+
+                            dao.save(tmf);
+                        }
+
+                        listMinusStock = new ArrayList();
+                        listPlusStock = new ArrayList();
+                        med = (Medicine) dao.find(Medicine.class, medId);
+                    }
+
+                    if (qty < 0) {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listMinusStock.add(stock);
+                    } else {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listPlusStock.add(stock);
+                    }
+
+                    prvMedId = medId;
+                }
+
+                if (!listPlusStock.isEmpty()) {
+                    listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
+                    for (Stock s : listPlusStock) {
+                        TmpMinusFixedKey key = new TmpMinusFixedKey();
+                        key.setExpDate(s.getExpDate());
+                        key.setItemId(s.getMed().getMedId());
+                        key.setLocationId(s.getLocationId());
+                        key.setUserId(userId);
+                        TmpMinusFixed tmf = new TmpMinusFixed();
+                        tmf.setKey(key);
+                        tmf.setBalance(Math.round(s.getBalance()));
+
+                        dao.save(tmf);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("fixedMinus : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String[] getCopyData() {
@@ -3088,23 +3167,22 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
     }
 
-    private void listMethod() {
+    /*private void listMethod() {
         //Method methods[];
 
         try {
             Class obj = this.getClass();
-            Method mt = obj.getMethod("generateExcel", null);
-            mt.invoke(obj.newInstance(), null);
-            /*methods = this.getClass().getMethods();
+            Method mt1 = obj.getMethod("generateExcel", null);
+            mt1.invoke(obj.newInstance(), null);
+            Method[] methods = this.getClass().getMethods();
             for(Method mt : methods){
                 String name = mt.getName();
                 log.info("Method Name : " + name);
-            }*/
+            }
         } catch (Exception ex) {
             log.error("listMethod : " + ex.getMessage());
         }
-    }
-
+    }*/
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

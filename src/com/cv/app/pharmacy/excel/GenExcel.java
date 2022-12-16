@@ -59,8 +59,8 @@ public abstract class GenExcel {
                 + "from v_med_loc m\n"
                 + "where m.calc_stock = true";
 
-        strSQL = strSQL + " group by location_id, med_id) meod on m.med_id = meod.med_id "
-                + " and m.location_id = meod.location_id where m.calc_stock = true";
+        //strSQL = strSQL + " group by location_id, med_id) meod on m.med_id = meod.med_id "
+        //        + " and m.location_id = meod.location_id where m.calc_stock = true";
 
         if (!locationId.equals("-") && !locationId.equals("0")) {
             strSQL = strSQL + " and m.location_id = " + locationId;

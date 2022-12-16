@@ -24,7 +24,7 @@
 		<![CDATA[select tran_date,tran_type,sum(amount) amount,sum(amount1) amount1,TRAN_OPTION,TRAN_OPTION1,desp
 from (select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sh.sale_date) tran_date, sum(sh.sale_amount) amount, 0 as amount1,
 			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, sh.sale_inv_id desp
-		from v_sale sh,location loc
+		from v_sale1 sh,location loc
 	   where sh.deleted = false and sh.admission_no = $P{adm_no}
 		 and sh.location_id = loc.location_id and date(sh.sale_date) between date($P{adm_date}) and date($P{tran_date})
 	   group by date(sh.sale_date),loc.location_name, sh.sale_inv_id

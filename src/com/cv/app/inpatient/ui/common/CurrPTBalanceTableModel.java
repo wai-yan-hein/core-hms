@@ -23,7 +23,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(CurrPTBalanceTableModel.class.getName());
     private List<CurrPTBalance> listBal;
-    private final String[] columnNames = {"Reg No.", "Adm No", "Patient", "Balance"};
+    private final String[] columnNames = {"Reg No.", "Adm No", "Patient", "Balance", "E", "P"};
     private final AbstractDataAccess dao = Global.dao;
     private Double total = 0.0;
 
@@ -34,7 +34,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return false;
+        return column == 5;
     }
 
     @Override
@@ -48,6 +48,10 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                 return String.class;
             case 3: //Vou Total
                 return Double.class;
+            case 4: //E
+                return Boolean.class;
+            case 5: //P
+                return Boolean.class;
             default:
                 return Object.class;
         }
@@ -76,6 +80,10 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                     return record.getPtName();
                 case 3: //Balance
                     return record.getBalance();
+                case 4: //E
+                    return record.isError();
+                case 5: //P
+                    return record.isStatus();
                 default:
                     return null;
             }
@@ -88,6 +96,21 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int column) {
+        if (listBal == null) {
+            return;
+        }
+
+        if (listBal.isEmpty()) {
+            return;
+        }
+        
+        CurrPTBalance record = listBal.get(row);
+        switch(column){
+            case 5:
+                boolean status = (Boolean)value;
+                record.setStatus(status);
+                break;
+        }
     }
 
     @Override
@@ -188,7 +211,7 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                     + "	    group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date\n"
                     + "	    union all\n"
                     + "	   select tbp.reg_no, tbp.patient_name,tbp.admission_no, tbp.currency,\n"
-                    + "                    (sum(ifnull(opbp.amt,0))*-1) amt, tbp.dc_date\n"
+                    + "                    (sum(ifnull(opbp.amt,0)+ifnull(discount,0))*-1) amt, tbp.dc_date\n"
                     + "	     from tmp_bill_payment tbp join (\n"
                     + "                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0))) amt\n"
                     + "		  from opd_patient_bill_payment\n"
@@ -220,6 +243,11 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                             rs.getDouble("balance")
                     );
                     total += cpb.getBalance();
+                    if(cpb.getBalance() == 0){
+                        cpb.setStatus(false);
+                    }else{
+                        cpb.setStatus(true);
+                    }
                     listBal.add(cpb);
                 }
                 rs.close();
@@ -315,6 +343,11 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
                             rs.getDouble("amt")
                     );
                     total += cpb.getBalance();
+                    //if(cpb.getBalance() == 0){
+                    //    cpb.setStatus(false);
+                    //}else{
+                        cpb.setStatus(true);
+                    //}
                     listBal.add(cpb);
                 }
                 rs.close();
@@ -345,5 +378,9 @@ public class CurrPTBalanceTableModel extends AbstractTableModel {
         } else {
             return null;
         }
+    }
+
+    public List<CurrPTBalance> getListBal() {
+        return listBal;
     }
 }

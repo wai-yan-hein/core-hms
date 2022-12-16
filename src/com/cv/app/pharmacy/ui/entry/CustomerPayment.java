@@ -371,7 +371,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
             strSql = strSql + " and p.remark = '" + strRemark + "'";
         }
 
-        strSql = strSql + " and p.discm = 'C'";
+        //strSql = strSql + " and p.discm = 'C'";
 
         return strSql;
     }

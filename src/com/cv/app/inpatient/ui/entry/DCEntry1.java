@@ -991,7 +991,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             DateUtil.toDateStr(ams.getAmsDate(), "yyyy-MM-dd"),
                             DateUtil.toDateStr(txtDate.getText(), "yyyy-MM-dd"));
 
-                    dao.close();
+                    //dao.close();
                     ReportUtil.viewReport(reportPath, params, dao.getConnection());
                     //dao.commit();
                 } catch (Exception ex) {

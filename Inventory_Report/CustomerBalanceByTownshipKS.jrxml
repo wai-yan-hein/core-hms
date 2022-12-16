@@ -18,7 +18,7 @@ join v_cs on ttbd.trader_id = v_cs.trader_id
 join currency curr on ttbd.curr_id = curr.cur_code
 left join township tow on v_cs.township = tow.township_id
 where user_id = $P{user_id} and v_cs.discriminator = 'C'
-order by tow.township_name, v_cs.trader_name]]>
+order by tow.township_name, v_cs.trader_id, v_cs.trader_name]]>
 	</queryString>
 	<field name="trader_id" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>

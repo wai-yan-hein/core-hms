@@ -17,8 +17,8 @@ import javax.swing.table.AbstractTableModel;
 public class BillPaymentSearchTableModel extends AbstractTableModel {
 
     private List<VPatientBillPayment> listVPBP = new ArrayList();
-    private String[] columnNames = {"Reg No.", "Date", "Patient Name", "Bill Type", 
-        "Remark", "Discount","Pay Amount"};
+    private String[] columnNames = {"Reg No.", "Date", "Patient Name", "Bill Type",
+        "Remark", "Discount", "Pay Amount"};
 
     @Override
     public String getColumnName(int column) {
@@ -109,12 +109,14 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
         listVPBP.remove(row);
         fireTableRowsDeleted(row, row);
     }
-    
-    public boolean isCanDelete(int row){
+
+    public boolean isCanDelete(int row) {
         boolean status = true;
         VPatientBillPayment vpbp = listVPBP.get(row);
-        if(vpbp.getRemark().contains("Bill Transfer")){
-            status = false;
+        if (vpbp.getRemark() != null) {
+            if (vpbp.getRemark().contains("Bill Transfer")) {
+                status = false;
+            }
         }
         return status;
     }

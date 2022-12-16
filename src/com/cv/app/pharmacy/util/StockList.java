@@ -74,7 +74,7 @@ public class StockList {
                         strLocation, med.getMedId(), Global.machineId);
                 log.info("Stock Calculation time taken : " + DateUtil.getDuration());
                 if (resultSet != null) {
-                    HashMap<Integer, List<Stock>> minusHM = new HashMap();
+                    /*HashMap<Integer, List<Stock>> minusHM = new HashMap();
                     List<Stock> listStock = new ArrayList();
                     List<Integer> listLoc = new ArrayList();
                     while (resultSet.next()) {
@@ -151,19 +151,9 @@ public class StockList {
                                 listStock.add(stock);
                             }
                         }
+                    }*/
 
-                        /*if (qty != 0.0) {
-                            String qtyStr = MedicineUtil.getQtyInStr(med,
-                                    resultSet.getInt("TTL_QTY"));
-                            Stock stock = new Stock(med, resultSet.getDate("EXP_DATE"),
-                                    qtyStr, resultSet.getFloat("TTL_QTY"), qtyStr,
-                                    resultSet.getString("location_name"));
-
-                            listStock.add(stock);
-                        }*/
-                    }
-
-                    listLoc.stream().map(id -> minusHM.get(id)).filter(minusList -> (minusList != null))
+                    /*listLoc.stream().map(id -> minusHM.get(id)).filter(minusList -> (minusList != null))
                             .filter(minusList -> (!minusList.isEmpty())).forEachOrdered(minusList -> {
                         minusList.stream().map(stk -> {
                             String qtyStr = MedicineUtil.getQtyInStr(stk.getMed(), stk.getBalance());
@@ -175,7 +165,27 @@ public class StockList {
                         });
                     });
 
-                    hasStock.put(med.getMedId(), listStock);
+                    hasStock.put(med.getMedId(), listStock);*/
+                    
+                    List<Stock> listMinusStock = new ArrayList();
+                    List<Stock> listPlusStock = new ArrayList();
+                    while(resultSet.next()){
+                        float qty = NumberUtil.FloatZero(resultSet.getInt("TTL_QTY"));
+                        Integer tmpLocId = resultSet.getInt("location_id");
+                        if(qty < 0){
+                            Stock stock = new Stock(med, resultSet.getDate("EXP_DATE"),
+                                        null, qty, null,
+                                        resultSet.getString("location_name"), tmpLocId);
+                            listMinusStock.add(stock);
+                        }else{
+                            Stock stock = new Stock(med, resultSet.getDate("EXP_DATE"),
+                                        null, qty, null,
+                                        resultSet.getString("location_name"), tmpLocId);
+                            listPlusStock.add(stock);
+                        }
+                    }
+                    
+                    hasStock.put(med.getMedId(), PharmacyUtil.getStockList(listMinusStock, listPlusStock));
                     resultSet.close();
                 }
             } catch (Exception ex) {

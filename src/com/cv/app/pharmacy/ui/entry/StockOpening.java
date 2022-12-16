@@ -22,11 +22,13 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.StockOpeningDetailHis;
 import com.cv.app.pharmacy.database.entity.StockOpeningHis;
+import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.helper.StockExp;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilter;
 import com.cv.app.pharmacy.database.tempentity.StockBalance;
 import com.cv.app.pharmacy.database.tempentity.TmpMinusFixed;
+import com.cv.app.pharmacy.database.tempentity.TmpMinusFixedKey;
 import com.cv.app.pharmacy.database.tempentity.TmpStockOpeningDetailHisInsert;
 import com.cv.app.pharmacy.database.view.VMedRel;
 import com.cv.app.pharmacy.database.view.VStockOpToAcc;
@@ -875,127 +877,88 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
                     + Global.machineId + "'");
-        } catch (Exception ex) {
-
-        }
-        try {
-            //fixedMinus(Global.loginUser.getUserId());
-            fixedMinus1(Global.machineId);
-            //dao.commit();
-            /*dao.execProc("insert_cost", DateUtil.toDateStrMYSQL(txtStockDate.getText()),
-                    Global.loginUser.getUserId());
-            dao.commit();*/
-
- /*String strSQL = "select distinct med_id from tmp_stock_balance_exp where user_id = '"
-                    + Global.loginUser.getUserId() + "'";
-            ResultSet resultSet = dao.execSQL(strSQL);
-            while (resultSet.next()) {
-                String medId = resultSet.getString("med_id");
-                //log.info(medId);
-                strSQL = "select v from TmpMinusFixed v where v.key.userId = '"
-                        + Global.loginUser.getUserId() + "' and v.key.itemId = '"
-                        + medId + "' and balance <> 0 order by v.key.expDate desc";
-                List<TmpMinusFixed> listTMF = dao.findAllHSQL(strSQL);
-                strSQL = "select v from TmpCostDetails v where v.userId = '"
-                        + Global.loginUser.getUserId() + "' and v.itemId = '"
-                        + medId + "' order by v.tranDate desc, v.tranId";
-                List<TmpCostDetails> listTCD = dao.findAllHSQL(strSQL);
-
-                if (medId.equals("01010042")) {
-                    System.out.println();
-                }
-                //Calculate cost with first in first out
-                if (listTCD != null) {
-                    if (!listTCD.isEmpty()) {
-                        for (TmpMinusFixed tmf : listTMF) {
-                            insertTmpStockDetails(medId, tmf.getKey().getExpDate(),
-                                            tmf.getBalance(), 0);
-                        }
-                    }
-                }
-
-            }
-            resultSet.close();*/
+            //fixedMinus1(Global.machineId);
+            fixedMinus(Global.machineId);
+            getFixedResult();
         } catch (Exception ex) {
             log.error("fixMinusBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
             dao.close();
         }
-
-        getFixedResult();
-        //applyStockOpFilter();
     }
 
     private void fixedMinus(String userId) {
-        String strSql = "select a.location_id, a.med_id, a.exp_date, a.bal_qty, b.ttl_qty\n"
-                + "		  from (select user_id, location_id, med_id, exp_date, bal_qty\n"
-                + "				  from tmp_stock_balance_exp\n"
-                + "				 where user_id = prm_user_id and bal_qty > 0) a,\n"
-                + "			   (select user_id, location_id, med_id, sum(bal_qty*-1) ttl_qty\n"
-                + "				  from tmp_stock_balance_exp\n"
-                + "				 where user_id = prm_user_id and bal_qty < 0\n"
-                + "				 group by user_id, location_id, med_id) b\n"
-                + "		 where a.user_id = b.user_id and a.location_id = b.location_id\n"
-                + "		   and a.med_id = b.med_id\n"
-                + "		 order by a.location_id, a.med_id, a.exp_date";
-        strSql = strSql.replace("prm_user_id", "'" + userId + "'");
+        String strSql = "select location_id, med_id, exp_date, bal_qty\n"
+                + "from tmp_stock_balance_exp\n"
+                + "where user_id = '" + userId + "' and bal_qty <> 0\n"
+                + "order by location_id, med_id, exp_date, bal_qty";
+        String prvMedId = "-";
 
         try {
             dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
             ResultSet rs = dao.execSQL(strSql);
             if (rs != null) {
-                int locationId;
-                int prvLocationId = -1;
-                String medId;
-                String prvMedId = "-";
-                Date expDate;
-                Double plusBalance;
-                Double minusBalance;
-                Double leftMinus = 0.0;
-                Double leftBalance = 0.0;
-                String fixMed = "";
-
+                List<Stock> listMinusStock = new ArrayList();
+                List<Stock> listPlusStock = new ArrayList();
+                Medicine med = null;
                 while (rs.next()) {
-                    locationId = rs.getInt("location_id");
-                    medId = rs.getString("med_id");
-                    expDate = rs.getDate("exp_date");
-                    plusBalance = rs.getDouble("bal_qty");
-                    minusBalance = rs.getDouble("ttl_qty");
+                    float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
+                    String medId = rs.getString("med_id");
+                    int locationId = rs.getInt("location_id");
 
-                    if (fixMed.isEmpty()) {
-                        fixMed = "'" + medId + "'";
-                    } else {
-                        fixMed = fixMed + "'," + medId + "'";
-                    }
-                    if (!medId.equals(prvMedId) || locationId != prvLocationId) {
+                    if (prvMedId.equals("-")) {
                         prvMedId = medId;
-                        prvLocationId = locationId;
-                        leftMinus = minusBalance;
+                        med = (Medicine) dao.find(Medicine.class, medId);
                     }
 
-                    if (plusBalance >= leftMinus) {
-                        leftBalance = plusBalance - leftMinus;
-                        leftMinus = 0.0;
-                    } else if (leftMinus > plusBalance) {
-                        leftBalance = 0.0;
-                        leftMinus = leftMinus - plusBalance;
+                    if (!prvMedId.equals(medId)) {
+                        listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
+                        for (Stock s : listPlusStock) {
+                            TmpMinusFixedKey key = new TmpMinusFixedKey();
+                            key.setExpDate(s.getExpDate());
+                            key.setItemId(s.getMed().getMedId());
+                            key.setLocationId(s.getLocationId());
+                            key.setUserId(userId);
+                            TmpMinusFixed tmf = new TmpMinusFixed();
+                            tmf.setKey(key);
+                            tmf.setBalance(Math.round(s.getBalance()));
+                            
+                            dao.save(tmf);
+                        }
+
+                        listMinusStock = new ArrayList();
+                        listPlusStock = new ArrayList();
+                        med = (Medicine) dao.find(Medicine.class, medId);
                     }
 
-                    if (leftBalance > 0) {
-                        String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                + " values(" + locationId + ",'" + medId + "','"
-                                + DateUtil.toDateStr(expDate, "yyyy-MM-dd") + "',"
-                                + leftBalance + ", '" + userId + "')";
-                        dao.execSql(strInsert);
+                    if (qty < 0) {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listMinusStock.add(stock);
+                    } else {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listPlusStock.add(stock);
+                    }
+
+                    prvMedId = medId;
+                }
+                
+                if (!listPlusStock.isEmpty()) {
+                    listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
+                    for (Stock s : listPlusStock) {
+                        TmpMinusFixedKey key = new TmpMinusFixedKey();
+                        key.setExpDate(s.getExpDate());
+                        key.setItemId(s.getMed().getMedId());
+                        key.setLocationId(s.getLocationId());
+                        key.setUserId(userId);
+                        TmpMinusFixed tmf = new TmpMinusFixed();
+                        tmf.setKey(key);
+                        tmf.setBalance(Math.round(s.getBalance()));
+
+                        dao.save(tmf);
                     }
                 }
-
-                /*String strSql1 = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                        + "	select location_id, med_id, exp_date, bal_qty, prm_user_id\n"
-                        + "	  from tmp_stock_balance_exp \n"
-                        + "	 where user_id = prm_user_id and med_id not in (select item_id from tmp_minus_fixed where user_id = prm_user_id)";
-                strSql1 = strSql1.replace("prm_user_id", "'" + userId + "'");
-                dao.execSql(strSql1);*/
             }
         } catch (Exception ex) {
             log.error("fixedMinus : " + ex.getMessage());
@@ -1018,7 +981,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 while (rs.next()) {
                     float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
                     String medId = rs.getString("med_id");
-                    if (medId.equals("101054")) {
+                    if (medId.equals("101119")) {
                         log.info("Med Id : " + medId + " Qty : " + qty);
                     }
                     if (prvMedId.equals("-")) {
@@ -1089,6 +1052,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                                                 break;
                                             } else if ((tmpBalance * -1) == qty) {
                                                 minusList.remove(0);
+                                                qty = tmpBalance + qty;
                                                 break;
                                             } else {
                                                 minusList.remove(0);
@@ -1615,7 +1579,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
 
@@ -1657,7 +1621,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
 
