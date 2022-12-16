@@ -25,6 +25,9 @@ add column intg_upd_status varchar(15);
 alter table opd_patient_bill_payment 
 add column deleted  bit(1) not null default 0;
 
+ALTER TABLE `opd_patient_bill_payment` 
+ADD COLUMN `intg_upd_status` VARCHAR(15) NULL AFTER `deleted`;
+
 drop view if exists v_opd_patient_bill_payment;
 create view v_opd_patient_bill_payment as select opbp.id as id,opbp.reg_no as reg_no,opbp.bill_type_id as bill_type_id,opbp.currency_id as currency_id,opbp.pay_amt as pay_amt,opbp.pay_date as pay_date,opbp.remark as remark,opbp.created_by as created_by,opbp.created_date as created_date,opbp.deleted as deleted,pd.patient_name as patient_name,pd.father_name as father_name,pt.payment_type_name as payment_type_name,usr.user_name as user_name,usr.user_short_name as user_short_name from (((patient_detail pd join opd_patient_bill_payment opbp) join payment_type pt) join appuser usr) where pd.reg_no = opbp.reg_no and opbp.bill_type_id = pt.payment_type_id and opbp.created_by = usr.user_id;
 
@@ -265,3 +268,8 @@ ADD COLUMN `bt_id` VARCHAR(15);
 
 ALTER TABLE `ot_his` 
 ADD COLUMN `bt_id` VARCHAR(15);
+
+set sql_safe_updates =0;
+update building_structure b join(
+select reg_no,building_structure_id from admission where dc_status is null) c on b.id = c.building_structure_id
+set b.reg_no = c.reg_no

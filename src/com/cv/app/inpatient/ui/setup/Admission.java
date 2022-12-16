@@ -306,7 +306,13 @@ public class Admission extends javax.swing.JPanel implements FormAction,
 
                     if (cboBooking.getSelectedItem() != null) {
                         String strSql = "update booking_room set check_status = 0 "
-                                + " where booking_id =" + ((RBooking) cboBooking.getSelectedItem()).getBookingId();
+                                + " where booking_id =" + ((RBooking) cboBooking.getSelectedItem()).getBookingId() + "";
+                        dao.execSql(strSql);
+                    }
+                    //update building
+                    if (cboRoom.getSelectedItem() != null) {
+                        String strSql = "update building_structure set reg_no ='" + regNo.getRegNo() + "'"
+                                + " where id =" + ((BuildingStructure) cboRoom.getSelectedItem()).getId() + "";
                         dao.execSql(strSql);
                     }
                 } catch (Exception ex) {
@@ -930,7 +936,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 his.setUserId(Global.loginUser.getUserId());
 
                 if (isValidRoom(toRoom)) {
-                    if(fromRoom != null){
+                    if (fromRoom != null) {
                         dao.save(fromRoom);
                     }
                     dao.save(toRoom);
@@ -1015,7 +1021,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Recover Success.", "Admission Recover",
                             JOptionPane.ERROR_MESSAGE);
-                    
+
                     txtRCARegNo.setText(null);
                     txtRCADAdmNo.setText(null);
                 }
