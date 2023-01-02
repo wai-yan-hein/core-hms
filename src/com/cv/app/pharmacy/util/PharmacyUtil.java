@@ -6,9 +6,12 @@ package com.cv.app.pharmacy.util;
 
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Sequence;
+import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.util.DateUtil;
 import java.sql.ResultSet;
 import java.util.Date;
+import java.util.List;
+import static java.util.stream.Collectors.toList;
 import org.apache.log4j.Logger;
 
 /**
@@ -41,18 +44,18 @@ public class PharmacyUtil {
 
     public static Double getSeqR(String option, AbstractDataAccess dao) {
         double seq;
-        try{
-        Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
+        try {
+            Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
 
-        if (objSeq == null) {
-            seq = 1;
-        } else {
-            seq = objSeq.getSeq();
-        }
-        }catch(Exception ex){
+            if (objSeq == null) {
+                seq = 1;
+            } else {
+                seq = objSeq.getSeq();
+            }
+        } catch (Exception ex) {
             seq = 0;
             log.error("getSeqR : " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
         return seq;
@@ -62,11 +65,11 @@ public class PharmacyUtil {
         try {
             Sequence objSeq = (Sequence) dao.find(Sequence.class, option);
 
-        if (objSeq == null) {
-            objSeq = new Sequence(option, 0.0);
-        }
+            if (objSeq == null) {
+                objSeq = new Sequence(option, 0.0);
+            }
 
-        objSeq.setSeq(objSeq.getSeq() + 1);
+            objSeq.setSeq(objSeq.getSeq() + 1);
             dao.save(objSeq);
         } catch (Exception ex) {
             dao.rollBack();
@@ -122,5 +125,51 @@ public class PharmacyUtil {
             dao.close();
         }
         return lockDate;
+    }
+
+    public static List<Stock> getStockList(List<Stock> minusList, List<Stock> stockList) {
+        if (minusList != null) {
+            for (Stock stkm : minusList) {
+                float minusQty = stkm.getBalance();
+                for (Stock stk : stockList) {
+                    if (minusQty == 0.0) {
+                        break;
+                    }
+
+                    if (stk.getBalance() != 0f) {
+                        if (Math.abs(minusQty) == stk.getBalance()) {
+                            stkm.setBalance(0f);
+                            stk.setBalance(0f);
+                            minusQty = 0f;
+                        } else if (Math.abs(minusQty) < stk.getBalance()) {
+                            stk.setBalance(minusQty + stk.getBalance());
+                            minusQty = 0f;
+                        } else if (Math.abs(minusQty) > stk.getBalance()) {
+                            minusQty = minusQty + stk.getBalance();
+                            stk.setBalance(0f);
+                        }
+                    }
+                }
+
+                stkm.setBalance(minusQty);
+            }
+
+            List<Stock> tmpList = minusList.stream().filter(s -> s.getBalance() != 0f)
+                    .collect(toList());
+            if (!tmpList.isEmpty()) {
+                stockList.addAll(tmpList);
+            }
+
+            stockList = stockList.stream().filter(s -> s.getBalance() != 0.f)
+                    .map(stk -> {
+                        String qtyStr = MedicineUtil.getQtyInStr(stk.getMed(), stk.getBalance());
+                        stk.setQtyStr(qtyStr);
+                        stk.setQtyStrBal(qtyStr);
+                        return stk;
+                    })
+                    .collect(toList());
+        }
+
+        return stockList;
     }
 }

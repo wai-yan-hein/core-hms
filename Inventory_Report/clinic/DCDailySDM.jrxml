@@ -24,7 +24,7 @@
 		<![CDATA[select tran_date,tran_type,sum(amount) amount,sum(amount1) amount1,TRAN_OPTION,TRAN_OPTION1,desp
 from (select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sh.sale_date) tran_date, sum(sh.sale_amount) amount, 0 as amount1,
 			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, sh.sale_inv_id desp
-		from v_sale sh,location loc
+		from v_sale1 sh,location loc
 	   where sh.deleted = false and sh.admission_no = $P{adm_no}
 		 and sh.location_id = loc.location_id and date(sh.sale_date) between date($P{adm_date}) and date($P{tran_date})
 	   group by date(sh.sale_date),loc.location_name, sh.sale_inv_id
@@ -208,7 +208,7 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 	<group name="tran_type">
 		<groupExpression><![CDATA[$F{tran_date}]]></groupExpression>
 		<groupFooter>
-			<band height="30">
+			<band height="20">
 				<rectangle>
 					<reportElement x="474" y="0" width="81" height="20" uuid="2cfa578d-522e-45a2-ad36-75d3343b598f"/>
 					<graphicElement>
@@ -528,7 +528,9 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
 			<rectangle>
-				<reportElement x="55" y="21" width="257" height="20" uuid="e2ac5786-a2aa-4a02-b44f-b6ce3487fbb1"/>
+				<reportElement x="140" y="21" width="172" height="20" uuid="e2ac5786-a2aa-4a02-b44f-b6ce3487fbb1">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 			</rectangle>
 			<rectangle>
 				<reportElement x="0" y="21" width="55" height="20" uuid="da7fdcf9-3541-4e0d-9bd6-d72d432cd308">
@@ -549,7 +551,7 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				<reportElement x="474" y="21" width="81" height="20" uuid="8512074e-efb4-4a23-8c64-9b0316ed90bb"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="56" y="21" width="99" height="20" uuid="ca161483-8579-43f6-b71a-19ef06f443a7"/>
+				<reportElement x="141" y="21" width="99" height="20" uuid="ca161483-8579-43f6-b71a-19ef06f443a7"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
@@ -592,12 +594,29 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				</textElement>
 				<text><![CDATA[Expenses ]]></text>
 			</staticText>
+			<rectangle>
+				<reportElement x="55" y="21" width="85" height="20" uuid="ae1a843b-97c1-4dd1-bda4-4e12023bac94">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="56" y="21" width="84" height="20" uuid="04535f9d-6ba8-4ef5-8997-c905c892ddbe">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Department]]></text>
+			</staticText>
 		</band>
 	</pageHeader>
 	<detail>
 		<band height="20" splitType="Stretch">
 			<rectangle>
-				<reportElement x="55" y="0" width="257" height="20" uuid="ed87a0e8-c62c-4f4e-aeb5-b54d55a98539"/>
+				<reportElement x="140" y="0" width="172" height="20" uuid="ed87a0e8-c62c-4f4e-aeb5-b54d55a98539">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<graphicElement>
 					<pen lineColor="#666666"/>
 				</graphicElement>
@@ -633,7 +652,9 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				</graphicElement>
 			</rectangle>
 			<textField>
-				<reportElement x="57" y="1" width="255" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f"/>
+				<reportElement x="142" y="1" width="170" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
@@ -663,6 +684,23 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 					<font fontName="Arial" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{amount1}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="55" y="0" width="85" height="20" uuid="d48f1bee-47c6-466f-9af1-21c91dd2c397">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="56" y="1" width="82" height="17" uuid="f98525a6-374c-4bd2-bd0a-94b7fcb704dd">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_type}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

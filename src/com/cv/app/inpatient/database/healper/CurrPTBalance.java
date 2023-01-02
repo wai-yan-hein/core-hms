@@ -17,6 +17,7 @@ public class CurrPTBalance {
     private String ptName;
     private Double balance;
     private Double checkBalance;
+    private boolean status = false;
     
     public CurrPTBalance(){}
     
@@ -68,10 +69,14 @@ public class CurrPTBalance {
     }
     
     public boolean isError(){
-        if(!Objects.equals(balance, checkBalance)){
-            return true;
-        }else{
-            return false;
-        }
+        return !Objects.equals(balance, checkBalance);
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 }

@@ -658,4 +658,19 @@ public class DateUtil {
             return diff.getSeconds();
         }
     }
+
+    public static String getYesterdayateStrMYSQL() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String date = null;
+
+        try {
+            final Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.DATE, -1);
+            date = formatter.format(cal.getTime());
+        } catch (Exception ex) {
+            //System.out.println("toDateStrMYSQL Error : " + ex.getMessage());
+        }
+
+        return date;
+    }
 }

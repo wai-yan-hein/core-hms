@@ -3098,7 +3098,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String bankInfo = Util1.getPropValue("report.bankinfo");
             String printMode = Util1.getPropValue("report.vou.printer.mode");
             if (chkA5.isSelected()) {
-                reportName = "W/SaleVoucherInvoiceA5";
+                String a5Report = Util1.getPropValue("report.file.saleW");
+                if (a5Report.isEmpty() || a5Report.equals("-")) {
+                    reportName = "W/SaleVoucherInvoiceA5";
+                } else {
+                    reportName = a5Report;
+                }
                 printMode = "View";
             }
             String reportPath = Util1.getAppWorkFolder()
@@ -3329,10 +3334,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     + vouTtl + " modelTtl : " + totalAmount);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         calculateTotalAmount();
         double vouBal = NumberUtil.NZero(txtVouBalance.getText());
-        
+
         if (!Util1.hashPrivilege("CanEditSaleCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -3388,8 +3394,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     "No vou status.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboVouStatus.requestFocusInWindow();
-        } else if (vouBal != 0 && currSaleVou.getPatientId() == null &&
-                Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+        } else if (vouBal != 0 && currSaleVou.getPatientId() == null
+                && Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;

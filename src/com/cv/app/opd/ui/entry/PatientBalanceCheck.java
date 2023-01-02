@@ -125,7 +125,7 @@ public class PatientBalanceCheck extends javax.swing.JPanel {
                     + "	   select tbp.reg_no, tbp.patient_name,tbp.admission_no, tbp.currency,\n"
                     + "                    (sum(ifnull(opbp.amt,0))*-1) amt, tbp.dc_date\n"
                     + "	     from tmp_bill_payment tbp join (\n"
-                    + "                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0))) amt\n"
+                    + "                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0)+ifnull(discount,0))) amt\n"
                     + "		  from opd_patient_bill_payment\n"
                     + "		 where reg_no is not null and deleted = false \n"
                     + "		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no\n"

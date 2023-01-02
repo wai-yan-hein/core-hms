@@ -991,7 +991,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             DateUtil.toDateStr(ams.getAmsDate(), "yyyy-MM-dd"),
                             DateUtil.toDateStr(txtDate.getText(), "yyyy-MM-dd"));
 
-                    dao.close();
+                    //dao.close();
                     ReportUtil.viewReport(reportPath, params, dao.getConnection());
                     //dao.commit();
                 } catch (Exception ex) {
@@ -1911,6 +1911,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     + vouTtl + " modelTtl : " + modelTotal);
             JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher total.",
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
         
         txtVouTotal.setValue(modelTotal);

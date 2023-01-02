@@ -564,9 +564,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             params.put("payment_name", "All");
         }
         if (cboDoctor.getSelectedItem() instanceof Doctor) {
-            params.put("doctor", ((Doctor) cboDoctor.getSelectedItem()).getDoctorId());
+            String drId = ((Doctor) cboDoctor.getSelectedItem()).getDoctorId();
+            params.put("doctor", drId);
+            params.put("tech_id", drId);
         } else {
             params.put("doctor", "-");
+            params.put("tech_id", "-");
         }
         if (!txtRegNo.getText().trim().isEmpty()) {
             params.put("reg_no", txtRegNo.getText().trim());
@@ -1622,7 +1625,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel21)
                     .addComponent(txtAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel10)
                     .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -1638,7 +1641,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel13))
-                .addContainerGap())
+                .addContainerGap(27, Short.MAX_VALUE))
         );
 
         cboReportType.setFont(Global.textFont);
@@ -1845,7 +1848,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
                     String reportPath = Util1.getAppWorkFolder()
                             + Util1.getPropValue("report.folder.path")
-                            + "Clinic/"
+                            + "clinic/"
                             + report.getMenuUrl();
                     dao.close();
                     DateUtil.setStartTime();
