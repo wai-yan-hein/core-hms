@@ -285,7 +285,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         vouEngine.setPeriod(DateUtil.getPeriod(txtTranDate.getText()));
         genVouNo();
         //setFocus();
-
+        txtTotalItem.setText("0");
         System.gc();
     }
 
@@ -406,6 +406,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
 
                     if (yes_no == 0) {
                         tblTransferModel.delete(tblTransfer.getSelectedRow());
+                        txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
                     }
                 }
             }
@@ -482,6 +483,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                 } else {
                     System.out.println("Transfer.selected MedicineList : Cannot get relation group");
                 }
+                txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
             } catch (Exception ex) {
                 log.error("MedicineList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -539,7 +541,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                         }
                     }
                 }
-
+                txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
                 dao.close();
             } catch (Exception ex) {
                 log.error("TransferVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -646,6 +648,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
             @Override
             public void tableChanged(TableModelEvent e) {
                 txtTotalAmount.setValue(tblTransferModel.getTotalAmount());
+                txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
             }
         });
     }
@@ -1202,6 +1205,8 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         lblStatus = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         txtTotalAmount = new javax.swing.JFormattedTextField();
+        jLabel9 = new javax.swing.JLabel();
+        txtTotalItem = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -1299,7 +1304,6 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         tblTransfer.setFont(Global.textFont);
         tblTransfer.setModel(tblTransferModel);
         tblTransfer.setRowHeight(23);
-        tblTransfer.setShowVerticalLines(false);
         tblTransfer.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 tblTransferFocusLost(evt);
@@ -1331,6 +1335,11 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         txtTotalAmount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtTotalAmount.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
 
+        jLabel9.setText("Total Item : ");
+
+        txtTotalItem.setEditable(false);
+        txtTotalItem.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1338,6 +1347,10 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(lblStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 185, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(18, 18, 18)
+                .add(jLabel9)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(txtTotalItem, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 116, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(jLabel3)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1353,7 +1366,13 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                 .add(31, 42, Short.MAX_VALUE))
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(lblStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel3Layout.createSequentialGroup()
+                        .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                            .add(jLabel9)
+                            .add(txtTotalItem, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(lblStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -1565,6 +1584,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -1578,6 +1598,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     private javax.swing.JTextField txtSupId;
     private javax.swing.JTextField txtSupName;
     private javax.swing.JFormattedTextField txtTotalAmount;
+    private javax.swing.JTextField txtTotalItem;
     private javax.swing.JFormattedTextField txtTranDate;
     private javax.swing.JFormattedTextField txtVouNo;
     // End of variables declaration//GEN-END:variables

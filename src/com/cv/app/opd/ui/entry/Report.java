@@ -564,9 +564,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             params.put("payment_name", "All");
         }
         if (cboDoctor.getSelectedItem() instanceof Doctor) {
-            params.put("doctor", ((Doctor) cboDoctor.getSelectedItem()).getDoctorId());
+            String drId = ((Doctor) cboDoctor.getSelectedItem()).getDoctorId();
+            params.put("doctor", drId);
+            params.put("tech_id", drId);
         } else {
             params.put("doctor", "-");
+            params.put("tech_id", "-");
         }
         if (!txtRegNo.getText().trim().isEmpty()) {
             params.put("reg_no", txtRegNo.getText().trim());

@@ -1261,7 +1261,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         params.put("sess_id", sessionId);
         params.put("session_currency", sessionCurr);
         params.put("p_user_id", userId);
-        params.put("tran_user_id", Global.loginUser.getUserId());
+        params.put("tran_user_id", Global.machineId);
         params.put("p_machine_id", machineId);
         params.put("comp_name", Util1.getPropValue("report.company.name"));
         params.put("p_user_name", cboUser.getSelectedItem().toString());

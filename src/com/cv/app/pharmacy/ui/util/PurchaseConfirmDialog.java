@@ -13,6 +13,9 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import javax.swing.JFormattedTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -116,6 +119,120 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
         }
     };
 
+    private final KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyTyped(KeyEvent e) {
+            System.out.println("keyTyped");
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            System.out.println("keyPressed");
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            String name = "-";
+            if (e.getSource() instanceof JFormattedTextField) {
+                name = ((JFormattedTextField) e.getSource()).getName();
+                if (name == null) {
+                    name = "-";
+                }
+            }
+
+            switch (name) {
+                case "txtDiscP":
+                    if (NumberUtil.NZero(txtDiscP.getText()) > 0) {
+                        txtDiscount.setEnabled(false);
+                    } else {
+                        txtDiscount.setEnabled(true);
+                    }
+                    calDiscPercent("Percent", txtDiscP.getText());
+                    break;
+                case "txtDiscountAmt":
+                    calDiscPercent("Amt", txtDiscount.getText());
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtTaxAmt.requestFocus();
+                    }
+                    break;
+                case "txtTaxP":
+                    if (NumberUtil.NZero(txtTaxP.getText()) > 0) {
+                        txtTaxAmt.setEnabled(false);
+                    } else {
+                        txtTaxAmt.setEnabled(true);
+                    }
+                    calTaxPercent("Percent", txtTaxP.getText());
+                    break;
+                case "txtTaxAmt":
+                    calTaxPercent("Amt", txtTaxAmt.getText());
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtPaid.requestFocus();
+                    }
+                    break;
+                case "txtPaidAmtC":
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtPaid.requestFocus();
+                    }
+                    break;
+            }
+            reCalculate(name);
+        }
+    };
+    
+    private void reCalculate(String ctrlName) {
+        if (!ctrlName.equals("txtPaidAmtC")) {
+            PaymentType pt = currPurVou.getPaymentTypeId();
+            if (pt != null) {
+                if (pt.getPaymentTypeId() == 1) {
+                    Double vouTotal = NumberUtil.NZero(txtVTotal.getText());
+                    Double discount = NumberUtil.NZero(txtDiscount.getText());
+                    Double taxAmt = NumberUtil.NZero(txtTaxAmt.getText());
+                    Double cashPaid = vouTotal - discount + taxAmt;
+                    txtPaid.setText(cashPaid.toString());
+                }
+            }
+        }
+
+        Double vTotal = NumberUtil.NZero(txtVTotal.getText())
+                + NumberUtil.NZero(txtExpense.getText())
+                + NumberUtil.NZero(txtTaxAmt.getText())
+                - NumberUtil.NZero(txtDiscount.getText());
+        Double balance = vTotal - NumberUtil.NZero(txtPaid.getText());
+
+        if (balance < 0) {
+            balance = -1 * balance;
+            txtVouBalance.setText(balance.toString());
+            //jLabel12.setText("Change : ");
+        } else {
+            txtVouBalance.setText(balance.toString());
+            //jLabel12.setText("Vou Balance : ");
+        }
+
+        //System.out.println("Balance : " + balance + " Discount : " + NumberUtil.NZero(txtDiscountAmt.getValue()));
+    }
+
+    private void calDiscPercent(String evtFrom, String value) {
+        if (evtFrom.equals("Percent")) {
+            double percent = NumberUtil.NZero(value);
+            Double vTotal = NumberUtil.NZero(txtVTotal.getText());
+            Double discAmt = (vTotal * percent) / 100;
+            txtDiscount.setText(discAmt.toString());
+        } else if (evtFrom.equals("Amt")) {
+            txtDiscP.setText("0.0");
+        }
+    }
+
+    private void calTaxPercent(String evtFrom, String value) {
+        if (evtFrom.equals("Percent")) {
+            double percent = NumberUtil.NZero(value);
+            Double vTotal = NumberUtil.NZero(txtVTotal.getText());
+            Double taxAmt = (vTotal * percent) / 100;
+            txtTaxAmt.setText(taxAmt.toString());
+        } else if (evtFrom.equals("Amt")) {
+            txtTaxP.setText("0.0");
+        }
+    }
+    
     /**
      * Creates new form PurchaseConfirmDialog
      */
@@ -174,6 +291,12 @@ public class PurchaseConfirmDialog extends javax.swing.JDialog {
     }
 
     private void initTextBox() {
+        txtDiscP.addKeyListener(keyListener);
+        txtDiscount.addKeyListener(keyListener);
+        txtTaxP.addKeyListener(keyListener);
+        txtTaxAmt.addKeyListener(keyListener);
+        txtPaid.addKeyListener(keyListener);
+        
         txtDiscount.setValue(currPurVou.getDiscount());
         txtPaid.setValue(currPurVou.getPaid());
         txtVouBalance.setValue(currPurVou.getBalance());

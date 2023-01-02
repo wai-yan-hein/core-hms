@@ -9,6 +9,7 @@ import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.ui.util.AdmissionSearch;
+import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -29,7 +30,6 @@ import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.VouStatus;
 import com.cv.app.pharmacy.database.helper.Stock;
-import com.cv.app.pharmacy.database.helper.StockExp;
 import com.cv.app.pharmacy.database.tempentity.BarcodeFilter;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt;
 import com.cv.app.pharmacy.database.tempentity.TmpCostDetails;
@@ -80,7 +80,6 @@ import com.cv.app.pharmacy.ui.common.ReportListTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableCellEditor;
 import com.cv.app.pharmacy.ui.common.TraderFilterTableModel;
-import static com.cv.app.pharmacy.ui.entry.StockOpening.log;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.pharmacy.util.PharmacyUtil;
@@ -99,7 +98,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -214,6 +212,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     dao.findAllHSQL("select o from LocationGroup o order by o.groupName"));
             BindingUtil.BindComboFilter(cboSystem,
                     dao.findAllHSQL("select o from PharmacySystem o order by o.systemDesp"));
+            BindingUtil.BindComboFilter(cboDoctor,
+                    dao.findAllHSQL("select o from Doctor o order by o.doctorName"));
 
             AutoCompleteDecorator.decorate(cboPayment);
             AutoCompleteDecorator.decorate(cboLocation);
@@ -230,6 +230,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             AutoCompleteDecorator.decorate(cboSession);
             AutoCompleteDecorator.decorate(cboLocGroup);
             AutoCompleteDecorator.decorate(cboSystem);
+            AutoCompleteDecorator.decorate(cboDoctor);
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());
         } finally {
@@ -1569,6 +1570,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } else {
             params.put("session", "-");
         }
+        
+        if (cboDoctor.getSelectedItem() instanceof Doctor) {
+            String drId = ((Doctor) cboDoctor.getSelectedItem()).getDoctorId();
+            params.put("p_doctor_id", drId);
+            //params.put("tech_id", drId);
+        } else {
+            params.put("p_doctor_id", "-");
+            //params.put("tech_id", "-");
+        }
+        
         switch (report) {
             case "StockBalance":
             case "StockBalanceKS":
@@ -3244,6 +3255,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboLocGroup = new javax.swing.JComboBox();
         jLabel5 = new javax.swing.JLabel();
         cboSystem = new javax.swing.JComboBox<>();
+        jLabel22 = new javax.swing.JLabel();
+        cboDoctor = new javax.swing.JComboBox<>();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblItemCodeFilter = new javax.swing.JTable();
@@ -3513,6 +3526,11 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         jLabel5.setFont(Global.lableFont);
         jLabel5.setText("System");
 
+        jLabel22.setFont(Global.lableFont);
+        jLabel22.setText("Doctor");
+
+        cboDoctor.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -3583,23 +3601,31 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addGap(18, 18, 18)
                                 .addComponent(cboCustomG, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                    .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanel3Layout.createSequentialGroup()
+                                    .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGap(18, 18, 18)
-                                    .addComponent(cboExpenseType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                    .addComponent(jLabel13)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                    .addComponent(jLabel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel5)
-                                .addGap(18, 18, 18)
-                                .addComponent(cboSystem, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                    .addComponent(cboDoctor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGroup(jPanel3Layout.createSequentialGroup()
+                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                                                .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(cboExpenseType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                                                .addComponent(jLabel13)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                                                .addComponent(jLabel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addGroup(jPanel3Layout.createSequentialGroup()
+                                            .addComponent(jLabel5)
+                                            .addGap(18, 18, 18)
+                                            .addComponent(cboSystem, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addGap(0, 0, Short.MAX_VALUE))))))
                 .addContainerGap())
         );
 
@@ -3683,10 +3709,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel18))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel22)
+                    .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(44, Short.MAX_VALUE))
         );
-
-        jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Item Code Filter"));
 
         tblItemCodeFilter.setFont(Global.textFont);
         tblItemCodeFilter.setModel(codeTableModel);
@@ -4051,6 +4079,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JComboBox cboCurrency;
     private javax.swing.JComboBox cboCusGroup;
     private javax.swing.JComboBox<String> cboCustomG;
+    private javax.swing.JComboBox<String> cboDoctor;
     private javax.swing.JComboBox cboExpenseType;
     private javax.swing.JComboBox<String> cboItemStatus;
     private javax.swing.JComboBox cboItemType;
@@ -4080,6 +4109,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
