@@ -501,7 +501,8 @@ public class TransferTableModel extends AbstractTableModel {
                     } else {
                         key = med.getMedId() + "-" + unitCode;
                         float qtySmall = medUp.getQtyInSmallest(key);
-                        Double smallPrice = rs.getDouble("pur_unit_cost") / qtySmall;
+                        double cost =rs.getDouble("pur_unit_cost");
+                        Double smallPrice = cost / qtySmall;
                         key = med.getMedId() + "-" + tdh.getUnit().getItemUnitCode();
                         tdh.setPrice(smallPrice * medUp.getQtyInSmallest(key));
                     }

@@ -52,6 +52,7 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -98,7 +99,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private AbstractDataAccess dao = Global.dao;
     private DCHis currVou = new DCHis();
     private DCTableModel tableModel = new DCTableModel(dao);
-    private boolean cboBindStatus = false;
     private GenVouNoImpl vouEngine = null;
     private String focusCtrlName = "-";
     private PatientBillTableModel tblPatientBillTableModel = new PatientBillTableModel();
@@ -671,14 +671,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                         if (odf.getDrFeeId() == null) {
                                             odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                         }
-                                        dao.save1(odf);
+                                        dao.save(odf);
                                     }
                                 }
                             }
 
-                            dao.save1(odh);
+                            dao.save(odh);
                         }
-                        dao.save1(currVou);
+                        dao.save(currVou);
                         dao.commit();
 
                         linkTotal = tblAmountLinkTableModel.getTotalAmount() + currVou.getVouTotal() - currVou.getDiscountA();
@@ -1565,8 +1565,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             cboDCStatus.setSelectedItem(null);
             cboDiagnosis.setSelectedItem(null);
             cboAgeRange.setSelectedItem(null);
-
-            cboBindStatus = true;
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());
         } finally {
@@ -1933,7 +1931,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
@@ -1942,11 +1940,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         if (tblService.getCellEditor() != null) {
             tblService.getCellEditor().stopCellEditing();
         }
-        
-        
+
+        boolean status = true;
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTotal = tableModel.getTotal();
-        
+
         if (vouTtl != modelTotal) {
             log.error(txtVouNo.getText().trim() + " DC Voucher Total Error : vouTtl : "
                     + vouTtl + " modelTtl : " + modelTotal);
@@ -1954,7 +1952,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
         txtVouTotal.setValue(modelTotal);
         calcBalance();
 
@@ -2036,7 +2034,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             String date = DateUtil.toDateStrMYSQL(txtDate.getText());
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -2715,7 +2713,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

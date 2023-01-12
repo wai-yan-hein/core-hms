@@ -159,11 +159,7 @@ public class SysPropSetup extends javax.swing.JPanel {
         if (txtFilter.getText().isEmpty()) {
             sorter.setRowFilter(null);
         } else {
-            if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
-                sorter.setRowFilter(swrf);
-            } else {
-                sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
-            }
+            sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
         }
     }//GEN-LAST:event_txtFilterKeyReleased
 

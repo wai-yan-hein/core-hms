@@ -9,7 +9,6 @@ import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.inpatient.database.entity.DCDoctorFee;
 import com.cv.app.inpatient.ui.common.DCDoctorFeeTableModel;
-import com.cv.app.opd.ui.entry.OPD;
 import com.cv.app.ot.ui.common.OTDrFeeTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.ui.common.BestTableCellEditor;
@@ -24,23 +23,18 @@ import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import org.apache.log4j.Logger;
 
 /**
  *
  * @author admin
  */
-public class DCDoctorFeeDialog extends javax.swing.JDialog implements KeyPropagate{
+public class DCDoctorFeeDialog extends javax.swing.JDialog implements KeyPropagate {
 
-    static Logger log = Logger.getLogger(OPD.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private final DCDoctorFeeTableModel tblOTDoctorFeeTableModel;
-    
 
-    public DCDoctorFeeDialog(List<DCDoctorFee> listDrFee, Integer serviceId){
+    public DCDoctorFeeDialog(List<DCDoctorFee> listDrFee, Integer serviceId) {
         super(Util1.getParent(), true);
         tblOTDoctorFeeTableModel = new DCDoctorFeeTableModel(dao, serviceId);
         initComponents();
@@ -51,79 +45,81 @@ public class DCDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
         tblOTDoctorFee.setRowSelectionInterval(0, 0);
         tblOTDoctorFee.requestFocus();
         formActionKeyMapping(tblOTDoctorFee);
+        focusOnTable();
     }
-    
-    private void initTable(){
+
+    private void focusOnTable() {
+        int rc = tblOTDoctorFee.getRowCount();
+        if (rc >= 1) {
+            tblOTDoctorFee.setRowSelectionInterval(rc - 1, rc - 1);
+            tblOTDoctorFee.setColumnSelectionInterval(0, 0);
+            tblOTDoctorFee.requestFocus();
+        }
+    }
+
+    private void initTable() {
+        tblOTDoctorFee.setCellSelectionEnabled(true);
         tblOTDoctorFee.getTableHeader().setFont(Global.lableFont);
         tblOTDoctorFee.getColumnModel().getColumn(0).setPreferredWidth(200);//Doctor Name
         tblOTDoctorFee.getColumnModel().getColumn(0).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
         tblOTDoctorFee.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor(this));
         tblOTDoctorFee.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblOTDoctorFee.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                
-            }
+        tblOTDoctorFee.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
         });
-        tblOTDoctorFee.getModel().addTableModelListener(new TableModelListener() {
+        tblOTDoctorFee.getModel().addTableModelListener((TableModelEvent e) -> {
+            txtTotal.setText(getTotal().toString());
+        });
 
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                txtTotal.setText(getTotal().toString());
-            }
-        });
-        
         //tblOTDoctorFee.getInputMap().put(KeyStroke.getKeyStroke("F10"), "F10-Action");
         //tblOTDoctorFee.getActionMap().put("F10-Action", actionClose);
     }
-    
-    public Double getTotal(){
+
+    public Double getTotal() {
         List<DCDoctorFee> listFee = tblOTDoctorFeeTableModel.getListDrFee();
         String strSql = "SELECT * FROM com.cv.app.inpatient.database.entity.DCDoctorFee"
                 + " EXECUTE ON ALL sum(drFee) AS total";
         Object total = JoSQLUtil.getSaveValue(listFee, strSql, "total");
-        if(total == null){
+        if (total == null) {
             return 0.0;
-        }else{
-            return Double.parseDouble(total.toString());
+        } else {
+            return Double.valueOf(total.toString());
         }
     }
-    
-    public List<DCDoctorFee> getEntryDrFee(){
+
+    public List<DCDoctorFee> getEntryDrFee() {
         return tblOTDoctorFeeTableModel.getEntryDrFee();
     }
-    
+
     private void formActionKeyMapping(JComponent jc) {
         //Save
         jc.getInputMap().put(KeyStroke.getKeyStroke("F10"), "F10-Action");
         jc.getActionMap().put("F10-Action", actionClose);
     }
-    
+
     private Action actionClose = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             dispose();
         }
     };
-    
+
     @Override
     public void keyEvent(KeyEvent e) {
         if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
-            
+
         } else if (e.isShiftDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F5) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F7) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F9) {
-            
+
         } else if (e.getKeyCode() == KeyEvent.VK_F10) {
             dispose();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
