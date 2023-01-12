@@ -1941,7 +1941,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             tblService.getCellEditor().stopCellEditing();
         }
 
-        boolean status = true;
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTotal = tableModel.getTotal();
 
