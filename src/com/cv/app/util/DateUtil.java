@@ -397,7 +397,7 @@ public class DateUtil {
         int stHr = Integer.parseInt(stTime);
         int enHr = Integer.parseInt(endTime);
         int curHr = getHour();
-        return curHr >= stHr && curHr < enHr;
+        return curHr >= stHr && curHr <= enHr;
     }
 
     public static int getHour() {

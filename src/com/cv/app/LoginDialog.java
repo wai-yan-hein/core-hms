@@ -91,11 +91,11 @@ public class LoginDialog extends javax.swing.JDialog {
             List<Session> listSession = dao.findAll("Session");
             BindingUtil.BindCombo(cboSession, listSession);
 
-            /*for (Session sess : listSession) {
+            for (Session sess : listSession) {
                 if (DateUtil.isValidSession(sess.getStartTime(), sess.getEndTime())) {
                     cboSession.setSelectedItem(sess);
                 }
-            }*/
+            }
             dao.close();
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
