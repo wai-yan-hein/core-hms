@@ -7,7 +7,6 @@ package com.cv.app.ot.ui.util;
 
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
-import com.cv.app.opd.ui.entry.OPD;
 import com.cv.app.ot.database.entity.OTDoctorFee;
 import com.cv.app.ot.ui.common.OTDoctorFeeTableModel;
 import com.cv.app.ot.ui.common.OTDrFeeTableCellEditor;
@@ -25,7 +24,6 @@ import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -33,7 +31,6 @@ import org.apache.log4j.Logger;
  */
 public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropagate {
 
-    static Logger log = Logger.getLogger(OPD.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private final OTDoctorFeeTableModel tblOTDoctorFeeTableModel;
 
@@ -51,6 +48,7 @@ public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
     }
 
     private void initTable() {
+        tblOTDoctorFee.setCellSelectionEnabled(true);
         tblOTDoctorFee.getTableHeader().setFont(Global.lableFont);
         tblOTDoctorFee.getColumnModel().getColumn(0).setPreferredWidth(200);//Doctor Name
         tblOTDoctorFee.getColumnModel().getColumn(0).setCellEditor(new OTDrFeeTableCellEditor(dao, this));
@@ -74,7 +72,7 @@ public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
         if (total == null) {
             return 0.0;
         } else {
-            return Double.parseDouble(total.toString());
+            return Double.valueOf(total.toString());
         }
     }
 
@@ -88,7 +86,7 @@ public class OTDoctorFeeDialog extends javax.swing.JDialog implements KeyPropaga
         jc.getActionMap().put("F10-Action", actionClose);
     }
 
-    private Action actionClose = new AbstractAction() {
+    private final Action actionClose = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             dispose();

@@ -505,7 +505,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try ( CSVReader csvReader = new CSVReader(reader)) {
+                try (CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
                     int ttlInsert = 0;
@@ -672,6 +672,13 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         chkActive = new javax.swing.JCheckBox();
         jScrollPane3 = new javax.swing.JScrollPane();
         tblLocationItemMapping = new javax.swing.JTable();
+        chkEdit = new javax.swing.JCheckBox();
+
+        addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                formKeyReleased(evt);
+            }
+        });
 
         tblItem.setFont(Global.textFont);
         tblItem.setModel(itemTableModel);
@@ -951,11 +958,11 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
 
         txtSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                txtSearchKeyTyped(evt);
-            }
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 txtSearchKeyReleased(evt);
+            }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtSearchKeyTyped(evt);
             }
         });
 
@@ -1000,6 +1007,9 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         tblLocationItemMapping.setRowHeight(23);
         jScrollPane3.setViewportView(tblLocationItemMapping);
 
+        chkEdit.setText("Edit");
+        chkEdit.setEnabled(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -1008,7 +1018,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(txtSearch, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE)
+                        .addComponent(txtSearch, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(cmdFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18))
@@ -1025,6 +1035,8 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cboPurUnit, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(chkEdit)
+                        .addGap(18, 18, 18)
                         .addComponent(chkActive)
                         .addGap(18, 18, 18)
                         .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1054,7 +1066,8 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                             .addComponent(cboPurUnit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(chkCalculate)
                             .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(chkActive, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(chkActive, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(chkEdit, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1154,7 +1167,11 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
        }
        statusFilter = false;*/
       //}
-
+      if (evt.isControlDown()) {
+          if (evt.getKeyCode() == KeyEvent.VK_E) {
+              chkEdit.setSelected(!chkEdit.isSelected());
+          }
+      }
       if (txtSearch.getText().length() == 0) {
           sorter.setRowFilter(null);
       } else if (Util1.getPropValue("system.text.filter.method").equals("SW")) {
@@ -1225,6 +1242,11 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         }
     }//GEN-LAST:event_butSystemActionPerformed
 
+    private void formKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyReleased
+        // TODO add your handling code here:
+
+    }//GEN-LAST:event_formKeyReleased
+
     @Override
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {
@@ -1278,7 +1300,9 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         }
                         BindingUtil.BindCombo(cboPurUnit, listItemUnit);
                         rpTableMode.setEditable(!PharmacyUtil.isItemAlreadyUsaded(currMedicine.getMedId(), dao));
-                        //rpTableMode.setEditable(true);
+                        if (chkEdit.isSelected()) {
+                            rpTableMode.setEditable(true);
+                        }
                     } else {
                         rpTableMode.setEditable(true);
                     }
@@ -1324,6 +1348,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         lblStatus.setText("NEW");
         currMedicine = new Medicine();
         chkActive.setSelected(true);
+        chkActive.setSelected(false);
         selectRow = -1;
         rpTableMode.setEditable(true);
 
@@ -1658,7 +1683,6 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void actionMapping() {
-
         //Enter event on tblExpense
         tblRelationPrice.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "ENTER-Action");
         tblRelationPrice.getActionMap().put("ENTER-Action", actionTblRelEnterKey);
@@ -1774,6 +1798,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
     private javax.swing.JComboBox<String> cboSystem;
     private javax.swing.JCheckBox chkActive;
     private javax.swing.JCheckBox chkCalculate;
+    private javax.swing.JCheckBox chkEdit;
     private javax.swing.JButton cmdFilter;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

@@ -192,6 +192,7 @@ public class SysPropTableModel extends AbstractTableModel {
 
             dao.delete(prop);
             listSysProperty.remove(row);
+            Global.systemProperties.remove(prop.getPropDesp());
             fireTableRowsDeleted(0, listSysProperty.size());
         } catch (Exception ex) {
             log.error("deleteSysProperty : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());

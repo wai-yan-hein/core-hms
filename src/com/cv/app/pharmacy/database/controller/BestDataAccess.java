@@ -33,7 +33,7 @@ public class BestDataAccess implements AbstractDataAccess {
         close();
         try {
             session = HibernateUtil.getSessionFactory().getCurrentSession();
-        } catch (Exception ex) {
+        } catch (HibernateException ex) {
             session = HibernateUtil.getSessionFactory().getCurrentSession();
         }
     }
@@ -51,8 +51,10 @@ public class BestDataAccess implements AbstractDataAccess {
             
          }*/
         try {
-            session.close();
-        } catch (Exception ex) {
+            if (session != null) {
+                session.close();
+            }
+        } catch (HibernateException ex) {
             //log.error("close : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
     }
@@ -75,6 +77,7 @@ public class BestDataAccess implements AbstractDataAccess {
         try {
             session.saveOrUpdate(o);
         } catch (NonUniqueObjectException ex) {
+            log.error("save : " + o.toString() + ex.getMessage());
             session.merge(o);
         }
         session.flush();
@@ -90,6 +93,7 @@ public class BestDataAccess implements AbstractDataAccess {
         try {
             session.saveOrUpdate(o);
         } catch (NonUniqueObjectException ex) {
+            log.error("save : " + o.toString() + ex.getMessage());
             session.merge(o);
         }
         //session.flush();
@@ -98,16 +102,16 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public Object find(Class type, Serializable id) throws Exception{
+    public Object find(Class type, Serializable id) throws Exception {
         Object obj = null;
 
         //try {
-            if (!id.equals("")) {
-                open();
-                tran = session.beginTransaction();
-                obj = session.get(type, id);
-                //tran.commit();
-            }
+        if (!id.equals("")) {
+            open();
+            tran = session.beginTransaction();
+            obj = session.get(type, id);
+            //tran.commit();
+        }
         /*} catch (Exception ex) {
             log.error("find1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }*/
@@ -116,19 +120,19 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public Object find(String entityName, String filter) throws Exception{
+    public Object find(String entityName, String filter) throws Exception {
         Object obj = null;
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
         //try {
-            open();
-            tran = session.beginTransaction();
-            Query query = session.createQuery(strSQL);
-            List list = query.list();
+        open();
+        tran = session.beginTransaction();
+        Query query = session.createQuery(strSQL);
+        List list = query.list();
 
-            if (!list.isEmpty()) {
-                obj = list.get(0);
-            }
+        if (!list.isEmpty()) {
+            obj = list.get(0);
+        }
         /*} catch (Exception ex) {
             log.error("find2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }*/
@@ -137,15 +141,15 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAll(String entityName) throws Exception{
+    public List findAll(String entityName) throws Exception {
         List lists = null;
 
         //try {
-            open();
-            tran = session.beginTransaction();
-            Query query = session.createQuery("from " + entityName);
-            lists = query.list();
-            //tran.commit();
+        open();
+        tran = session.beginTransaction();
+        Query query = session.createQuery("from " + entityName);
+        lists = query.list();
+        //tran.commit();
         /*} catch (Exception ex) {
             log.error("findAll1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }*/
@@ -154,7 +158,7 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAll(String entityName, Object obj) throws Exception{
+    public List findAll(String entityName, Object obj) throws Exception {
         List list = findAll(entityName);
         list.add(0, obj);
 
@@ -162,7 +166,7 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAll(String entityName, String filter) throws Exception{
+    public List findAll(String entityName, String filter) throws Exception {
         List lists = null;
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
@@ -180,15 +184,15 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAllHSQL(String strHSQL) throws Exception{
+    public List findAllHSQL(String strHSQL) throws Exception {
         List lists = null;
 
         //try {
-            open();
-            tran = session.beginTransaction();
-            Query query = session.createQuery(strHSQL);
-            lists = query.list();
-            //tran.commit();
+        open();
+        tran = session.beginTransaction();
+        Query query = session.createQuery(strHSQL);
+        lists = query.list();
+        //tran.commit();
         //} catch (Exception ex) {
         //    log.error("findAllHSQL1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         //}
@@ -236,38 +240,38 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public ResultSet getPro(String procName, List parameters) throws Exception{
+    public ResultSet getPro(String procName, List parameters) throws Exception {
         String strSQL = "{call " + procName + "(";
         ResultSet resultSet = null;
 
         //try {
-            String tmpStr = "";
-            for (Object obj : parameters) {
-                if (tmpStr.isEmpty()) {
-                    tmpStr = "?";
-                } else {
-                    tmpStr = tmpStr + ",?";
-                }
+        String tmpStr = "";
+        for (Object obj : parameters) {
+            if (tmpStr.isEmpty()) {
+                tmpStr = "?";
+            } else {
+                tmpStr = tmpStr + ",?";
+            }
+        }
+
+        strSQL = strSQL + tmpStr + ")}";
+        open();
+        tran = session.beginTransaction();
+        statement = session.connection().prepareCall(strSQL);
+
+        int i = 1;
+        for (Object obj : parameters) {
+            if (obj instanceof Date) {
+                ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
+            } else {
+                ((CallableStatement) statement).setString(i, obj.toString());
             }
 
-            strSQL = strSQL + tmpStr + ")}";
-            open();
-            tran = session.beginTransaction();
-            statement = session.connection().prepareCall(strSQL);
+            i++;
+        }
 
-            int i = 1;
-            for (Object obj : parameters) {
-                if (obj instanceof Date) {
-                    ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
-                } else {
-                    ((CallableStatement) statement).setString(i, obj.toString());
-                }
-
-                i++;
-            }
-
-            resultSet = ((CallableStatement) statement).executeQuery();
-            tran.commit();
+        resultSet = ((CallableStatement) statement).executeQuery();
+        tran.commit();
         /*} catch (Exception ex) {
             log.error("getPro1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }*/
@@ -281,32 +285,32 @@ public class BestDataAccess implements AbstractDataAccess {
         ResultSet resultSet = null;
 
         //try {
-            String tmpStr = "";
-            for (int i = 0; i < parameters.length; i++) {
-                if (tmpStr.isEmpty()) {
-                    tmpStr = "?";
-                } else {
-                    tmpStr = tmpStr + ",?";
-                }
+        String tmpStr = "";
+        for (int i = 0; i < parameters.length; i++) {
+            if (tmpStr.isEmpty()) {
+                tmpStr = "?";
+            } else {
+                tmpStr = tmpStr + ",?";
+            }
+        }
+
+        strSQL = strSQL + tmpStr + ")}";
+        open();
+        tran = session.beginTransaction();
+        statement = session.connection().prepareCall(strSQL);
+
+        int i = 1;
+        for (Object obj : parameters) {
+            if (obj instanceof Date) {
+                ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
+            } else {
+                ((CallableStatement) statement).setString(i, obj.toString());
             }
 
-            strSQL = strSQL + tmpStr + ")}";
-            open();
-            tran = session.beginTransaction();
-            statement = session.connection().prepareCall(strSQL);
-
-            int i = 1;
-            for (Object obj : parameters) {
-                if (obj instanceof Date) {
-                    ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
-                } else {
-                    ((CallableStatement) statement).setString(i, obj.toString());
-                }
-
-                i++;
-            }
-            resultSet = ((CallableStatement) statement).executeQuery();
-            tran.commit();
+            i++;
+        }
+        resultSet = ((CallableStatement) statement).executeQuery();
+        tran.commit();
         /*} catch (Exception ex) {
             log.error("getPro2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }*/

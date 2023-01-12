@@ -360,6 +360,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtName.requestFocusInWindow();
         cboRoom.setEnabled(false);
         cboRoom.setSelectedItem(null);
+        lblRoom.setText(null);
     }
 
     @Override
@@ -523,11 +524,11 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboType.setSelectedItem(pt.getPtType());
             currPatient.getKey().setRegister(pt);
             dao.close();
-            verifyRoom();
+            getValidRoom();
             cboRoom.setSelectedItem(null);
             cboRoom.setEnabled(true);
         } else if (source.equals("AdmissionSearch")) {
-            verifyRoom();
+            getValidRoom();
             lblStatus.setText("EDIT");
             currPatient = (Ams) selectObj;
             txtAmsNo.setText(currPatient.getKey().getAmsNo());
@@ -869,24 +870,13 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         }
     }
 
-    private void verifyRoom() {
+    private void getValidRoom() {
         try {
-            ResultSet rs = dao.execSQL("select bs.id, bs.description, bs.reg_no, pd.admission_no, adm.dc_status\n"
-                    + "from building_structure bs\n"
-                    + "join patient_detail pd on bs.reg_no = pd.reg_no\n"
-                    + "left join admission adm on pd.admission_no = adm.ams_no\n"
-                    + "where pd.admission_no is null or adm.dc_status is not null");
-            if (rs != null) {
-                while (rs.next()) {
-                    BuildingStructure bs = (BuildingStructure) dao.find(BuildingStructure.class, rs.getInt("id"));
-                    bs.setRegNo(null);
-                    dao.save(bs);
-                }
-            }
-            BindingUtil.BindCombo(cboRoom,
-                    dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null "
-                            + " and o.structureType.typeId in (3,4) order by o.description"));
+            List<BuildingStructure> list = dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null "
+                    + " and o.structureType.typeId in (3,4) order by o.description");
+            BindingUtil.BindCombo(cboRoom, list);
             AutoCompleteDecorator.decorate(cboRoom);
+            lblRoom.setText("Available Room : " + String.valueOf(list.size()));
         } catch (Exception ex) {
             log.error("verifyRoom : " + ex.toString());
         } finally {
@@ -1101,7 +1091,6 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         cboRoom = new javax.swing.JComboBox();
         jLabel20 = new javax.swing.JLabel();
         cboBooking = new javax.swing.JComboBox();
-        lblBooking = new javax.swing.JLabel();
         cboGender = new javax.swing.JComboBox();
         jLabel7 = new javax.swing.JLabel();
         txtNIRC = new javax.swing.JTextField();
@@ -1114,6 +1103,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtAddress = new javax.swing.JTextArea();
         jLabel16 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
+        lblBooking = new javax.swing.JLabel();
+        lblRoom = new javax.swing.JLabel();
         panelReCoverAdmissionDelete = new javax.swing.JPanel();
         jLabel26 = new javax.swing.JLabel();
         txtRCARegNo = new javax.swing.JTextField();
@@ -1411,11 +1402,6 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             }
         });
 
-        jLabel19.setFont(Global.lableFont);
-        lblBooking.setFont(new java.awt.Font("Zawgyi-One", 1, 14)); // NOI18N
-        lblBooking.setForeground(new java.awt.Color(255, 51, 51));
-        lblBooking.setText("Booking Status");
-
         cboGender.setEditable(true);
         cboGender.setFont(Global.textFont);
         cboGender.setEnabled(true);
@@ -1461,6 +1447,16 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         jLabel16.setFont(Global.lableFont);
         jLabel16.setText("Ams-Date Time ");
 
+        jLabel19.setFont(Global.lableFont);
+        lblBooking.setFont(new java.awt.Font("Zawgyi-One", 1, 14)); // NOI18N
+        lblBooking.setForeground(new java.awt.Color(255, 51, 51));
+        lblBooking.setText("Booking Status");
+
+        jLabel19.setFont(Global.lableFont);
+        lblRoom.setFont(Global.textFont);
+        lblRoom.setForeground(new java.awt.Color(0, 0, 0));
+        lblRoom.setText("0");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1468,9 +1464,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jSeparator1)
-                        .addContainerGap())
+                    .addComponent(jSeparator1)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel20)
@@ -1480,20 +1474,22 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createSequentialGroup()
                                 .addComponent(cboBooking, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(63, 63, 63))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(lblBooking, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(jPanel3Layout.createSequentialGroup()
                                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(cboRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 201, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 202, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(jPanel3Layout.createSequentialGroup()
-                                        .addGap(0, 0, Short.MAX_VALUE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addComponent(jLabel18)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                         .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, 244, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(lblBooking, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap())))))
+                                    .addGroup(jPanel3Layout.createSequentialGroup()
+                                        .addGap(11, 11, 11)
+                                        .addComponent(lblRoom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))))
+                .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, 486, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1575,16 +1571,17 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(cboRoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblBooking, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel19)))
+                            .addComponent(jLabel19)
+                            .addComponent(lblRoom, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel18)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboBooking, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel20))
-                .addGap(27, 27, 27))
+                    .addComponent(jLabel20)
+                    .addComponent(lblBooking, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(23, 23, 23))
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel3Layout.createSequentialGroup()
                     .addContainerGap()
@@ -1954,6 +1951,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JLabel lblBooking;
+    private javax.swing.JLabel lblRoom;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JPanel panelReCoverAdmissionDelete;
     private javax.swing.JPanel panelReCoverAdmissionDelete1;

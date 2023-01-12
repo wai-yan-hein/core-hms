@@ -49,6 +49,7 @@ public class LoginDialog extends javax.swing.JDialog {
 
     /**
      * Creates new form BestLoginDialog
+     * @param modal
      */
     public LoginDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -396,11 +397,11 @@ public class LoginDialog extends javax.swing.JDialog {
                 initDefaultValue(Global.loginUser.getUserRole());
                 Global.defaultValue.put("Location", Global.loginUser.getDefLocation());
                 String strFontSize = Util1.getPropValue("system.font.size");
-                int fontSize = 12;
+                int fontSize = 14;
                 if (!strFontSize.isEmpty() && !strFontSize.equals("-")) {
                     try {
                         fontSize = Integer.parseInt(strFontSize);
-                    } catch (Exception ex) {
+                    } catch (NumberFormatException ex) {
                         log.error("Font Size Error : " + ex.getMessage());
                     }
                 }
