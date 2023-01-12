@@ -65,7 +65,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
     public DCPatientBalance() {
         initComponents();
         initTable();
-
+        cleanDeleteError();
         swrfPatient = new StartWithRowFilter(txtPtFilter);
         sorterPatient = new TableRowSorter(tblPtList.getModel());
         tblPtList.setRowSorter(sorterPatient);
@@ -76,6 +76,70 @@ public class DCPatientBalance extends javax.swing.JPanel {
         butPrintBill.setVisible(false);
     }
 
+    private void cleanDeleteError() {
+        try {
+            String toDeleteVou = getDeleteVou("select distinct sale_inv_id from sale_his where deleted = false and "
+                    + "not EXISTS (select * from sale_detail_his where vou_no = sale_inv_id)", "sale_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update sale_his set deleted = true where sale_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct ret_in_id from ret_in_his where deleted = false and "
+                    + "not EXISTS (select * from ret_in_detail_his where vou_no = ret_in_id)", "ret_in_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update ret_in_his set deleted = true where ret_in_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct opd_inv_id from opd_his where deleted = false and "
+                    + "not EXISTS (select * from opd_details_his where vou_no = opd_inv_id)", "opd_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update opd_his set deleted = true where opd_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct ot_inv_id from ot_his where deleted = false and "
+                    + "not EXISTS (select * from ot_details_his where vou_no = ot_inv_id)", "ot_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update ot_his set deleted = true where ot_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select dc_inv_id from dc_his where deleted = false and "
+                    + "not EXISTS (select * from dc_details_his where vou_no = dc_inv_id)", "dc_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update dc_his set deleted = true where dc_inv_id in (" + toDeleteVou + ")");
+            }
+        } catch (Exception ex) {
+            log.error("cleanDeleteError : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private String getDeleteVou(String strSql, String fieldName){
+        String toDeleteVou = "";
+        try{
+            ResultSet rs = dao.execSQL(strSql);
+            if(rs != null){
+                
+                
+                while(rs.next()){
+                    if(toDeleteVou.isEmpty()){
+                        toDeleteVou = "'" + rs.getString(fieldName) + "'";
+                    }else{
+                        toDeleteVou = toDeleteVou + ",'" + rs.getString(fieldName) + "'";
+                    }
+                }
+                
+                rs.close();
+            }
+        }catch(Exception ex){
+            log.error("getDeleteVou : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+        
+        return toDeleteVou;
+    }
+    
     private void initTable() {
         getBalance();
 
@@ -452,26 +516,89 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 .replace("@from", admitDate)
                 .replace("@to", tranDate);
         log.info("strSql : " + strSql);
-        String strSql1 = "select 'Sale' as tran_option, 'Invalid Admission' as err_desp, date(sale_date) as tran_date,\n"
+        String strSql1 = "select 'Sale' as tran_option, 'Sale Invalid Admission' as err_desp, date(sale_date) as tran_date,\n"
                 + "       sale_inv_id as vou_no, vou_total, balance\n"
                 + "  from sale_his\n"
-                + " where deleted = false and reg_no = '@regNo' and if(admission_no='', null, admission_no) is null and ifnull(balance,0) <> 0\n"
+                + " where deleted = false and reg_no = '@regNo' and if(admission_no = '', null, admission_no) is null and ifnull(balance,0) <> 0\n"
                 + " union all\n"
-                + "select 'Return In' as tran_option, 'Invalid Admission' as err_desp, date(ret_in_date) as tran_date,\n"
+                + "select 'Return In' as tran_option, 'RetIn Invalid Admission' as err_desp, date(ret_in_date) as tran_date,\n"
                 + "	   ret_in_id as vou_no, vou_total, balance\n"
                 + "  from ret_in_his \n"
                 + " where deleted = false and reg_no = '@regNo' and if(admission_no='', null, admission_no) is null and ifnull(balance,0) <> 0\n"
                 + " union all\n"
-                + "select 'OPD' as tran_option, 'Invalid Admission' as err_desp, date(opd_date) as tran_date,\n"
+                + "select 'OPD' as tran_option, 'OPD Invalid Admission' as err_desp, date(opd_date) as tran_date,\n"
                 + "	   opd_inv_id as vou_no, vou_total, vou_balance as balance\n"
                 + "  from opd_his\n"
                 + " where deleted = false and patient_id = '@regNo' and if(admission_no='', null, admission_no) is null and ifnull(vou_balance,0) <> 0\n"
                 + " union all\n"
-                + "select 'OT' as tran_option, 'Invalid Admission' as err_desp, date(ot_date) as tran_date,\n"
+                + "select 'OT' as tran_option, 'OT Invalid Admission' as err_desp, date(ot_date) as tran_date,\n"
                 + "	   ot_inv_id as vou_no, vou_total, vou_balance as balance\n"
                 + "  from ot_his\n"
                 + " where deleted = false and patient_id = '@regNo' and if(admission_no='', null, admission_no) is null and ifnull(vou_balance,0) <> 0";
         strSql1 = strSql1.replace("@regNo", regNo);
+
+        String strSql2 = "select 'Sale' as tran_option, 'Invalid Sale Vou Date' as err_desp, date(sale_date) as tran_date,\n"
+                + "       sale_inv_id as vou_no, vou_total, balance\n"
+                + "  from sale_his\n"
+                + " where deleted = false and reg_no = '@regNo' and admission_no = '@admNo' and date(sale_date) not between '@from' and '@to'\n"
+                + " union all\n"
+                + "select 'Return In' as tran_option, 'Invalid RetIn Vou Date' as err_desp, date(ret_in_date) as tran_date,\n"
+                + "	   ret_in_id as vou_no, vou_total, balance\n"
+                + "  from ret_in_his \n"
+                + " where deleted = false and reg_no = '@regNo' and admission_no = '@admNo' and date(ret_in_date) not between '@from' and '@to'\n"
+                + " union all\n"
+                + "select 'OPD' as tran_option, 'Invalid OPD Vou Date' as err_desp, date(opd_date) as tran_date,\n"
+                + "	   opd_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from opd_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(opd_date) not between '@from' and '@to'\n"
+                + " union all\n"
+                + "select 'OT' as tran_option, 'Invalid OT Vou Date' as err_desp, date(ot_date) as tran_date,\n"
+                + "	   ot_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from ot_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(ot_date) not between '@from' and '@to'\n"
+                + " union all\n"
+                + "select 'DC' as tran_option, 'Invalid DC Vou Date' as err_desp, date(dc_date) as tran_date,\n"
+                + "       dc_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from dc_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(dc_date) not between '@from' and '@to'";
+        strSql2 = strSql2.replace("@regNo", regNo)
+                .replace("@admNo", admNo)
+                .replace("@from", admitDate)
+                .replace("@to", tranDate);
+
+        String strSql3 = "select 'Sale' as tran_option, 'Sale Vou Error' as err_desp, date(sale_date) as tran_date,\n"
+                + "       sale_inv_id as vou_no, vou_total, balance\n"
+                + "  from sale_his\n"
+                + " where deleted = false and reg_no = '@regNo' and admission_no = '@admNo' and date(sale_date) between '@from' and '@to'\n"
+                + "   and not EXISTS (select * from sale_detail_his where vou_no = sale_inv_id) \n"
+                + " union all\n"
+                + "select 'Return In' as tran_option, 'RetIn Vou Error' as err_desp, date(ret_in_date) as tran_date,\n"
+                + "	   ret_in_id as vou_no, vou_total, balance\n"
+                + "  from ret_in_his \n"
+                + " where deleted = false and reg_no = '@regNo' and admission_no = '@admNo' and date(ret_in_date) between '@from' and '@to'\n"
+                + "   and not EXISTS (select * from ret_in_detail_his where vou_no = ret_in_id) \n"
+                + " union all\n"
+                + "select 'OPD' as tran_option, 'OPD Vou Error' as err_desp, date(opd_date) as tran_date,\n"
+                + "	   opd_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from opd_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(opd_date) between '@from' and '@to'\n"
+                + "   and not EXISTS (select * from opd_details_his where vou_no = opd_inv_id) \n"
+                + " union all\n"
+                + "select 'OT' as tran_option, 'OT Vou Error' as err_desp, date(ot_date) as tran_date,\n"
+                + "	   ot_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from ot_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(ot_date) between '@from' and '@to'\n"
+                + "   and not EXISTS (select * from ot_details_his where vou_no = ot_inv_id) \n"
+                + " union all\n"
+                + "select 'DC' as tran_option, 'DC Vou Error' as err_desp, date(dc_date) as tran_date,\n"
+                + "       dc_inv_id as vou_no, vou_total, vou_balance as balance\n"
+                + "  from dc_his\n"
+                + " where deleted = false and patient_id = '@regNo' and admission_no = '@admNo' and date(dc_date) between '@from' and '@to'\n"
+                + "   and not EXISTS (select * from dc_details_his where vou_no = dc_inv_id)";
+        strSql3 = strSql3.replace("@regNo", regNo)
+                .replace("@admNo", admNo)
+                .replace("@from", admitDate)
+                .replace("@to", tranDate);
 
         try {
             List<CurrPTBalanceTran> list = new ArrayList();
@@ -489,22 +616,58 @@ public class DCPatientBalance extends javax.swing.JPanel {
                     );
                     list.add(cptbt);
                 }
+                rs.close();
             }
 
             ResultSet rs1 = dao.execSQL(strSql1);
             if (rs1 != null) {
                 while (rs1.next()) {
                     CurrPTBalanceTran cptbt = new CurrPTBalanceTran(
-                            rs.getString("tran_option"),
-                            rs.getDate("tran_date"),
-                            rs.getString("vou_no"),
-                            rs.getString("err_desp"),
+                            rs1.getString("tran_option"),
+                            rs1.getDate("tran_date"),
+                            rs1.getString("vou_no"),
+                            rs1.getString("err_desp"),
                             "",
-                            rs.getDouble("vou_total"),
-                            rs.getDouble("balance")
+                            rs1.getDouble("vou_total"),
+                            rs1.getDouble("balance")
                     );
                     list.add(cptbt);
                 }
+                rs1.close();
+            }
+
+            ResultSet rs2 = dao.execSQL(strSql2);
+            if (rs2 != null) {
+                while (rs2.next()) {
+                    CurrPTBalanceTran cptbt = new CurrPTBalanceTran(
+                            rs2.getString("tran_option"),
+                            rs2.getDate("tran_date"),
+                            rs2.getString("vou_no"),
+                            rs2.getString("err_desp"),
+                            "",
+                            rs2.getDouble("vou_total"),
+                            rs2.getDouble("balance")
+                    );
+                    list.add(cptbt);
+                }
+                rs2.close();
+            }
+
+            ResultSet rs3 = dao.execSQL(strSql3);
+            if (rs3 != null) {
+                while (rs3.next()) {
+                    CurrPTBalanceTran cptbt = new CurrPTBalanceTran(
+                            rs3.getString("tran_option"),
+                            rs3.getDate("tran_date"),
+                            rs3.getString("vou_no"),
+                            rs3.getString("err_desp"),
+                            "",
+                            rs3.getDouble("vou_total"),
+                            rs3.getDouble("balance")
+                    );
+                    list.add(cptbt);
+                }
+                rs3.close();
             }
 
             errVouTableModel.setList(list);
@@ -520,7 +683,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
             List<PatientBillPayment> listPBP = new ArrayList();
             Double totalBalance = 0.0;
             String currency = Util1.getPropValue("system.app.currency"); //"MMK"; //((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
-            if(currency.isEmpty()){
+            if (currency.isEmpty()) {
                 currency = "MMK";
             }
             //String date = DateUtil.toDateStrMYSQL(txtDate.getText());
@@ -751,16 +914,16 @@ public class DCPatientBalance extends javax.swing.JPanel {
         Map<String, Object> params = getParameter();
         String reportName = Util1.getPropValue("system.dc.pbalance.rpt");
         String reportPath = Util1.getAppWorkFolder()
-                        + Util1.getPropValue("report.folder.path")
-                        + "clinic/"
-                        + reportName;
+                + Util1.getPropValue("report.folder.path")
+                + "clinic/"
+                + reportName;
         try {
             dao.close();
             ReportUtil.viewReport(reportPath, params, dao.getConnection());
             dao.commit();
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("print : " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
     }
@@ -802,7 +965,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 + Util1.getPropValue("report.folder.path"));
         params.put("phoneNo", phoneNo);
         params.put("comAddress", address);
-        
+
         return params;
     }
 

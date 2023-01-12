@@ -8,6 +8,7 @@ import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.helper.MinusPlusList;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -53,7 +54,7 @@ public class StockList {
         }
 
         String qtyStr = MedicineUtil.getQtyInStr(med, ttlQty);
-        Stock stock = new Stock(med, expDate, qtyStr, ttlQty, qtyStr, 
+        Stock stock = new Stock(med, expDate, qtyStr, ttlQty, qtyStr,
                 location.getLocationName(), location.getLocationId());
         listStock.add(stock);
     }
@@ -153,7 +154,7 @@ public class StockList {
                         }
                     }*/
 
-                    /*listLoc.stream().map(id -> minusHM.get(id)).filter(minusList -> (minusList != null))
+ /*listLoc.stream().map(id -> minusHM.get(id)).filter(minusList -> (minusList != null))
                             .filter(minusList -> (!minusList.isEmpty())).forEachOrdered(minusList -> {
                         minusList.stream().map(stk -> {
                             String qtyStr = MedicineUtil.getQtyInStr(stk.getMed(), stk.getBalance());
@@ -166,26 +167,48 @@ public class StockList {
                     });
 
                     hasStock.put(med.getMedId(), listStock);*/
-                    
-                    List<Stock> listMinusStock = new ArrayList();
-                    List<Stock> listPlusStock = new ArrayList();
-                    while(resultSet.next()){
-                        float qty = NumberUtil.FloatZero(resultSet.getInt("TTL_QTY"));
+                    HashMap<Integer, MinusPlusList> hmMP = new HashMap();
+                    List<Stock> listMinusStock;
+                    List<Stock> listPlusStock;
+                    List<Integer> listLocation = new ArrayList();
+                    while (resultSet.next()) {
                         Integer tmpLocId = resultSet.getInt("location_id");
-                        if(qty < 0){
+                        if (!hmMP.containsKey(tmpLocId)) {
+                            listMinusStock = new ArrayList();
+                            listPlusStock = new ArrayList();
+                            MinusPlusList mpl = new MinusPlusList(listMinusStock, listPlusStock);
+                            hmMP.put(tmpLocId, mpl);
+                            listLocation.add(tmpLocId);
+                        } else {
+                            MinusPlusList mpl = hmMP.get(tmpLocId);
+                            listMinusStock = mpl.getListMinusStock();
+                            listPlusStock = mpl.getListPlusStock();
+                        }
+
+                        float qty = NumberUtil.FloatZero(resultSet.getInt("TTL_QTY"));
+
+                        if (qty < 0) {
                             Stock stock = new Stock(med, resultSet.getDate("EXP_DATE"),
-                                        null, qty, null,
-                                        resultSet.getString("location_name"), tmpLocId);
+                                    null, qty, null,
+                                    resultSet.getString("location_name"), tmpLocId);
                             listMinusStock.add(stock);
-                        }else{
+                        } else {
                             Stock stock = new Stock(med, resultSet.getDate("EXP_DATE"),
-                                        null, qty, null,
-                                        resultSet.getString("location_name"), tmpLocId);
+                                    null, qty, null,
+                                    resultSet.getString("location_name"), tmpLocId);
                             listPlusStock.add(stock);
                         }
                     }
+
+                    List<Stock> listS = new ArrayList();
+                    for (Integer loc : listLocation) {
+                        MinusPlusList mpl = hmMP.get(loc);
+                        listMinusStock = mpl.getListMinusStock();
+                        listPlusStock = mpl.getListPlusStock();
+                        listS.addAll(PharmacyUtil.getStockList(listMinusStock, listPlusStock));
+                    }
                     
-                    hasStock.put(med.getMedId(), PharmacyUtil.getStockList(listMinusStock, listPlusStock));
+                    hasStock.put(med.getMedId(), listS);
                     resultSet.close();
                 }
             } catch (Exception ex) {

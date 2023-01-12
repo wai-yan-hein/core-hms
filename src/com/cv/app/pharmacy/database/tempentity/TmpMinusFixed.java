@@ -41,4 +41,9 @@ public class TmpMinusFixed implements Serializable{
     public void setBalance(Integer balance) {
         this.balance = balance;
     }
+    
+    @Override
+    public String toString(){
+        return key.getItemId() + "-" + key.getLocationId() + "-" + balance;
+    }
 }

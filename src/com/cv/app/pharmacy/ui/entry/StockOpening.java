@@ -22,6 +22,7 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.StockOpeningDetailHis;
 import com.cv.app.pharmacy.database.entity.StockOpeningHis;
+import com.cv.app.pharmacy.database.helper.MinusPlusList;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.helper.StockExp;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
@@ -887,7 +888,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         }
     }
 
-    private void fixedMinus(String userId) {
+    /*private void fixedMinus(String userId) {
         String strSql = "select location_id, med_id, exp_date, bal_qty\n"
                 + "from tmp_stock_balance_exp\n"
                 + "where user_id = '" + userId + "' and bal_qty <> 0\n"
@@ -958,6 +959,122 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
                         dao.save(tmf);
                     }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("fixedMinus : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }*/
+    private void fixedMinus(String userId) {
+        String strSql = "select location_id, med_id, exp_date, bal_qty\n"
+                + "from tmp_stock_balance_exp\n"
+                + "where user_id = '" + userId + "' and bal_qty <> 0\n"
+                + "order by location_id, med_id, exp_date, bal_qty";
+        String prvMedId = "-";
+
+        try {
+            dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                List<Stock> listMinusStock;
+                List<Stock> listPlusStock;
+                Medicine med = null;
+                HashMap<String, MinusPlusList> hmMP = new HashMap();
+                List<String> locList = new ArrayList();
+
+                while (rs.next()) {
+                    float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
+                    String medId = rs.getString("med_id");
+                    int locationId = rs.getInt("location_id");
+
+                    if (prvMedId.equals("-")) {
+                        prvMedId = medId;
+                        med = (Medicine) dao.find(Medicine.class, medId);
+                    }
+                    
+                    String sKey = locationId + "-" + medId;
+                    
+                    /*if (prvMedId.equals("16160002")) {
+                        log.error("Error");
+                    }*/
+                    
+                    if (!prvMedId.equals(medId)) {
+                        List<Stock> listS = new ArrayList();
+                        for (String loc : locList) {
+                            MinusPlusList mpl = hmMP.get(loc);
+                            if (mpl != null) {
+                                listS.addAll(PharmacyUtil.getStockList(mpl.getListMinusStock(), mpl.getListPlusStock()));
+                            }
+                        }
+
+                        for (Stock s : listS) {
+                            TmpMinusFixedKey key = new TmpMinusFixedKey();
+                            key.setExpDate(s.getExpDate());
+                            key.setItemId(s.getMed().getMedId());
+                            key.setLocationId(s.getLocationId());
+                            key.setUserId(userId);
+                            TmpMinusFixed tmf = new TmpMinusFixed();
+                            tmf.setKey(key);
+                            tmf.setBalance(Math.round(s.getBalance()));
+                            log.info("insert : " + tmf.toString());
+                            dao.save(tmf);
+                        }
+
+                        //log.info("Med Id : " + prvMedId);
+                        //listMinusStock = new ArrayList();
+                        //listPlusStock = new ArrayList();
+                        med = (Medicine) dao.find(Medicine.class, medId);
+                        hmMP = new HashMap();
+                        locList = new ArrayList();
+                        //locList.add(sKey);
+                    }
+
+                    if (!hmMP.containsKey(sKey)) {
+                        listMinusStock = new ArrayList();
+                        listPlusStock = new ArrayList();
+                        MinusPlusList mpl = new MinusPlusList(listMinusStock, listPlusStock);
+                        hmMP.put(sKey, mpl);
+                        locList.add(sKey);
+                    } else {
+                        MinusPlusList mpl = hmMP.get(sKey);
+                        listMinusStock = mpl.getListMinusStock();
+                        listPlusStock = mpl.getListPlusStock();
+                    }
+                    
+                    if (qty < 0) {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listMinusStock.add(stock);
+                    } else {
+                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                                null, qty, null, null, locationId);
+                        listPlusStock.add(stock);
+                    }
+
+                    prvMedId = medId;
+                }
+
+                List<Stock> listS = new ArrayList();
+                for (String loc : locList) {
+                    MinusPlusList mpl = hmMP.get(loc);
+                    if (mpl != null) {
+                        listS.addAll(PharmacyUtil.getStockList(mpl.getListMinusStock(), mpl.getListPlusStock()));
+                    }
+                }
+
+                for (Stock s : listS) {
+                    TmpMinusFixedKey key = new TmpMinusFixedKey();
+                    key.setExpDate(s.getExpDate());
+                    key.setItemId(s.getMed().getMedId());
+                    key.setLocationId(s.getLocationId());
+                    key.setUserId(userId);
+                    TmpMinusFixed tmf = new TmpMinusFixed();
+                    tmf.setKey(key);
+                    tmf.setBalance(Math.round(s.getBalance()));
+
+                    dao.save(tmf);
                 }
             }
         } catch (Exception ex) {

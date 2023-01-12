@@ -1227,6 +1227,47 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     }
 
     private boolean isValidEntry() {
+        boolean status = true;
+        Patient pt = currVou.getPatient();
+        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+
+        if (!admissionNo.equals("-")) {
+            AdmissionKey key = new AdmissionKey();
+            key.setAmsNo(admissionNo);
+            key.setRegister(pt);
+            try {
+                Ams adm = (Ams) dao.find(Ams.class, key);
+                if (adm == null) {
+                    status = false;
+                } else {
+                    Date vouDate = DateUtil.toDate(txtDate.getText());
+                    Date admDate = DateUtil.toDate(DateUtil.toDateStr(adm.getAmsDate(), "dd/MM/yyyy"));
+                    Date dcDate = adm.getDcDateTime();
+
+                    if (vouDate.compareTo(admDate) < 0) {
+                        status = false;
+                    }
+
+                    if (dcDate != null) {
+                        if (vouDate.compareTo(dcDate) > 0) {
+                            status = false;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("admission error : " + " " + admissionNo + " " + ex.getMessage());
+                status = false;
+            } finally {
+                dao.close();
+            }
+
+            if (!status) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
+                        "Invalid Vou Date", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+        
         if (!Util1.hashPrivilege("CanEditOPDCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1247,7 +1288,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             tblService.getCellEditor().stopCellEditing();
         }
 
-        boolean status = true;
+        
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTtl = tableModel.getTotal();
         if (vouTtl != modelTtl) {

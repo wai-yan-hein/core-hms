@@ -29,6 +29,7 @@ import com.cv.app.pharmacy.database.entity.PharmacySystem;
 import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.VouStatus;
+import com.cv.app.pharmacy.database.helper.MinusPlusList;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.database.tempentity.BarcodeFilter;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilterRpt;
@@ -1230,7 +1231,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + "             union all \n"
                     + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                     + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
-                    + "              from v_med_usage vlmu, tmp_stock_filter tsf\n"
+                    + "              from v_lab_med_usage vlmu, tmp_stock_filter tsf\n"
+                    + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
+                    + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                    + "               and date(vlmu.opd_date) <= prm_stock_date \n"
+                    + "               and (vlmu.location_id = prm_location or prm_location = 0)\n"
+                    + "             group by vlmu.location_id, vlmu.med_id "
+                    + "             union all \n"
+                    + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
+                    + "                   vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
+                    + "              from v_investigation_med_usage vlmu, tmp_stock_filter tsf\n"
                     + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
                     + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
                     + "               and date(vlmu.opd_date) <= prm_stock_date \n"
@@ -1570,7 +1580,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         } else {
             params.put("session", "-");
         }
-        
+
         if (cboDoctor.getSelectedItem() instanceof Doctor) {
             String drId = ((Doctor) cboDoctor.getSelectedItem()).getDoctorId();
             params.put("p_doctor_id", drId);
@@ -1579,7 +1589,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             params.put("p_doctor_id", "-");
             //params.put("tech_id", "-");
         }
-        
+
         switch (report) {
             case "StockBalance":
             case "StockBalanceKS":
@@ -3019,9 +3029,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
             ResultSet rs = dao.execSQL(strSql);
             if (rs != null) {
-                List<Stock> listMinusStock = new ArrayList();
-                List<Stock> listPlusStock = new ArrayList();
+                List<Stock> listMinusStock;
+                List<Stock> listPlusStock;
                 Medicine med = null;
+                HashMap<String, MinusPlusList> hmMP = new HashMap();
+                List<String> locList = new ArrayList();
+
                 while (rs.next()) {
                     float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
                     String medId = rs.getString("med_id");
@@ -3031,10 +3044,23 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         prvMedId = medId;
                         med = (Medicine) dao.find(Medicine.class, medId);
                     }
-
+                    
+                    String sKey = locationId + "-" + medId;
+                    
+                    /*if (prvMedId.equals("16160002")) {
+                        log.error("Error");
+                    }*/
+                    
                     if (!prvMedId.equals(medId)) {
-                        listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
-                        for (Stock s : listPlusStock) {
+                        List<Stock> listS = new ArrayList();
+                        for (String loc : locList) {
+                            MinusPlusList mpl = hmMP.get(loc);
+                            if (mpl != null) {
+                                listS.addAll(PharmacyUtil.getStockList(mpl.getListMinusStock(), mpl.getListPlusStock()));
+                            }
+                        }
+
+                        for (Stock s : listS) {
                             TmpMinusFixedKey key = new TmpMinusFixedKey();
                             key.setExpDate(s.getExpDate());
                             key.setItemId(s.getMed().getMedId());
@@ -3043,15 +3069,31 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             TmpMinusFixed tmf = new TmpMinusFixed();
                             tmf.setKey(key);
                             tmf.setBalance(Math.round(s.getBalance()));
-
+                            log.info("insert : " + tmf.toString());
                             dao.save(tmf);
                         }
 
-                        listMinusStock = new ArrayList();
-                        listPlusStock = new ArrayList();
+                        //log.info("Med Id : " + prvMedId);
+                        //listMinusStock = new ArrayList();
+                        //listPlusStock = new ArrayList();
                         med = (Medicine) dao.find(Medicine.class, medId);
+                        hmMP = new HashMap();
+                        locList = new ArrayList();
+                        //locList.add(sKey);
                     }
 
+                    if (!hmMP.containsKey(sKey)) {
+                        listMinusStock = new ArrayList();
+                        listPlusStock = new ArrayList();
+                        MinusPlusList mpl = new MinusPlusList(listMinusStock, listPlusStock);
+                        hmMP.put(sKey, mpl);
+                        locList.add(sKey);
+                    } else {
+                        MinusPlusList mpl = hmMP.get(sKey);
+                        listMinusStock = mpl.getListMinusStock();
+                        listPlusStock = mpl.getListPlusStock();
+                    }
+                    
                     if (qty < 0) {
                         Stock stock = new Stock(med, rs.getDate("exp_date"),
                                 null, qty, null, null, locationId);
@@ -3065,20 +3107,25 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     prvMedId = medId;
                 }
 
-                if (!listPlusStock.isEmpty()) {
-                    listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
-                    for (Stock s : listPlusStock) {
-                        TmpMinusFixedKey key = new TmpMinusFixedKey();
-                        key.setExpDate(s.getExpDate());
-                        key.setItemId(s.getMed().getMedId());
-                        key.setLocationId(s.getLocationId());
-                        key.setUserId(userId);
-                        TmpMinusFixed tmf = new TmpMinusFixed();
-                        tmf.setKey(key);
-                        tmf.setBalance(Math.round(s.getBalance()));
-
-                        dao.save(tmf);
+                List<Stock> listS = new ArrayList();
+                for (String loc : locList) {
+                    MinusPlusList mpl = hmMP.get(loc);
+                    if (mpl != null) {
+                        listS.addAll(PharmacyUtil.getStockList(mpl.getListMinusStock(), mpl.getListPlusStock()));
                     }
+                }
+
+                for (Stock s : listS) {
+                    TmpMinusFixedKey key = new TmpMinusFixedKey();
+                    key.setExpDate(s.getExpDate());
+                    key.setItemId(s.getMed().getMedId());
+                    key.setLocationId(s.getLocationId());
+                    key.setUserId(userId);
+                    TmpMinusFixed tmf = new TmpMinusFixed();
+                    tmf.setKey(key);
+                    tmf.setBalance(Math.round(s.getBalance()));
+
+                    dao.save(tmf);
                 }
             }
         } catch (Exception ex) {
