@@ -649,7 +649,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (canEdit) {
                     if (!isDataLock) {
                         dao.open();
-                        dao.beginTran();
+                        //dao.beginTran();
                         String vouNo = currVou.getOpdInvId();
                         List<DCDetailHis> listDetail = currVou.getListOPDDetailHis();
                         for (DCDetailHis odh : listDetail) {
@@ -679,7 +679,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             dao.save(odh);
                         }
                         dao.save(currVou);
-                        dao.commit();
+                        //dao.commit();
 
                         linkTotal = tblAmountLinkTableModel.getTotalAmount() + currVou.getVouTotal() - currVou.getDiscountA();
 

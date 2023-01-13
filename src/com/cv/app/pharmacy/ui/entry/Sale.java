@@ -3330,42 +3330,53 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double totalAmount = saleTableModel.getTotalAmount();
         Patient pt = currSaleVou.getPatientId();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
-
-        if (!admissionNo.equals("-")) {
-            AdmissionKey key = new AdmissionKey();
-            key.setAmsNo(admissionNo);
-            key.setRegister(pt);
-            try {
-                Ams adm = (Ams) dao.find(Ams.class, key);
-                if (adm == null) {
-                    status = false;
-                } else {
-                    Date vouDate = DateUtil.toDate(txtSaleDate.getText());
-                    Date admDate = DateUtil.toDate(DateUtil.toDateStr(adm.getAmsDate(), "dd/MM/yyyy"));
-                    Date dcDate = adm.getDcDateTime();
-
-                    if (vouDate.compareTo(admDate) < 0) {
-                        status = false;
-                    }
-
-                    if (dcDate != null) {
-                        if (vouDate.compareTo(dcDate) > 0) {
-                            status = false;
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                log.error("admission error : " + " " + admissionNo + " " + ex.getMessage());
-                status = false;
-            } finally {
-                dao.close();
+        
+        if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+            
+            String admissionNo = "-";
+            if (pt != null) {
+                admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+                return false;
             }
 
-            if (!status) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
-                        "Invalid Vou Date", JOptionPane.ERROR_MESSAGE);
-                return false;
+            if (!admissionNo.equals("-")) {
+                AdmissionKey key = new AdmissionKey();
+                key.setAmsNo(admissionNo);
+                key.setRegister(pt);
+                try {
+                    Ams adm = (Ams) dao.find(Ams.class, key);
+                    if (adm == null) {
+                        status = false;
+                    } else {
+                        Date vouDate = DateUtil.toDate(txtSaleDate.getText());
+                        Date admDate = DateUtil.toDate(DateUtil.toDateStr(adm.getAmsDate(), "dd/MM/yyyy"));
+                        Date dcDate = adm.getDcDateTime();
+
+                        if (vouDate.compareTo(admDate) < 0) {
+                            status = false;
+                        }
+
+                        if (dcDate != null) {
+                            if (vouDate.compareTo(dcDate) > 0) {
+                                status = false;
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.error("admission error : " + " " + admissionNo + " " + ex.getMessage());
+                    status = false;
+                } finally {
+                    dao.close();
+                }
+
+                if (!status) {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Please enter registration no.",
+                            "Invalid Vou Date", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
             }
         }
 
