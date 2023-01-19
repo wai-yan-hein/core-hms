@@ -30,6 +30,9 @@ public class BuildingStructure implements java.io.Serializable {
     private FacilityType facilityType;
     private String regNo;
 
+    public BuildingStructure() {
+    }
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "id", unique = true, nullable = false)
