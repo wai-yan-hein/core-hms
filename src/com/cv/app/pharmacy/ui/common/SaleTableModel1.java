@@ -400,7 +400,7 @@ public class SaleTableModel1 extends AbstractTableModel {
                                         + " order by o.eqSmallestQty,o.smallestQty desc";
 
                                 List<ItemRule> listiItemRules = dao.findAllHSQL(str);
-                                if (listiItemRules.size() > 0) {
+                                if (!listiItemRules.isEmpty()) {
                                     if (NumberUtil.NZeroFloat(listiItemRules.get(0).getChekcQtyPrice()) == 1.0) {
                                         record.setPrice(listiItemRules.get(0).getPrice());
                                         //record.setAmount(record.getQuantity()*record.getPrice());

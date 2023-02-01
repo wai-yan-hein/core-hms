@@ -1287,7 +1287,7 @@
                                   <Component id="txtVouTotal" alignment="1" max="32767" attributes="0"/>
                                   <Group type="102" alignment="1" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="txtTaxP" pref="62" max="32767" attributes="0"/>
+                                          <Component id="txtTaxP" max="32767" attributes="0"/>
                                           <Component id="txtDiscP" max="32767" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>

@@ -857,7 +857,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());
             ReportUtil.printJasper(jp, printerName);
         }
-
         newForm();
     }
 
