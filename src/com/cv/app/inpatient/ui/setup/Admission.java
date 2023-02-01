@@ -997,6 +997,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 } else {
                     pt.setAdmissionNo(admNo);
                     ams.setDcStatus(null);
+                    ams.setAmsDate(null);
                     dao.save(pt);
                     dao.save(ams);
 

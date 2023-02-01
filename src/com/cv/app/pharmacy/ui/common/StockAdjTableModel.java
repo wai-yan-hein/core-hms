@@ -583,9 +583,10 @@ public class StockAdjTableModel extends AbstractTableModel {
                 }
             } else {
                 String strSql = "select vp.pur_unit, vp.pur_unit_cost "
-                        + "from v_purchase vp, (select med_id, pur_unit, max(pur_date) pur_date "
-                        + "from v_purchase where med_id = '" + med.getMedId() + "') max_date where vp.pur_date = "
-                        + "max_date.pur_date and vp.med_id = max_date.med_id and vp.pur_unit = max_date.pur_unit";
+                        + "from v_purchase vp, (select med_id, pur_unit, max(pur_date) pur_date \n"
+                        + "from v_purchase where med_id = '" + med.getMedId() + "') max_date where vp.pur_date = \n"
+                        + "max_date.pur_date and vp.med_id = max_date.med_id and vp.pur_unit = max_date.pur_unit \n"
+                        + "and ifnull(vp.pur_unit_cost,0) <> 0";
 
                 try {
                     ResultSet rs = dao.execSQL(strSql);

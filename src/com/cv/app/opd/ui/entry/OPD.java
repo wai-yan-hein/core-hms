@@ -1229,7 +1229,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private boolean isValidEntry() {
         boolean status = true;
         Patient pt = currVou.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        String admissionNo = "-";
+        
+        if(pt != null){
+            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        }
 
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();

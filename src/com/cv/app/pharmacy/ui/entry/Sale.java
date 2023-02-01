@@ -3337,9 +3337,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             if (pt != null) {
                 admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
             } else {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
+                /*JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
                         "Invalid Patient", JOptionPane.ERROR_MESSAGE);
-                return false;
+                return false;*/
             }
 
             if (!admissionNo.equals("-")) {

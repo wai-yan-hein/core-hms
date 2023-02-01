@@ -397,7 +397,7 @@ public class LoginDialog extends javax.swing.JDialog {
                 initDefaultValue(Global.loginUser.getUserRole());
                 Global.defaultValue.put("Location", Global.loginUser.getDefLocation());
                 String strFontSize = Util1.getPropValue("system.font.size");
-                int fontSize = 14;
+                int fontSize = 12;
                 if (!strFontSize.isEmpty() && !strFontSize.equals("-")) {
                     try {
                         fontSize = Integer.parseInt(strFontSize);
