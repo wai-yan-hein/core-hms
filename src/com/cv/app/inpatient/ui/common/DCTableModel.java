@@ -18,6 +18,7 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -336,17 +337,10 @@ public class DCTableModel extends AbstractTableModel {
                     record.setChargeType((ChargeType) value);
                     break;
             }
-
             calculateAmount(row);
-            //fireTableCellUpdated(row, 2);
-            //fireTableCellUpdated(row, 3);
-            fireTableCellUpdated(row, column);
-            fireTableCellUpdated(row, 5);
-            /*try {
-             parent.setRowSelectionInterval(getRowCount() - 1, getRowCount() - 1);
-             } catch (Exception ex) {
+            fireTableRowsUpdated(row, row);
+            parent.requestFocus();
 
-             }*/
         } catch (Exception ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
@@ -670,7 +664,7 @@ public class DCTableModel extends AbstractTableModel {
             strSQL = "update opd_service set ver_upd_id = price_ver_id "
                     + "where service_id in (" + strSelectedId + ")";
             dao.execSql(strSQL);
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             dao.rollBack();
             log.error("updateAllFees : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
@@ -701,7 +695,7 @@ public class DCTableModel extends AbstractTableModel {
                     + " WHERE service.serviceId = " + serviceId;
             List<DCDetailHis> list = JoSQLUtil.getResult(strSql, listOPDDetailHis);
 
-            if (list.size() > 0) {
+            if (!list.isEmpty()) {
                 DCDetailHis odh = list.get(0);
                 odh.setPrice(fees);
                 odh.setAmount(odh.getQuantity() * odh.getPrice());

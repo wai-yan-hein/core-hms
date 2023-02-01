@@ -310,7 +310,7 @@ public class SaleTableModel extends AbstractTableModel {
                             if (record.getMedId().getMedId() != null) {
                                 lblRemark.setText(record.getMedId().getChemicalName());
                                 record.setExpireDate(stockTableModel.getExpireDate(record.getLocation().getLocationId()));
-                                if (Util1.getPropValue("system.app.sale.stockBalance").equals("D")) {
+                                    if (Util1.getPropValue("system.app.sale.stockBalance").equals("D")) {
                                     assignBalance(record);
                                     fireTableCellUpdated(row, 12);
                                 }

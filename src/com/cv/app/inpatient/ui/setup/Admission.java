@@ -356,11 +356,11 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtReligion.setText(null);
         txtContactNo.setText(null);
         lblBooking.setVisible(false);
+        getValidRoom();
         assignDefaultValue();
-        txtName.requestFocusInWindow();
         cboRoom.setEnabled(false);
-        cboRoom.setSelectedItem(null);
         lblRoom.setText(null);
+        txtName.requestFocusInWindow();
     }
 
     @Override
@@ -491,6 +491,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             BindingUtil.BindCombo(cboBooking,
                     dao.findAllHSQL("select o from RBooking o where checkStatus = true order by o.bookingName"));
             AutoCompleteDecorator.decorate(cboBooking);
+            getValidRoom();
             bindStatus = true;
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());
@@ -524,11 +525,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboType.setSelectedItem(pt.getPtType());
             currPatient.getKey().setRegister(pt);
             dao.close();
-            getValidRoom();
             cboRoom.setSelectedItem(null);
             cboRoom.setEnabled(true);
         } else if (source.equals("AdmissionSearch")) {
-            getValidRoom();
             lblStatus.setText("EDIT");
             currPatient = (Ams) selectObj;
             txtAmsNo.setText(currPatient.getKey().getAmsNo());
@@ -667,10 +666,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             } else {
                 currPatient.setPtType((CustomerGroup) cboType.getSelectedItem());
             }
-            if (cboRoom.getSelectedItem() instanceof BuildingStructure) {
-                currPatient.setBuildingStructure((BuildingStructure) cboRoom.getSelectedItem());
-            } else {
+            if (cboRoom.getSelectedItem() == null) {
                 currPatient.setBuildingStructure(null);
+            } else {
+                currPatient.setBuildingStructure((BuildingStructure) cboRoom.getSelectedItem());
             }
             if (lblStatus.getText().equals("NEW")) {
                 currPatient.setCreatedDate(new Date());

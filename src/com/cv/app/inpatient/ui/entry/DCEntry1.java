@@ -1896,7 +1896,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     Date vouDate = DateUtil.toDate(txtDate.getText());
                     Date admDate = DateUtil.toDate(DateUtil.toDateStr(adm.getAmsDate(), "dd/MM/yyyy"));
                     Date dcDate = adm.getDcDateTime();
-
                     if (vouDate.compareTo(admDate) < 0) {
                         status = false;
                     }
@@ -1915,12 +1914,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
 
             if (!status) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check vou date with admission date.",
                         "Invalid Vou Date", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditDCCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
