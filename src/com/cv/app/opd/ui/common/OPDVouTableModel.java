@@ -78,9 +78,13 @@ public class OPDVouTableModel extends AbstractTableModel {
                 }
             case 2: //Patient
                 if (record.getCusNo() != null) {
-                    if(record.getRefNo() != null){
-                        return record.getCusNo() + " - " + record.getRefNo();
-                    }else{
+                    if (record.getRefNo() != null) {
+                        if (record.getRefNo().trim().length() > 0) {
+                            return record.getCusNo() + " - " + record.getRefNo();
+                        } else {
+                            return record.getCusNo() + " - " + record.getCusName();
+                        }
+                    } else {
                         return record.getCusNo() + " - " + record.getCusName();
                     }
                 } else {

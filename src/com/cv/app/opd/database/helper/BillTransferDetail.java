@@ -23,6 +23,7 @@ public class BillTransferDetail {
     private Double discount;
     private Double paid;
     private Double balance;
+    private boolean pStatus;
     
     public BillTransferDetail(Date tranDate, String regNo, String name, String status,
             String admissionNo, String strAge, Double amount, Integer payTypeId) {
@@ -122,5 +123,13 @@ public class BillTransferDetail {
 
     public void setBalance(Double balance) {
         this.balance = balance;
+    }
+
+    public boolean ispStatus() {
+        return pStatus;
+    }
+
+    public void setpStatus(boolean pStatus) {
+        this.pStatus = pStatus;
     }
 }

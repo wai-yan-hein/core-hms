@@ -4,11 +4,13 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.TotalEvent;
 import com.cv.app.opd.database.helper.BillTransferDetail;
 import com.cv.app.util.NumberUtil;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -19,7 +21,8 @@ public class BillTransferTableModel extends AbstractTableModel {
 
     private List<BillTransferDetail> listBTD = new ArrayList();
     private final String[] columnNames = {"Date", "Reg No.", "Admission No.",
-        "Name", "Bill Type", "Amount", "Discount", "Paid", "Balance"};
+        "Name", "Bill Type", "Amount", "Discount", "Paid", "Balance", "P"};
+    private TotalEvent event;
 
     @Override
     public String getColumnName(int column) {
@@ -28,7 +31,7 @@ public class BillTransferTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 6 || column == 7;
+        return column == 6 || column == 7 || column == 9;
     }
 
     @Override
@@ -52,6 +55,8 @@ public class BillTransferTableModel extends AbstractTableModel {
                 return Double.class;
             case 8: //Balance
                 return Double.class;
+            case 9: //P
+                return Boolean.class;
             default:
                 return Object.class;
         }
@@ -80,6 +85,8 @@ public class BillTransferTableModel extends AbstractTableModel {
                 return record.getPaid();
             case 8: //Balance
                 return record.getBalance();
+            case 9: //P
+                return record.ispStatus();
             default:
                 return null;
         }
@@ -92,17 +99,47 @@ public class BillTransferTableModel extends AbstractTableModel {
         switch (column) {
             case 6: //Discount
                 record.setDiscount(NumberUtil.NZero(value));
-                record.setPaid(NumberUtil.NZero(record.getAmount())-
-                        NumberUtil.NZero(record.getDiscount()));
+                record.setPaid(NumberUtil.NZero(record.getAmount())
+                        - NumberUtil.NZero(record.getDiscount()));
+                if(NumberUtil.NZero(record.getDiscount()) == 0 && NumberUtil.NZero(record.getPaid()) == 0){
+                    record.setpStatus(false);
+                }else{
+                    record.setpStatus(true);
+                }
                 break;
             case 7: //Paid
-                record.setPaid(NumberUtil.NZero(value));
+                double tmpValue = NumberUtil.NZero(value);
+                if (tmpValue == 0 && NumberUtil.NZero(record.getDiscount()) == 0) {
+                    record.setPaid(null);
+                    record.setpStatus(false);
+                } else {
+                    record.setPaid(tmpValue);
+                    record.setpStatus(true);
+                }
+                break;
+            case 9: //P
+                boolean status = (Boolean) value;
+                record.setpStatus(status);
+                if (status) {
+                    if (NumberUtil.NZero(record.getPaid()) == 0) {
+                        record.setPaid(NumberUtil.NZero(record.getAmount()) - NumberUtil.NZero(record.getDiscount()));
+                    }
+                } else {
+                    record.setPaid(null);
+                    record.setDiscount(null);
+                }
                 break;
         }
 
         double balance = NumberUtil.NZero(record.getAmount())
                 - (NumberUtil.NZero(record.getDiscount()) + NumberUtil.NZero(record.getPaid()));
         record.setBalance(balance);
+        if (event != null) {
+            event.assignTotal();
+        }
+        fireTableCellUpdated(row, 6);
+        fireTableCellUpdated(row, 7);
+        fireTableCellUpdated(row, 9);
     }
 
     @Override
@@ -138,5 +175,14 @@ public class BillTransferTableModel extends AbstractTableModel {
         } else {
             return listBTD.get(index);
         }
+    }
+
+    public void setEvent(TotalEvent event) {
+        this.event = event;
+    }
+    
+    public List<BillTransferDetail> getSaveData(){
+        return listBTD.stream().filter(o -> o.ispStatus())
+                .collect(Collectors.toList());
     }
 }

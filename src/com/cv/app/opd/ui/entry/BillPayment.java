@@ -262,13 +262,14 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void initTable() {
-        tblBillPaymentSearch.getColumnModel().getColumn(0).setPreferredWidth(30);//Reg No
-        tblBillPaymentSearch.getColumnModel().getColumn(1).setPreferredWidth(30);//Date
-        tblBillPaymentSearch.getColumnModel().getColumn(2).setPreferredWidth(250);//Patient Name
-        tblBillPaymentSearch.getColumnModel().getColumn(3).setPreferredWidth(150);//Bill Type
-        tblBillPaymentSearch.getColumnModel().getColumn(4).setPreferredWidth(200);//Remark
-        tblBillPaymentSearch.getColumnModel().getColumn(5).setPreferredWidth(50);//Discount
-        tblBillPaymentSearch.getColumnModel().getColumn(6).setPreferredWidth(50);//Amount
+        tblBillPaymentSearch.getColumnModel().getColumn(0).setPreferredWidth(30);//Date
+        tblBillPaymentSearch.getColumnModel().getColumn(1).setPreferredWidth(30);//Reg No
+        tblBillPaymentSearch.getColumnModel().getColumn(2).setPreferredWidth(30);//Adm No
+        tblBillPaymentSearch.getColumnModel().getColumn(3).setPreferredWidth(250);//Patient Name
+        tblBillPaymentSearch.getColumnModel().getColumn(4).setPreferredWidth(150);//Bill Type
+        tblBillPaymentSearch.getColumnModel().getColumn(5).setPreferredWidth(200);//Remark
+        tblBillPaymentSearch.getColumnModel().getColumn(6).setPreferredWidth(50);//Discount
+        tblBillPaymentSearch.getColumnModel().getColumn(7).setPreferredWidth(50);//Amount
 
         tblBillPayment.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
