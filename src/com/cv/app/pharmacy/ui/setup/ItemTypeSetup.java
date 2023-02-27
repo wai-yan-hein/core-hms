@@ -244,7 +244,6 @@ public class ItemTypeSetup extends javax.swing.JPanel {
         tblItemType.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblItemType.setModel(tableModel);
         tblItemType.setRowHeight(23);
-        tblItemType.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblItemType);
 
         jLabel1.setFont(Global.lableFont);
@@ -257,7 +256,7 @@ public class ItemTypeSetup extends javax.swing.JPanel {
 
         txtName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
 
-        butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butClear.setFont(Global.textFont);
         butClear.setText("Clear");
         butClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -265,7 +264,7 @@ public class ItemTypeSetup extends javax.swing.JPanel {
             }
         });
 
-        butSave.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSave.setFont(Global.textFont);
         butSave.setText("Save");
         butSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -275,7 +274,7 @@ public class ItemTypeSetup extends javax.swing.JPanel {
 
         lblStatus.setText("NEW");
 
-        butDelete.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butDelete.setFont(Global.textFont);
         butDelete.setText("Delete");
         butDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -288,6 +287,7 @@ public class ItemTypeSetup extends javax.swing.JPanel {
         jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Account Id");
 
+        jLabel4.setFont(Global.lableFont);
         jLabel4.setText("Department");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -301,22 +301,19 @@ public class ItemTypeSetup extends javax.swing.JPanel {
                 .addComponent(butDelete)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(butClear))
+            .addComponent(lblStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4))
                 .addGap(16, 16, 16)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtDept)
                     .addComponent(txtName, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(txtCode, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(txtAccId)))
-            .addComponent(lblStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jLabel4)
-                .addGap(18, 18, 18)
-                .addComponent(txtDept)
-                .addContainerGap())
         );
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butDelete, butSave});
@@ -341,7 +338,7 @@ public class ItemTypeSetup extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(txtDept, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(33, 33, 33)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(butSave)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
