@@ -75,6 +75,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -91,6 +94,10 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.springframework.beans.BeanUtils;
@@ -1725,7 +1732,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     dao.save(currSaleVou);
 
                     //Upload to Account
-                    uploadToAccount(currSaleVou);
+                    uploadToAccount(currSaleVou.getSaleInvId());
 
                     if (!Util1.getPropValue("system.app.usage.type").equals("School")
                             || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2503,7 +2510,34 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
     }
 
-    private void uploadToAccount(SaleHis sh) {
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(SaleHis sh) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -2545,7 +2579,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                 log.error("Connection error : " + sh.getSaleInvId());
             }
         }
-    }
+    }*/
 
     public void timerFocus() {
 
@@ -3919,7 +3953,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             dao.save(currSaleVou);
             vouEngine.updateVouNo();
             //Upload to Account
-            uploadToAccount(currSaleVou);
+            uploadToAccount(currSaleVou.getSaleInvId());
             newForm();
             deleteDetail();
         } catch (Exception ex) {

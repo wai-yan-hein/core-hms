@@ -17,10 +17,14 @@ import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.entity.TraderPayAccount;
 import com.cv.app.pharmacy.database.entity.TraderPayHis;
 import com.cv.app.pharmacy.database.helper.VoucherPayment;
+import static com.cv.app.pharmacy.ui.common.CPaymentEntryTableModel1.LOGGER;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +32,10 @@ import javax.jms.MapMessage;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 
 /**
@@ -291,14 +299,41 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 tph.setListDetail(listPV);
 
                 dao.save(tph);
-                uploadToAccount(tph);
+                uploadToAccount(tph.getPaymentId());
             } catch (Exception e) {
                 LOGGER.error("saveTraderpayHis : " + e.getMessage());
             }
         }
     }
 
-    private void uploadToAccount(TraderPayHis tph) {
+    private void uploadToAccount(Integer vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        LOGGER.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update payment_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    LOGGER.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(TraderPayHis tph) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -322,7 +357,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 }
             }
         }
-    }
+    }*/
 
     private void calculateBalance(VoucherPayment record) {
         Double balance = NumberUtil.NZero(record.getVouTotal())

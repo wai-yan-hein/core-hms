@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="compName" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="data_date" class="java.lang.String"/>
+	<parameter name="from_date" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="to_date" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="currency" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="payment" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="reg_no" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="user_id" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pt_type" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select a.*
+from (
+select a.reg_no, a.currency, sum(amt) balance,bs.description,a.patient_name, a.admission_no ams_no, tbp.dc_date
+    from (
+	  select po.reg_no, po1.patient_name, po1.admission_no, po.currency, sum(ifnull(op_amount,0)) amt,
+	         po1.dc_date
+	    from patient_op po
+        join (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) po1 on po.reg_no = po1.reg_no  and po.currency = po1.currency
+	     and po.op_date = po1.op_date
+		left join patient_detail pd on po.reg_no = pd.reg_no
+	   where date(po.op_date) <= $P{to_date} and po1.user_id = $P{user_id}
+	     and (po.currency = $P{currency} or '-' = $P{currency}) and (ifnull(pd.pt_type,'PT') =  $P{pt_type} or '-' = $P{pt_type})
+	   group by po.reg_no, po1.patient_name, po1.admission_no, po.currency, po1.dc_date
+	   union all
+	  select tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, sum(a.amt), tbp.dc_date
+              from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp join (
+                   select sh.reg_no, sh.currency_id,date(sh.sale_date) sale_date, sum(ifnull(sh.balance,0)) amt
+                     from sale_his sh
+                     left join patient_detail pd on sh.reg_no = pd.reg_no
+                    where deleted = false and sh.reg_no is not null and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+                    group by sh.reg_no,sh.currency_id,date(sh.sale_date)) a on tbp.reg_no = a.reg_no
+               and tbp.currency = a.currency_id and a.sale_date between tbp.op_date and $P{to_date}
+             where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})
+             group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date
+	   union all
+	  select tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, sum(ifnull(oh.amt,0)) amt, tbp.dc_date
+	    from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp join (
+                    select patient_id, currency_id, date(opd_date) opd_date, sum(ifnull(vou_balance,0)) amt
+                      from opd_his
+                      left join patient_detail pd on patient_id = pd.reg_no
+                     where deleted = false and patient_id is not null and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+                     group by patient_id, currency_id, date(opd_date)) oh on tbp.reg_no = oh.patient_id
+                and tbp.currency = oh.currency_id and date(oh.opd_date) between tbp.op_date and $P{to_date}
+              where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency})
+              group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date
+	    union all
+	   select tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, sum(ifnull(oh.amt,0)) amt, tbp.dc_date
+	     from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp join (
+	          select patient_id, currency_id, date(ot_date) ot_date, sum(ifnull(vou_balance,0)) amt
+	            from ot_his
+                left join patient_detail pd on patient_id = pd.reg_no
+	           where deleted = false and patient_id is not null and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+		 group by patient_id, currency_id, date(ot_date)) oh on tbp.reg_no = oh.patient_id
+                and tbp.currency = oh.currency_id
+	      and date(oh.ot_date) between tbp.op_date and $P{to_date}
+	    where (tbp.currency = $P{currency} or '-' = $P{currency}) and tbp.user_id = $P{user_id}
+	    group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date
+	    union all
+	   select tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency,sum(ifnull(dh.vou_balance,0)), tbp.dc_date
+from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+				 from tmp_bill_payment where user_id = $P{user_id}) tbp
+join dc_his dh on tbp.reg_no = dh.patient_id and tbp.currency = dh.currency_id
+left join patient_detail pd on dh.patient_id = pd.reg_no
+where dh.deleted = false and dh.patient_id is not null and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+and (tbp.currency = $P{currency} or '-' = $P{currency}) and tbp.user_id = $P{user_id} and date(dh.dc_date) between tbp.op_date and $P{to_date}
+group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date
+	    union all
+	   select tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, (sum(ifnull(rih.amt,0))*-1) amt,
+                     tbp.dc_date
+	     from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp join (
+                    select reg_no, currency, date(ret_in_date) ret_in_date, sum(ifnull(balance,0)) amt
+		 from ret_in_his
+		where deleted = false and reg_no is not null 
+	          group by reg_no, currency, date(ret_in_date)) rih on tbp.reg_no = rih.reg_no
+                and tbp.currency = rih.currency and date(rih.ret_in_date) between tbp.op_date and $P{to_date}
+		left join patient_detail pd on tbp.reg_no = pd.reg_no
+	    where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency}) and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+	    group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date
+	    union all
+	   select tbp.reg_no, tbp.patient_name,tbp.admission_no, tbp.currency,
+                    (sum(ifnull(opbp.amt,0))*-1) amt, tbp.dc_date
+	     from (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp join (
+                     select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0)+ifnull(discount,0))) amt
+		  from opd_patient_bill_payment
+		 where reg_no is not null and deleted = false
+		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no
+                 and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}
+		  left join patient_detail pd on tbp.reg_no = pd.reg_no
+	     where tbp.user_id = $P{user_id} and (tbp.currency = $P{currency} or '-' = $P{currency}) and (ifnull(pd.pt_type,'PT') = $P{pt_type} or '-' = $P{pt_type})
+	     group by tbp.reg_no, tbp.patient_name, tbp.admission_no, tbp.currency, tbp.dc_date) a
+    left join admission adm on a.admission_no = adm.ams_no and a.reg_no = adm.reg_no
+    left join building_structure bs on adm.building_structure_id = bs.id
+    join (select distinct reg_no, currency, op_date, user_id, admission_no, dc_date, patient_name
+from tmp_bill_payment where user_id = $P{user_id}) tbp on a.reg_no = tbp.reg_no and a.currency = tbp.currency and tbp.user_id = $P{user_id}
+   where (a.reg_no = $P{reg_no} or '-' = $P{reg_no})
+   group by a.reg_no, a.currency, bs.description,a.patient_name, tbp.dc_date
+   having abs(sum(round(amt,0))) <> 0
+order by a.patient_name) a
+where (abs(a.balance)-1) > 0]]>
+	</queryString>
+	<field name="reg_no" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="currency" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="balance" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="description" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="patient_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="ams_no" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="dc_date" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<variable name="ttl_bal" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{balance}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="59" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="363" height="20" uuid="6602518c-7bb1-4317-a225-08c03dd3d852"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="19" width="363" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<box>
+					<pen lineStyle="Solid" lineColor="#004ECA"/>
+					<topPen lineStyle="Solid" lineColor="#004ECA"/>
+					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
+					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
+					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="18" isBold="true" isItalic="false"/>
+				</textElement>
+				<text><![CDATA[Patient Balance]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="455" y="44" width="100" height="15" uuid="a6d1588f-771a-4dac-8a6e-fc423d7ce180"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="387" y="44" width="66" height="15" uuid="428cbcaa-ec93-4528-8482-7ff31e97aa53"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="43" width="363" height="16" uuid="5fafe77e-e49c-41a7-a8fe-e3042593723d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="33" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="16" width="555" height="1" uuid="2ad57bf6-355b-4396-8af4-15ca2c08a2f2"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="248" y="17" width="152" height="15" uuid="b5319cd4-ca40-4805-9048-625ff6bf417c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Patient Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="490" y="17" width="65" height="15" uuid="b4e96551-ad38-46b5-943c-65235c6ed061"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Balance]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="32" width="555" height="1" uuid="083c3184-c6c2-4c76-a733-a1a7b5dd2a65"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<textField>
+				<reportElement x="435" y="0" width="80" height="15" uuid="cea526fb-617a-4cf5-bf66-ccb63f4d233a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="515" y="0" width="40" height="15" uuid="f197d6b9-41e5-4fc0-8e72-7215dada4fe0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="400" y="17" width="47" height="15" uuid="e91ed36a-570b-4767-94cd-d81c559e9ae9"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Room]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="17" width="34" height="15" uuid="06b07681-e289-4141-bf84-4b8dfb201d12"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="35" y="17" width="70" height="15" uuid="2736ee41-430b-46bd-b6b5-eca95c440e3a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reg No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="105" y="17" width="70" height="15" uuid="409e712d-1a0f-4bc0-82eb-080e03393664"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Adm No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="175" y="17" width="73" height="15" uuid="c95f3508-7c55-4d86-aa16-76665fe41053"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DC Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="449" y="17" width="40" height="15" uuid="0ec40800-c3c6-4c63-a8a2-52a423a4e552"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Currency]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<textField>
+				<reportElement x="248" y="0" width="152" height="15" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="490" y="0" width="65" height="15" uuid="135ba9d2-5efb-4336-afe7-dd7499782055"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{balance}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="400" y="0" width="47" height="15" uuid="3848726e-0bf8-4a96-933d-e297ef76de0c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="0" width="34" height="15" uuid="38630521-7b6a-402e-8274-bd0048513819"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="35" y="0" width="70" height="15" uuid="b9206b38-2f51-4836-b894-2db6ee33ff37"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{reg_no}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="105" y="0" width="70" height="15" uuid="a2de21d5-15f3-489c-b13b-d5f458c10968"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ams_no}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="175" y="0" width="73" height="15" uuid="a93c51e4-2842-45ee-a6b9-ea7b813c22e0"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dc_date}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="15" width="555" height="1" uuid="9d5a5dea-18e3-4760-8021-7cdb0068e370"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="449" y="0" width="40" height="15" uuid="99dbf768-58cb-461e-8507-b73782567b28"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{currency}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="16" splitType="Stretch">
+			<staticText>
+				<reportElement x="368" y="1" width="100" height="15" uuid="8773bd21-1703-47c4-8113-2913101590f0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Amount : ]]></text>
+			</staticText>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="468" y="1" width="87" height="15" uuid="c0557133-e219-4822-9d54-4b3d48bf4dcb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_bal}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="1" width="555" height="1" uuid="8b8b9efb-8736-44b8-88e1-8bda99500c8d"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+		</band>
+	</summary>
+</jasperReport>

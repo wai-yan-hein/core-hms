@@ -54,6 +54,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -76,6 +79,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 
@@ -289,14 +296,33 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     //System.out.println("Before updateVouTotal Vou Save end." + new Date());
                     //updateVouTotal(currVou.getOpdInvId());
                     //System.out.println("After updateVouTotal Vou Save end." + new Date());
+                    try {
+                        //double vouBalance = NumberUtil.NZero(currVou.getVouBalance());
+                        //double ttlBill = Double.parseDouble(txtBillTotal.getText());
+                        if (chkCloseBill.isSelected()) {
+                            Patient pt = currVou.getPatient();
+                            if (pt != null) {
+                                if (pt.getOtId() != null) {
+                                    log.error("Bill Close Save ==> OT Vou No : " + currVou.getOpdInvId()
+                                            + " Reg No : " + pt.getRegNo() + " User Id : " + Global.loginUser.getUserId()
+                                            + " Bill Id : " + pt.getOtId());
+                                }
+                                pt.setOtId(null);
+                                dao.save(pt);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        log.error("Paid check : " + ex.getMessage());
+                    }
                     String desp = "-";
                     if (currVou.getPatient() != null) {
                         desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                     }
                     log.info("Before uploadToAccount." + new Date());
-                    uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                    /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
-                            currVou.getPaid(), currVou.getTaxA(), desp);
+                            currVou.getPaid(), currVou.getTaxA(), desp);*/
+                    uploadToAccount(currVou.getOpdInvId());
                     log.info("After uploadToAccount." + new Date());
 
                     newForm();
@@ -318,6 +344,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     public void newForm() {
         isDeleteCopy = false;
         canEdit = true;
+        chkCloseBill.setSelected(false);
         currVou = new OPDHis();
         txtDoctorName.setText(null);
         txtDoctorNo.setText(null);
@@ -420,9 +447,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
                     }
-                    uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                    /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
-                            currVou.getPaid(), currVou.getTaxA(), "");
+                            currVou.getPaid(), currVou.getTaxA(), "");*/
+                    uploadToAccount(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -496,9 +524,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
-                uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                         currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), "");
+                        currVou.getPaid(), currVou.getTaxA(), "");*/
+                uploadToAccount(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -649,14 +678,33 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             deleteDetail();
                             //updateVouTotal(currVou.getOpdInvId());
 
+                            try {
+                                //double vouBalance = NumberUtil.NZero(currVou.getVouBalance());
+                                //double ttlBill = Double.parseDouble(txtBillTotal.getText());
+                                if (chkCloseBill.isSelected()) {
+                                    Patient pt = currVou.getPatient();
+                                    if (pt != null) {
+                                        if (pt.getOtId() != null) {
+                                            log.error("Bill Close Save ==> OT Vou No : " + currVou.getOpdInvId()
+                                                    + " Reg No : " + pt.getRegNo() + " User Id : " + Global.loginUser.getUserId()
+                                                    + " Bill Id : " + pt.getOtId());
+                                        }
+                                        pt.setOtId(null);
+                                        dao.save(pt);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                log.error("Paid check : " + ex.getMessage());
+                            }
+                            
                             String desp = "-";
                             if (currVou.getPatient() != null) {
                                 desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                             }
-                            uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                            /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                                     currVou.getVouBalance(), currVou.getDiscountA(),
                                     currVou.getPaid(), currVou.getTaxA(),
-                                    desp);
+                                    desp);*/
                         }
                     } catch (Exception ex) {
                         dao.rollBack();
@@ -753,8 +801,14 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         params.put("comp_name", Util1.getPropValue("report.company.name1"));
         params.put("category", Util1.getPropValue("report.company.cat"));
         params.put("comp_address", Util1.getPropValue("report.address"));
+
         if (chkA5.isSelected()) {
-            reportName = "W/OPDVoucherInvoiceA5";
+            String tmpRptName = Util1.getPropValue("report.file.opd.a5");
+            if (!tmpRptName.isEmpty() && !tmpRptName.equals("-")) {
+                reportName = tmpRptName;
+            } else {
+                reportName = "W/OPDVoucherInvoiceA5";
+            }
             printMode = "View";
         }
         String reportPath = Util1.getAppWorkFolder()
@@ -769,6 +823,16 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 params.put("reg_no", currVou.getPatient().getRegNo() + "/" + year);
             } else {
                 params.put("reg_no", currVou.getPatient().getRegNo());
+            }
+            if (currVou.getPatient().getTownship() != null) {
+                params.put("address", currVou.getPatient().getTownship().getTownshipName());
+            } else {
+                params.put("address", "-");
+            }
+            if (currVou.getPatient().getSex() != null) {
+                params.put("sex", currVou.getPatient().getSex().getDescription());
+            } else {
+                params.put("sex", "");
             }
         } else {
             if (currVou.getPatientName() != null) {
@@ -825,6 +889,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 + Util1.getPropValue("report.folder.path"));
         params.put("REPORT_CONNECTION", dao.getConnection());
         params.put("user_desp", "*Thanks You.*");
+        params.put("bill_id", Util1.isNull(txtBill.getText(), "-"));
+        params.put("IMAGE_PATH", Util1.getAppWorkFolder()
+                + Util1.getPropValue("report.folder.path"));
 
         if (lblStatus.getText().equals("NEW")) {
             params.put("vou_status", " ");
@@ -1998,7 +2065,34 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
     }
 
-    private void uploadToAccount(String vouNo, boolean isDeleted,
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+
+    /*private void uploadToAccount(String vouNo, boolean isDeleted,
             Double balance, Double disc, Double paid, Double tax, String desp) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
@@ -2038,8 +2132,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 log.error("Connection error : " + vouNo);
             }
         }
-    }
-
+    }*/
     private void deleteDetail() {
         String deleteSQL;
 
@@ -2146,6 +2239,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel25 = new javax.swing.JLabel();
         butRemove = new javax.swing.JButton();
         txtPrice = new javax.swing.JFormattedTextField();
+        chkCloseBill = new javax.swing.JCheckBox();
         txtBill = new javax.swing.JTextField();
 
         jLabel1.setFont(Global.lableFont);
@@ -2484,6 +2578,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         txtPrice.setEditable(false);
 
+        chkCloseBill.setText("Close Bill");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -2499,7 +2595,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtPrice, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butRemove)))
+                        .addComponent(butRemove))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(chkCloseBill)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -2516,7 +2615,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     .addComponent(jLabel25)
                     .addComponent(butRemove)
                     .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 88, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(chkCloseBill)
+                .addGap(0, 54, Short.MAX_VALUE))
         );
 
         txtBill.setEditable(false);
@@ -2960,6 +3061,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JComboBox cboPaymentType;
     private javax.swing.JCheckBox chkA5;
     private javax.swing.JCheckBox chkAmount;
+    private javax.swing.JCheckBox chkCloseBill;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;

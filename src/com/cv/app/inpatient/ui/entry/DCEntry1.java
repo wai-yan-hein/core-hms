@@ -60,6 +60,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -81,6 +84,10 @@ import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.josql.Query;
 import org.josql.QueryExecutionException;
@@ -271,10 +278,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (currVou.getPatient() != null) {
                     desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                 }
-                uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                        currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), desp);
-
+                //uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                //        currVou.getVouBalance(), currVou.getDiscountA(),
+                //        currVou.getPaid(), currVou.getTaxA(), desp);
+                uploadToAccount(currVou.getOpdInvId());
+                        
                 if (currVou.getDcStatus() != null) {
                     log.error("dc voucher save status change : " + currVou.getOpdInvId() + " : " + currVou.getDcStatus());
                     Patient pt = currVou.getPatient();
@@ -449,9 +457,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     dao.execSql("update dc_his set deleted = true, intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
                     log.error("dc delete after voucher save.");
                     //dao.commit();
-                    uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                    /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
-                            currVou.getPaid(), currVou.getTaxA(), "");
+                            currVou.getPaid(), currVou.getTaxA(), "");*/
+                    uploadToAccount(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("delete : " + ex.getStackTrace()[0].getLineNumber()
@@ -529,9 +538,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
-                uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                         currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), "");
+                        currVou.getPaid(), currVou.getTaxA(), "");*/
+                uploadToAccount(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -694,9 +704,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         if (currVou.getPatient() != null) {
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
-                        uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                        /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                                 currVou.getVouBalance(), currVou.getDiscountA(),
-                                currVou.getPaid(), currVou.getTaxA(), desp);
+                                currVou.getPaid(), currVou.getTaxA(), desp);*/
+                        uploadToAccount(currVou.getOpdInvId());
                         log.error("dc vou print after uploadToAccount : " + currVou.getOpdInvId());
                     }
 
@@ -2612,7 +2623,34 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
     }
 
-    private void uploadToAccount(String vouNo, boolean isDeleted,
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update dc_his set intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(String vouNo, boolean isDeleted,
             Double balance, Double disc, Double paid, Double tax, String desp) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
@@ -2654,7 +2692,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 log.error("Connection error : " + vouNo);
             }
         }
-    }
+    }*/
 
     private void deleteDetail() {
         String deleteSQL;

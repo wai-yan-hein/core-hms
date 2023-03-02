@@ -1,0 +1,707 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="adm_no" class="java.lang.String"/>
+	<parameter name="tran_date" class="java.lang.String"/>
+	<parameter name="adm_date" class="java.lang.String"/>
+	<parameter name="pt_name" class="java.lang.String"/>
+	<parameter name="dr_name" class="java.lang.String"/>
+	<parameter name="address" class="java.lang.String"/>
+	<parameter name="dc_status" class="java.lang.String"/>
+	<parameter name="age" class="java.lang.String"/>
+	<parameter name="sex" class="java.lang.String"/>
+	<parameter name="bed_no" class="java.lang.String"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="phoneNo" class="java.lang.String"/>
+	<parameter name="comAddress" class="java.lang.String"/>
+	<parameter name="IMAGE_PATH" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select tran_date,tran_type,sum(amount) amount,sum(amount1) amount1,TRAN_OPTION,TRAN_OPTION1,desp
+from (select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sh.sale_date) tran_date, sum(sh.sale_amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, sh.sale_inv_id desp
+		from v_sale1 sh,location loc
+	   where sh.deleted = false and sh.admission_no = $P{adm_no}
+		 and sh.location_id = loc.location_id and date(sh.sale_date) between date($P{adm_date}) and date($P{tran_date})
+	   group by date(sh.sale_date),loc.location_name, sh.sale_inv_id
+	   union all
+	  select og.group_name as tran_type, date(vo.opd_date) tran_date, sum(vo.amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, vo.service_name as desp
+		from v_opd vo, opd_group og
+	   where vo.group_id = og.group_id and deleted = false and admission_no = $P{adm_no}
+		 and date(vo.opd_date) between date($P{adm_date}) and date($P{tran_date})
+	   group by og.group_name, date(vo.opd_date), vo.service_name
+	   union all
+	  select 'DC' as tran_type, date(dc_date) tran_date, sum(amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, service_name as desp
+	    from v_dc
+	   where deleted = false and admission_no = $P{adm_no}
+		 and v_dc.service_id not in (select service_id from dr_detail_id where option = 'DC')
+		 and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+		 and v_dc.service_id not in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.disc.id','system.dc.paid.id',
+                                    'system.dc.refund.id'))
+	   group by date(dc_date), service_name
+	   union all
+	  select 'DC' as tran_type,date(dc_date) tran_date, sum(amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, service_name as desp
+		from v_dc ,dc_doctor_fee ddf,doctor d
+	   where deleted = false and admission_no = $P{adm_no} and v_dc.dc_detail_id = ddf.dc_detail_id
+		 and ddf.doctor_id = d.doctor_id and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+		 and v_dc.service_id not in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.disc.id','system.dc.paid.id',
+                                    'system.dc.refund.id'))
+	   group by date(dc_date), service_name
+	   union all
+	  select 'OT' as tran_type, date(ot_date) tran_date, sum(amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, service_name as desp
+		from v_ot
+	   where deleted = false and admission_no = $P{adm_no}
+		 and v_ot.service_id not in (select service_id from dr_detail_id where option = 'OT')
+		 and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
+		 and v_ot.service_id not in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.ot.deposite.id','system.ot.disc.id','system.ot.paid.id',
+                                    'system.ot.refund.id'))
+	   group by date(ot_date), service_name
+	   union all
+	  select 'OT' as tran_type, date(ot_date) tran_date, sum(amount) amount, 0 as amount1,
+			 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, service_name as desp
+		from v_ot,ot_doctor_fee odf,doctor d
+	   where deleted = false and admission_no = $P{adm_no} and v_ot.ot_detail_id = odf.ot_detail_id
+		 and odf.doctor_id = d.doctor_id and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
+		 and v_ot.service_id not in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.ot.deposite.id','system.ot.disc.id','system.ot.paid.id',
+                                    'system.ot.refund.id'))
+	   group by date(ot_date), service_name
+	   union all
+	  select 'RETURN IN ' as tran_type, date(ret_in_date) tran_date, 0 as amount, sum(ret_in_amount*-1) amount1,
+		     'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1, ret_in_id as desp
+		from v_return_in
+	   where deleted = false and admission_no = $P{adm_no}
+		 and date(ret_in_date) between date($P{adm_date}) and date($P{tran_date})
+	   group by date(ret_in_date), ret_in_id
+	   union all
+	  select tran_type, tran_date, 0 as amount, sum(ifnull(amount,0))*-1 amount1, TRAN_OPTION, 2 AS TRAN_OPTION1, desp
+		from (select 'Payment' as tran_type, dt.tran_date, dt.desp, 1 as qty,
+					case dt.desp
+						when 'Pharmacy Discount' then dt.discount
+						when 'Pharmacy Paid' then dt.paid
+						when 'Pharmacy Tax' then dt.tax
+						else 0
+					end as amount, 'Total Payment : ' as TRAN_OPTION
+				from (select a.*, b.*
+						from (select date(sale_date) as tran_date, sum(ifnull(discount,0)) as discount, 
+									 sum(ifnull(paid_amount,0)) as paid, sum(ifnull(tax_amt,0)) as tax
+								from sale_his where deleted = false and admission_no = $P{adm_no}
+								 and date(sale_date) between date($P{adm_date}) and date($P{tran_date})
+							   group by date(Sale_date)) a,
+							 (select 'Pharmacy Discount' as desp
+							   union all 
+							  select 'Pharmacy Paid' as desp
+							   union all
+							  select 'Pharmacy Tax' as desp) b) dt
+				union all
+				select 'Payment' as tran_type, dt.tran_date, dt.desp, 1 as qty,
+					case dt.desp
+						when 'OPD Discount' then dt.discount
+						when 'OPD Paid' then dt.paid
+						when 'OPD Tax' then dt.tax
+						else 0
+					end as amount, 'Total Payment : ' as TRAN_OPTION
+				from (select a.*, b.*
+						from (select date(opd_date) as tran_date, sum(ifnull(disc_a,0)) as discount , 
+									 sum(ifnull(paid,0)) as paid, sum(ifnull(tax_a,0)) as tax
+								from opd_his where deleted = false and admission_no = $P{adm_no}
+								 and date(opd_date) between date($P{adm_date}) and date($P{tran_date})
+							   group by date(opd_date)) a,
+							 (select 'OPD Discount' as desp
+							   union all 
+							  select 'OPD Paid' as desp
+							   union all
+							  select 'OPD Tax' as desp) b) dt
+union all
+select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM ot_his
+where deleted = false and admission_no = $P{adm_no}
+and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
+union all
+select 'Payment' as tran_type, date(dc.ot_date) tran_date, 'OT Refund' desp, ddh.qty as qty, (-sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
+FROM ot_his dc,ot_details_his ddh
+where dc.ot_inv_id = ddh.vou_no and ddh.service_id in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.ot.refund.id')) and dc.deleted = false and dc.admission_no = $P{adm_no}
+and date(dc.ot_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(dc.ot_date) having amount != 0
+union all
+select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM ot_his
+where deleted = false and admission_no = $P{adm_no}
+and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(ot_date) having amount > 0
+union all
+select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Paid' desp, 1 as qty, sum(ifnull(paid,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM ot_his
+where deleted = false and admission_no = $P{adm_no}
+and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(ot_date) having amount > 0
+union all
+select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM dc_his
+where deleted = false and admission_no = $P{adm_no}
+and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(dc_date) having amount > 0
+union all
+select 'Payment' as tran_type, date(dc.dc_date) tran_date, 'DC Refund' desp, ddh.qty as qty, (- sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
+FROM dc_his dc,dc_details_his ddh
+where dc.dc_inv_id = ddh.vou_no and ddh.service_id in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.dc.refund.id')) and dc.deleted = false and dc.admission_no = $P{adm_no}
+and date(dc.dc_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(dc.dc_date) having amount != 0
+union all
+select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM dc_his
+where deleted = false and admission_no = $P{adm_no}
+and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+group by date(dc_date) having amount > 0
+union all
+select tran_type,tran_date,desp,qty,amount,tran_option
+from
+(select 'Payment' as tran_type, date(dc_date) tran_date, concat('DC ',s.service_name) desp, sum(ddh.qty) qty, sum(ifnull(ddh.amount,0)) amount, 'Total Payment : ' as TRAN_OPTION
+FROM dc_his dh,dc_details_his ddh, inp_service s
+where deleted = false and admission_no = $P{adm_no} and dh.dc_inv_id = ddh.vou_no and ddh.service_id = s.service_id
+and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+and ddh.service_id in (select sys_prop_value from sys_prop
+								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.paid.id'))
+group by date(dc_date),ddh.service_id having amount > 0)tmp
+group by tran_type,tran_date,desp,qty,amount,tran_option ) a
+where a.tran_date is not null and a.amount <> 0
+group by tran_type, tran_date, desp
+) a
+where a.tran_date is not null and a.amount <> 0
+group by a.tran_date,a.tran_type,a.TRAN_OPTION,a.TRAN_OPTION1,a.desp
+order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
+	</queryString>
+	<field name="tran_type" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="tran_date" class="java.sql.Date">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="amount" class="java.lang.Double">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="amount1" class="java.lang.Double"/>
+	<field name="TRAN_OPTION" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="TRAN_OPTION1" class="java.lang.Long"/>
+	<field name="desp" class="java.lang.String"/>
+	<variable name="v_ttl_expense" class="java.lang.Double" resetType="Group" resetGroup="tran_type" calculation="Sum">
+		<variableExpression><![CDATA[$F{amount}]]></variableExpression>
+	</variable>
+	<variable name="v_ttl_pay" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{amount1}]]></variableExpression>
+	</variable>
+	<group name="tran_type">
+		<groupExpression><![CDATA[$F{tran_date}]]></groupExpression>
+		<groupFooter>
+			<band height="20">
+				<rectangle>
+					<reportElement x="474" y="0" width="81" height="20" uuid="2cfa578d-522e-45a2-ad36-75d3343b598f"/>
+					<graphicElement>
+						<pen lineColor="#666666"/>
+					</graphicElement>
+				</rectangle>
+				<rectangle>
+					<reportElement x="0" y="0" width="312" height="20" uuid="06dee850-be73-43ba-a4d4-786d3b9ed6f3"/>
+					<graphicElement>
+						<pen lineColor="#666666"/>
+					</graphicElement>
+				</rectangle>
+				<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+					<reportElement x="475" y="1" width="78" height="17" uuid="45c07f55-1dbd-4c7d-ad04-28985931a401">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{v_ttl_expense} + $V{v_ttl_pay}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement x="312" y="0" width="81" height="20" uuid="e9057298-abaa-4b09-95f5-5742818ea553">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<graphicElement>
+						<pen lineStyle="Solid" lineColor="#666666"/>
+					</graphicElement>
+				</rectangle>
+				<rectangle>
+					<reportElement x="393" y="0" width="81" height="20" uuid="68fc6e73-3826-491a-bdf8-c78d3f5f2444">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<graphicElement>
+						<pen lineColor="#666666"/>
+					</graphicElement>
+				</rectangle>
+				<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+					<reportElement x="312" y="1" width="80" height="17" uuid="3683eac6-f8ab-41f7-bec2-45e577a1152f">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{v_ttl_expense}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+					<reportElement x="393" y="1" width="80" height="17" uuid="f4c81839-7159-40e4-b299-320df103ca24">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{v_ttl_pay}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd-MM-yyyy" isBlankWhenNull="true">
+					<reportElement isPrintRepeatedValues="false" x="223" y="1" width="53" height="17" uuid="76b6c93b-1df6-4060-88da-d397b2bcb623"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="9" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{tran_date}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="280" y="1" width="32" height="17" uuid="7e7a4ad0-2b95-4eeb-9d74-c62b4809a661">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="9" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total : ]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="161" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="74" width="555" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<box>
+					<pen lineStyle="Solid" lineColor="#004ECA"/>
+					<topPen lineStyle="Solid" lineColor="#004ECA"/>
+					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
+					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
+					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true" isItalic="false"/>
+				</textElement>
+				<text><![CDATA[Daily Inpatient Charges]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="1" y="101" width="80" height="20" uuid="5ead1282-6db8-4cf5-ad15-0689c8a682ec"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="1" y="101" width="80" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Admission No. : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="1" y="121" width="80" height="20" uuid="9caca459-21a9-4993-bf7b-9890aa6ce40e"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="1" y="121" width="80" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Patient's Name : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="1" y="141" width="80" height="20" uuid="00aef42d-7911-484b-976f-8ba7883813a3"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="1" y="141" width="80" height="20" uuid="0d73c8d3-1c29-4b02-972c-40325f1e50d6"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Doctor's name : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="81" y="101" width="192" height="20" uuid="2d296082-9d02-4c2e-ab63-2221560f8b61"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="81" y="121" width="192" height="20" uuid="a4c2f8b9-1312-48d8-bc9c-16a25da9a287"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="81" y="141" width="192" height="20" uuid="9da67fcc-ac4b-4c8f-a556-67f1925d1d35"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="273" y="101" width="52" height="20" uuid="2920e13d-0d84-41b0-b305-314df5fc5a8d"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="273" y="101" width="52" height="20" uuid="619bbcd8-94a3-4ece-9245-195c46d4822a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Bed No. : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="273" y="121" width="52" height="20" uuid="587f607c-fd58-459d-857e-39a6006f18e2"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="273" y="121" width="52" height="20" uuid="86b3f7a9-a1a0-4a6b-8059-b9ba3ef7528a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Address : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="273" y="141" width="52" height="20" uuid="b35cbec5-a91f-4ef7-b74a-39416a9b1932"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="273" y="141" width="52" height="20" uuid="a8e10e9c-0c41-42c6-8758-e81bbd5ea0a1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Status : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="325" y="101" width="90" height="20" uuid="1aa9e5a4-1997-4193-a48b-12bde1ced3aa"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="325" y="121" width="90" height="20" uuid="8bd1c09e-c801-4781-bee3-797494ea63b5"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="325" y="141" width="90" height="20" uuid="e2dc6404-9ae1-4723-a37e-b3000a823d90"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="415" y="101" width="38" height="20" uuid="51d408e8-0580-44be-bcfb-d7f3ea0d6c46"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="415" y="101" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Date : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="415" y="121" width="38" height="20" uuid="37ece8ab-1b7e-498e-ac8b-1416e04d97d2"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="415" y="141" width="38" height="20" uuid="b0b46d72-6173-40f5-a43b-dc35c0feabea"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="415" y="121" width="38" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Age : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="415" y="141" width="38" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[ Sex : ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="453" y="101" width="102" height="20" uuid="80709569-6cb2-48e5-87fd-4e3f6a67dda2"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="453" y="121" width="102" height="20" uuid="459d2223-05c4-4fcc-91f8-ca163e8b73a9"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="453" y="141" width="102" height="20" uuid="a1b4f2e8-ca84-4fcb-b49f-7a4987834e0e"/>
+			</rectangle>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="83" y="101" width="126" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{adm_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="83" y="121" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pt_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="83" y="141" width="189" height="20" uuid="7c483841-968b-4e8f-8746-55ced5ab3f21"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{dr_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="327" y="101" width="88" height="20" uuid="7ab7e749-d8e6-4399-8aaf-dd63ec3ff9c4"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{bed_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="327" y="121" width="88" height="20" uuid="673fd90f-7aa0-44ab-9573-0eab034be108"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{address}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="327" y="141" width="88" height="20" uuid="e40a9c20-8fe9-4aae-b195-32a368c74203"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{dc_status}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="455" y="121" width="90" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{age}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement isPrintRepeatedValues="false" x="455" y="141" width="90" height="20" uuid="7e25f6f1-a513-41f3-91b1-24f29519b792"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{sex}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="453" y="101" width="100" height="20" uuid="c61abb01-e7f0-4164-954b-0f3a761e3c79"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="148" y="45" width="303" height="15" uuid="6148578b-2c94-4a8c-91fe-dd485515d16c"/>
+				<textElement textAlignment="Center">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="140" y="61" width="152" height="15" uuid="c0f2873b-1a1a-4447-b493-201c447bad29"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement x="61" y="0" width="75" height="75" uuid="e092cbcd-ce31-46f0-a3e7-0e132840d10a"/>
+				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_logo.png"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="295" y="61" width="225" height="15" uuid="26855d85-f625-4945-bb45-ebbf8b62e6a5"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<text><![CDATA[E-mail- sandamonhospital@gmail.com]]></text>
+			</staticText>
+			<image>
+				<reportElement x="141" y="0" width="385" height="45" uuid="498661b5-1f0a-4320-b0ec-c5ed7a9bebbe"/>
+				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_text.png"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="41" splitType="Stretch">
+			<textField>
+				<reportElement x="435" y="0" width="80" height="20" uuid="cea526fb-617a-4cf5-bf66-ccb63f4d233a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="515" y="0" width="40" height="20" uuid="f197d6b9-41e5-4fc0-8e72-7215dada4fe0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="140" y="21" width="172" height="20" uuid="e2ac5786-a2aa-4a02-b44f-b6ce3487fbb1">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="21" width="55" height="20" uuid="da7fdcf9-3541-4e0d-9bd6-d72d432cd308">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="312" y="21" width="81" height="20" uuid="5caf2287-ef10-4b7b-b8c2-66c86dc81492">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="393" y="21" width="81" height="20" uuid="be7ba7fc-a98d-4078-b241-31b077df93b4">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="474" y="21" width="81" height="20" uuid="8512074e-efb4-4a23-8c64-9b0316ed90bb"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="141" y="21" width="99" height="20" uuid="ca161483-8579-43f6-b71a-19ef06f443a7"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Description]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1" y="21" width="54" height="20" uuid="22350d01-31b1-42b1-8e71-0d13d70b625f">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="474" y="21" width="80" height="20" uuid="e4ac1e50-2dc2-4313-8df0-5354473ee4b3">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Balance ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="393" y="21" width="80" height="20" uuid="5f3ed090-d70f-4799-bf67-8a1f7905c132">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Payment ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="312" y="21" width="80" height="20" uuid="2fad0611-3ae5-4dfd-8f3e-ef5dce2d8979">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Expenses ]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="55" y="21" width="85" height="20" uuid="ae1a843b-97c1-4dd1-bda4-4e12023bac94">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="56" y="21" width="84" height="20" uuid="04535f9d-6ba8-4ef5-8997-c905c892ddbe">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Department]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<rectangle>
+				<reportElement x="140" y="0" width="172" height="20" uuid="ed87a0e8-c62c-4f4e-aeb5-b54d55a98539">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="55" height="20" uuid="f211e022-933c-4ff9-9016-3e998e2d37b3">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="312" y="0" width="81" height="20" uuid="3281e366-3866-4d3c-9746-6e7c1acf6aa3">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineStyle="Solid" lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="393" y="0" width="81" height="20" uuid="013adc59-6dc5-4eee-8edf-a5532ac2d44c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="474" y="0" width="81" height="20" uuid="f35008ce-dc98-458f-ae84-47183f2e6893"/>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<textField>
+				<reportElement x="142" y="1" width="170" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{desp}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd-MM-yyyy" isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="2" y="1" width="53" height="17" uuid="3848726e-0bf8-4a96-933d-e297ef76de0c"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_date}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="312" y="1" width="80" height="17" uuid="f6fef1cb-082f-48e5-8a1c-e460f8487a5f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="393" y="1" width="80" height="17" uuid="a6614e74-6649-4818-8600-c3de86c6e34b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{amount1}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="55" y="0" width="85" height="20" uuid="d48f1bee-47c6-466f-9af1-21c91dd2c397">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#666666"/>
+				</graphicElement>
+			</rectangle>
+			<textField isBlankWhenNull="true">
+				<reportElement isPrintRepeatedValues="false" x="56" y="1" width="82" height="17" uuid="f98525a6-374c-4bd2-bd0a-94b7fcb704dd">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_type}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

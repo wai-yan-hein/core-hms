@@ -843,6 +843,10 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="butRemove" min="-2" max="-2" attributes="0"/>
                       </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="chkCloseBill" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -861,7 +865,9 @@
                       <Component id="butRemove" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="txtPrice" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace min="0" pref="88" max="32767" attributes="0"/>
+                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                  <Component id="chkCloseBill" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="0" pref="54" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -905,6 +911,11 @@
         <Component class="javax.swing.JFormattedTextField" name="txtPrice">
           <Properties>
             <Property name="editable" type="boolean" value="false"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="chkCloseBill">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Close Bill"/>
           </Properties>
         </Component>
       </SubComponents>
