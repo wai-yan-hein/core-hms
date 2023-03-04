@@ -30,6 +30,9 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +50,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 
 /**
@@ -585,7 +592,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                                 dao.save(traderPayHis);
 
                                 //For upload to account
-                                uploadToAccount(traderPayHis);
+                                uploadToAccount(traderPayHis.getPaymentId());
 
                                 model.remove(selectRow);
                                 selectRow = -1;
@@ -607,7 +614,34 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         }
     };
 
-    private void uploadToAccount(TraderPayHis tph) {
+    private void uploadToAccount(Integer vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update payment_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(TraderPayHis tph) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -660,7 +694,7 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                 }
             }
         }
-    }
+    }*/
 
     private void actionMapping() {
         //F8 event on tblSale

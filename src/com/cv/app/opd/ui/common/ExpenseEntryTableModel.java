@@ -14,6 +14,9 @@ import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +24,10 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 
 /**
@@ -276,7 +283,34 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
         }
     }
 
-    private void uploadToAccount(long vouNo) {
+    private void uploadToAccount(Long vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update gen_expense set intg_upd_status = null where vou_no = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(long vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -301,7 +335,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                 log.error("Connection error : " + vouNo);
             }
         }
-    }
+    }*/
 
     private void updateOption(VGenExpense ge) {
         ExpenseType et = ge.getExpType();

@@ -379,6 +379,7 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
 
     private Map<String, Object> getBillTranListParams() {
         Map<String, Object> params = new HashMap();
+        params.put("prm_compName", Util1.getPropValue("report.company.name"));
         params.put("prm_fDate", DateUtil.toDateStrMYSQL(txtFrom.getText()));
         params.put("prm_tDate", DateUtil.toDateStrMYSQL(txtTo.getText()));
         params.put("data_date",

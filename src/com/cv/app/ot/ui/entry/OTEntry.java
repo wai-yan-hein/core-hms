@@ -52,6 +52,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -73,6 +76,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.josql.Query;
 import org.josql.QueryExecutionException;
@@ -249,10 +256,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 if (currVou.getPatient() != null) {
                     desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                 }
-                uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                         currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), desp);
-
+                        currVou.getPaid(), currVou.getTaxA(), desp);*/
+                uploadToAccount(currVou.getOpdInvId());
                 //Paid check
                 try {
                     //double vouBalance = NumberUtil.NZero(currVou.getVouBalance());
@@ -383,9 +390,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     //dao.save(currVou);
                     String vouNo = currVou.getOpdInvId();
                     dao.execSql("update ot_his set deleted = true, intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
-                    uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                    /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                             currVou.getVouBalance(), currVou.getDiscountA(),
-                            currVou.getPaid(), currVou.getTaxA(), "");
+                            currVou.getPaid(), currVou.getTaxA(), "");*/
+                    uploadToAccount(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("delete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
@@ -456,9 +464,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
-                uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                         currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), "");
+                        currVou.getPaid(), currVou.getTaxA(), "");*/
+                uploadToAccount(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -613,9 +622,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         if (currVou.getPatient() != null) {
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
-                        uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
+                        /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
                                 currVou.getVouBalance(), currVou.getDiscountA(),
-                                currVou.getPaid(), currVou.getTaxA(), desp);
+                                currVou.getPaid(), currVou.getTaxA(), desp);*/
+                        uploadToAccount(currVou.getOpdInvId());
 
                     }
 
@@ -1781,7 +1791,34 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
     }
 
-    private void uploadToAccount(String vouNo, boolean isDeleted,
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(String vouNo, boolean isDeleted,
             Double balance, Double disc, Double paid, Double tax, String desp) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
@@ -1822,7 +1859,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 log.error("Connection error : " + vouNo);
             }
         }
-    }
+    }*/
 
     private void deleteDetail() {
         String deleteSQL = "delete from ot_doctor_fee where ot_detail_id in ("

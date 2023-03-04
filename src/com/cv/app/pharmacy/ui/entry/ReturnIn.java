@@ -30,6 +30,7 @@ import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.RetInTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MarchantSearch;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.ReturnInItemSearchDialog;
@@ -51,6 +52,9 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import javax.jms.MapMessage;
 import javax.swing.*;
@@ -58,6 +62,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -794,7 +802,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 deleteDetail();
                 updateVouTotal(currRetIn.getRetInId());
                 //For upload to account
-                uploadToAccount(currRetIn);
+                uploadToAccount(currRetIn.getRetInId());
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
@@ -874,7 +882,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 try {
                     dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_id = '" + vouNo + "'");
                     //For upload to account
-                    uploadToAccount(currRetIn);
+                    uploadToAccount(currRetIn.getRetInId());
                 } catch (Exception ex) {
                     log.error("delete error : " + ex.getMessage());
                 } finally {
@@ -936,7 +944,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         deleteDetail();
                         updateVouTotal(currRetIn.getRetInId());
                         //For upload to account
-                        uploadToAccount(currRetIn);
+                        uploadToAccount(currRetIn.getRetInId());
 
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
@@ -1494,7 +1502,34 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         }
     };
 
-    private void uploadToAccount(RetInHis rih) {
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(RetInHis rih) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -1509,28 +1544,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         msg.setString("program", Global.programId);
                         msg.setString("entity", "RETURNIN");
                         msg.setString("VOUCHER-NO", rih.getRetInId());
-                        /*msg.setString("remark", rih.getRemark());
-                        msg.setString("cusId", rih.getCustomer().getAccountId());
-                        msg.setBoolean("deleted", rih.isDeleted());
-                        msg.setString("retInDate", DateUtil.toDateStr(rih.getRetInDate(), "yyyy-MM-dd"));
-                        //msg.setDouble("vouTotal", rih.getVouTotal());
-                        msg.setDouble("vouTotal", rih.getBalance());
-                        msg.setDouble("payment", rih.getPaid());
-                        msg.setString("currency", rih.getCurrency().getCurrencyAccId());
-                        if (rih.getCustomer().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", rih.getCustomer().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }*/
                         msg.setString("queueName", "INVENTORY");
-                        /*msg.setString("dept", "-");
-                        if (rih.getCustomer().getTraderGroup() != null) {
-                            if (rih.getCustomer().getTraderGroup().getDeptId() != null) {
-                                if (!rih.getCustomer().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", rih.getCustomer().getTraderGroup().getDeptId().trim());
-                                }
-                            }
-                        }*/
                         mq.sendMessage(Global.queueName, msg);
                     } catch (Exception ex) {
                         log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + rih.getRetInId() + " - " + ex);
@@ -1538,7 +1552,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 }
             }
         }
-    }
+    }*/
 
     private void setEditStatus(String invId) {
         //canEdit

@@ -93,6 +93,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -113,6 +116,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.springframework.beans.BeanUtils;
@@ -2349,7 +2356,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
 
                 //Upload to Account
-                uploadToAccount(currSaleVou);
+                uploadToAccount(currSaleVou.getSaleInvId());
                 log.error("save1() after uploadToAccount : " + currSaleVou.getSaleInvId());
                 clear();
 
@@ -2515,7 +2522,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         }
 
                         //Upload to Account
-                        uploadToAccount(currSaleVou);
+                        uploadToAccount(currSaleVou.getSaleInvId());
 
                         clear();
 
@@ -2617,7 +2624,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     dao.close();
                 }
                 //Upload to Account
-                uploadToAccount(currSaleVou);
+                uploadToAccount(currSaleVou.getSaleInvId());
                 log.error("save1() after uploadToAccount : " + currSaleVou.getSaleInvId());
                 if (!Util1.getPropValue("system.app.usage.type").equals("School")
                         || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2695,7 +2702,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         dao.save(currSaleVou);
 
                         //Upload to Account
-                        uploadToAccount(currSaleVou);
+                        uploadToAccount(currSaleVou.getSaleInvId());
 
                         if (!Util1.getPropValue("system.app.usage.type").equals("School")
                                 || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2977,7 +2984,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 deleteDetail();
                                 updateVouTotal(currSaleVou.getSaleInvId());
                                 //Upload to Account
-                                uploadToAccount(currSaleVou);
+                                uploadToAccount(currSaleVou.getSaleInvId());
                                 log.error("print() after uploadToAccount : " + currSaleVou.getSaleInvId());
                             }
                         }
@@ -4171,7 +4178,34 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     }
 
-    private void uploadToAccount(SaleHis sh) {
+    private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+
+    /*private void uploadToAccount(SaleHis sh) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
@@ -4186,30 +4220,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         msg.setString("program", Global.programId);
                         msg.setString("entity", "SALE");
                         msg.setString("VOUCHER-NO", sh.getSaleInvId());
-                        /*msg.setString("remark", sh.getRemark());
-                        msg.setString("cusId", sh.getCustomerId().getAccountId());
-                        msg.setString("saleDate", DateUtil.toDateStr(sh.getSaleDate(), "yyyy-MM-dd"));
-                        msg.setBoolean("deleted", sh.getDeleted());
-                        //msg.setDouble("vouTotal", sh.getVouTotal() + sh.getTtlExpenseIn() + sh.getExpenseTotal());
-                        msg.setDouble("vouTotal", sh.getBalance());
-                        msg.setDouble("discount", sh.getDiscount());
-                        msg.setDouble("payment", sh.getPaid());
-                        msg.setDouble("tax", sh.getTaxAmt());
-                        msg.setString("currency", sh.getCurrencyId().getCurrencyAccId());
-                        if (sh.getCustomerId().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", sh.getCustomerId().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }*/
                         msg.setString("queueName", "INVENTORY");
-                        /*msg.setString("dept", "-");
-                        if (sh.getCustomerId().getTraderGroup() != null) {
-                            if (sh.getCustomerId().getTraderGroup().getDeptId() != null) {
-                                if (!sh.getCustomerId().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", sh.getCustomerId().getTraderGroup().getDeptId().trim());
-                                }
-                            }
-                        }*/
                         mq.sendMessage(Global.queueName, msg);
                         log.info("uploadToAccount: Sale : " + sh.getSaleInvId());
                     } catch (JMSException ex) {
@@ -4222,7 +4233,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 log.error("Connection error : " + sh.getSaleInvId());
             }
         }
-    }
+    }*/
 
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {

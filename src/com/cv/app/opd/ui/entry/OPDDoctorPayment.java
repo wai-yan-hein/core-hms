@@ -27,6 +27,9 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +38,10 @@ import java.util.List;
 import java.util.Map;
 import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
@@ -190,7 +197,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
         switch (et.getSysCode()) {
             case "OPDCF": //CF Fee Payment
                 if (et.getNeedDr()) {
-                    strSql = strSql + " and doctor_id = '" + selectedDrId
+                    strSql = strSql + " and ifnull(refer_doctor_id,doctor_id) = '" + selectedDrId
                             + "' and ifnull(fee1_id,'')=''";
                 } else {
                     strSql = strSql + " and ifnull(fee1_id,'')=''";
@@ -386,7 +393,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + "JOIN opd_details_his odh on oh.opd_inv_id = odh.vou_no "
                                 + "JOIN opd_service os on odh.service_id = os.service_id "
                                 + "set fee1_id = '?' "
-                                + "where oh.deleted = 0 and oh.doctor_id = '" + selectedDrId + "'\n"
+                                + "where oh.deleted = 0 and ifnull(odh.refer_doctor_id,oh.doctor_id) = '" + selectedDrId + "'\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and ifnull(fee1_id,'')='' ";
@@ -845,6 +852,33 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = "http://example.com/api/users/" + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
+                    }
+                }
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update gen_expense set intg_upd_status = null where vou_no = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+
+        }
+    }
+    
+    /*private void uploadToAccount(String vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
             if (!Global.mqConnection.isStatus()) {
                 String mqUrl = Util1.getPropValue("system.mqserver.url");
                 Global.mqConnection = new ActiveMQConnection(mqUrl);
@@ -867,7 +901,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                 log.error("Connection error : " + vouNo);
             }
         }
-    }
+    }*/
 
     private void genVouNo() {
         String vouNo = vouEngine.getVouNo();
