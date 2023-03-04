@@ -1048,8 +1048,12 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         boolean status = true;
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
         Patient pt = currRetIn.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
-
+        String admissionNo = "-";
+        
+        if(pt != null){
+            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        }
+        
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
             key.setAmsNo(admissionNo);
@@ -1124,7 +1128,8 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     "No payment type.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboPayment.requestFocusInWindow();
-        } else if (vouBalance != 0 && currRetIn.getPatient() == null) {
+        } else if (vouBalance != 0 && currRetIn.getPatient() == null && currRetIn.getCustomer() == null
+                && Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;

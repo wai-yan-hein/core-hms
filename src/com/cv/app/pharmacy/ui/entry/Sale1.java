@@ -2109,30 +2109,27 @@ public class Sale1 extends javax.swing.JPanel implements SelectionObserver, Form
     }
 
     private void addExpenseTableModelListener() {
-        tblExpense.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                int column = e.getColumn();
-
-                if (column >= 0) {
-                    //Need to add action for updating table
-                    switch (column) {
-                        case 2: //Amt In
-                        case 3: //Amt Out
-                            /*Double expTotal = new Double(0);
-                             Double expTtlIn = new Double(0);
-                            
-                             for (SaleExpense exp : listExpense) {
-                             expTotal += NumberUtil.NZero(exp.getExpAmount());
-                             expTtlIn += NumberUtil.NZero(exp.getExpenseIn());
-                             }
-
-                             txtTotalExpense.setValue(expTotal);
-                             txtTtlExpIn.setValue(expTtlIn);*/
-
-                            calculateTotalAmount();
-                            break;
-                    }
+        tblExpense.getModel().addTableModelListener((TableModelEvent e) -> {
+            int column = e.getColumn();
+            
+            if (column >= 0) {
+                //Need to add action for updating table
+                switch (column) {
+                    case 2: //Amt In
+                    case 3: //Amt Out
+                        /*Double expTotal = new Double(0);
+                        Double expTtlIn = new Double(0);
+                        
+                        for (SaleExpense exp : listExpense) {
+                        expTotal += NumberUtil.NZero(exp.getExpAmount());
+                        expTtlIn += NumberUtil.NZero(exp.getExpenseIn());
+                        }
+                        
+                        txtTotalExpense.setValue(expTotal);
+                        txtTtlExpIn.setValue(expTtlIn);*/
+                        
+                        calculateTotalAmount();
+                        break;
                 }
             }
         });

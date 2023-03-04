@@ -50,6 +50,7 @@ public class TransferTableModel extends AbstractTableModel {
     private String deletedList;
     private StockList stockList;
     private Location location;
+    private boolean canEdit = false;
 
     public TransferTableModel(List<TransferDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo, SelectionObserver observer) {
@@ -71,8 +72,12 @@ public class TransferTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return !(column == 1 || column == 2 || column == 3 || column == 7
-                || column == 9 || column == 4 || column == 6 || column == 8);
+        if (canEdit) {
+            return !(column == 1 || column == 2 || column == 3 || column == 7
+                    || column == 9 || column == 4 || column == 6 || column == 8);
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -501,7 +506,7 @@ public class TransferTableModel extends AbstractTableModel {
                     } else {
                         key = med.getMedId() + "-" + unitCode;
                         float qtySmall = medUp.getQtyInSmallest(key);
-                        double cost =rs.getDouble("pur_unit_cost");
+                        double cost = rs.getDouble("pur_unit_cost");
                         Double smallPrice = cost / qtySmall;
                         key = med.getMedId() + "-" + tdh.getUnit().getItemUnitCode();
                         tdh.setPrice(smallPrice * medUp.getQtyInSmallest(key));
@@ -631,5 +636,9 @@ public class TransferTableModel extends AbstractTableModel {
 
     public void setLocation(Location location) {
         this.location = location;
+    }
+
+    public void setCanEdit(boolean canEdit) {
+        this.canEdit = canEdit;
     }
 }

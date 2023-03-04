@@ -440,7 +440,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     if (currVou.getDcStatus() != null) {
                         String regNo = currVou.getPatient().getRegNo();
                         String admNo = currVou.getAdmissionNo();
-                        String sql = "update admission set dc_status = null where ams_no = '" + admNo + "'";
+                        String sql = "update admission set dc_status = null, dc_datetime = null where ams_no = '" + admNo + "'";
                         String sql1 = "update patient_detail set admission_no='" + admNo + "' where reg_no='" + regNo + "'";
                         dao.execSql(sql, sql1);
                     }
@@ -1217,6 +1217,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 cboDCStatus.setSelectedItem(currVou.getDcStatus());
                 cboDiagnosis.setSelectedItem(currVou.getDiagnosis());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
+                log.error("Err : 1");
                 if (txtAdmissionNo.getText() != null) {
                     if (!txtAdmissionNo.getText().trim().isEmpty()) {
                         AdmissionKey key = new AdmissionKey();
@@ -1233,6 +1234,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         }
                     }
                 }
+                log.error("Err : 2");
                 cboAgeRange.setSelectedItem(currVou.getAgeRange());
                 txtPkgName.setText(currVou.getPkgName());
                 txtPkgPrice.setValue(currVou.getPkgPrice());
@@ -1256,7 +1258,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     txtDoctorNo.setText(currVou.getDoctor().getDoctorId());
                     txtDoctorName.setText(currVou.getDoctor().getDoctorName());
                 }
-
+                log.error("Err : 3");
                 txtVouTotal.setValue(currVou.getVouTotal());
                 txtDiscP.setValue(currVou.getDiscountP());
                 txtDiscA.setValue(currVou.getDiscountA());
@@ -1269,6 +1271,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 tableModel.setCanEdit(canEdit);
                 tableModel.setVouStatus("EDIT");
                 tableModel.setVouDate(txtDate.getText());
+                log.error("Err : 4");
                 //For Package
                 if (currVou.getPkgId() != null) {
                     calcPackageExtraFees(currVou);
@@ -1280,6 +1283,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (Util1.getPropValue("system.dc.link.amt").equals("Y")) {
                     linkAmount();
                 }
+                log.error("Err : 5");
             } catch (Exception ex) {
                 log.error("DCVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -1896,7 +1900,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     Date vouDate = DateUtil.toDate(txtDate.getText());
                     Date admDate = DateUtil.toDate(DateUtil.toDateStr(adm.getAmsDate(), "dd/MM/yyyy"));
                     Date dcDate = adm.getDcDateTime();
-
                     if (vouDate.compareTo(admDate) < 0) {
                         status = false;
                     }
@@ -1915,12 +1918,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
 
             if (!status) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check vou date with admission date.",
                         "Invalid Vou Date", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditDCCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {

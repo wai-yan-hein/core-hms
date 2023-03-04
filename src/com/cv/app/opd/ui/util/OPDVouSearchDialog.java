@@ -376,7 +376,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         vouFilter.setToDate(DateUtil.toDate(txtTo.getText()));
 
         if (!txtRemark.getText().isEmpty()) {
-            strSql = strSql + " and sh.remark = '" + txtRemark.getText() + "'";
+            strSql = strSql + " and sh.remark like '%" + txtRemark.getText() + "%'";
             vouFilter.setRemark(txtRemark.getText());
         } else {
             vouFilter.setRemark(null);

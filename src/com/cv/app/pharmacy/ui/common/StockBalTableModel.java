@@ -234,7 +234,7 @@ public class StockBalTableModel extends AbstractTableModel {
             focQtySmall = medUp.getQtyInSmallest(focKey);
         }
         
-        balance = NumberUtil.NZeroFloat(record.getQtySmallest())
+        balance = NumberUtil.NZeroFloat(record.getBalance())
                 - ((NumberUtil.NZeroFloat(record.getUnitQty()) * demanQtySmall)
                 + (NumberUtil.NZeroFloat(record.getFocUnitQty()) * focQtySmall));
         

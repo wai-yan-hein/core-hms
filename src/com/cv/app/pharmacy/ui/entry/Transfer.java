@@ -88,6 +88,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     private int mouseClick = 2;
     private String strOption = "-";
     private boolean isBind = false;
+    private boolean canEdit = true;
 
     /**
      * Creates new form Sale
@@ -113,6 +114,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         addNewRow();
         assignLocation();
         tblTransferModel.setStockList(stockList);
+        tblTransferModel.setCanEdit(canEdit);
         //applyFocusPolicy();
         //AddFocusMoveKey();
         //this.setFocusTraversalPolicy(focusPolicy);
@@ -232,6 +234,33 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         }
     }
 
+    private void setEditStatus(String tranDate) {
+        if (!Util1.hashPrivilege("CanEditTranCheckPoint")) {
+
+            try {
+                List list = dao.findAllSQLQuery(
+                        "select * from c_bk_sale_his where date(sale_date) = '" + tranDate + "'");
+                if (list != null) {
+                    canEdit = list.isEmpty();
+                } else {
+                    canEdit = true;
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus Check BK data : " + tranDate + " : " + ex.toString());
+            } finally {
+                dao.close();
+            }
+        } else {
+            canEdit = true;
+        }
+    }
+
+    private void applySecurityPolicy() {
+        cboFromLocation.setEnabled(canEdit);
+        cboToLocation.setEnabled(canEdit);
+        txtRemark.setEnabled(canEdit);
+    }
+
     private void genVouNo() {
         try {
             String vouNo = vouEngine.getVouNo();
@@ -259,6 +288,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void clear() {
+        canEdit = true;
         try {
             if (tblTransfer.getCellEditor() != null) {
                 tblTransfer.getCellEditor().stopCellEditing();
@@ -287,6 +317,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         //setFocus();
         txtTotalItem.setText("0");
         System.gc();
+        applySecurityPolicy();
     }
 
     private void initCombo() {
@@ -386,29 +417,34 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     private Action actionItemDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            TransferDetailHis transferdh;
-            int yes_no = -1;
+            if (canEdit) {
+                TransferDetailHis transferdh;
+                int yes_no = -1;
 
-            if (tblTransfer.getSelectedRow() >= 0) {
-                transferdh = listDetail.get(tblTransfer.getSelectedRow());
+                if (tblTransfer.getSelectedRow() >= 0) {
+                    transferdh = listDetail.get(tblTransfer.getSelectedRow());
 
-                if (transferdh.getMedicineId().getMedId() != null) {
-                    try {
-                        yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
-                                "Sale item delete", JOptionPane.YES_NO_OPTION);
+                    if (transferdh.getMedicineId().getMedId() != null) {
+                        try {
+                            yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
+                                    "Sale item delete", JOptionPane.YES_NO_OPTION);
 
-                        if (tblTransfer.getCellEditor() != null) {
-                            tblTransfer.getCellEditor().stopCellEditing();
+                            if (tblTransfer.getCellEditor() != null) {
+                                tblTransfer.getCellEditor().stopCellEditing();
+                            }
+                        } catch (HeadlessException ex) {
+                            log.error(ex.toString());
                         }
-                    } catch (HeadlessException ex) {
-                        log.error(ex.toString());
-                    }
 
-                    if (yes_no == 0) {
-                        tblTransferModel.delete(tblTransfer.getSelectedRow());
-                        txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
+                        if (yes_no == 0) {
+                            tblTransferModel.delete(tblTransfer.getSelectedRow());
+                            txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
+                        }
                     }
                 }
+            } else {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot entry voucher in back date.",
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
             }
         }
     };// </editor-fold>
@@ -543,6 +579,10 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                 }
                 txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
                 dao.close();
+
+                setEditStatus(DateUtil.toDateStrMYSQL(txtTranDate.getText()));
+                applySecurityPolicy();
+                tblTransferModel.setCanEdit(canEdit);
             } catch (Exception ex) {
                 log.error("TransferVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             }
@@ -711,25 +751,27 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         if (isValidEntry() && tblTransferModel.isValidEntry()) {
             //removeEmptyRow();
             try {
-                dao.open();
-                dao.beginTran();
-                List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
-                String vouNo = currTransfer.getTranVouId();
-                for (TransferDetailHis tdh : listTmp) {
-                    tdh.setVouNo(vouNo);
-                    if (tdh.getTranDetailId() == null) {
-                        tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                if (canEdit) {
+                    dao.open();
+                    dao.beginTran();
+                    List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
+                    String vouNo = currTransfer.getTranVouId();
+                    for (TransferDetailHis tdh : listTmp) {
+                        tdh.setVouNo(vouNo);
+                        if (tdh.getTranDetailId() == null) {
+                            tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                        }
+                        dao.save1(tdh);
                     }
-                    dao.save1(tdh);
-                }
-                currTransfer.setListDetail(listTmp);
-                dao.save1(currTransfer);
-                dao.commit();
+                    currTransfer.setListDetail(listTmp);
+                    dao.save1(currTransfer);
+                    dao.commit();
 
-                if (lblStatus.getText().equals("NEW")) {
-                    vouEngine.updateVouNo();
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.updateVouNo();
+                    }
+                    deleteDetail();
                 }
-                deleteDetail();
                 newForm();
             } catch (Exception ex) {
                 dao.rollBack();
@@ -807,26 +849,29 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
         if (isValidEntry() && tblTransferModel.isValidEntry()) {
             //removeEmptyRow();
             try {
-                dao.open();
-                dao.beginTran();
-                List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
-                String vouNo = currTransfer.getTranVouId();
-                for (TransferDetailHis tdh : listTmp) {
-                    tdh.setVouNo(vouNo);
-                    if (tdh.getTranDetailId() == null) {
-                        tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                if (canEdit) {
+                    dao.open();
+                    dao.beginTran();
+                    List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
+                    String vouNo = currTransfer.getTranVouId();
+                    for (TransferDetailHis tdh : listTmp) {
+                        tdh.setVouNo(vouNo);
+                        if (tdh.getTranDetailId() == null) {
+                            tdh.setTranDetailId(vouNo + "-" + tdh.getUniqueId().toString());
+                        }
+                        dao.save1(tdh);
                     }
-                    dao.save1(tdh);
-                }
-                currTransfer.setListDetail(listTmp);
-                dao.save1(currTransfer);
-                dao.commit();
+                    currTransfer.setListDetail(listTmp);
+                    dao.save1(currTransfer);
+                    dao.commit();
 
-                if (lblStatus.getText().equals("NEW")) {
-                    vouEngine.updateVouNo();
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.updateVouNo();
+                    }
+                    deleteDetail();
                 }
                 String strPrintVouNo = currTransfer.getTranVouId();
-                deleteDetail();
+
                 newForm();
 
                 String reportPath = Util1.getAppWorkFolder()
@@ -1496,18 +1541,25 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtTranDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtTranDateMouseClicked
-        if (evt.getClickCount() == mouseClick) {
-            String strDate = DateUtil.getDateDialogStr();
 
-            if (strDate != null) {
-                txtTranDate.setText(strDate);
+        if (canEdit) {
+            if (evt.getClickCount() == mouseClick) {
+                String strDate = DateUtil.getDateDialogStr();
 
-                if (lblStatus.getText().equals("NEW")) {
-                    vouEngine.setPeriod(DateUtil.getPeriod(txtTranDate.getText()));
-                    genVouNo();
+                if (strDate != null) {
+                    txtTranDate.setText(strDate);
+
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.setPeriod(DateUtil.getPeriod(txtTranDate.getText()));
+                        genVouNo();
+                    }
                 }
             }
+        } else {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot entry voucher in back date.",
+                    "Check Point", JOptionPane.ERROR_MESSAGE);
         }
+
     }//GEN-LAST:event_txtTranDateMouseClicked
 
     private void butPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPrintActionPerformed

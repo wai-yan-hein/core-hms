@@ -255,7 +255,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     dao.close();
                 }
                 log.info("Backup end. : " + new Date());
-                
+
                 try {
                     log.info("Save start. : " + new Date());
                     if (lblStatus.getText().equals("NEW")) {
@@ -857,7 +857,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());
             ReportUtil.printJasper(jp, printerName);
         }
-
         newForm();
     }
 
@@ -1201,7 +1200,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         double tax = NumberUtil.NZero(txtTaxA.getValue());
         double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
         double paid = NumberUtil.NZero(txtPaid.getValue());
-        
+
         if (cboPaymentType.getSelectedItem() != null) {
             PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
 
@@ -1229,7 +1228,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private boolean isValidEntry() {
         boolean status = true;
         Patient pt = currVou.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        String admissionNo = "-";
+
+        if (pt != null) {
+            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        }
 
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
@@ -1267,7 +1270,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditOPDCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1288,7 +1291,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             tblService.getCellEditor().stopCellEditing();
         }
 
-        
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTtl = tableModel.getTotal();
         if (vouTtl != modelTtl) {
@@ -1935,19 +1937,22 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 return;
             }
 
-            if (canEdit) {
-                try {
-                    List list = dao.findAllSQLQuery(
-                            "select * from c_bk_opd_his where opd_inv_id = '" + invId + "'");
-                    if (list != null) {
-                        canEdit = list.isEmpty();
-                    } else {
-                        canEdit = true;
+            String oneDayEdit = Util1.getPropValue("system.one.day.edit");
+            if (oneDayEdit.equals("Y")) {
+                if (canEdit) {
+                    try {
+                        List list = dao.findAllSQLQuery(
+                                "select * from c_bk_opd_his where opd_inv_id = '" + invId + "'");
+                        if (list != null) {
+                            canEdit = list.isEmpty();
+                        } else {
+                            canEdit = true;
+                        }
+                    } catch (Exception ex) {
+                        log.error("setEditStatus Check BK data : " + invId + " : " + ex.toString());
+                    } finally {
+                        dao.close();
                     }
-                } catch (Exception ex) {
-                    log.error("setEditStatus Check BK data : " + invId + " : " + ex.toString());
-                } finally {
-                    dao.close();
                 }
             }
         } else {
@@ -1971,7 +1976,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 }
             }
 
-            String oneDayEdit = Util1.getPropValue("system.one.day.edit");
+            /*String oneDayEdit = Util1.getPropValue("system.one.day.edit");
             if (oneDayEdit.equals("Y")) {
                 if (canEdit) {
                     try {
@@ -1988,7 +1993,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         dao.close();
                     }
                 }
-            }
+            }*/
             //canEdit = true;
         }
     }

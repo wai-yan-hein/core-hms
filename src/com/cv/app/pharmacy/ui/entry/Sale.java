@@ -3330,16 +3330,20 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double totalAmount = saleTableModel.getTotalAmount();
         Patient pt = currSaleVou.getPatientId();
-        
+
         if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-            
+
             String admissionNo = "-";
             if (pt != null) {
                 admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
             } else {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check voud date with admission date.",
-                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
-                return false;
+                if (Util1.getPropValue("system.sale.patientmusthave").equals("Y")) {
+                    if (currSaleVou.getCustomerId() == null) {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Please enter registration number.",
+                                "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
             }
 
             if (!admissionNo.equals("-")) {
@@ -3445,7 +3449,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     "No vou status.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboVouStatus.requestFocusInWindow();
-        } else if (vouBal != 0 && currSaleVou.getPatientId() == null
+        } else if (vouBal != 0 && currSaleVou.getPatientId() == null && currSaleVou.getCustomerId() == null
                 && Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);

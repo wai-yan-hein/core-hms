@@ -170,7 +170,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         } catch (Exception ex) {
 
         }
-        String deleteSQL;
+        //String deleteSQL;
         canEdit = true;
         //Clear text box.
         txtVouNo.setText("");
@@ -190,10 +190,10 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
         //All detail section need to explicity delete
         //because of save function only delete to join table
-        deleteSQL = retOutTableModel.getDeleteSql();
+        /*deleteSQL = retOutTableModel.getDeleteSql();
         if (deleteSQL != null) {
             dao.execSql(deleteSQL);
-        }
+        }*/
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
@@ -229,7 +229,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         } finally {
             dao.close();
         }
-        
+
         return null;
     }
 
@@ -667,6 +667,11 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 dao.save1(currRetOut);
                 dao.commit();
 
+                String deleteSQL = retOutTableModel.getDeleteSql();
+                if (deleteSQL != null) {
+                    dao.execSql(deleteSQL);
+                }
+
                 //For upload to account
                 uploadToAccount(currRetOut);
 
@@ -731,8 +736,8 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
             if (yes_no == 0) {
                 currRetOut.setDeleted(true);
                 currRetOut.setIntgUpdStatus(null);
-                
-                try{
+
+                try {
                     dao.execProc("bkreturnout",
                             currRetOut.getRetOutId(),
                             Global.loginUser.getUserId(),
@@ -740,12 +745,12 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                             currRetOut.getVouTotal().toString(),
                             currRetOut.getPaid().toString(),
                             currRetOut.getBalance().toString());
-                }catch(Exception ex){
+                } catch (Exception ex) {
                     log.error("bkreturnout : " + ex.getMessage());
-                }finally{
+                } finally {
                     dao.close();
                 }
-                
+
                 String vouNo = currRetOut.getRetOutId();
                 try {
                     dao.execSql("update ret_out_his set deleted = true, intg_upd_status = null where ret_out_id = '" + vouNo + "'");
@@ -754,11 +759,11 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 } finally {
                     dao.close();
                 }
-                
+
                 //For upload to account
                 uploadToAccount(currRetOut);
                 newForm();
-                
+
                 //save();
             }
         }
@@ -1236,7 +1241,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 + " and o.tranInvId = '" + invId + "'");*/
         if (!Util1.hashPrivilege("CanEditReturnOutCheckPoint")) {
             List list = dao.findAllSQLQuery(
-                    "select * from c_bk_sale_his where sale_inv_id = '" + invId + "'");
+                    "select * from c_bk_ret_out_his where ret_out_id = '" + invId + "'");
             if (list != null) {
                 canEdit = list.isEmpty();
             } else {

@@ -225,6 +225,7 @@ public class RetOutTableModel extends AbstractTableModel {
 
         if (column != 0) {
             fireTableCellUpdated(row, column);
+            fireTableCellUpdated(row, 7);
         }
     }
 
@@ -338,7 +339,7 @@ public class RetOutTableModel extends AbstractTableModel {
         boolean status = true;
         int row = maxUniqueId;
         int recordCnt = 0;
-        
+
         if (listDetail != null) {
             for (RetOutDetailHis record : listDetail) {
                 if (record.getMedicineId().getMedId() != null) {
@@ -352,8 +353,10 @@ public class RetOutTableModel extends AbstractTableModel {
                                 "Minus or zero qty.", JOptionPane.ERROR_MESSAGE);
                         status = false;
                     } else {
-                        record.setUniqueId(row + 1);
-                        row++;
+                        if (NumberUtil.NZeroInt(record.getUniqueId()) == 0) {
+                            record.setUniqueId(row + 1);
+                            row++;
+                        }
                     }
                 }
             }

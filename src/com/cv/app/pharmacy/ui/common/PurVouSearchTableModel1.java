@@ -22,7 +22,7 @@ public class PurVouSearchTableModel1 extends AbstractTableModel {
     static Logger log = Logger.getLogger(PurVouSearchTableModel1.class.getName());
     private List<VoucherSearch> listPurHis = new ArrayList();
     private final String[] columnNames = {"Date", "Vou No", "Ref. Vou.",
-        "Supplier", "User", "V-Total", "Location"};
+        "Supplier", "User", "V-Total", "V-Balance", "Location"};
     private double ttlDisc;
     private double ttlPaid;
     private double ttlBalance;
@@ -52,7 +52,9 @@ public class PurVouSearchTableModel1 extends AbstractTableModel {
                 return String.class;
             case 5: //V-Total
                 return Double.class;
-            case 6: //Location
+            case 6: //V-Balance
+                return Double.class;
+            case 7: //Location
                 return String.class;
             default:
                 return Object.class;
@@ -92,7 +94,9 @@ public class PurVouSearchTableModel1 extends AbstractTableModel {
                     return ph.getUserName();
                 case 5: //V-Total
                     return NumberUtil.roundTo(NumberUtil.NZero(ph.getVouTotal()), 0);
-                case 6: //Location
+                case 6: //V-Balance
+                    return NumberUtil.roundTo(ph.getBalance(), 0);
+                case 7: //Location
                     return " " + ph.getLocation();
                 default:
                     return null;

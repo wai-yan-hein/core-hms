@@ -38,6 +38,7 @@ public class VPatientBillPayment implements Serializable {
     private String userShort;
     private boolean deleted;
     private Double discount;
+    private String admissionNo;
 
     @Id
     @Column(name = "id", unique = true, nullable = false)
@@ -184,6 +185,15 @@ public class VPatientBillPayment implements Serializable {
 
     public void setDiscount(Double discount) {
         this.discount = discount;
+    }
+
+    @Column(name="admission_no")
+    public String getAdmissionNo() {
+        return admissionNo;
+    }
+
+    public void setAdmissionNo(String admissionNo) {
+        this.admissionNo = admissionNo;
     }
 
 }

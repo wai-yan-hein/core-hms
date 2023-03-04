@@ -72,6 +72,7 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         initComponents();
         assignDate();
         initCombo();
+        cleanDeleteError();
         initTable();
         getSessionFilter();
         sorter = new TableRowSorter(tblSession.getModel());
@@ -91,6 +92,70 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
         }
     }
 
+    private void cleanDeleteError() {
+        try {
+            String toDeleteVou = getDeleteVou("select distinct sale_inv_id from sale_his where deleted = false and "
+                    + "not EXISTS (select * from sale_detail_his where vou_no = sale_inv_id)", "sale_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update sale_his set deleted = true, intg_upd_status = null where sale_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct ret_in_id from ret_in_his where deleted = false and "
+                    + "not EXISTS (select * from ret_in_detail_his where vou_no = ret_in_id)", "ret_in_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct opd_inv_id from opd_his where deleted = false and "
+                    + "not EXISTS (select * from opd_details_his where vou_no = opd_inv_id)", "opd_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update opd_his set deleted = true, intg_upd_status = null where opd_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select distinct ot_inv_id from ot_his where deleted = false and "
+                    + "not EXISTS (select * from ot_details_his where vou_no = ot_inv_id)", "ot_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update ot_his set deleted = true, intg_upd_status = null where ot_inv_id in (" + toDeleteVou + ")");
+            }
+            
+            toDeleteVou = getDeleteVou("select dc_inv_id from dc_his where deleted = false and "
+                    + "not EXISTS (select * from dc_details_his where vou_no = dc_inv_id)", "dc_inv_id");
+            if(!toDeleteVou.isEmpty()){
+                dao.execSql("update dc_his set deleted = true, intg_upd_status = null where dc_inv_id in (" + toDeleteVou + ")");
+            }
+        } catch (Exception ex) {
+            log.error("cleanDeleteError : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private String getDeleteVou(String strSql, String fieldName){
+        String toDeleteVou = "";
+        try{
+            ResultSet rs = dao.execSQL(strSql);
+            if(rs != null){
+                
+                
+                while(rs.next()){
+                    if(toDeleteVou.isEmpty()){
+                        toDeleteVou = "'" + rs.getString(fieldName) + "'";
+                    }else{
+                        toDeleteVou = toDeleteVou + ",'" + rs.getString(fieldName) + "'";
+                    }
+                }
+                
+                rs.close();
+            }
+        }catch(Exception ex){
+            log.error("getDeleteVou : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+        
+        return toDeleteVou;
+    }
+    
     private void getSessionFilter() {
         try {
             List<SessionFilter> listSF = dao.findAllHSQL("select o from SessionFilter o where o.key.progId = 'Pharmacy'");
