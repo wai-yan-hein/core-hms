@@ -193,6 +193,16 @@ public class Util1 {
         }
     }
 
+    public static int getIntegerOne(String str) {
+        if (str == null) {
+            return 1;
+        }
+        if (str.isEmpty()) {
+            return 1;
+        }
+        return Integer.parseInt(str);
+    }
+
     public static boolean isNullOrEmpty(Object obj) {
         return obj == null || obj.toString().isEmpty();
     }

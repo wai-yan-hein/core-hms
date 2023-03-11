@@ -713,11 +713,13 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             break;
             case "PatientList":
                 try {
+                txtAdmissionNo.setText(null);
+                txtBill.setText(null);
+                butOTID.setEnabled(true);
+                butAdmit.setEnabled(true);
                 Patient ptt = (Patient) selectObj;
-
                 currSaleVou.setPatientId(ptt);
                 currSaleVou.setAdmissionNo(ptt.getAdmissionNo());
-
                 if (ptt != null) {
                     if (ptt.getAdmissionNo() != null && !ptt.getAdmissionNo().equals("")) {
                         String priceType = Util1.getPropValue("system.sale.adm.price");
@@ -729,6 +731,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                     txtCusId.setText(ptt.getRegNo());
                     txtCusName.setText(ptt.getPatientName());
+                    txtAdmissionNo.setText(ptt.getAdmissionNo());
                     txtCreditLimit.setValue(0.0);
                     calculateTotalAmount();
                     if (ptt.getDoctor() != null) {
@@ -738,31 +741,21 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     } else {
                         txtDrCode.requestFocus();
                     }
-                    txtAdmissionNo.setText(ptt.getAdmissionNo());
-                    /*if (!Util1.getNullTo(ptt.getAdmissionNo(), "").trim().isEmpty()) {
-                            butAdmit.setEnabled(true);
-                        } else*/
-                    if (Util1.getNullTo(ptt.getAdmissionNo(), "").trim().isEmpty()) {
-                        butAdmit.setEnabled(true);
-                        cboPayment.setSelectedItem(ptCash);
-                    } else {
+                    if (!Util1.isNullOrEmpty(ptt.getAdmissionNo())) {
+                        cboPayment.setSelectedItem(ptCredit);
                         butAdmit.setEnabled(false);
-                        if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
-                            cboPayment.setSelectedItem(ptCredit);
-                        } else {
-                            cboPayment.setSelectedItem(ptCash);
-                        }
-                    }
-
-                    if (ptt.getOtId() != null) {
+                    } else if (!Util1.isNullOrEmpty(ptt.getOtId())) {
+                        cboPayment.setSelectedItem(ptCredit);
                         butOTID.setEnabled(false);
                         txtBill.setText(ptt.getOtId());
                     } else {
-                        butOTID.setEnabled(true);
-                        txtBill.setText(null);
+                        cboPayment.setSelectedItem(ptCash);
+
+                    }
+                    if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                        cboPayment.setSelectedItem(ptCash);
                     }
                     getPatientBill(ptt.getRegNo());
-
                     //Booking info
                     String regNo = ptt.getRegNo();
                     List<Booking> listBK = dao.findAllHSQL(
@@ -1136,6 +1129,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 txtTotalItem.setText(String.valueOf(listDetail.size()));
 
                 txtBill.setText(currSaleVou.getOtId());
+                cboPayment.setSelectedItem(ptCredit);
                 if (txtBill.getText() == null) {
                     butOTID.setEnabled(true);
                 } else if (!txtBill.getText().isEmpty()) {
@@ -1647,6 +1641,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void calculateTotalAmount() {
+
         double totalAmount = 0;
         double totalExp = 0;
         double totalExpIn = 0;
@@ -3219,7 +3214,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             params.put("compName", compName);
             params.put("prv_date", lblSaleLastBal.getText());
             //double prvBalance = NumberUtil.NZero(txtSaleLastBalance.getValue()) + NumberUtil.NZero(tranTableModel.getTotal());
-            params.put("prv_balance", Double.parseDouble(txtSaleLastBalance.getValue().toString()));
+            params.put("prv_balance", Double.valueOf(txtSaleLastBalance.getValue().toString()));
             params.put("tran_total", NumberUtil.NZero(tranTableModel.getTotal()));
             /*NumberUtil.NZero(txtCusLastBalance.getText()) -
              (NumberUtil.NZero(currSaleVou.getPaid())+
@@ -3308,11 +3303,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 } else {
                     if (Util1.getPropValue("report.file.type").equals("con")) {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                        ReportUtil.printJasper(jp, printerName);
+                        int count = Util1.getIntegerOne(Util1.getPropValue("system.sale.print.count"));
                         if (Util1.getPropValue("system.pharmacy.sale.print.double").equals("Y")) {
-                            params.put("user_desp", "Receive Voucher, Thanks You.");
-                            JasperPrint jp1 = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                            ReportUtil.printJasper(jp1, printerName);
+                            count = 2;
+                        }
+                        for (int i = 0; i < count; i++) {
+                            ReportUtil.printJasper(jp, printerName);
                         }
                     } else {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, listDetail);
@@ -4181,7 +4177,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = "http://example.com/api/users/" + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
@@ -4234,7 +4230,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
         }
     }*/
-
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
             @Override
@@ -4301,7 +4296,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -5077,12 +5072,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         lblDueRemark.setForeground(new java.awt.Color(255, 0, 0));
         lblDueRemark.setText("This Cust have Due Vou");
 
+        butOTID.setFont(Global.lableFont);
         butOTID.setText("Bill ID");
         butOTID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butOTIDActionPerformed(evt);
             }
         });
+
+        txtBill.setEditable(false);
+        txtBill.setFont(Global.lableFont);
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -5713,7 +5712,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(0, 0, Short.MAX_VALUE))
             .add(jPanel3Layout.createSequentialGroup()
-                .add(jPanel12, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .add(jPanel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -6075,6 +6074,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 dao.save(pt);
                 regNo.updateRegNo();
                 txtBill.setText(pt.getOtId());
+                cboPayment.setSelectedItem(ptCredit);
                 butOTID.setEnabled(false);
             }
         } catch (Exception ex) {

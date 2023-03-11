@@ -253,7 +253,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                         record.setUsrBalUnit(null);
                     } else {
                         record.setUsrBalQty(NumberUtil.NZeroFloat(value));
-                        if (medUp.getUnitList(medId).size() > 0) {
+                        if (!medUp.getUnitList(medId).isEmpty()) {
                             unitPopup = new UnitAutoCompleter(x, y,
                                     medUp.getUnitList(medId), Util1.getParent());
 

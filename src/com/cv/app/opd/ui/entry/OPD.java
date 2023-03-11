@@ -4,7 +4,6 @@
  */
 package com.cv.app.opd.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -33,7 +32,6 @@ import com.cv.app.opd.ui.util.OPDVouSearchDialog;
 import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.ot.ui.common.OTDrFeeTableCellEditor;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.AccSetting;
 import com.cv.app.pharmacy.database.entity.ChargeType;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
@@ -64,7 +62,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.jms.MapMessage;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
@@ -696,7 +693,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             } catch (Exception ex) {
                                 log.error("Paid check : " + ex.getMessage());
                             }
-                            
+
                             String desp = "-";
                             if (currVou.getPatient() != null) {
                                 desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
@@ -914,11 +911,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             }
         } else if (Util1.getPropValue("report.file.type").equals("con")) {
             JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-            ReportUtil.printJasper(jp, printerName);
+            int count = Util1.getIntegerOne(Util1.getPropValue("system.opd.print.count"));
             if (Util1.getPropValue("system.pharmacy.opd.print.double").equals("Y")) {
-                params.put("user_desp", "Receive Voucher, Thanks You.");
-                JasperPrint jp1 = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                ReportUtil.printJasper(jp1, printerName);
+                count = 2;
+            }
+            for (int i = 0; i < count; i++) {
+                ReportUtil.printJasper(jp, printerName);
             }
         } else {
             JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());
@@ -1532,6 +1530,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     return;
                 }
                 try {
+                    txtAdmissionNo.setText(null);
+                    txtBill.setText(null);
+                    butAdmit.setEnabled(true);
                     Patient patient = (Patient) selectObj;
                     currVou.setPatient(patient);
                     currVou.setAdmissionNo(patient.getAdmissionNo());
@@ -1539,29 +1540,21 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     txtAge.setText(isNull(patient.getAge()));
                     txtMonth.setText(isNull(patient.getMonth()));
                     txtDay.setText(isNull(patient.getDay()));
-
-                    /*if (!Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
-                        butAdmit.setEnabled(true);
-                    } else*/
-                    if (Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
-                        butAdmit.setEnabled(true);
-                        cboPaymentType.setSelectedItem(ptCash);
-                    } else {
-                        butAdmit.setEnabled(false);
-                        if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
-                            cboPaymentType.setSelectedItem(ptCredit);
-                        } else {
-                            cboPaymentType.setSelectedItem(ptCash);
-                        }
-                    }
                     txtPatientNo.setText(patient.getRegNo());
                     txtPatientName.setText(patient.getPatientName());
                     txtPatientName.setEditable(false);
                     txtDoctorNo.requestFocus();
-                    if (Util1.nullToBlankStr(patient.getAdmissionNo()).isEmpty()) {
+                    if (!Util1.isNullOrEmpty(patient.getAdmissionNo())) {
+                        cboPaymentType.setSelectedItem(ptCredit);
+                        butAdmit.setEnabled(false);
+                    } else if (!Util1.isNullOrEmpty(patient.getOtId())) {
+                        cboPaymentType.setSelectedItem(ptCredit);
                         txtBill.setText(patient.getOtId());
                     } else {
-                        txtBill.setText(null);
+                        cboPaymentType.setSelectedItem(ptCash);
+                    }
+                    if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                        cboPaymentType.setSelectedItem(ptCash);
                     }
                     getPatientBill(patient.getRegNo());
 
@@ -2068,12 +2061,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = "http://example.com/api/users/" + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);

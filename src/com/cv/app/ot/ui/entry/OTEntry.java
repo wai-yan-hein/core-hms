@@ -5,7 +5,6 @@
  */
 package com.cv.app.ot.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -29,7 +28,6 @@ import com.cv.app.ot.ui.common.OTTableCellEditor;
 import com.cv.app.ot.ui.common.OTTableModel;
 import com.cv.app.ot.ui.util.OTVouSearchDialog;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.AccSetting;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
@@ -61,7 +59,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.jms.MapMessage;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
@@ -149,7 +146,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         butAdmit.setVisible(false);
         butOTID.setEnabled(false);
         butOTID.setEnabled(false);
-        lblOTID.setText(null);
+        txtBill.setText(null);
         tableModel.setOtInvId(txtVouNo.getText());
     }
 
@@ -316,7 +313,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         tblPatientBillTableModel.setListPBP(new ArrayList());
         butAdmit.setEnabled(false);
         //txtPatientNo.requestFocus();
-        lblOTID.setText(null);
+        txtBill.setText(null);
         tableModel.setCanEdit(canEdit);
         tableModel.setOtInvId(txtVouNo.getText());
         applySecurityPolicy();
@@ -672,9 +669,9 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 reportName = Util1.getPropValue("report.file.otbillid");
             }
         }
-        /*if (lblOTID.getText() != null) {
+        /*if (txtBill.getText() != null) {
             reportName = "OTDetailMLZ";
-            params.put("bill_id", lblOTID.getText().trim());
+            params.put("bill_id", txtBill.getText().trim());
         }*/
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
@@ -818,12 +815,12 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("category", Util1.getPropValue("report.company.cat"));
-        if (lblOTID.getText() == null) {
+        if (txtBill.getText() == null) {
             params.put("bill_id", "-");
-        } else if (lblOTID.getText().isEmpty()) {
+        } else if (txtBill.getText().isEmpty()) {
             params.put("bill_id", "-");
         } else {
-            params.put("bill_id", lblOTID.getText());
+            params.put("bill_id", txtBill.getText());
         }
 
         if (lblStatus.getText().equals("NEW")) {
@@ -839,7 +836,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 ReportUtil.viewReport(reportPath, params, dao.getConnection());
             } else {
                 JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                ReportUtil.printJasper(jp, printerName);
+                int count = Util1.getIntegerOne(Util1.getPropValue("system.ot.print.count"));
+                for (int i = 0; i < count; i++) {
+                    ReportUtil.printJasper(jp, printerName);
+                }
             }
         } else {
             ReportUtil.viewReport(reportPath, params, dao.getConnection());
@@ -876,42 +876,33 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             }
             break;
             case "PatientSearch":
+                txtAdmissionNo.setText(null);
+                txtBill.setText(null);
+                butAdmit.setEnabled(true);
                 Patient patient = (Patient) selectObj;
                 currVou.setPatient(patient);
                 currVou.setAdmissionNo(patient.getAdmissionNo());
                 txtAdmissionNo.setText(patient.getAdmissionNo());
-                /*if (!Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
-                    butAdmit.setEnabled(true);
-                } else*/
-                if (Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
-                    butAdmit.setEnabled(true);
-                    cboPaymentType.setSelectedItem(ptCash);
-                } else {
-                    butAdmit.setEnabled(false);
-                    if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
-                        cboPaymentType.setSelectedItem(ptCredit);
-                    } else {
-                        cboPaymentType.setSelectedItem(ptCash);
-                    }
-                }
                 txtPatientNo.setText(patient.getRegNo());
                 txtPatientName.setText(patient.getPatientName());
                 txtPatientName.setEditable(false);
+                if (!Util1.isNullOrEmpty(patient.getAdmissionNo())) {
+                    cboPaymentType.setSelectedItem(ptCredit);
+                    butAdmit.setEnabled(false);
+                } else if (!Util1.isNullOrEmpty(patient.getOtId())) {
+                    cboPaymentType.setSelectedItem(ptCredit);
+                    txtBill.setText(patient.getOtId());
+                } else {
+                    cboPaymentType.setSelectedItem(ptCash);
+                }
+                if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                    cboPaymentType.setSelectedItem(ptCash);
+                }
+
                 if (patient.getDoctor() != null) {
                     selected("DoctorSearch", patient.getDoctor());
                 }
                 txtDoctorNo.requestFocus();
-
-                if (Util1.getPropValue("system.ot.otid").equals("Y")) {
-                    if (patient.getOtId() != null) {
-                        butOTID.setEnabled(false);
-                        lblOTID.setText(patient.getOtId());
-                    } else {
-                        butOTID.setEnabled(true);
-                        lblOTID.setText(null);
-                    }
-                }
-
                 getPatientBill(patient.getRegNo());
                 break;
             case "OTVouList":
@@ -973,10 +964,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 applySecurityPolicy();
                 tableModel.setCanEdit(canEdit);
                 tableModel.setVouStatus("EDIT");
-                lblOTID.setText(currVou.getOtId());
-                if (lblOTID.getText() == null) {
+                txtBill.setText(currVou.getOtId());
+                if (txtBill.getText() == null) {
                     butOTID.setEnabled(true);
-                } else if (!lblOTID.getText().isEmpty()) {
+                } else if (!txtBill.getText().isEmpty()) {
                     butOTID.setEnabled(false);
                 } else {
                     butOTID.setEnabled(true);
@@ -1189,7 +1180,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     txtPatientName.setText(null);
                     currVou.setPatient(null);
                     butOTID.setEnabled(true);
-                    lblOTID.setText(null);
+                    txtBill.setText(null);
 
                     JOptionPane.showMessageDialog(Util1.getParent(),
                             "Invalid patient code.",
@@ -1207,7 +1198,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             currVou.setPatient(null);
             txtPatientName.setEditable(true);
             butOTID.setEnabled(true);
-            lblOTID.setText(null);
+            txtBill.setText(null);
         }
     }
 
@@ -1382,7 +1373,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditOTCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1402,10 +1393,10 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         if (tblService.getCellEditor() != null) {
             tblService.getCellEditor().stopCellEditing();
         }
-        
+
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double modelTotal = tableModel.getTotal();
-        
+
         if (vouTtl != modelTotal) {
             log.error(txtVouNo.getText().trim() + " OT Voucher Total Error : vouTtl : "
                     + vouTtl + " modelTtl : " + modelTotal);
@@ -1413,11 +1404,11 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
         txtVouTotal.setValue(modelTotal);
         calcBalance();
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        
+
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OT date error : " + txtVouNo.getText());
             status = false;
@@ -1428,7 +1419,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        } else if(vouBalance != 0 && currVou.getPatient() == null) {
+        } else if (vouBalance != 0 && currVou.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -1469,12 +1460,12 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 currVou.setCreatedDate(new Date());
             }
 
-            if (lblOTID.getText() == null) {
+            if (txtBill.getText() == null) {
                 currVou.setOtId(null);
-            } else if (lblOTID.getText().isEmpty()) {
+            } else if (txtBill.getText().isEmpty()) {
                 currVou.setOtId(null);
             } else {
-                currVou.setOtId(lblOTID.getText());
+                currVou.setOtId(txtBill.getText());
             }
         }
 
@@ -1667,7 +1658,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -1794,7 +1785,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = "http://example.com/api/users/" + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
@@ -1817,7 +1808,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
         }
     }
-    
+
     /*private void uploadToAccount(String vouNo, boolean isDeleted,
             Double balance, Double disc, Double paid, Double tax, String desp) {
         String isIntegration = Util1.getPropValue("system.integration");
@@ -1860,7 +1851,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             }
         }
     }*/
-
     private void deleteDetail() {
         String deleteSQL = "delete from ot_doctor_fee where ot_detail_id in ("
                 + tableModel.getDeletedList() + ")";
@@ -1981,7 +1971,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         jScrollPane1 = new javax.swing.JScrollPane();
         tblService = new javax.swing.JTable();
         butOTID = new javax.swing.JButton();
-        lblOTID = new javax.swing.JLabel();
+        txtBill = new javax.swing.JTextField();
 
         txtVouTotal.setEditable(false);
         txtVouTotal.setFont(Global.textFont);
@@ -2276,12 +2266,16 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         });
         jScrollPane1.setViewportView(tblService);
 
+        butOTID.setFont(Global.lableFont);
         butOTID.setText("Bill ID");
         butOTID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butOTIDActionPerformed(evt);
             }
         });
+
+        txtBill.setEditable(false);
+        txtBill.setFont(Global.lableFont);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -2322,22 +2316,21 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(cboPaymentType, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE))
+                                .addComponent(butOTID)
+                                .addContainerGap(214, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(txtRemark, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtBill, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(layout.createSequentialGroup()
-                                        .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(cboPaymentType, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(butOTID)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(lblOTID, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addContainerGap(26, Short.MAX_VALUE))))
+                                        .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(txtAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -2375,16 +2368,15 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel1)
-                        .addComponent(txtVouNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel3)
-                        .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel6)
-                        .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(butOTID))
-                    .addComponent(lblOTID, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(txtVouNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(txtDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel6)
+                    .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butOTID)
+                    .addComponent(txtBill, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel7)
@@ -2478,17 +2470,17 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     private void cboPaymentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentTypeActionPerformed
         if (cboBindStatus) {
             //if (!isPaid) {
-                PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
-                double discount = NumberUtil.NZero(txtDiscA.getValue());
-                double tax = NumberUtil.NZero(txtTaxA.getValue());
-                double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+            PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+            double discount = NumberUtil.NZero(txtDiscA.getValue());
+            double tax = NumberUtil.NZero(txtTaxA.getValue());
+            double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
 
-                if (pt.getPaymentTypeId() == 1) {
-                    txtPaid.setValue((vouTotal + tax) - discount);
-                } else {
-                    txtPaid.setValue(0);
-                }
-                calcBalance();
+            if (pt.getPaymentTypeId() == 1) {
+                txtPaid.setValue((vouTotal + tax) - discount);
+            } else {
+                txtPaid.setValue(0);
+            }
+            calcBalance();
             //}
         }
     }//GEN-LAST:event_cboPaymentTypeActionPerformed
@@ -2610,7 +2602,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 pt.setOtId(regNo.getRegNo());
                 dao.save(pt);
                 regNo.updateRegNo();
-                lblOTID.setText(pt.getOtId());
+                txtBill.setText(pt.getOtId());
                 butOTID.setEnabled(false);
             }
         } catch (Exception ex) {
@@ -2695,11 +2687,11 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JLabel lblOTID;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblPatientBill;
     private javax.swing.JTable tblService;
     private javax.swing.JTextField txtAdmissionNo;
+    private javax.swing.JTextField txtBill;
     private javax.swing.JFormattedTextField txtBillTotal;
     private javax.swing.JFormattedTextField txtDate;
     private javax.swing.JFormattedTextField txtDiscA;
