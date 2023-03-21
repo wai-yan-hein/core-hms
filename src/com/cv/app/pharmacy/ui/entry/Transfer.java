@@ -1205,15 +1205,21 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
     }
 
     private void deleteDetail() {
-        String deleteSQL;
+        try {
+            String deleteSQL;
 
-        //All detail section need to explicity delete
-        //because of save function only delete to join table
-        deleteSQL = tblTransferModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
+            //All detail section need to explicity delete
+            //because of save function only delete to join table
+            deleteSQL = tblTransferModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+            //delete section end
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        //delete section end
     }
 
     private void assignLocation() {

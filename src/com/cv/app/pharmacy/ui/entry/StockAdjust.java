@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -25,7 +24,6 @@ import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.StockAdjTableModel;
 import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
-import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -88,6 +86,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     private int mouseClick = 2;
     private CurrencyTotalTableModel cttlModel = new CurrencyTotalTableModel();
     private final TmpEXRateTableModel tmpExrTableModel = new TmpEXRateTableModel();
+    private boolean canEdit = true;
 
     /**
      * Creates new form StockAdjust
@@ -154,6 +153,9 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         } finally {
             dao.close();
         }
+
+        adjTableModel.setStockDate(txtAdjDate.getText());
+        adjTableModel.setEditStatus(canEdit);
     }
 
     private void genVouNo() {
@@ -190,6 +192,8 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
         }
 
+        canEdit = true;
+        adjTableModel.setEditStatus(canEdit);
         txtRemark.setText("");
         lblStatus.setText("NEW");
 
@@ -199,9 +203,9 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         setFocus();
 
         tmpExrTableModel.clear();
-        adjTableModel.setEditStatus(false);
         tmpExrTableModel.addEmptyRow();
         deleteExRateTmp();
+        adjTableModel.setStockDate(txtAdjDate.getText());
 
         System.gc();
     }
@@ -267,6 +271,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         formActionKeyMapping(cboLocation);
         formActionKeyMapping(tblAdjDetail);
     }// </editor-fold>
+
     // <editor-fold defaultstate="collapsed" desc="actionMedList">
     private Action actionMedList = new AbstractAction() {
         @Override
@@ -294,22 +299,24 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             AdjDetailHis pdh;
             int yes_no = -1;
 
-            if (tblAdjDetail.getSelectedRow() >= 0) {
-                pdh = listDetail.get(tblAdjDetail.getSelectedRow());
+            if (canEdit) {
+                if (tblAdjDetail.getSelectedRow() >= 0) {
+                    pdh = listDetail.get(tblAdjDetail.getSelectedRow());
 
-                if (pdh.getMedicineId().getMedId() != null) {
-                    try {
-                        yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
-                                "Adjust item delete", JOptionPane.YES_NO_OPTION);
-                        if (tblAdjDetail.getCellEditor() != null) {
-                            tblAdjDetail.getCellEditor().stopCellEditing();
+                    if (pdh.getMedicineId().getMedId() != null) {
+                        try {
+                            yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
+                                    "Adjust item delete", JOptionPane.YES_NO_OPTION);
+                            if (tblAdjDetail.getCellEditor() != null) {
+                                tblAdjDetail.getCellEditor().stopCellEditing();
+                            }
+                        } catch (Exception ex) {
+                            log.error("actionItemDelete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                         }
-                    } catch (Exception ex) {
-                        log.error("actionItemDelete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-                    }
 
-                    if (yes_no == 0) {
-                        adjTableModel.delete(tblAdjDetail.getSelectedRow());
+                        if (yes_no == 0) {
+                            adjTableModel.delete(tblAdjDetail.getSelectedRow());
+                        }
                     }
                 }
             }
@@ -379,15 +386,17 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
                 if (Util1.getNullTo(currAdjust.isDeleted())) {
                     lblStatus.setText("DELETED");
-                    adjTableModel.setEditStatus(true);
                 } else {
                     lblStatus.setText("EDIT");
-                    adjTableModel.setEditStatus(true);
                 }
+
+                canEdit = false;
+                adjTableModel.setEditStatus(canEdit);
 
                 log.info("selected : AdjVouList : 1");
                 txtVouNo.setText(currAdjust.getAdjVouId());
                 txtAdjDate.setText(DateUtil.toDateStr(currAdjust.getAdjDate()));
+                adjTableModel.setStockDate(txtAdjDate.getText());
                 txtRemark.setText(currAdjust.getRemark());
                 cboLocation.setSelectedItem(currAdjust.getLocation());
                 //txtTotalAmount.setValue(currAdjust.getAmount());
@@ -536,38 +545,42 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         } catch (Exception ex) {
 
         }
-        if (isValidEntry() && adjTableModel.isValidEntry()) {
-            //removeEmptyRow();
-            try {
-                String vouNo = currAdjust.getAdjVouId();
-                deleteExRateHis(vouNo);
-                insertExRateHis(vouNo);
-                List<AdjDetailHis> listTmp = adjTableModel.getListDetail();
+        if (canEdit) {
+            if (isValidEntry() && adjTableModel.isValidEntry()) {
+                //removeEmptyRow();
+                try {
+                    String vouNo = currAdjust.getAdjVouId();
+                    deleteExRateHis(vouNo);
+                    insertExRateHis(vouNo);
+                    List<AdjDetailHis> listTmp = adjTableModel.getListDetail();
 
-                dao.open();
-                dao.beginTran();
-                for (AdjDetailHis adh : listTmp) {
-                    adh.setVouNo(vouNo);
-                    if (adh.getAdjDetailId() == null) {
-                        adh.setAdjDetailId(vouNo + "-" + adh.getUniqueId().toString());
+                    dao.open();
+                    dao.beginTran();
+                    for (AdjDetailHis adh : listTmp) {
+                        adh.setVouNo(vouNo);
+                        if (adh.getAdjDetailId() == null) {
+                            adh.setAdjDetailId(vouNo + "-" + adh.getUniqueId().toString());
+                        }
+                        dao.save1(adh);
                     }
-                    dao.save1(adh);
+                    currAdjust.setListDetail(listTmp);
+                    dao.save1(currAdjust);
+                    dao.commit();
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.updateVouNo();
+                    }
+                    deleteDetail();
+                    uploadToAccount(currAdjust.getAdjVouId());
+                    newForm();
+                } catch (Exception ex) {
+                    dao.rollBack();
+                    log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                } finally {
+                    dao.close();
                 }
-                currAdjust.setListDetail(listTmp);
-                dao.save1(currAdjust);
-                dao.commit();
-                if (lblStatus.getText().equals("NEW")) {
-                    vouEngine.updateVouNo();
-                }
-                deleteDetail();
-                uploadToAccount(currAdjust.getAdjVouId());
-                newForm();
-            } catch (Exception ex) {
-                dao.rollBack();
-                log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            } finally {
-                dao.close();
             }
+        } else {
+            newForm();
         }
     }
 
@@ -607,9 +620,23 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     "Adjust delete", JOptionPane.YES_NO_OPTION);
 
             if (yes_no == 0) {
-                currAdjust.setDeleted(true);
+                try {
+                    String vouNo = currAdjust.getAdjVouId();
+                    String strSql = "update adj_his set deleted = true, \n"
+                            + "intg_upd_status = null, \n"
+                            + "updated_date = '" + DateUtil.toDateTimeStr(new Date(), "yyyy-mm-dd hh:mm:ss") + "', \n"
+                            + "updated_by = '" + Global.loginUser.getUserId() + "' \n"
+                            + "where adj_id = '" + vouNo + "'";
+                    dao.execSql(strSql);
+                } catch (Exception ex) {
+                    log.error("delete : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+                /*currAdjust.setDeleted(true);
                 currAdjust.setIntgUpdStatus(null);
-                save();
+                save();*/
+                clear();
             }
         }
     }
@@ -845,26 +872,32 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     };
 
     private void deleteDetail() {
-        String deleteSQL;
+        try {
+            String deleteSQL;
 
-        //All detail section need to explicity delete
-        //because of save function only delete to join table
-        deleteSQL = adjTableModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
+            //All detail section need to explicity delete
+            //because of save function only delete to join table
+            deleteSQL = adjTableModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+            //delete section end
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        //delete section end
     }
 
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
+                String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -883,36 +916,6 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         }
     }
     
-    /*private void uploadToAccount(AdjHis currAdjust) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "ADJUST");
-                        msg.setString("VOUCHER-NO", currAdjust.getAdjVouId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber()
-                                + " - " + currAdjust.getAdjVouId() + " - " + ex);
-                    }
-                } else {
-                    log.error("Connection status error : " + currAdjust.getAdjVouId());
-                }
-            } else {
-                log.error("Connection error : " + currAdjust.getAdjVouId());
-            }
-        }
-    }*/
-
     private Long getExchangeId(String strDate, String curr) {
         long id = 0;
         if (Util1.getPropValue("system.multicurrency").equals("Y")) {
@@ -997,6 +1000,14 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         }
     }
 
+    private void applySecurityPolicy() {
+        if (canEdit) {
+
+        } else {
+
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1029,6 +1040,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Vou No");
 
+        txtVouNo.setEditable(false);
         txtVouNo.setFont(Global.textFont);
 
         jLabel2.setFont(Global.lableFont);
@@ -1044,10 +1056,16 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Date");
 
+        txtAdjDate.setEditable(false);
         txtAdjDate.setFont(Global.textFont);
         txtAdjDate.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtAdjDateMouseClicked(evt);
+            }
+        });
+        txtAdjDate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtAdjDateActionPerformed(evt);
             }
         });
 
@@ -1064,7 +1082,6 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
         tblAdjDetail.setFont(Global.textFont);
         tblAdjDetail.setModel(adjTableModel);
         tblAdjDetail.setRowHeight(23);
-        tblAdjDetail.setShowVerticalLines(false);
         tblAdjDetail.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 tblAdjDetailFocusLost(evt);
@@ -1154,14 +1171,17 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtAdjDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtAdjDateMouseClicked
-        if (evt.getClickCount() == mouseClick) {
-            String strDate = DateUtil.getDateDialogStr();
+        if (canEdit) {
+            if (evt.getClickCount() == mouseClick) {
+                String strDate = DateUtil.getDateDialogStr();
 
-            if (strDate != null) {
-                txtAdjDate.setText(strDate);
-                if (lblStatus.getText().equals("NEW")) {
-                    vouEngine.setPeriod(DateUtil.getPeriod(txtAdjDate.getText()));
-                    genVouNo();
+                if (strDate != null) {
+                    txtAdjDate.setText(strDate);
+                    adjTableModel.setStockDate(txtAdjDate.getText());
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.setPeriod(DateUtil.getPeriod(txtAdjDate.getText()));
+                        genVouNo();
+                    }
                 }
             }
         }
@@ -1200,6 +1220,10 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             }
         }
     }//GEN-LAST:event_cboCurrencyActionPerformed
+
+    private void txtAdjDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtAdjDateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtAdjDateActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboCurrency;

@@ -5,7 +5,6 @@
  */
 package com.cv.app.inpatient.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -36,7 +35,6 @@ import com.cv.app.opd.ui.common.AmountLinkTableModel;
 import com.cv.app.opd.ui.util.DoctorSearchDialog;
 import com.cv.app.ot.database.entity.DrDetailId;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.AccSetting;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
@@ -70,7 +68,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.jms.MapMessage;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
@@ -84,10 +81,13 @@ import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import net.sf.jasperreports.engine.JasperPrint;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.josql.Query;
 import org.josql.QueryExecutionException;
@@ -282,7 +282,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 //        currVou.getVouBalance(), currVou.getDiscountA(),
                 //        currVou.getPaid(), currVou.getTaxA(), desp);
                 uploadToAccount(currVou.getOpdInvId());
-                        
+
                 if (currVou.getDcStatus() != null) {
                     log.error("dc voucher save status change : " + currVou.getOpdInvId() + " : " + currVou.getDcStatus());
                     Patient pt = currVou.getPatient();
@@ -1121,7 +1121,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             params.put("total_deposite", ttlDeposite);
             params.put("total_refund", ttlRefund);
 
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("assignExtraParam : " + ex.getMessage());
         }
     }
@@ -2047,7 +2047,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             String date = DateUtil.toDateStrMYSQL(txtDate.getText());
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -2591,7 +2591,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
                 packageUsageTotal = billTotal - (overUsageTotal + extraUsageTotal);
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("getPkgUseAmt : " + ex.toString());
         } finally {
             dao.close();
@@ -2626,18 +2626,42 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
-                HttpGet request = new HttpGet(url);
-                CloseableHttpResponse response = httpClient.execute(request);
-                // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        log.info("return from server : " + output);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/dc";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();                    
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update dc_his set intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update dc_his set intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            } catch (IOException e) {
+            } else {
                 try {
                     dao.execSql("update dc_his set intg_upd_status = null where dc_inv_id = '" + vouNo + "'");
                 } catch (Exception ex) {
@@ -2646,53 +2670,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     dao.close();
                 }
             }
-
         }
     }
-    
-    /*private void uploadToAccount(String vouNo, boolean isDeleted,
-            Double balance, Double disc, Double paid, Double tax, String desp) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        AccSetting as = (AccSetting) dao.find(AccSetting.class,
-                                "DC");
-
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("entity", "DC");
-                        msg.setString("VOUCHER-NO", vouNo);
-                        msg.setBoolean("DELETED", isDeleted);
-                        msg.setDouble("BALANCE", balance);
-                        msg.setDouble("DISCOUNT", disc);
-                        msg.setDouble("PAYMENT", paid);
-                        msg.setDouble("TAX", tax);
-                        msg.setString("DESCRIPTION", desp);
-
-                        msg.setString("SOURCE-ACC", as.getSourceAcc());
-                        msg.setString("DIS-ACC", as.getDiscAcc());
-                        msg.setString("PAY-ACC", as.getPayAcc());
-                        msg.setString("VOU-ACC", as.getBalanceAcc());
-
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber()
-                                + " - " + vouNo + " - " + ex);
-                    }
-                } else {
-                    log.error("Connection status error : " + vouNo);
-                }
-            } else {
-                log.error("Connection error : " + vouNo);
-            }
-        }
-    }*/
 
     private void deleteDetail() {
         String deleteSQL;
@@ -2753,7 +2732,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

@@ -472,10 +472,16 @@ public class GrossProfitCOGS extends javax.swing.JPanel implements SelectionObse
     }
 
     private void deleteTmpData() {
-        String strSql1 = "delete from tmp_item_code_filter where user_id ='"
-                + Global.machineId + "'";
+        try {
+            String strSql1 = "delete from tmp_item_code_filter where user_id ='"
+                    + Global.machineId + "'";
 
-        dao.execSql(strSql1);
+            dao.execSql(strSql1);
+        } catch (Exception ex) {
+            log.error("deleteTmpData : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /**

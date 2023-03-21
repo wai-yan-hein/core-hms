@@ -639,9 +639,9 @@ public class DCTableModel extends AbstractTableModel {
         String strSelectedId = null;
         String strSQL = "select service_id from opd_service os "
                 + "where os.price_ver_id <> ifnull(os.ver_upd_id,0)";
-        ResultSet rs = dao.execSQL(strSQL);
 
         try {
+            ResultSet rs = dao.execSQL(strSQL);
             if (rs != null) {
                 while (rs.next()) {
                     String strTmpId = rs.getString("service_id");
@@ -664,7 +664,7 @@ public class DCTableModel extends AbstractTableModel {
             strSQL = "update opd_service set ver_upd_id = price_ver_id "
                     + "where service_id in (" + strSelectedId + ")";
             dao.execSql(strSQL);
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             dao.rollBack();
             log.error("updateAllFees : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {

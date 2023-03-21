@@ -131,7 +131,7 @@ public class JavaFXHTMLEditor {
     private void getOldData() {
         try {
             if (option.equals("LT")) {
-                Long detailId = Long.parseLong(id.toString());
+                String detailId = id.toString();
                 final OPDDetailHis odh = (OPDDetailHis) dao.find(OPDDetailHis.class, detailId);
                 tmpObj = odh;
 

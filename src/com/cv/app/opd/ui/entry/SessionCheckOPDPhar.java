@@ -664,7 +664,7 @@ public class SessionCheckOPDPhar extends javax.swing.JPanel implements Selection
                     ));
                 }
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("applyFilter : " + ex.getMessage());
         }
 

@@ -682,8 +682,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private boolean isValidRoom(BuildingStructure b) {
         if (lblStatus.getText().equals("NEW")) {
             String sql = "select reg_no from building_structure where id = " + b.getId() + "";
-            ResultSet rs = dao.execSQL(sql);
+            
             try {
+                ResultSet rs = dao.execSQL(sql);
                 if (rs.next()) {
                     String no = rs.getString("reg_no");
                     if (no != null) {
@@ -691,7 +692,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         return false;
                     }
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage());
 
             }

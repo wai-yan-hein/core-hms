@@ -601,9 +601,9 @@ public class OPDTableModel extends AbstractTableModel {
         String strSelectedId = null;
         String strSQL = "select service_id from opd_service os "
                 + "where os.price_ver_id <> ifnull(os.ver_upd_id,0)";
-        ResultSet rs = dao.execSQL(strSQL);
 
         try {
+            ResultSet rs = dao.execSQL(strSQL);
             if (rs != null) {
                 while (rs.next()) {
                     String strTmpId = rs.getString("service_id");

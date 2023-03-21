@@ -329,119 +329,137 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void insertOPDFilter() {
-        String strSql = "insert into tmp_opd_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.machineId + "' "
-                + "from opd_service \n";
-        String strFilter = "";
-        String delSql = "delete from tmp_opd_service_filter where user_id = '" + Global.machineId + "'";
+        try {
+            String strSql = "insert into tmp_opd_service_filter(service_id, user_id) "
+                    + "select service_id, '" + Global.machineId + "' "
+                    + "from opd_service \n";
+            String strFilter = "";
+            String delSql = "delete from tmp_opd_service_filter where user_id = '" + Global.machineId + "'";
 
-        if (cboOPDGroup.getSelectedItem() instanceof OPDCategory) {
-            OPDCategory grp = (OPDCategory) cboOPDGroup.getSelectedItem();
-            if (strFilter.isEmpty()) {
-                strFilter = "cat_id = " + grp.getCatId().toString();
-            } else {
-                strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
+            if (cboOPDGroup.getSelectedItem() instanceof OPDCategory) {
+                OPDCategory grp = (OPDCategory) cboOPDGroup.getSelectedItem();
+                if (strFilter.isEmpty()) {
+                    strFilter = "cat_id = " + grp.getCatId().toString();
+                } else {
+                    strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
+                }
             }
-        }
 
-        if (cboOPDCG.getSelectedItem() instanceof OPDCusLabGroup) {
-            OPDCusLabGroup grp = (OPDCusLabGroup) cboOPDCG.getSelectedItem();
-            if (strFilter.isEmpty()) {
-                strFilter = "cat_id in (select opd_cat_id "
-                        + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
-            } else {
-                strFilter = strFilter + " and cat_id in (select opd_cat_id "
-                        + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
+            if (cboOPDCG.getSelectedItem() instanceof OPDCusLabGroup) {
+                OPDCusLabGroup grp = (OPDCusLabGroup) cboOPDCG.getSelectedItem();
+                if (strFilter.isEmpty()) {
+                    strFilter = "cat_id in (select opd_cat_id "
+                            + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
+                } else {
+                    strFilter = strFilter + " and cat_id in (select opd_cat_id "
+                            + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
+                }
             }
-        }
 
-        String filterService = tblServiceTableModel.getFilterCodeStr();
-        if (filterService != null) {
-            if (strFilter.isEmpty()) {
-                strFilter = "service_id in (" + filterService + ")";
-            } else {
-                strFilter = strFilter + " and service_id in (" + filterService + ")";
+            String filterService = tblServiceTableModel.getFilterCodeStr();
+            if (filterService != null) {
+                if (strFilter.isEmpty()) {
+                    strFilter = "service_id in (" + filterService + ")";
+                } else {
+                    strFilter = strFilter + " and service_id in (" + filterService + ")";
+                }
             }
-        }
 
-        if (cboOPDLG.getSelectedItem() instanceof OPDLabGroup) {
-            OPDLabGroup grp = (OPDLabGroup) cboOPDLG.getSelectedItem();
-            if (strFilter.isEmpty()) {
-                strFilter = "cus_group_id = " + grp.getId().toString();
-            } else {
-                strFilter = strFilter + " and cus_group_id = " + grp.getId().toString();
+            if (cboOPDLG.getSelectedItem() instanceof OPDLabGroup) {
+                OPDLabGroup grp = (OPDLabGroup) cboOPDLG.getSelectedItem();
+                if (strFilter.isEmpty()) {
+                    strFilter = "cus_group_id = " + grp.getId().toString();
+                } else {
+                    strFilter = strFilter + " and cus_group_id = " + grp.getId().toString();
+                }
             }
-        }
 
-        if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
-        }
+            if (!strFilter.isEmpty()) {
+                strSql = strSql + " where " + strFilter;
+            }
 
-        dao.execSql(delSql, strSql);
+            dao.execSql(delSql, strSql);
+        } catch (Exception ex) {
+            log.error("insertOPDFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void insertDCFilter() {
-        String strSql = "insert into tmp_dc_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.machineId + "' "
-                + "from inp_service \n";
-        String strFilter = "";
-        String delSql = "delete from tmp_dc_service_filter where user_id = '" + Global.machineId + "'";
+        try {
+            String strSql = "insert into tmp_dc_service_filter(service_id, user_id) "
+                    + "select service_id, '" + Global.machineId + "' "
+                    + "from inp_service \n";
+            String strFilter = "";
+            String delSql = "delete from tmp_dc_service_filter where user_id = '" + Global.machineId + "'";
 
-        if (cboDCGroup.getSelectedItem() instanceof InpCategory) {
-            InpCategory grp = (InpCategory) cboDCGroup.getSelectedItem();
-            if (strFilter.isEmpty()) {
-                strFilter = "cat_id = " + grp.getCatId().toString();
-            } else {
-                strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
+            if (cboDCGroup.getSelectedItem() instanceof InpCategory) {
+                InpCategory grp = (InpCategory) cboDCGroup.getSelectedItem();
+                if (strFilter.isEmpty()) {
+                    strFilter = "cat_id = " + grp.getCatId().toString();
+                } else {
+                    strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
+                }
             }
-        }
 
-        String filterService = tblDCServiceTableModel.getFilterCodeStr();
-        if (filterService != null) {
-            if (strFilter.isEmpty()) {
-                strFilter = "service_id in (" + filterService + ")";
-            } else {
-                strFilter = strFilter + " and service_id in (" + filterService + ")";
+            String filterService = tblDCServiceTableModel.getFilterCodeStr();
+            if (filterService != null) {
+                if (strFilter.isEmpty()) {
+                    strFilter = "service_id in (" + filterService + ")";
+                } else {
+                    strFilter = strFilter + " and service_id in (" + filterService + ")";
+                }
             }
-        }
 
-        if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
-        }
+            if (!strFilter.isEmpty()) {
+                strSql = strSql + " where " + strFilter;
+            }
 
-        dao.execSql(delSql, strSql);
+            dao.execSql(delSql, strSql);
+        } catch (Exception ex) {
+            log.error("insertDCFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void insertOTFilter() {
-        String strSql = "insert into tmp_ot_service_filter(service_id, user_id) "
-                + "select service_id, '" + Global.machineId + "' "
-                + "from ot_service \n";
-        String strFilter = "";
-        String delSql = "delete from tmp_ot_service_filter where user_id = '" + Global.machineId + "'";
+        try {
+            String strSql = "insert into tmp_ot_service_filter(service_id, user_id) "
+                    + "select service_id, '" + Global.machineId + "' "
+                    + "from ot_service \n";
+            String strFilter = "";
+            String delSql = "delete from tmp_ot_service_filter where user_id = '" + Global.machineId + "'";
 
-        if (cboOTGroup.getSelectedItem() instanceof OTProcedureGroup) {
-            OTProcedureGroup grp = (OTProcedureGroup) cboOTGroup.getSelectedItem();
-            if (strFilter.isEmpty()) {
-                strFilter = "group_id = " + grp.getGroupId().toString();
-            } else {
-                strFilter = strFilter + " and group_id = " + grp.getGroupId().toString();
+            if (cboOTGroup.getSelectedItem() instanceof OTProcedureGroup) {
+                OTProcedureGroup grp = (OTProcedureGroup) cboOTGroup.getSelectedItem();
+                if (strFilter.isEmpty()) {
+                    strFilter = "group_id = " + grp.getGroupId().toString();
+                } else {
+                    strFilter = strFilter + " and group_id = " + grp.getGroupId().toString();
+                }
             }
-        }
 
-        String filterService = tblOTServiceTableModel.getFilterCodeStr();
-        if (filterService != null) {
-            if (strFilter.isEmpty()) {
-                strFilter = "service_id in (" + filterService + ")";
-            } else {
-                strFilter = strFilter + " and service_id in (" + filterService + ")";
+            String filterService = tblOTServiceTableModel.getFilterCodeStr();
+            if (filterService != null) {
+                if (strFilter.isEmpty()) {
+                    strFilter = "service_id in (" + filterService + ")";
+                } else {
+                    strFilter = strFilter + " and service_id in (" + filterService + ")";
+                }
             }
-        }
 
-        if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
-        }
+            if (!strFilter.isEmpty()) {
+                strSql = strSql + " where " + strFilter;
+            }
 
-        dao.execSql(delSql, strSql);
+            dao.execSql(delSql, strSql);
+        } catch (Exception ex) {
+            log.error("insertOTFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void removeOtPaymentService() {
@@ -726,83 +744,89 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     public void insertMonthFilterDiag(String from, String to, String userId,
             Map<String, Object> params) {
-        Date dFrom = DateUtil.toDate(from);
-        Date dTo = DateUtil.toDate(to);
-        int fromYear = DateUtil.getDatePart(dFrom, "yyyy");
-        int fromMonth = DateUtil.getDatePart(dFrom, "MM");
-        int toYear = DateUtil.getDatePart(dTo, "yyyy");
-        int toMonth = DateUtil.getDatePart(dTo, "MM");
-        String strField = "";
-        String strSql = "";
+        try {
+            Date dFrom = DateUtil.toDate(from);
+            Date dTo = DateUtil.toDate(to);
+            int fromYear = DateUtil.getDatePart(dFrom, "yyyy");
+            int fromMonth = DateUtil.getDatePart(dFrom, "MM");
+            int toYear = DateUtil.getDatePart(dTo, "yyyy");
+            int toMonth = DateUtil.getDatePart(dTo, "MM");
+            String strField = "";
+            String strSql = "";
 
-        dao.execSql("delete from tmp_month_filter where user_id = '" + userId + "'");
-        dao.execSql("delete from tmp_diagnosis_yearly_summary where user_id = '" + userId + "'");
+            dao.execSql("delete from tmp_month_filter where user_id = '" + userId + "'");
+            dao.execSql("delete from tmp_diagnosis_yearly_summary where user_id = '" + userId + "'");
 
-        for (int i = 1; i <= 12; i++) {
-            if (fromMonth > 12 && fromYear < toYear) {
-                fromMonth = 1;
-                fromYear++;
-            } else if (fromMonth > toMonth && fromYear == toYear) {
-                fromYear = toYear + 1;
-            }
+            for (int i = 1; i <= 12; i++) {
+                if (fromMonth > 12 && fromYear < toYear) {
+                    fromMonth = 1;
+                    fromYear++;
+                } else if (fromMonth > toMonth && fromYear == toYear) {
+                    fromYear = toYear + 1;
+                }
 
-            String ym = fromMonth + "-" + fromYear;
-            if (fromYear <= toYear) {
-                params.put("m" + i, ym);
-                if (strSql.isEmpty()) {
-                    strSql = "sum(case tmf.y_m when '" + ym + "' then ifnull(pt_cnt,0) else 0 end) as " + "m" + i;
+                String ym = fromMonth + "-" + fromYear;
+                if (fromYear <= toYear) {
+                    params.put("m" + i, ym);
+                    if (strSql.isEmpty()) {
+                        strSql = "sum(case tmf.y_m when '" + ym + "' then ifnull(pt_cnt,0) else 0 end) as " + "m" + i;
+                    } else {
+                        strSql = strSql + ", sum(case tmf.y_m when '" + ym + "' then ifnull(pt_cnt,0) else 0 end) as " + "m" + i;
+                    }
                 } else {
-                    strSql = strSql + ", sum(case tmf.y_m when '" + ym + "' then ifnull(pt_cnt,0) else 0 end) as " + "m" + i;
+                    params.put("m" + i, " ");
+                    if (strSql.isEmpty()) {
+                        strSql = "0 as " + "m" + i;
+                    } else {
+                        strSql = strSql + ", 0 as " + "m" + i;
+                    }
                 }
-            } else {
-                params.put("m" + i, " ");
-                if (strSql.isEmpty()) {
-                    strSql = "0 as " + "m" + i;
+
+                if (strField.isEmpty()) {
+                    strField = "m" + i;
                 } else {
-                    strSql = strSql + ", 0 as " + "m" + i;
+                    strField = strField + ",m" + i;
                 }
-            }
 
-            if (strField.isEmpty()) {
-                strField = "m" + i;
-            } else {
-                strField = strField + ",m" + i;
-            }
-
-            if (fromMonth <= 12 && fromYear <= toYear) {
-                TmpMonthFilter tmf = new TmpMonthFilter(userId,
-                        ym, fromMonth, fromYear);
-                try {
-                    dao.save(tmf);
-                } catch (Exception ex) {
-                    log.error("insertMonthFilterDiag : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                if (fromMonth <= 12 && fromYear <= toYear) {
+                    TmpMonthFilter tmf = new TmpMonthFilter(userId,
+                            ym, fromMonth, fromYear);
+                    try {
+                        dao.save(tmf);
+                    } catch (Exception ex) {
+                        log.error("insertMonthFilterDiag : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                    }
                 }
+
+                fromMonth++;
             }
 
-            fromMonth++;
+            strSql = "insert into tmp_diagnosis_yearly_summary(user_id,diagnosis_id,age_range_id," + strField + ") "
+                    + "select '" + userId + "',d.diagnosis_id, d.age_range_id," + strSql + " "
+                    + "from tmp_month_filter tmf left join (select a.diagnosis_id, a.age_range_id, "
+                    + "a.y_m, count(*) pt_cnt\n"
+                    + "from (select adm.ams_no, dg.local_name, ear.ager_desp, concat(month(adm.dc_datetime),'-',year(adm.dc_datetime)) y_m,\n"
+                    + "			 adm.diagnosis_id, adm.age_range_id\n"
+                    + "	    from admission adm, diagnosis dg, emr_age_range ear\n"
+                    + "	   where adm.diagnosis_id = dg.id and adm.age_range_id = ear.id"
+                    + " and date(adm.dc_datetime) between '" + DateUtil.toDateStrMYSQL(from) + "' and '"
+                    + DateUtil.toDateStrMYSQL(from) + "') a\n"
+                    + "       group by a.local_name, a.ager_desp) d\n"
+                    + "on tmf.y_m = d.y_m\n"
+                    + "where tmf.user_id = '" + userId + "' "
+                    + "group by d.diagnosis_id, d.age_range_id";
+
+            dao.execSql(strSql);
+
+            dao.execSql("update tmp_diagnosis_yearly_summary set total = ifnull(m1,0)+ifnull(m2,0)+ifnull(m3,0)"
+                    + "+ifnull(m4,0)+ifnull(m5,0)+ifnull(m6,0)+ifnull(m7,0)+ifnull(m8,0)+ifnull(m9,0)+"
+                    + "ifnull(m10,0)+ifnull(m11,0)+ifnull(m12,0)\n"
+                    + " where user_id = '" + userId + "'");
+        } catch (Exception ex) {
+            log.error("insertMonthFilterDiag : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        strSql = "insert into tmp_diagnosis_yearly_summary(user_id,diagnosis_id,age_range_id," + strField + ") "
-                + "select '" + userId + "',d.diagnosis_id, d.age_range_id," + strSql + " "
-                + "from tmp_month_filter tmf left join (select a.diagnosis_id, a.age_range_id, "
-                + "a.y_m, count(*) pt_cnt\n"
-                + "from (select adm.ams_no, dg.local_name, ear.ager_desp, concat(month(adm.dc_datetime),'-',year(adm.dc_datetime)) y_m,\n"
-                + "			 adm.diagnosis_id, adm.age_range_id\n"
-                + "	    from admission adm, diagnosis dg, emr_age_range ear\n"
-                + "	   where adm.diagnosis_id = dg.id and adm.age_range_id = ear.id"
-                + " and date(adm.dc_datetime) between '" + DateUtil.toDateStrMYSQL(from) + "' and '"
-                + DateUtil.toDateStrMYSQL(from) + "') a\n"
-                + "       group by a.local_name, a.ager_desp) d\n"
-                + "on tmf.y_m = d.y_m\n"
-                + "where tmf.user_id = '" + userId + "' "
-                + "group by d.diagnosis_id, d.age_range_id";
-
-        dao.execSql(strSql);
-
-        dao.execSql("update tmp_diagnosis_yearly_summary set total = ifnull(m1,0)+ifnull(m2,0)+ifnull(m3,0)"
-                + "+ifnull(m4,0)+ifnull(m5,0)+ifnull(m6,0)+ifnull(m7,0)+ifnull(m8,0)+ifnull(m9,0)+"
-                + "ifnull(m10,0)+ifnull(m11,0)+ifnull(m12,0)\n"
-                + " where user_id = '" + userId + "'");
     }
 
     private boolean insertPatientFilter() {
@@ -1163,8 +1187,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             txtRegNo.setText(null);
         }
     }
-    
-    private boolean isValidAdm(Map<String, Object> params){
+
+    private boolean isValidAdm(Map<String, Object> params) {
         boolean status = true;
         String imagePath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path");
@@ -1185,9 +1209,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         params.put("compName", compName);
         params.put("phoneNo", phoneNo);
         params.put("comAddress", address);
-        
+
         return status;
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1769,6 +1794,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             break;
                         case "PatientBalance":
                         case "CurrentPatientBalance":
+                            try {
                             DateUtil.setStartTime();
                             String regNo = "-";
                             if (!txtRegNo.getText().trim().isEmpty()) {
@@ -1789,13 +1815,24 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                     + "' and tbp.reg_no = dc.patient_id and tbp.admission_no is null";
                             dao.execSql(strSQLs);
                             log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
-                            break;
+                        } catch (Exception ex) {
+                            log.error("butPrintActionPerformed : PatientBalance : " + ex.getMessage());
+                        } finally {
+                            dao.close();
+                        }
+                        break;
                         case "InpatientSummary":
+                            try {
                             DateUtil.setStartTime();
                             dao.execProc("rpt_inp", DateUtil.toDateStrMYSQL(txtFrom.getText()),
                                     DateUtil.toDateStrMYSQL(txtTo.getText()), Global.machineId);
                             log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
-                            break;
+                        } catch (Exception ex) {
+                            log.error("InpatientSummary : " + ex.getMessage());
+                        } finally {
+                            dao.close();
+                        }
+                        break;
                         case "PatientInOutBalance":
                             String appCurr = Util1.getPropValue("system.app.currency");
                             if (txtRegNo.getText() == null) {
@@ -1810,12 +1847,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                 return;
                             } else {
                                 DateUtil.setStartTime();
-                                dao.execProc("patient_balance_detail", txtRegNo.getText().trim(),
-                                        DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                                        DateUtil.toDateStrMYSQL(txtTo.getText()),
-                                        appCurr, Global.machineId);
+
                                 double opBalance = 0;
                                 try {
+                                    dao.execProc("patient_balance_detail", txtRegNo.getText().trim(),
+                                            DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                                            DateUtil.toDateStrMYSQL(txtTo.getText()),
+                                            appCurr, Global.machineId);
                                     ResultSet rs = dao.execSQL("select tran_date, tran_option, trader_id as reg_no, null as admission_no, curr_id, sum(amount) as ttl_op_amt,\n"
                                             + "			 0 as ttl_amt, 0 as ttl_paid\n"
                                             + "		from tmp_patient_bal_date\n"
@@ -1826,7 +1864,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                                             opBalance = rs.getDouble("ttl_op_amt");
                                         }
                                     }
-                                } catch (SQLException ex) {
+                                } catch (Exception ex) {
                                     log.error("PatientInOutBalance : " + ex.getMessage());
                                 }
                                 log.info(report.getMenuClass() + " time taken : " + DateUtil.getDuration());
@@ -1856,7 +1894,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             insertOTFilter();
                             break;
                         case "DCDailySDM":
-                            if(!isValidAdm(params)){
+                            if (!isValidAdm(params)) {
                                 return;
                             }
                             break;

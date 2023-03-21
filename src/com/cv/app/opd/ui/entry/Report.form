@@ -880,9 +880,9 @@
               <Group type="102" attributes="0">
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
-                          <Component id="jLabel13" linkSize="4" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel13" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="-2" attributes="0"/>
-                          <Component id="cboSession" linkSize="3" min="-2" pref="175" max="-2" attributes="0"/>
+                          <Component id="cboSession" min="-2" pref="175" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" attributes="0">
                           <Component id="butCraftRpt" min="-2" max="-2" attributes="0"/>

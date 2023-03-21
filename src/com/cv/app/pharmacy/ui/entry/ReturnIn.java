@@ -63,9 +63,13 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -1057,11 +1061,11 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
         Patient pt = currRetIn.getPatient();
         String admissionNo = "-";
-        
-        if(pt != null){
+
+        if (pt != null) {
             admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
         }
-        
+
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
             key.setAmsNo(admissionNo);
@@ -1098,7 +1102,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditReturnCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1238,7 +1242,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         txtCusId.setText(ptt.getRegNo());
                         txtCusName.setText(ptt.getPatientName());
                         lblOTID.setText(ptt.getOtId());
-                        
+
                         if (currRetIn.getAdmissionNo() != null) {
                             if (currRetIn.getAdmissionNo().isEmpty()) {
                                 cboPayment.setSelectedItem(ptCash);
@@ -1505,18 +1509,42 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
-                HttpGet request = new HttpGet(url);
-                CloseableHttpResponse response = httpClient.execute(request);
-                // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        log.info("return from server : " + output);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/returnIn";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            } catch (IOException e) {
+            } else {
                 try {
                     dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
                 } catch (Exception ex) {
@@ -1525,34 +1553,8 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     dao.close();
                 }
             }
-
         }
     }
-    
-    /*private void uploadToAccount(RetInHis rih) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "RETURNIN");
-                        msg.setString("VOUCHER-NO", rih.getRetInId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + rih.getRetInId() + " - " + ex);
-                    }
-                }
-            }
-        }
-    }*/
 
     private void setEditStatus(String invId) {
         //canEdit

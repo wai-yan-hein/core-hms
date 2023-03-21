@@ -780,19 +780,19 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         String sql = "select count(*)\n"
                 + "from opd_booking\n"
                 + "where doctor_id = '" + doctor.getDoctorId() + "' and bk_date = '" + DateUtil.toDateStr(bkDate.getText(), "yyyy-MM-dd") + "'";
-        ResultSet rs = dao.execSQL(sql);
-        if (rs != null) {
-            try {
+        try {
+            ResultSet rs = dao.execSQL(sql);
+            if (rs != null) {
+
                 rs.next();
                 String tmpNo = rs.getString(1);
                 booking.setBkSerialNo(Integer.parseInt(tmpNo) + 1);
 
-            } catch (SQLException ex) {
-                log.info("ERROR : " + ex.getMessage());
+            } else {
+                booking.setBkSerialNo(1);
             }
-
-        } else {
-            booking.setBkSerialNo(1);
+        } catch (Exception ex) {
+            log.info("ERROR : " + ex.getMessage());
         }
     }
 

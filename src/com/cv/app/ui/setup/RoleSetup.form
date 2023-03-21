@@ -28,7 +28,7 @@
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
                       <Component id="lblStatus" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="309" max="32767" attributes="0"/>
+                      <EmptySpace pref="545" max="32767" attributes="0"/>
                       <Component id="butSave" linkSize="1" min="-2" pref="78" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="butClear" linkSize="1" min="-2" max="-2" attributes="0"/>
@@ -176,7 +176,7 @@
                                   <Group type="103" groupAlignment="0" attributes="0">
                                       <Group type="102" attributes="0">
                                           <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
-                                          <Component id="cboCurrency" pref="375" max="32767" attributes="0"/>
+                                          <Component id="cboCurrency" pref="501" max="32767" attributes="0"/>
                                       </Group>
                                       <Group type="102" alignment="0" attributes="0">
                                           <EmptySpace type="unrelated" max="-2" attributes="0"/>

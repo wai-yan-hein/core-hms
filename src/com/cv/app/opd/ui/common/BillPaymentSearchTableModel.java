@@ -55,10 +55,10 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
 
         switch (column) {
             case 0: //Date
-                if (record.getCreatedDate() != null) {
-                    return DateUtil.toDateStr(record.getCreatedDate());
+                if (record.getPayDate() != null) {
+                    return DateUtil.toDateStr(record.getPayDate());
                 } else {
-                    return record.getCreatedDate();
+                    return record.getPayDate();
                 }
             case 1: //Reg No.
                 return record.getRegNo();
