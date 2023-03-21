@@ -1380,7 +1380,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        } else if (vouBalance != 0 && currVou.getPatient() == null) {
+        } else if (currVou.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -1644,7 +1644,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 } else {
                     txtPatientName.setText(currVou.getPatientName());
                     txtPatientName.setEditable(true);
-                    txtPatientNo.setEditable(false);
                 }
 
                 if (currVou.getDoctor() != null) {
