@@ -62,9 +62,7 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
                 }
             case 1: //Reg No.
                 return record.getRegNo();
-            case 2: //Adm No.
-                return record.getAdmissionNo();
-            case 3: //Patient Name
+            case 2: //Patient Name
                 return record.getPatientName();
             case 4: //Bill Type
                 return record.getBillName();

@@ -505,7 +505,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             try {
                 FileReader fr = new FileReader(file);
                 BufferedReader reader = new BufferedReader(fr);
-                try (CSVReader csvReader = new CSVReader(reader)) {
+                try ( CSVReader csvReader = new CSVReader(reader)) {
                     String[] nextRecord;
                     int ttlRec = 0;
                     int ttlInsert = 0;
@@ -628,6 +628,18 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
 
         jScrollPane1 = new javax.swing.JScrollPane();
         tblItem = new javax.swing.JTable();
+        txtSearch = new javax.swing.JTextField();
+        cmdFilter = new javax.swing.JButton();
+        chkCalculate = new javax.swing.JCheckBox();
+        lblStatus = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
+        txtPurPrice = new javax.swing.JTextField();
+        cboPurUnit = new javax.swing.JComboBox();
+        chkActive = new javax.swing.JCheckBox();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblLocationItemMapping = new javax.swing.JTable();
+        chkEdit = new javax.swing.JCheckBox();
+        jScrollPane4 = new javax.swing.JScrollPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         txtItemCode = new javax.swing.JTextField();
@@ -659,20 +671,8 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         jLabel8 = new javax.swing.JLabel();
         cboSystem = new javax.swing.JComboBox<>();
         butSystem = new javax.swing.JButton();
-        txtSearch = new javax.swing.JTextField();
-        cmdFilter = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblRelationPrice = new javax.swing.JTable(rpTableMode);
-        chkCalculate = new javax.swing.JCheckBox();
-        lblStatus = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel();
-        txtPurPrice = new javax.swing.JTextField();
-        cboPurUnit = new javax.swing.JComboBox();
-        chkActive = new javax.swing.JCheckBox();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tblLocationItemMapping = new javax.swing.JTable();
-        chkEdit = new javax.swing.JCheckBox();
 
         addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
@@ -684,6 +684,46 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         tblItem.setModel(itemTableModel);
         tblItem.setRowHeight(23);
         jScrollPane1.setViewportView(tblItem);
+
+        txtSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                txtSearchKeyReleased(evt);
+            }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtSearchKeyTyped(evt);
+            }
+        });
+
+        cmdFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        cmdFilter.setText("...");
+        cmdFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdFilterActionPerformed(evt);
+            }
+        });
+
+        chkCalculate.setFont(Global.lableFont);
+        chkCalculate.setText("Calculate");
+
+        lblStatus.setFont(Global.lableFont);
+        lblStatus.setText("NEW");
+
+        jLabel11.setText("Pur Price");
+
+        txtPurPrice.setFont(Global.lableFont);
+
+        cboPurUnit.setFont(Global.textFont);
+
+        chkActive.setFont(Global.lableFont);
+        chkActive.setText("Active");
+
+        tblLocationItemMapping.setModel(mappingTableModel);
+        tblLocationItemMapping.setRowHeight(23);
+        jScrollPane3.setViewportView(tblLocationItemMapping);
+
+        chkEdit.setText("Edit");
+        chkEdit.setEnabled(false);
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Item Code ");
@@ -783,7 +823,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             }
         });
 
-        butCharNo.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butCharNo.setFont(Global.textFont);
         butCharNo.setText("Char No");
         butCharNo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -791,7 +831,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             }
         });
 
-        butUnit.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butUnit.setFont(Global.textFont);
         butUnit.setText("Unit");
         butUnit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -808,6 +848,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             }
         });
 
+        butUpload.setFont(Global.textFont);
         butUpload.setText("Upload");
         butUpload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -902,43 +943,43 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE, false)
                     .addComponent(jLabel1)
                     .addComponent(txtItemCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(9, 9, 9)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboItemType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butItemType)
                     .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(txtItemName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(cboCategory, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butCategory))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(cboBrandName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butBrand))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(txtChemicalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(txtUnitRelation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butUnitRelation))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel9)
                     .addComponent(txtBarcode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel10)
                     .addComponent(txtShortName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(butCharNo)
@@ -953,62 +994,14 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         .addComponent(jLabel8)
                         .addComponent(cboSystem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(butSystem))
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        txtSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                txtSearchKeyReleased(evt);
-            }
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                txtSearchKeyTyped(evt);
-            }
-        });
-
-        cmdFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        cmdFilter.setText("...");
-        cmdFilter.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmdFilterActionPerformed(evt);
-            }
-        });
+        jScrollPane4.setViewportView(jPanel1);
 
         tblRelationPrice.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblRelationPrice.setRowHeight(23);
         jScrollPane2.setViewportView(tblRelationPrice);
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
-        );
-
-        chkCalculate.setText("Calculate");
-
-        lblStatus.setText("NEW");
-
-        jLabel11.setText("Pur Price");
-
-        txtPurPrice.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-
-        cboPurUnit.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-
-        chkActive.setText("Active");
-
-        tblLocationItemMapping.setModel(mappingTableModel);
-        tblLocationItemMapping.setRowHeight(23);
-        jScrollPane3.setViewportView(tblLocationItemMapping);
-
-        chkEdit.setText("Edit");
-        chkEdit.setEnabled(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -1026,7 +1019,6 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addComponent(jLabel11)
@@ -1043,9 +1035,10 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkCalculate))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(13, 13, 13)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1055,11 +1048,11 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 399, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 399, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(8, 8, 8)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel11)
                             .addComponent(txtPurPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1348,7 +1341,6 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
         lblStatus.setText("NEW");
         currMedicine = new Medicine();
         chkActive.setSelected(true);
-        chkActive.setSelected(false);
         selectRow = -1;
         rpTableMode.setEditable(true);
 
@@ -1467,7 +1459,9 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                     new BestTableCellEditor(this));
             tblRelationPrice.getColumnModel().getColumn(1).setCellEditor(
                     new TableUnitCellEditor(dao.findAll("ItemUnit"), this));
-
+            tblRelationPrice.getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                    .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "selectNextColumnCell");
+            tblRelationPrice.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adjust table column width
             TableColumn column = tblRelationPrice.getColumnModel().getColumn(0);
             column.setPreferredWidth(30);
@@ -1813,10 +1807,10 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblItem;
     private javax.swing.JTable tblLocationItemMapping;

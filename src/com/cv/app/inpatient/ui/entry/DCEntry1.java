@@ -909,7 +909,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 ReportUtil.viewReport(reportPath, params, dao.getConnection());
             } else {
                 JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                ReportUtil.printJasper(jp, printerName);
+                int count = Util1.getIntegerOne(Util1.getPropValue("system.dc.print.count"));
+                for (int i = 0; i < count; i++) {
+                    ReportUtil.printJasper(jp, printerName);
+                }
             }
 
             newForm();
@@ -1161,15 +1164,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 txtPatientNo.setText(patient.getRegNo());
                 txtPatientName.setText(patient.getPatientName());
                 txtPatientName.setEditable(false);
-                if (patient.getDoctor() != null) {
-                    selected("DoctorSearch", patient.getDoctor());
-                }
-                txtDoctorNo.requestFocus();
                 txtAdmissionNo.setText(patient.getAdmissionNo());
-                if (Util1.getNullTo(patient.getAdmissionNo(), "").trim().isEmpty()) {
-                    butAdmit.setEnabled(true);
-                    cboPaymentType.setSelectedItem(ptCash);
-                } else {
+                txtDoctorNo.requestFocus();
+                if (!Util1.isNullOrEmpty(patient.getAdmissionNo())) {
+                    cboPaymentType.setSelectedItem(ptCredit);
                     butAdmit.setEnabled(false);
                     AdmissionKey key = new AdmissionKey();
                     key.setRegister(patient);
@@ -1187,12 +1185,20 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 tableModel.setRoomFee(null);
                             }
                         }
-                    }
-                    if (Util1.getPropValue("system.admission.paytype").equals("CREDIT")) {
-                        cboPaymentType.setSelectedItem(ptCredit);
                     } else {
-                        cboPaymentType.setSelectedItem(ptCash);
+                        JOptionPane.showMessageDialog(this, "Admit No not found.");
+                        return;
                     }
+                } else {
+                    txtAdmissionNo.setText(null);
+                    butAdmit.setEnabled(true);
+                    cboPaymentType.setSelectedItem(ptCash);
+                }
+                if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                    cboPaymentType.setSelectedItem(ptCash);
+                }
+                if (patient.getDoctor() != null) {
+                    selected("DoctorSearch", patient.getDoctor());
                 }
                 getPatientBill(patient.getRegNo());
                 if (Util1.getPropValue("system.dc.link.amt").equals("Y")) {
@@ -2672,6 +2678,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
+
 
     private void deleteDetail() {
         String deleteSQL;
