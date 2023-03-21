@@ -11,6 +11,7 @@ import com.cv.app.opd.database.entity.BillTransferHis;
 import com.cv.app.opd.database.helper.BillTransferDetail;
 import com.cv.app.opd.ui.common.BillTransferDetailHisTableModel;
 import com.cv.app.opd.ui.common.BillTransferHisTableModel;
+import static com.cv.app.opd.ui.entry.BillTransfer.log;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -21,6 +22,9 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,6 +32,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JOptionPane;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 /**
@@ -292,8 +303,8 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
                 if (bth != null) {
                     String id = bth.getBthId();
                     String type = cboType.getSelectedItem().toString();
-                    String strSql1 = "update opd_patient_bill_payment set deleted = true \n"
-                            + "where remark = '" + id + "@" + type + "'";
+                    String strSql1 = "update opd_patient_bill_payment set deleted = true, \n"
+                            + "intg_upd_status = null where remark = '" + id + "@" + type + "'";
                     String strSql2 = "update bill_transfer_his set deleted = true, "
                             + "del_by = '" + Global.loginUser.getUserId() + "',"
                             + "del_time = '" + DateUtil.toDateTimeStrMYSQL(new Date()) + "',"
@@ -314,12 +325,31 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
                     txtHTtlDisc.setValue(ttlDisc);
                     txtHTtlPaid.setValue(ttlPaid);
                     txtHTtlRecord.setValue(listBTH.size());
+
+                    deleteUpdate(id, type);
                 }
             } catch (Exception ex) {
                 log.error("delete : " + ex.getMessage());
             } finally {
                 dao.close();
             }
+        }
+    }
+
+    private void deleteUpdate(String id, String type) {
+        String strSql = "select id from opd_patient_bill_payment where deleted = true \n"
+                + "and remark = '" + id + "@" + type + "'";
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if(rs != null){
+                while(rs.next()){
+                    uploadToAccount(rs.getInt("id"));
+                }
+            }
+        } catch (Exception ex) {
+            log.error("deleteUpdate : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -418,7 +448,9 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
 
     private Map<String, Object> getListDetailParams() {
         Map<String, Object> params = new HashMap();
+        params.put("prm_compName", Util1.getPropValue("report.company.name"));
         params.put("prm_vouno", txtTranNo.getText().trim());
+        params.put("prm_type_desp", cboType.getSelectedItem().toString());
         boolean isDeleted = chkDeleted.isSelected();
         params.put("prm_del_status", isDeleted);
         if (isDeleted) {
@@ -461,6 +493,56 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
         return bth.getDelated();
     }
 
+    private void uploadToAccount(Integer vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/opdReceive";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("id", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("uploadToAccount BillTransfer Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                } catch (Exception ex) {
+                    log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -581,6 +663,11 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
         butDelete.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 butDeleteMouseClicked(evt);
+            }
+        });
+        butDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butDeleteActionPerformed(evt);
             }
         });
 
@@ -828,9 +915,7 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
     }//GEN-LAST:event_butClearActionPerformed
 
     private void butDeleteMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_butDeleteMouseClicked
-        int selRow = tblHistory.getSelectedRow();
-        selRow = tblHistory.convertRowIndexToModel(selRow);
-        delete(selRow);
+        
     }//GEN-LAST:event_butDeleteMouseClicked
 
     private void butHPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butHPrintActionPerformed
@@ -846,6 +931,12 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
             print("PDETAIL");
         }
     }//GEN-LAST:event_tblHDetailMouseClicked
+
+    private void butDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butDeleteActionPerformed
+        int selRow = tblHistory.getSelectedRow();
+        selRow = tblHistory.convertRowIndexToModel(selRow);
+        delete(selRow);
+    }//GEN-LAST:event_butDeleteActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

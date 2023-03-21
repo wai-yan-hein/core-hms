@@ -77,7 +77,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
         initCombo();
         actionMapping();
         deleteTmpData();
-        
+
         txtTotalCost.setHorizontalAlignment(JFormattedTextField.RIGHT);
         //txtTotalCost.setFormatterFactory(NumberUtil.getDecimalFormat());
         txtCostDate.setText(DateUtil.getTodayDateStr());
@@ -181,66 +181,78 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
     }
 
     private void calculate() {
-        String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
-                + Global.machineId + "'";
-        String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
-                + Global.machineId + "'";
-        String strMethod = cboMethod.getSelectedItem().toString();
+        try {
+            String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
+                    + Global.machineId + "'";
+            String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
+                    + Global.machineId + "'";
+            String strMethod = cboMethod.getSelectedItem().toString();
 
-        dao.execSql(deleteTmpData1, deleteTmpData2);
-        dao.commit();
-        dao.close();
-        insertStockFilterCode();
+            dao.execSql(deleteTmpData1, deleteTmpData2);
+            dao.commit();
+            dao.close();
+            insertStockFilterCode();
 
-        dao.execProc("gen_cost_balance",
-                DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
-                Global.machineId);
+            dao.execProc("gen_cost_balance",
+                    DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
+                    Global.machineId);
 
-        String strLocation;
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            Location location = (Location) cboLocation.getSelectedItem();
-            strLocation = location.getLocationId().toString();
-        } else {
-            strLocation = "0";
+            String strLocation;
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                Location location = (Location) cboLocation.getSelectedItem();
+                strLocation = location.getLocationId().toString();
+            } else {
+                strLocation = "0";
+            }
+
+            dao.execProc("insert_cost_detail",
+                    "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                    Global.machineId, strMethod);
+
+            dao.commit();
+            dao.close();
+            calculateLocation();
+            applyFilter();
+        } catch (Exception ex) {
+            log.error("calculate : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        dao.execProc("insert_cost_detail",
-                "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                Global.machineId, strMethod);
-
-        dao.commit();
-        dao.close();
-        calculateLocation();
-        applyFilter();
     }
 
     private void calculateLocation() {
-        String strLocation = "0";
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            Location location = (Location) cboLocation.getSelectedItem();
-            strLocation = location.getLocationId().toString();
-        }
+        try {
+            String strLocation = "0";
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                Location location = (Location) cboLocation.getSelectedItem();
+                strLocation = location.getLocationId().toString();
+            }
 
-        String userId = Global.machineId;
-        dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                + userId + "'");
-        dao.execSql("update tmp_stock_costing set location_id = null, "
-                + "loc_ttl_small_qty = null, loc_ttl_cost = null where user_id = '" + userId + "'");
+            String userId = Global.machineId;
+            dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
+                    + userId + "'");
+            dao.execSql("update tmp_stock_costing set location_id = null, "
+                    + "loc_ttl_small_qty = null, loc_ttl_cost = null where user_id = '" + userId + "'");
 
-        if (!strLocation.equals("0")) {
-            /*dao.execProc("stock_balance_exp", "Opening",
+            if (!strLocation.equals("0")) {
+                /*dao.execProc("stock_balance_exp", "Opening",
                     DateUtil.toDateStrMYSQL(txtCostDate.getText()),
                     strLocation, userId);*/
-            stockBalanceExp("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                    strLocation, userId);
-            dao.execSql("update tmp_stock_costing tsc, (\n"
-                    + "select med_id, sum(ifnull(bal_qty,0)) ttl_bal_qty\n"
-                    + "from tmp_stock_balance_exp\n"
-                    + "where user_id = '" + userId + "' and location_id = " + strLocation + " and tran_option = 'Opening'\n"
-                    + "group by med_id) a\n"
-                    + "set tsc.location_id = " + strLocation + ", tsc.loc_ttl_small_qty = a.ttl_bal_qty, \n"
-                    + "tsc.loc_ttl_cost = if(tsc.bal_qty=0,0,(tsc.total_cost/tsc.bal_qty)*a.ttl_bal_qty)\n"
-                    + "where tsc.med_id = a.med_id and tsc.user_id = '" + userId + "' and tran_option = 'Opening'");
+                stockBalanceExp("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        strLocation, userId);
+                dao.execSql("update tmp_stock_costing tsc, (\n"
+                        + "select med_id, sum(ifnull(bal_qty,0)) ttl_bal_qty\n"
+                        + "from tmp_stock_balance_exp\n"
+                        + "where user_id = '" + userId + "' and location_id = " + strLocation + " and tran_option = 'Opening'\n"
+                        + "group by med_id) a\n"
+                        + "set tsc.location_id = " + strLocation + ", tsc.loc_ttl_small_qty = a.ttl_bal_qty, \n"
+                        + "tsc.loc_ttl_cost = if(tsc.bal_qty=0,0,(tsc.total_cost/tsc.bal_qty)*a.ttl_bal_qty)\n"
+                        + "where tsc.med_id = a.med_id and tsc.user_id = '" + userId + "' and tran_option = 'Opening'");
+            }
+        } catch (Exception ex) {
+            log.error("calculateLocation : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -724,10 +736,16 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
     }
 
     private void deleteTmpData() {
-        String strSql1 = "delete from tmp_item_code_filter where user_id ='"
-                + Global.machineId + "'";
+        try {
+            String strSql1 = "delete from tmp_item_code_filter where user_id ='"
+                    + Global.machineId + "'";
 
-        dao.execSql(strSql1);
+            dao.execSql(strSql1);
+        } catch (Exception ex) {
+            log.error("deleteTmpData : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private String getItemType() {

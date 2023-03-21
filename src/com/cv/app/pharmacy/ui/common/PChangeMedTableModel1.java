@@ -455,7 +455,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                         record.setMarketUnit(hmUnit.get(strUnit));
                     }
                 }
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 log.error("setMed4 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
             } finally {
                 dao.closeStatment();

@@ -352,9 +352,15 @@ public class ServiceTableModel extends AbstractTableModel {
 
     private void execOpdBackup(Service record) {
         if (record.getServiceId() != null) {
-            dao.execProc("opd_backup", record.getServiceId().toString(),
-                    DateUtil.toDateTimeStrMYSQL(new Date()),
-                    Global.loginUser.getUserId());
+            try {
+                dao.execProc("opd_backup", record.getServiceId().toString(),
+                        DateUtil.toDateTimeStrMYSQL(new Date()),
+                        Global.loginUser.getUserId());
+            } catch (Exception ex) {
+                log.error("execOpdBackup : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 

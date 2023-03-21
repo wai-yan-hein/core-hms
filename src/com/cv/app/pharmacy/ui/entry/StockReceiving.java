@@ -106,14 +106,14 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
                 break;
             case "StockReceiveList":
                 try {
-                    VoucherSearch vs = (VoucherSearch) selectObj;
-                    dao.open();
-                    srHis = (StockReceiveHis) dao.find(StockReceiveHis.class, vs.getInvNo());
-                    List<StockReceiveDetailHis> list = dao.findAllHSQL(
-                            "select o from StockReceiveDetailHis o where o.vouNo = '"
-                            + vs.getInvNo() + "' order by o.uniqueId");
-                    //srHis.setListDetail(list);
-                    System.out.println(list.size());
+                VoucherSearch vs = (VoucherSearch) selectObj;
+                dao.open();
+                srHis = (StockReceiveHis) dao.find(StockReceiveHis.class, vs.getInvNo());
+                List<StockReceiveDetailHis> list = dao.findAllHSQL(
+                        "select o from StockReceiveDetailHis o where o.vouNo = '"
+                        + vs.getInvNo() + "' order by o.uniqueId");
+                //srHis.setListDetail(list);
+                System.out.println(list.size());
 
                 if (srHis.isDeleted()) {
                     lblStatus.setText("DELETED");
@@ -449,15 +449,21 @@ public class StockReceiving extends javax.swing.JPanel implements SelectionObser
     };
 
     private void deleteDetail() {
-        String deleteSQL;
+        try {
+            String deleteSQL;
 
-        //All detail section need to explicity delete
-        //because of save function only delete to join table
-        deleteSQL = recTblModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
+            //All detail section need to explicity delete
+            //because of save function only delete to join table
+            deleteSQL = recTblModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+            //delete section end
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        //delete section end
     }
 
     @Override

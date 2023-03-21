@@ -888,11 +888,11 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
+                String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -910,61 +910,42 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
 
         }
     }
-    
-    /*private void uploadToAccount(DamageHis dh) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "DAMAGE");
-                        msg.setString("VOUCHER-NO", dh.getDmgVouId());
-                        msg.setString("remark", dh.getRemark());
-                        msg.setString("dmbDate", DateUtil.toDateStr(dh.getDmgDate(), "yyyy-MM-dd"));
-                        msg.setBoolean("deleted", dh.isDeleted());
-                        msg.setDouble("vouTotal", dh.getTotalAmount());
-                        msg.setString("currency", "MMK");
-                        msg.setString("queueName", "INVENTORY");
-
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + dh.getDmgVouId() + " - " + ex);
-                    }
-                }
-            }
-        }
-    }*/
 
     private void deleteDetail() {
-        String deleteSQL;
+        try {
+            String deleteSQL;
 
-        //All detail section need to explicity delete
-        //because of save function only delete to join table
-        deleteSQL = dmgTableModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
+            //All detail section need to explicity delete
+            //because of save function only delete to join table
+            deleteSQL = dmgTableModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+            //delete section end
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-        //delete section end
     }
 
     private void setEditStatus(String invId) {
-        //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Return In' "
-                + " and o.tranInvId = '" + invId + "'");*/
-        if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
-            List list = dao.findAllSQLQuery(
-                    "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
-            if (list != null) {
-                canEdit = list.isEmpty();
+        try {
+            if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
+                List list = dao.findAllSQLQuery(
+                        "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
+                if (list != null) {
+                    canEdit = list.isEmpty();
+                } else {
+                    canEdit = true;
+                }
             } else {
                 canEdit = true;
             }
-        } else {
-            canEdit = true;
+        } catch (Exception ex) {
+            log.error("setEditStatus : " + ex.getMessage());
+        }finally{
+            dao.close();
         }
     }
 

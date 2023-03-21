@@ -15,6 +15,7 @@ import com.cv.app.opd.database.entity.BillTransferHis;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.helper.BillTransferDetail;
 import com.cv.app.opd.ui.common.BillTransferTableModel;
+import static com.cv.app.opd.ui.entry.BillPayment.log;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -27,6 +28,9 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +39,13 @@ import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 /**
@@ -413,6 +424,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 pbp.setRemark(vouNo + "@" + selType);
                 pbp.setDiscount(btd.getDiscount());
                 dao.save(pbp);
+                uploadToAccount(pbp.getId());
             }
 
             
@@ -520,7 +532,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             pbp.setRemark(vouNo + "@" + selType);
             pbp.setDiscount(btd.getDiscount());
             dao.save(pbp);
-
+            uploadToAccount(pbp.getId());
+            
             //String selCurrency = getSelCurrency();
             BillTransferHis bth = new BillTransferHis();
             bth.setCurrency(curr.getCurrencyCode());
@@ -580,6 +593,56 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             txtTtlPaid.setValue(ttlPaid);
             txtTtlBal.setValue(ttlBal);
             txtTtlDisc.setValue(ttlDisc);
+        }
+    }
+    
+    private void uploadToAccount(Integer vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/opdReceive";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("id", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("uploadToAccount BillTransfer Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                } catch (Exception ex) {
+                    log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
         }
     }
     

@@ -738,8 +738,14 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
     };
 
     private void deleteDetail() {
-        String deleteSql = issueTableModel.getDeleteSql();
-        dao.execSql(deleteSql);
+        try {
+            String deleteSql = issueTableModel.getDeleteSql();
+            dao.execSql(deleteSql);
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Action actionTblServiceEnterKey = new AbstractAction() {
@@ -776,11 +782,11 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
+                String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -799,35 +805,6 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         }
     }
     
-    /*private void uploadToAccount(StockIssueHis sih) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "STOCKISSUE");
-                        msg.setString("VOUCHER-NO", sih.getIssueId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + sih.getIssueId() + " - " + ex);
-                    }
-                } else {
-                    log.error("Connection status error : " + sih.getIssueId());
-                }
-            } else {
-                log.error("Connection error : " + sih.getIssueId());
-            }
-        }
-    }*/
-
     private void insertStockFilterCode(String medId) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + Global.machineId + "'";

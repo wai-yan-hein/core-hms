@@ -1100,10 +1100,11 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 + "		where vp.med_id = mpd.med_id and vp.pur_date = mpd.pur_date\n"
                 + "		and vp.deleted = false and vp.med_id in (" + selectedMedId + ")) vpid\n"
                 + "where vlp.med_id = vpid.med_id and vlp.pur_detail_id = vpid.pur_detail_id";
-        ResultSet rsLatestPur = dao.execSQL(strLatestPur);
+        
         HashMap<String, String> hmLatestPur = new HashMap();
 
         try {
+            ResultSet rsLatestPur = dao.execSQL(strLatestPur);
             while (rsLatestPur.next()) {
                 String strMedId = rsLatestPur.getString("med_id");
                 String strPurUnit = Util1.getString(rsLatestPur.getString("pur_unit"), "-");
@@ -1127,10 +1128,11 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 + "market_price, market_unit, remark_med "
                 + "from v_price_change_med where med_id in (" + selectedMedId
                 + ") group by med_id";
-        ResultSet rsLatestMarket = dao.execSQL(strLatestMarket);
+        
         HashMap<String, String> hmLatestMarket = new HashMap();
 
         try {
+            ResultSet rsLatestMarket = dao.execSQL(strLatestMarket);
             while (rsLatestMarket.next()) {
                 String strMedId = rsLatestMarket.getString("med_id");
                 String strMarketPrice = Util1.getString(rsLatestMarket.getString("market_price"), "0");
@@ -1262,9 +1264,8 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             strSql = strSql + " where " + filter;
 
             String selectedMedId = null;
-            ResultSet rs = dao.execSQL(strSql);
-
             try {
+                ResultSet rs = dao.execSQL(strSql);
                 while (rs.next()) {
                     selectedMedId = rs.getString("med_id");
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);

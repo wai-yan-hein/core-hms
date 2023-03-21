@@ -143,54 +143,42 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     }
 
     private void getReOrderLevel() {
-        if (cboLocation.getSelectedItem() != null) {
-            Integer location = 0;
-            if (cboLocation.getSelectedItem() instanceof Location) {
-                location = ((Location) cboLocation.getSelectedItem()).getLocationId();
-            }
-            insertStockFilterCode(location);
-            execStockBalanceExp(location);
-            /*Integer locationId = ((Location) cboLocation.getSelectedItem())
+        try {
+            if (cboLocation.getSelectedItem() != null) {
+                Integer location = 0;
+                if (cboLocation.getSelectedItem() instanceof Location) {
+                    location = ((Location) cboLocation.getSelectedItem()).getLocationId();
+                }
+                insertStockFilterCode(location);
+                execStockBalanceExp(location);
+                /*Integer locationId = ((Location) cboLocation.getSelectedItem())
              .getLocationId();*/
-            tblReOrderModel.setLocationId(location);
-            log.info("gen start");
-            dao.execProc("gen_re_order_level", location.toString());
-            log.info("gen end");
-            /*dao.execProc("update_re_order_balance", Global.loginUser.getUserId(),
-             locationId.toString());*/
- /*String strSql = "update re_order_level rol left join (select user_id, location_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
-                    + "	from tmp_stock_balance_exp\n"
-                    + "	where user_id = '" + Global.loginUser.getUserId() + "' and (location_id = " + location.toString() + " or 0 = " + location.toString() + ")\n"
-                    + "           and ifnull(bal_qty,0) <> 0\n"
-                    + "	group by user_id, location_id, med_id) tsbe on rol.item_id = tsbe.med_id and rol.location_id = tsbe.location_id join "
-                    + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
-                    + "	   set rol.balance = tsbe.ttl_qty, \n"
-                    + "		   rol.balance_str = get_qty_in_str(ifnull(tsbe.ttl_qty,0), vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "		   rol.bal_max = max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
-                    + "		   rol.bal_max_str = get_qty_in_str(max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
-                    + "							vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "		   rol.bal_min = min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
-                    + "		   rol.bal_min_str = get_qty_in_str(min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
-                    + "							vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "            rol.main_bal = null, rol.main_bal_str = null "
-                    + "	 where (rol.location_id = " + location.toString() + " or 0 = " + location.toString() + ")";*/
-            String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
-                    + "	from tmp_stock_balance_exp\n"
-                    + "	where user_id = '" + Global.machineId + "' \n"
-                    + "           and ifnull(bal_qty,0) <> 0\n"
-                    + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
-                    + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
-                    + "	   set rol.balance = tsbe.ttl_qty, \n"
-                    + "		   rol.balance_str = get_qty_in_str(ifnull(tsbe.ttl_qty,0), vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "		   rol.bal_max = max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
-                    + "		   rol.bal_max_str = get_qty_in_str(max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
-                    + "							vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "		   rol.bal_min = min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
-                    + "		   rol.bal_min_str = get_qty_in_str(min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
-                    + "							vmusr.unit_smallest, vmusr.unit_str),\n"
-                    + "            rol.main_bal = null, rol.main_bal_str = null "
-                    + "	 where (rol.location_id = " + location.toString() + " or 0 = " + location.toString() + ")";
-            dao.execSql(strSql);
+                tblReOrderModel.setLocationId(location);
+                log.info("gen start");
+                dao.execProc("gen_re_order_level", location.toString());
+                log.info("gen end");
+                String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
+                        + "	from tmp_stock_balance_exp\n"
+                        + "	where user_id = '" + Global.machineId + "' \n"
+                        + "           and ifnull(bal_qty,0) <> 0\n"
+                        + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
+                        + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
+                        + "	   set rol.balance = tsbe.ttl_qty, \n"
+                        + "		   rol.balance_str = get_qty_in_str(ifnull(tsbe.ttl_qty,0), vmusr.unit_smallest, vmusr.unit_str),\n"
+                        + "		   rol.bal_max = max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
+                        + "		   rol.bal_max_str = get_qty_in_str(max_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.max_smallest,0)),\n"
+                        + "							vmusr.unit_smallest, vmusr.unit_str),\n"
+                        + "		   rol.bal_min = min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
+                        + "		   rol.bal_min_str = get_qty_in_str(min_qty(ifnull(tsbe.ttl_qty,0), ifnull(rol.min_smallest,0)),\n"
+                        + "							vmusr.unit_smallest, vmusr.unit_str),\n"
+                        + "            rol.main_bal = null, rol.main_bal_str = null "
+                        + "	 where (rol.location_id = " + location.toString() + " or 0 = " + location.toString() + ")";
+                dao.execSql(strSql);
+            }
+        } catch (Exception ex) {
+            log.error("getReOrderLevel : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -276,7 +264,7 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
             thread.start();*/
             List<VReOrderLevel> listReOrderLevel = dao.findAllHSQL(getHSQL());
             final List<ReOrderLevel> listROL = new ArrayList();
-            
+
             listReOrderLevel.forEach(vrol -> {
                 try {
                     String strQty = MedicineUtil.getQtyInStr(vrol.getQtyList(),
@@ -292,15 +280,15 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
                     java.util.logging.Logger.getLogger(ReOrderLevelEntry.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
-            
+
             try {
                 dao.saveBatch(listROL);
             } catch (Exception ex) {
                 log.error(ex.getMessage());
-            }finally{
+            } finally {
                 dao.close();
             }
-            
+
             tblReOrderModel.setListReOrderLevel(listReOrderLevel);
             System.gc();
         } catch (Exception ex) {
@@ -342,13 +330,19 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     }
 
     private void execStockBalanceExp(Integer location) {
-        dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                + Global.machineId + "'");
+        try {
+            dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
+                    + Global.machineId + "'");
 
-        dao.execProc("stock_balance_exp", "Opening",
-                DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
-                location.toString(),
-                Global.machineId);
+            dao.execProc("stock_balance_exp", "Opening",
+                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+                    location.toString(),
+                    Global.machineId);
+        } catch (Exception ex) {
+            log.error("execStockBalanceExp : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void insertStockFilterCode(int locationId) {
@@ -416,21 +410,27 @@ public class ReOrderLevelEntry extends javax.swing.JPanel implements KeyPropagat
     };
 
     private void updateMain(Integer location) {
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        insertStockFilterCode(location);
-        execStockBalanceExp(location);
-        Integer sourceLoc = ((Location) cboLocation.getSelectedItem()).getLocationId();
-        String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
-                + "	from tmp_stock_balance_exp\n"
-                + "	where user_id = '" + Global.machineId + "' and ifnull(bal_qty,0) <> 0\n"
-                + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
-                + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
-                + "	   set rol.main_bal = tsbe.ttl_qty, \n"
-                + "		   rol.main_bal_str = get_qty_in_str(ifnull(tsbe.ttl_qty,0), vmusr.unit_smallest, vmusr.unit_str) "
-                + "	 where rol.location_id = " + sourceLoc.toString();
-        dao.execSql(strSql);
-        applyFilter();
-        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        try {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            insertStockFilterCode(location);
+            execStockBalanceExp(location);
+            Integer sourceLoc = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            String strSql = "update re_order_level rol left join (select user_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
+                    + "	from tmp_stock_balance_exp\n"
+                    + "	where user_id = '" + Global.machineId + "' and ifnull(bal_qty,0) <> 0\n"
+                    + "	group by user_id, med_id) tsbe on rol.item_id = tsbe.med_id join "
+                    + "		   v_med_unit_smallest_rel vmusr on rol.item_id = vmusr.med_id "
+                    + "	   set rol.main_bal = tsbe.ttl_qty, \n"
+                    + "		   rol.main_bal_str = get_qty_in_str(ifnull(tsbe.ttl_qty,0), vmusr.unit_smallest, vmusr.unit_str) "
+                    + "	 where rol.location_id = " + sourceLoc.toString();
+            dao.execSql(strSql);
+            applyFilter();
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        } catch (Exception ex) {
+            log.error("updateMain : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void print() {

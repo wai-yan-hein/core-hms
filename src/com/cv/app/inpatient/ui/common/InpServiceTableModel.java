@@ -383,9 +383,15 @@ public class InpServiceTableModel extends AbstractTableModel {
 
     private void execOtBackup(InpService record) {
         if (record.getServiceId() != null) {
-            dao.execProc("inp_setbackup", record.getServiceId().toString(),
-                    DateUtil.toDateTimeStrMYSQL(new Date()),
-                    Global.loginUser.getUserId());
+            try {
+                dao.execProc("inp_setbackup", record.getServiceId().toString(),
+                        DateUtil.toDateTimeStrMYSQL(new Date()),
+                        Global.loginUser.getUserId());
+            } catch (Exception ex) {
+                log.error("execOtBackup : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 }

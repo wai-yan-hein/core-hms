@@ -295,9 +295,15 @@ public class OTServiceTableModel extends AbstractTableModel {
 
     private void execOtBackup(OTProcedure record) {
         if (record.getServiceId() != null) {
-            dao.execProc("ot_setbackup", record.getServiceId().toString(),
-                    DateUtil.toDateTimeStrMYSQL(new Date()),
-                    Global.loginUser.getUserId());
+            try {
+                dao.execProc("ot_setbackup", record.getServiceId().toString(),
+                        DateUtil.toDateTimeStrMYSQL(new Date()),
+                        Global.loginUser.getUserId());
+            } catch (Exception ex) {
+                log.error("execOtBackup : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 }

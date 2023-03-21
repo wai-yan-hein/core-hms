@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -108,18 +107,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.springframework.beans.BeanUtils;
@@ -4177,18 +4177,42 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
-                HttpGet request = new HttpGet(url);
-                CloseableHttpResponse response = httpClient.execute(request);
-                // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        log.info("return from server : " + output);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/sale";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            } catch (IOException e) {
+            } else {
                 try {
                     dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
                 } catch (Exception ex) {
@@ -4197,39 +4221,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     dao.close();
                 }
             }
-
         }
     }
-
-    /*private void uploadToAccount(SaleHis sh) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "SALE");
-                        msg.setString("VOUCHER-NO", sh.getSaleInvId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                        log.info("uploadToAccount: Sale : " + sh.getSaleInvId());
-                    } catch (JMSException ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + sh.getSaleInvId() + " - " + ex);
-                    }
-                } else {
-                    log.error("Connection status error : " + sh.getSaleInvId());
-                }
-            } else {
-                log.error("Connection error : " + sh.getSaleInvId());
-            }
-        }
-    }*/
+    
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
             @Override
@@ -4366,9 +4360,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     private void execTraderBalanceWithUPV() {
-        dao.execProc("get_trader_unpaid_vou", Global.machineId,
-                DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
-                DateUtil.toDateStrMYSQL(txtDueDate.getText()));
+        try {
+            dao.execProc("get_trader_unpaid_vou", Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
+                    DateUtil.toDateStrMYSQL(txtDueDate.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderBalanceWithUPV : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private boolean isOverDue(String traderId) {
@@ -4505,7 +4505,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             }
                         }
                     }
-                } catch (SQLException ex) {
+                } catch (Exception ex) {
                     log.error("isOverdue : " + ex.toString());
                 } finally {
                     dao.close();

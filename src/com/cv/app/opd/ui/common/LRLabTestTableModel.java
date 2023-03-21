@@ -27,7 +27,7 @@ public class LRLabTestTableModel extends AbstractTableModel {
     private final AbstractDataAccess dao = Global.dao;
     private List<VOpd> listVOPD = new ArrayList();
     private final String[] columnNames = {"Lab Test", "Date", "Ref. Doctor",
-        "Lab Tech", "Print", "Lab Machine", "Result Order","Comments"};
+        "Lab Tech", "Print", "Lab Machine", "Result Order", "Comments"};
 
     @Override
     public String getColumnName(int column) {
@@ -36,7 +36,7 @@ public class LRLabTestTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 3 || column == 4 || column == 5 || column == 6;
+        return column == 3 || column == 4 || column == 5 || column == 6 || column == 7;
     }
 
     @Override
@@ -108,20 +108,22 @@ public class LRLabTestTableModel extends AbstractTableModel {
                             dao.close();
                         }
                     } else {
-                        Doctor patho = (Doctor) value;
-                        try {
-                            OPDDetailHis odh = (OPDDetailHis) dao.find(OPDDetailHis.class, detailId);
-                            if (odh != null) {
-                                odh.setTechnician(patho);
-                                //odh.setPathoId(patho.getPathoId());
-                                dao.save(odh);
-                                record.setTechId(patho.getDoctorId());
-                                record.setTechName(patho.getDoctorName());
+                        if (value instanceof Doctor) {
+                            try {
+                                Doctor patho = (Doctor) value;
+                                OPDDetailHis odh = (OPDDetailHis) dao.find(OPDDetailHis.class, detailId);
+                                if (odh != null) {
+                                    odh.setTechnician(patho);
+                                    //odh.setPathoId(patho.getPathoId());
+                                    dao.save(odh);
+                                    record.setTechId(patho.getDoctorId());
+                                    record.setTechName(patho.getDoctorName());
+                                }
+                            } catch (Exception ex) {
+                                log.error("Patho assign : " + ex.getMessage());
+                            } finally {
+                                dao.close();
                             }
-                        } catch (Exception ex) {
-                            log.error("Patho assign : " + ex.getMessage());
-                        } finally {
-                            dao.close();
                         }
                     }
                 } else {
@@ -142,7 +144,7 @@ public class LRLabTestTableModel extends AbstractTableModel {
                     try {
                         OPDDetailHis odh = (OPDDetailHis) dao.find(OPDDetailHis.class, detailId);
                         if (odh != null) {
-                            LabMachine lm = (LabMachine)value;
+                            LabMachine lm = (LabMachine) value;
                             odh.setLabMachineId(lm.getlMachineId());
                             dao.save(odh);
                             record.setLabMachineId(lm.getlMachineId());
@@ -159,7 +161,7 @@ public class LRLabTestTableModel extends AbstractTableModel {
                 }
                 break;
             case 6: //Result Order
-                if(value != null){
+                if (value != null) {
                     try {
                         Integer resultOrder = Integer.parseInt(value.toString());
                         record.setResultOrder(resultOrder);
@@ -167,19 +169,19 @@ public class LRLabTestTableModel extends AbstractTableModel {
                         if (odh != null) {
                             odh.setSortOrder(resultOrder);
                             dao.save(odh);
-                            
+
                         }
                     } catch (Exception ex) {
                         log.error("Result Order : " + ex.getMessage());
                     } finally {
                         dao.close();
                     }
-                }else{
+                } else {
                     record.setResultOrder(null);
                 }
                 break;
         }
-        
+
         fireTableCellUpdated(row, column);
     }
 
@@ -201,10 +203,10 @@ public class LRLabTestTableModel extends AbstractTableModel {
         this.listVOPD = listVOPD;
         fireTableDataChanged();
     }
-    
-    public void showCommentDialog(int row){
+
+    public void showCommentDialog(int row) {
         VOpd record = listVOPD.get(row);
-        Long detailId = Long.parseLong(record.getKey().getOpdDetailId().toString());
+        String detailId = record.getKey().getOpdDetailId();
         JavaFXHTMLEditor.showEditor(record.getServiceName(), detailId, "LT");
     }
 }

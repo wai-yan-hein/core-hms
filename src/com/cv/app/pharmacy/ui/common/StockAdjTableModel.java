@@ -26,6 +26,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
@@ -54,7 +55,8 @@ public class StockAdjTableModel extends AbstractTableModel {
     private String deletedList;
     private String currency;
     private boolean editStatus = false;
-    
+    private String stockDate;
+
     public StockAdjTableModel(List<AdjDetailHis> listDetail, AbstractDataAccess dao,
             MedicineUP medUp, MedInfo medInfo) {
         this.listDetail = listDetail;
@@ -82,12 +84,17 @@ public class StockAdjTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return !(column == 1 || column == 2
-                || column == 4
-                || column == 6
-                || column == 9
-                || column == 11
-                || column == 13);
+        log.info("editStatus : " + editStatus);
+        if (!editStatus) {
+            return false;
+        } else {
+            return !(column == 1 || column == 2
+                    || column == 4
+                    || column == 6
+                    || column == 9
+                    || column == 11
+                    || column == 13);
+        }
     }
 
     @Override
@@ -220,16 +227,20 @@ public class StockAdjTableModel extends AbstractTableModel {
 
             switch (column) {
                 case 0: //Code
-                    record.getMedicineId().setMedId((String) value);
-                    dao.open();
-                    medInfo.getMedInfo((String) value);
-                    dao.close();
-                    record.setUnit(null);
-                    record.setQty(null);
-                    record.setExpireDate(null);
-                    record.setAdjType(null);
-                    record.setCurrencyId(currency);
-                    assignBalance(record);
+                    //if (!isAlreadyHave((String) value)) {
+                        record.getMedicineId().setMedId((String) value);
+                        dao.open();
+                        medInfo.getMedInfo((String) value);
+                        dao.close();
+                        record.setUnit(null);
+                        record.setQty(null);
+                        record.setExpireDate(null);
+                        record.setAdjType(null);
+                        record.setCurrencyId(currency);
+                        assignBalance(record);
+                    /*}else{
+                        return;
+                    }*/
                     break;
                 case 1: //Medicine Name
                     //record.getMedicineId().setMedName((String) value);
@@ -245,9 +256,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                 case 4: //Sys-Balance
                     break;
                 case 5: //Usr-Balance
-                    if(editStatus){
-                        record.setOldSmallestQty(record.getSmallestQty());
-                    }
+                    record.setOldSmallestQty(record.getSmallestQty());
                     if (value == null) {
                         record.setUsrBalQty(null);
                         record.setUsrBalUnit(null);
@@ -299,13 +308,11 @@ public class StockAdjTableModel extends AbstractTableModel {
                     }
                     break;
                 case 8: //Qty
-                    if(editStatus){
-                        record.setOldSmallestQty(record.getSmallestQty());
-                    }
+                    record.setOldSmallestQty(record.getSmallestQty());
                     String tmpQtyStr = NumberUtil.getEngNumber(value.toString().trim());
                     record.setQty(NumberUtil.NZeroFloat(tmpQtyStr));
                     //For unit popup
-                    if (medUp.getUnitList(medId).size() > 0) {
+                    if (!medUp.getUnitList(medId).isEmpty()) {
                         unitPopup = new UnitAutoCompleter(x, y,
                                 medUp.getUnitList(medId), Util1.getParent());
 
@@ -315,6 +322,7 @@ public class StockAdjTableModel extends AbstractTableModel {
                     } else {
                         record.setUnit(medUp.getUnitList(medId).get(0));
                     }
+
                     record.setAdjType(defaultAdjType);
                     fireTableCellUpdated(row, 6);
                     assignPrice(record);
@@ -341,6 +349,7 @@ public class StockAdjTableModel extends AbstractTableModel {
         calculateAmount(row);
         fireTableCellUpdated(row, 8);
         fireTableCellUpdated(row, 4);
+        fireTableCellUpdated(row, 11);
         fireTableCellUpdated(row, 12);
         if (column != 0) {
             fireTableCellUpdated(row, column);
@@ -445,7 +454,17 @@ public class StockAdjTableModel extends AbstractTableModel {
 
         rodh.setSmallestQty(NumberUtil.NZeroFloat(rodh.getQty())
                 * medUp.getQtyInSmallest(key));
+        float balance = 0f;
+        if (rodh.getAdjType() != null) {
+            if (rodh.getAdjType().getAdjTypeId().equals("+")) {
+                balance = NumberUtil.FloatZero(rodh.getSysBalance()) + NumberUtil.FloatZero(rodh.getSmallestQty());
+            } else if (rodh.getAdjType().getAdjTypeId().equals("-")) {
+                balance = NumberUtil.FloatZero(rodh.getSysBalance()) - NumberUtil.FloatZero(rodh.getSmallestQty());
+            }
+        }
 
+        rodh.setBalance(balance);
+        rodh.setStrBalance(MedicineUtil.getQtyInStr(rodh.getMedicineId(), balance));
         double amount = NumberUtil.NZero(rodh.getQty())
                 * NumberUtil.NZero(rodh.getCostPrice());
 
@@ -670,7 +689,16 @@ public class StockAdjTableModel extends AbstractTableModel {
     private void assignBalance(AdjDetailHis record) {
         DateUtil.setStartTime();
         String medId = record.getMedicineId().getMedId();
-        try {
+        float balance = getBalance(locationId.toString(), medId);
+        if (balance != 0f) {
+            record.setSysBalance(balance);
+            String strBalance = MedicineUtil.getQtyInStr(record.getMedicineId(), balance);
+            record.setStrSysBalance(strBalance);
+        } else {
+            record.setSysBalance(null);
+            record.setStrSysBalance(null);
+        }
+        /*try {
             ResultSet resultSet = dao.getPro("GET_STOCK_BALANCE_CODE",
                     locationId.toString(), medId, Global.machineId);
             if (resultSet != null) {
@@ -690,8 +718,157 @@ public class StockAdjTableModel extends AbstractTableModel {
             }
         } catch (Exception ex) {
             log.error("assignBalance : " + ex.getMessage());
-        }
+        }*/
         log.info("assignBalance time taken : " + DateUtil.getDuration());
+    }
+
+    private float getBalance(String locId, String medId) {
+        String mysqlStockDate = DateUtil.toDateStrMYSQL(stockDate);
+        String strSql = "select max(op_date) as op_date\n"
+                + "    from med_op_date\n"
+                + "   where location_id = " + locId + "\n"
+                + "     and med_id = '" + medId + "' and op_date <= '" + mysqlStockDate + "'";
+        String medOpDate = "1900-01-01";
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                if (rs.next()) {
+                    medOpDate = DateUtil.toDateStrMYSQL(
+                            DateUtil.toDateStr(rs.getDate("op_date")));
+                }
+                rs.close();
+            }
+        } catch (Exception ex) {
+            log.error("getBalance get op date : " + ex.getMessage());
+        }
+
+        strSql = "select * from (\n"
+                + "select a.location_id, loc.location_name, a.med_id, sum(ttl_qty) ttl_qty\n"
+                + "  from (\n"
+                + "    select soh.location location_id, sodh.med_id,\n"
+                + "           sodh.expire_date exp_date, sum(sodh.op_smallest_qty) ttl_qty\n"
+                + "      from stock_op_his soh inner join stock_op_detail_his sodh on soh.op_id = sodh.op_id\n"
+                + "                            inner join tmp_stock_filter tsf on soh.location = tsf.location_id\n"
+                + "					and sodh.med_id = tsf.med_id and soh.op_date = tsf.op_date\n"
+                + "     where sodh.med_id = prm_med_id\n"
+                + "     group by soh.location, sodh.med_id, sodh.expire_date\n"
+                + "     union all \n"
+                + "    select ifnull(sdh.location_id, sh.location_id) location_id, sdh.med_id, sdh.expire_date exp_date,\n"
+                + "           (sum(sdh.sale_smallest_qty+ifnull(sdh.foc_smallest_qty,0))*-1) ttl_qty\n"
+                + "      from sale_his sh, sale_detail_his sdh \n"
+                + "     where sh.sale_inv_id = sdh.vou_no and sh.deleted = false\n"
+                + "       and sh.sale_date >= var_op_date \n"
+                + "       and sdh.med_id = prm_med_id\n"
+                + "       and ifnull(sdh.location_id,sh.location_id) = prm_location_id\n"
+                + "	  and sh.vou_status = 1 \n"
+                + "     group by ifnull(sdh.location_id,sh.location_id), sdh.med_id, sdh.expire_date\n"
+                + "     union all \n"
+                + "    select ifnull(pdh.location_id,ph.location) location_id, pdh.med_id, pdh.expire_date exp_date,\n"
+                + "           sum(pdh.pur_smallest_qty + ifnull(pdh.pur_foc_smallest_qty,0)) ttl_qty\n"
+                + "      from pur_his ph, pur_detail_his pdh\n"
+                + "     where ph.pur_inv_id = pdh.vou_no and ph.deleted = false\n"
+                + "       and ph.pur_date >= var_op_date \n"
+                + "       and pdh.med_id = prm_med_id\n"
+                + "       and ifnull(pdh.location_id, ph.location) = prm_location_id\n"
+                + "	  and ph.vou_status = 1 \n"
+                + "     group by ifnull(pdh.location_id, ph.location), pdh.med_id, pdh.expire_date\n"
+                + "     union all \n"
+                + "    select rih.location location_id, ridh.med_id, ridh.expire_date exp_date,\n"
+                + "           sum(ridh.ret_in_smallest_qty) ttl_qty\n"
+                + "      from ret_in_his rih, ret_in_detail_his ridh\n"
+                + "     where rih.ret_in_id = ridh.vou_no and rih.deleted = false\n"
+                + "       and rih.ret_in_date >= var_op_date \n"
+                + "       and ridh.med_id = prm_med_id\n"
+                + "       and rih.location = prm_location_id\n"
+                + "     group by rih.location, ridh.med_id, ridh.expire_date\n"
+                + "     union all \n"
+                + "    select roh.location location_id, rodh.med_id, rodh.expire_date exp_date,\n"
+                + "           (sum(rodh.ret_out_smallest_qty)*-1) ttl_qty\n"
+                + "      from ret_out_his roh, ret_out_detail_his rodh\n"
+                + "     where roh.ret_out_id = rodh.vou_no and roh.deleted = false\n"
+                + "       and roh.ret_out_date >= var_op_date \n"
+                + "       and rodh.med_id = prm_med_id\n"
+                + "       and roh.location = prm_location_id\n"
+                + "     group by roh.location, rodh.med_id, rodh.expire_date\n"
+                + "     union all \n"
+                + "    select th.from_location location_id, tdh.med_id, tdh.expire_date exp_date,\n"
+                + "           (sum(tdh.tran_smallest_qty)*-1) ttl_qty\n"
+                + "      from transfer_his th, transfer_detail_his tdh\n"
+                + "     where th.transfer_id = tdh.vou_no and th.deleted = false\n"
+                + "       and th.tran_date >= var_op_date and tdh.med_id = prm_med_id\n"
+                + "       and th.from_location = prm_location_id\n"
+                + "     group by th.from_location, tdh.med_id, tdh.expire_date\n"
+                + "     union all \n"
+                + "    select th.to_location location_id, tdh.med_id med_id, tdh.expire_date exp_date,\n"
+                + "           sum(tdh.tran_smallest_qty) ttl_qty\n"
+                + "      from transfer_his th, transfer_detail_his tdh\n"
+                + "     where th.transfer_id = tdh.vou_no and th.deleted = false\n"
+                + "       and th.tran_date >= var_op_date and tdh.med_id = prm_med_id\n"
+                + "       and th.to_location = prm_location_id\n"
+                + "     group by th.to_location, tdh.med_id, tdh.expire_date\n"
+                + "     union all \n"
+                + "    select ah.location location_id, adh.med_id, adh.expire_date exp_date,\n"
+                + "           sum(if(adh.adj_type = '-',(adh.adj_smallest_qty*-1),adh.adj_smallest_qty)) ttl_qty\n"
+                + "      from adj_his ah, adj_detail_his adh\n"
+                + "     where ah.adj_id = adh.vou_no and ah.deleted = false\n"
+                + "       and ah.adj_date >= var_op_date and adh.med_id = prm_med_id\n"
+                + "       and ah.location = prm_location_id\n"
+                + "     group by ah.location, adh.med_id, adh.expire_date\n"
+                + "	union all \n"
+                + "    select srh.location_id location_id, srdh.order_med_id med_id, srdh.expire_date,\n"
+                + "		   sum(srdh.smallest_qty) ttl_qty\n"
+                + "	 from stock_receive_his srh, stock_receive_detail_his srdh\n"
+                + "	where srh.receive_id = srdh.vou_no\n"
+                + "	  and srh.deleted = false and srh.receive_date >= var_op_date and srdh.order_med_id = prm_med_id\n"
+                + "       and srh.location_id = prm_location_id\n"
+                + "     group by srh.location_id, srdh.order_med_id, srdh.expire_date\n"
+                + "	union all \n"
+                + "    select sih.location_id, sidh.med_id, sidh.expire_date, (sum(sidh.smallest_qty)*-1) ttl_qty\n"
+                + "	 from stock_issue_his sih,stock_issue_detail_his sidh\n"
+                + "	where sih.issue_id = sidh.issue_id\n"
+                + "	  and sih.deleted = false and sih.issue_date >= var_op_date\n"
+                + "	  and sidh.med_id = prm_med_id and sih.location_id = prm_location_id\n"
+                + "	group by sih.location_id, sidh.med_id, sidh.expire_date\n"
+                + "	union all\n"
+                + "    select vd.location location_id, vd.med_id, vd.expire_date, sum(ifnull(vd.dmg_smallest_qty,0)*-1) ttl_qty\n"
+                + "	 from v_damage vd\n"
+                + "	where vd.deleted = false and vd.dmg_date >= var_op_date\n"
+                + "	  and vd.med_id = prm_med_id and vd.location = prm_location_id\n"
+                + "	group by vd.location, vd.med_id, expire_date\n"
+                + "     union all \n"
+                + "    select vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
+                + "	 from v_lab_med_usage vlmu\n"
+                + "	where vlmu.location_id = prm_location_id and vlmu.med_id = prm_med_id\n"
+                + "	  and date(vlmu.opd_date) >= var_op_date\n"
+                + "	group by vlmu.location_id, vlmu.med_id \n"
+                + "	union all \n"
+                + "    select vlmu.location_id, vlmu.med_id, null exp_date, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
+                + "	 from v_investigation_med_usage vlmu\n"
+                + "	where vlmu.location_id = prm_location_id and vlmu.med_id = prm_med_id\n"
+                + "       and date(vlmu.opd_date) >= var_op_date\n"
+                + "	group by vlmu.location_id, vlmu.med_id\n"
+                + "     ) a, location loc\n"
+                + "  where a.location_id = loc.location_id\n"
+                + "  group by a.location_id, loc.location_name, a.med_id) a\n";
+        strSql = strSql.replace("var_op_date", "'" + medOpDate + "'")
+                .replace("prm_med_id", "'" + medId + "'")
+                .replace("prm_location_id", locId);
+        float ttlBalance = 0f;
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                if (rs.next()) {
+                    ttlBalance = rs.getFloat("ttl_qty");
+                }
+                rs.close();
+            }
+        } catch (Exception ex) {
+            log.error("getBalance calculate stock : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
+        return ttlBalance;
     }
 
     public List<AdjDetailHis> getListDetail() {
@@ -967,5 +1144,26 @@ public class StockAdjTableModel extends AbstractTableModel {
 
     public void setEditStatus(boolean editStatus) {
         this.editStatus = editStatus;
+    }
+
+    public void setStockDate(String stockDate) {
+        this.stockDate = stockDate;
+    }
+
+    private boolean isAlreadyHave(String medId) {
+        if (listDetail == null) {
+            return false;
+        } else if (listDetail.isEmpty()) {
+            return false;
+        } else {
+            List tmpList = listDetail.stream().filter(o -> o.getMedicineId() != null)
+                    .filter(o -> o.getMedicineId().getMedId().equals(medId))
+                    .collect(Collectors.toList());
+            if (tmpList == null) {
+                return false;
+            } else {
+                return !tmpList.isEmpty();
+            }
+        }
     }
 }

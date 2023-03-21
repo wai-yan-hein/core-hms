@@ -73,9 +73,13 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -1257,20 +1261,22 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void setEditStatus(String invId) {
-        //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Return In' "
-                + " and o.tranInvId = '" + invId + "'");*/
-        if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
-            List list = dao.findAllSQLQuery(
-                    "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
-            if (list != null) {
-                canEdit = list.isEmpty();
+        try {
+            if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
+                List list = dao.findAllSQLQuery(
+                        "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
+                if (list != null) {
+                    canEdit = list.isEmpty();
+                } else {
+                    canEdit = true;
+                }
             } else {
                 canEdit = true;
             }
-        } else {
-            canEdit = true;
+        } catch (Exception ex) {
+            log.error("setEditStatus : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1971,18 +1977,42 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
-                HttpGet request = new HttpGet(url);
-                CloseableHttpResponse response = httpClient.execute(request);
-                // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        log.info("return from server : " + output);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/purchase";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            } catch (IOException e) {
+            } else {
                 try {
                     dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
                 } catch (Exception ex) {
@@ -1991,34 +2021,8 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
                     dao.close();
                 }
             }
-
         }
     }
-    
-    /*private void uploadToAccount(PurHis ph) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "PURCHASE");
-                        msg.setString("VOUCHER-NO", ph.getPurInvId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ph.getPurInvId() + " - " + ex);
-                    }
-                }
-            }
-        }
-    }*/
 
     /**
      * This method is called from within the constructor to initialize the form.

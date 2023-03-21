@@ -156,7 +156,7 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
 
         login.setLocation(x, y);
         login.show();
-        //super.onPreStartup();
+        log.info("After Login Dialog");
 
         if (login.isStatus()) {
             AbstractDataAccess dao = Global.dao;
@@ -204,12 +204,11 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
                 dao.close();
             }
             //MQ initilization
-            String isIntegration = Util1.getPropValue("system.integration");
+            /*String isIntegration = Util1.getPropValue("system.integration");
             if (isIntegration.toUpperCase().equals("Y")) {
                 String mqUrl = Util1.getPropValue("system.mqserver.url");
                 Global.mqConnection = new ActiveMQConnection(mqUrl);
-                //Global.queueName = Util1.getPropValue("system.account.amq.name");
-            }
+            }*/
         } else {
             System.exit(1);
         }

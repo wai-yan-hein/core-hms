@@ -306,7 +306,7 @@ public class PackageDetailEditTableModel extends AbstractTableModel {
                 txtPackageUsage.setValue(packageUsageTotal);
                 txtGainLost.setValue(packageAmount - packageUsageTotal);
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("initData : " + ex.toString());
         } finally {
             dao.close();

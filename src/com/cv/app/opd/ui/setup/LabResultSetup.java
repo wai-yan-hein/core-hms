@@ -407,29 +407,41 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
     }
 
     private void txtLabRemarkChange() {
-        int index = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
-        VService service = labTestTableModel.getListService().get(index);
-        if (service != null) {
-            if (!txtLabRemark.getText().equals("")) {
-                dao.execSql("update opd_service set lab_remark = '" + txtLabRemark.getText() + "' where service_id =" + service.getServiceId());
-            } else {
-                dao.execSql("update opd_service set lab_remark = '' where service_id =" + service.getServiceId());
+        try {
+            int index = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
+            VService service = labTestTableModel.getListService().get(index);
+            if (service != null) {
+                if (!txtLabRemark.getText().equals("")) {
+                    dao.execSql("update opd_service set lab_remark = '" + txtLabRemark.getText() + "' where service_id =" + service.getServiceId());
+                } else {
+                    dao.execSql("update opd_service set lab_remark = '' where service_id =" + service.getServiceId());
+                }
             }
+        } catch (Exception ex) {
+            log.error("txtLabRemarkChange : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
     private void txtResultRemarkChange() {
-        if (tblLabResult.getSelectedRow() >= 0) {
-            int index = tblLabResult.convertRowIndexToModel(tblLabResult.getSelectedRow());
-            OPDLabResult result = labResultTableModel.getListResult().get(index);
-            if (result != null) {
-                //result.setLabResultRemark(txtLabResultRemark.getText());
-                if (!txtLabResultRemark.getText().equals("")) {
-                    dao.execSql("update opd_lab_result set lab_result_remark = '" + txtLabResultRemark.getText() + "' where result_id =" + result.getResultId());
-                } else {
-                    dao.execSql("update opd_lab_result set lab_result_remark = '' where result_id =" + result.getResultId());
+        try {
+            if (tblLabResult.getSelectedRow() >= 0) {
+                int index = tblLabResult.convertRowIndexToModel(tblLabResult.getSelectedRow());
+                OPDLabResult result = labResultTableModel.getListResult().get(index);
+                if (result != null) {
+                    //result.setLabResultRemark(txtLabResultRemark.getText());
+                    if (!txtLabResultRemark.getText().equals("")) {
+                        dao.execSql("update opd_lab_result set lab_result_remark = '" + txtLabResultRemark.getText() + "' where result_id =" + result.getResultId());
+                    } else {
+                        dao.execSql("update opd_lab_result set lab_result_remark = '' where result_id =" + result.getResultId());
+                    }
                 }
             }
+        } catch (Exception ex) {
+            log.error("txtResultRemarkChange : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

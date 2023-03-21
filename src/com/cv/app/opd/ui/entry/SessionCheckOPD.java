@@ -73,31 +73,31 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         try {
             String toDeleteVou = getDeleteVou("select distinct sale_inv_id from sale_his where deleted = false and "
                     + "not EXISTS (select * from sale_detail_his where vou_no = sale_inv_id)", "sale_inv_id");
-            if(!toDeleteVou.isEmpty()){
+            if (!toDeleteVou.isEmpty()) {
                 dao.execSql("update sale_his set deleted = true, intg_upd_status = null where sale_inv_id in (" + toDeleteVou + ")");
             }
-            
+
             toDeleteVou = getDeleteVou("select distinct ret_in_id from ret_in_his where deleted = false and "
                     + "not EXISTS (select * from ret_in_detail_his where vou_no = ret_in_id)", "ret_in_id");
-            if(!toDeleteVou.isEmpty()){
+            if (!toDeleteVou.isEmpty()) {
                 dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_id in (" + toDeleteVou + ")");
             }
-            
+
             toDeleteVou = getDeleteVou("select distinct opd_inv_id from opd_his where deleted = false and "
                     + "not EXISTS (select * from opd_details_his where vou_no = opd_inv_id)", "opd_inv_id");
-            if(!toDeleteVou.isEmpty()){
+            if (!toDeleteVou.isEmpty()) {
                 dao.execSql("update opd_his set deleted = true, intg_upd_status = null where opd_inv_id in (" + toDeleteVou + ")");
             }
-            
+
             toDeleteVou = getDeleteVou("select distinct ot_inv_id from ot_his where deleted = false and "
                     + "not EXISTS (select * from ot_details_his where vou_no = ot_inv_id)", "ot_inv_id");
-            if(!toDeleteVou.isEmpty()){
+            if (!toDeleteVou.isEmpty()) {
                 dao.execSql("update ot_his set deleted = true, intg_upd_status = null where ot_inv_id in (" + toDeleteVou + ")");
             }
-            
+
             toDeleteVou = getDeleteVou("select dc_inv_id from dc_his where deleted = false and "
                     + "not EXISTS (select * from dc_details_his where vou_no = dc_inv_id)", "dc_inv_id");
-            if(!toDeleteVou.isEmpty()){
+            if (!toDeleteVou.isEmpty()) {
                 dao.execSql("update dc_his set deleted = true, intg_upd_status = null where dc_inv_id in (" + toDeleteVou + ")");
             }
         } catch (Exception ex) {
@@ -106,33 +106,32 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             dao.close();
         }
     }
-    
-    private String getDeleteVou(String strSql, String fieldName){
+
+    private String getDeleteVou(String strSql, String fieldName) {
         String toDeleteVou = "";
-        try{
+        try {
             ResultSet rs = dao.execSQL(strSql);
-            if(rs != null){
-                
-                
-                while(rs.next()){
-                    if(toDeleteVou.isEmpty()){
+            if (rs != null) {
+
+                while (rs.next()) {
+                    if (toDeleteVou.isEmpty()) {
                         toDeleteVou = "'" + rs.getString(fieldName) + "'";
-                    }else{
+                    } else {
                         toDeleteVou = toDeleteVou + ",'" + rs.getString(fieldName) + "'";
                     }
                 }
-                
+
                 rs.close();
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("getDeleteVou : " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
-        
+
         return toDeleteVou;
     }
-    
+
     private void assignDate() {
         txtFrom.setText(DateUtil.getTodayDateStr());
         txtTo.setText(DateUtil.getTodayDateStr());
@@ -485,15 +484,15 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                                 + "where date(opd_date) between '"
                                 + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                                 + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-                        
+
                         if (session != 0) {
                             strOpd = strOpd + " and session_id = " + session;
                         }
-                        
+
                         if (!strSUBGFilter.isEmpty()) {
                             strOpd = strOpd + " and " + strSUBGFilter;
                         }
-                        
+
                         try {
                             dao.execSql(strOpd);
                         } catch (Exception ex) {
@@ -525,15 +524,15 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                                 + "where date(ot_date) between '"
                                 + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                                 + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-                        
+
                         if (session != 0) {
                             strOpd = strOpd + " and session_id = " + session;
                         }
-                        
+
                         if (!strSUBGFilter.isEmpty()) {
                             strOpd = strOpd + " and " + strSUBGFilter;
                         }
-                        
+
                         try {
                             dao.execSql(strOpd);
                         } catch (Exception ex) {
@@ -565,15 +564,15 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                                 + "where date(dc_date) between '"
                                 + DateUtil.toDateTimeStrMYSQL(txtFrom.getText()) + "' and '"
                                 + DateUtil.toDateTimeStrMYSQL(txtTo.getText()) + "' and cat_id in (" + strGroupId + ")";
-                        
+
                         if (session != 0) {
                             strOpd = strOpd + " and session_id = " + session;
                         }
-                        
+
                         if (!strSUBGFilter.isEmpty()) {
                             strOpd = strOpd + " and " + strSUBGFilter;
                         }
-                        
+
                         try {
                             dao.execSql(strOpd);
                         } catch (Exception ex) {
@@ -618,7 +617,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     ));
                 }
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("applyFilter : " + ex.getMessage());
         }
         listTtl.addAll(getBillPayment(fromDate, toDate));
@@ -634,18 +633,20 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                 + "where date(pay_date) between '" + fromDate + "' and '" + toDate + "'\n"
                 + " and deleted = false \n"
                 + "group by currency_id";
-        ResultSet rs = dao.execSQL(sql);
-        if (rs != null) {
-            try {
+        try {
+            ResultSet rs = dao.execSQL(sql);
+            if (rs != null) {
+
                 while (rs.next()) {
                     values.add(new SessionTtl(
                             "Total Bill Payment",
                             rs.getString("currency_id"),
                             rs.getDouble("amt")));
                 }
-            } catch (SQLException ex) {
-                log.error(String.format("getBillPayment: %s", ex.getMessage()));
+
             }
+        } catch (Exception ex) {
+            log.error(String.format("getBillPayment: %s", ex.getMessage()));
         }
         return values;
     }

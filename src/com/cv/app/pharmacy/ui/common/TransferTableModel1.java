@@ -603,7 +603,7 @@ public class TransferTableModel1 extends AbstractTableModel {
                 }
                 tdh.setAmount(NumberUtil.NZero(tdh.getPrice())
                         * NumberUtil.NZero(tdh.getQty()));
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 log.error("assignPrice : " + ex.getMessage());
             }
         } else {

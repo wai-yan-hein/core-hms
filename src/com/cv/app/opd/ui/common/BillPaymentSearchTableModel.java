@@ -54,13 +54,14 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
         VPatientBillPayment record = listVPBP.get(row);
 
         switch (column) {
-            case 0: //Reg No.
-                return record.getRegNo();
-            case 1://date
+            case 0: //Date
                 if (record.getPayDate() != null) {
                     return DateUtil.toDateStr(record.getPayDate());
+                } else {
+                    return record.getPayDate();
                 }
-                return null;
+            case 1: //Reg No.
+                return record.getRegNo();
             case 2: //Patient Name
                 return record.getPatientName();
             case 4: //Bill Type

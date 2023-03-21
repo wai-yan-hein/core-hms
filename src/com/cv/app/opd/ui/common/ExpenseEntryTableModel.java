@@ -25,9 +25,13 @@ import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 /**
@@ -286,56 +290,52 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
     private void uploadToAccount(Long vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
-                String url = "http://example.com/api/users/" + vouNo;
-                HttpGet request = new HttpGet(url);
-                CloseableHttpResponse response = httpClient.execute(request);
-                // Handle the response
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                    String output;
-                    while ((output = br.readLine()) != null) {
-                        log.info("return from server : " + output);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/expense";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("expId", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            } catch (IOException e) {
+            } else {
                 try {
-                    dao.execSql("update gen_expense set intg_upd_status = null where vou_no = '" + vouNo + "'");
+                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
                 } catch (Exception ex) {
                     log.error("uploadToAccount error : " + ex.getMessage());
                 } finally {
                     dao.close();
                 }
             }
-
         }
     }
-    
-    /*private void uploadToAccount(long vouNo) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("entity", "EXPENSE");
-                        msg.setLong("VOUCHER-NO", vouNo);
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (JMSException ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + vouNo + " - " + ex);
-                    }
-                } else {
-                    log.error("Connection status error : " + vouNo);
-                }
-            } else {
-                log.error("Connection error : " + vouNo);
-            }
-        }
-    }*/
 
     private void updateOption(VGenExpense ge) {
         ExpenseType et = ge.getExpType();

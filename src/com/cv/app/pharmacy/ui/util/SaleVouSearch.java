@@ -793,7 +793,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
                     listVS.add(vs);
                 }
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("getSearchVoucher : " + ex.toString());
         } finally {
             dao.close();
