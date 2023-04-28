@@ -246,7 +246,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     String printMode = Util1.getPropValue("report.vou.printer.mode");
                     String path = Util1.getAppWorkFolder()
                             + Util1.getPropValue("report.folder.path")
-                            + "Clinic/PatientInfo";
+                            + "clinic/PatientInfo";
                     String printerName = Util1.getPropValue("label.printer");
                     Map<String, Object> p = new HashMap();
                     p.put("p_patient", currPatient.getPatientName());
@@ -420,7 +420,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             if (print) {
                 String path = Util1.getAppWorkFolder()
                         + Util1.getPropValue("report.folder.path")
-                        + "Clinic/W/OPDAppointmentByDoctor";
+                        + "clinic/W/OPDAppointmentByDoctor";
                 Map<String, Object> p = new HashMap();
                 p.put("p_comp_name", Util1.getPropValue("report.company.name"));
                 p.put("p_data_date", String.format(
@@ -670,6 +670,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             booking.setBkDate(DateUtil.toDate(bkDate.getText()));
             booking.setBkPhone(bkPhone.getText());
             booking.setCreatedBy(Global.loginUser.getUserId());
+            booking.setBkType(cboBKType.getSelectedItem().toString());
 
         }
 
@@ -997,7 +998,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 } else {
                     String reportPath = Util1.getAppWorkFolder()
                             + Util1.getPropValue("report.folder.path")
-                            + "Clinic/"
+                            + "clinic/"
                             + reportName;
                     Map<String, Object> params = new HashMap();
                     String compName = Util1.getPropValue("report.company.name");
@@ -1018,18 +1019,19 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     params.put("p_visit_no", tmpBooking.getDoctorId() + " " + tmpBooking.getRegNo() + " "
                             + DateUtil.getDatePart(tmpBooking.getBkDate(), "ddMMyyyy")
                             + " " + tmpBooking.getBkSerialNo());
+                    params.put("prm_bk_id", tmpBooking.getBookingId());
                     /*params.put("p_visit_no", tmpBooking.getDoctorId() + tmpBooking.getRegNo()
                             + DateUtil.getDatePart(tmpBooking.getBkDate(), "ddMMyyyy")
                             + tmpBooking.getBkSerialNo());*/
 
                     try {
                         dao.close();
-                        if (printMode.equals("View")) {
+                        //if (printMode.equals("View")) {
                             ReportUtil.viewReport(reportPath, params, dao.getConnection());
-                        } else {
+                        /*} else {
                             JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                             ReportUtil.printJasper(jp, printerName);
-                        }
+                        }*/
                         dao.commit();
                     } catch (Exception ex) {
                         log.error("printVisitSlip : " + ex.getMessage());
@@ -1146,6 +1148,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel22 = new javax.swing.JLabel();
         bkpatientName = new javax.swing.JFormattedTextField();
         jLabel21 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
+        cboBKType = new javax.swing.JComboBox<>();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblBooking = new javax.swing.JTable();
@@ -1639,6 +1643,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel21.setFont(Global.lableFont);
         jLabel21.setText("Name");
 
+        jLabel19.setText("Type");
+
+        cboBKType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Normal", "Emergency" }));
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -1653,7 +1661,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel22)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 149, Short.MAX_VALUE)
+                        .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel4Layout.createSequentialGroup()
@@ -1664,21 +1674,23 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                                 .addComponent(jLabel21)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(bkpatientName, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel4Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel24)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addComponent(jLabel19)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cboBKType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel21, jLabel23, jLabel25});
 
-        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel22, jLabel24});
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel19, jLabel22, jLabel24});
 
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1688,7 +1700,8 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     .addComponent(bkRegno, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel23)
                     .addComponent(jLabel22)
-                    .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(bkDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
@@ -1698,14 +1711,15 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel25)
-                            .addComponent(bkPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(bkPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel19)
+                            .addComponent(cboBKType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel24)
                             .addComponent(bkDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bkSave, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(26, Short.MAX_VALUE))
+                        .addGap(32, 32, 32)))
+                .addContainerGap(20, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -1777,7 +1791,6 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel32.setText("Doctor");
 
         cboDr.setFont(Global.textFont);
-        cboDr.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         cboDr.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 cboDrItemStateChanged(evt);
@@ -1792,8 +1805,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             }
         });
 
+        txtFromDate.setDateFormatString("dd/MM/yyyy");
         txtFromDate.setFont(Global.textFont);
 
+        txtToDate.setDateFormatString("dd/MM/yyyy");
         txtToDate.setFont(Global.textFont);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -1816,16 +1831,16 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtFromDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel31)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(txtToDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cboDr, 0, 103, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(cboDr, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(butRefresh)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton1))
@@ -2128,6 +2143,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JFormattedTextField bkpatientName;
     private javax.swing.JButton butBillID;
     private javax.swing.JButton butRefresh;
+    private javax.swing.JComboBox<String> cboBKType;
     private javax.swing.JComboBox cboCity;
     private javax.swing.JComboBox cboDoctor;
     private javax.swing.JComboBox<String> cboDr;
@@ -2145,6 +2161,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;

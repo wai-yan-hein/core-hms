@@ -84,103 +84,9 @@ from (select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sh.sal
 	   where deleted = false and admission_no = $P{adm_no}
 		 and date(ret_in_date) between date($P{adm_date}) and date($P{tran_date})
 	   group by date(ret_in_date), ret_in_id
-	   union all
-	  select tran_type, tran_date, 0 as amount, sum(ifnull(amount,0))*-1 amount1, TRAN_OPTION, 2 AS TRAN_OPTION1, desp
-		from (select 'Payment' as tran_type, dt.tran_date, dt.desp, 1 as qty,
-					case dt.desp
-						when 'Pharmacy Discount' then dt.discount
-						when 'Pharmacy Paid' then dt.paid
-						when 'Pharmacy Tax' then dt.tax
-						else 0
-					end as amount, 'Total Payment : ' as TRAN_OPTION
-				from (select a.*, b.*
-						from (select date(sale_date) as tran_date, sum(ifnull(discount,0)) as discount, 
-									 sum(ifnull(paid_amount,0)) as paid, sum(ifnull(tax_amt,0)) as tax
-								from sale_his where deleted = false and admission_no = $P{adm_no}
-								 and date(sale_date) between date($P{adm_date}) and date($P{tran_date})
-							   group by date(Sale_date)) a,
-							 (select 'Pharmacy Discount' as desp
-							   union all 
-							  select 'Pharmacy Paid' as desp
-							   union all
-							  select 'Pharmacy Tax' as desp) b) dt
-				union all
-				select 'Payment' as tran_type, dt.tran_date, dt.desp, 1 as qty,
-					case dt.desp
-						when 'OPD Discount' then dt.discount
-						when 'OPD Paid' then dt.paid
-						when 'OPD Tax' then dt.tax
-						else 0
-					end as amount, 'Total Payment : ' as TRAN_OPTION
-				from (select a.*, b.*
-						from (select date(opd_date) as tran_date, sum(ifnull(disc_a,0)) as discount , 
-									 sum(ifnull(paid,0)) as paid, sum(ifnull(tax_a,0)) as tax
-								from opd_his where deleted = false and admission_no = $P{adm_no}
-								 and date(opd_date) between date($P{adm_date}) and date($P{tran_date})
-							   group by date(opd_date)) a,
-							 (select 'OPD Discount' as desp
-							   union all 
-							  select 'OPD Paid' as desp
-							   union all
-							  select 'OPD Tax' as desp) b) dt
-union all
-select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM ot_his
-where deleted = false and admission_no = $P{adm_no}
-and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
-union all
-select 'Payment' as tran_type, date(dc.ot_date) tran_date, 'OT Refund' desp, ddh.qty as qty, (-sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
-FROM ot_his dc,ot_details_his ddh
-where dc.ot_inv_id = ddh.vou_no and ddh.service_id in (select sys_prop_value from sys_prop
-								    where sys_prop_desp in ('system.ot.refund.id')) and dc.deleted = false and dc.admission_no = $P{adm_no}
-and date(dc.ot_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(dc.ot_date) having amount != 0
-union all
-select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM ot_his
-where deleted = false and admission_no = $P{adm_no}
-and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(ot_date) having amount > 0
-union all
-select 'Payment' as tran_type, date(ot_date) tran_date, 'OT Paid' desp, 1 as qty, sum(ifnull(paid,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM ot_his
-where deleted = false and admission_no = $P{adm_no}
-and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(ot_date) having amount > 0
-union all
-select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM dc_his
-where deleted = false and admission_no = $P{adm_no}
-and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(dc_date) having amount > 0
-union all
-select 'Payment' as tran_type, date(dc.dc_date) tran_date, 'DC Refund' desp, ddh.qty as qty, (- sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
-FROM dc_his dc,dc_details_his ddh
-where dc.dc_inv_id = ddh.vou_no and ddh.service_id in (select sys_prop_value from sys_prop
-								    where sys_prop_desp in ('system.dc.refund.id')) and dc.deleted = false and dc.admission_no = $P{adm_no}
-and date(dc.dc_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(dc.dc_date) having amount != 0
-union all
-select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM dc_his
-where deleted = false and admission_no = $P{adm_no}
-and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(dc_date) having amount > 0
-union all
-select tran_type,tran_date,desp,qty,amount,tran_option
-from
-(select 'Payment' as tran_type, date(dc_date) tran_date, concat('DC ',s.service_name) desp, sum(ddh.qty) qty, sum(ifnull(ddh.amount,0)) amount, 'Total Payment : ' as TRAN_OPTION
-FROM dc_his dh,dc_details_his ddh, inp_service s
-where deleted = false and admission_no = $P{adm_no} and dh.dc_inv_id = ddh.vou_no and ddh.service_id = s.service_id
-and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
-and ddh.service_id in (select sys_prop_value from sys_prop
-								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.paid.id'))
-group by date(dc_date),ddh.service_id having amount > 0)tmp
-group by tran_type,tran_date,desp,qty,amount,tran_option ) a
-where a.tran_date is not null and a.amount <> 0
-group by tran_type, tran_date, desp
+	   
 ) a
-where a.tran_date is not null and a.amount <> 0
+where a.tran_date is not null 
 group by a.tran_date,a.tran_type,a.TRAN_OPTION,a.TRAN_OPTION1,a.desp
 order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 	</queryString>
@@ -480,35 +386,31 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
+			<image>
+				<reportElement x="30" y="0" width="70" height="65" uuid="1bf4e756-f7db-477a-90ac-795690419a8e"/>
+				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/lts_logo.png"]]></imageExpression>
+			</image>
 			<textField>
-				<reportElement x="148" y="45" width="303" height="15" uuid="6148578b-2c94-4a8c-91fe-dd485515d16c"/>
+				<reportElement x="100" y="1" width="372" height="30" uuid="dd858c98-eb8f-4d00-8547-0c80d8c5f841"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="24" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="32" width="372" height="15" uuid="d9acf165-00b3-4a55-979a-919c45b54571"/>
 				<textElement textAlignment="Center">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="140" y="61" width="152" height="15" uuid="c0f2873b-1a1a-4447-b493-201c447bad29"/>
-				<textElement textAlignment="Left">
+				<reportElement x="100" y="50" width="372" height="15" uuid="e698bfe3-1f88-4d07-bc5f-f2af8b08855f"/>
+				<textElement textAlignment="Center">
 					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
 			</textField>
-			<image>
-				<reportElement x="61" y="0" width="75" height="75" uuid="e092cbcd-ce31-46f0-a3e7-0e132840d10a"/>
-				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_logo.png"]]></imageExpression>
-			</image>
-			<staticText>
-				<reportElement x="295" y="61" width="225" height="15" uuid="26855d85-f625-4945-bb45-ebbf8b62e6a5"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="10"/>
-				</textElement>
-				<text><![CDATA[E-mail- sandamonhospital@gmail.com]]></text>
-			</staticText>
-			<image>
-				<reportElement x="141" y="0" width="385" height="45" uuid="498661b5-1f0a-4320-b0ec-c5ed7a9bebbe"/>
-				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_text.png"]]></imageExpression>
-			</image>
 		</band>
 	</title>
 	<pageHeader>

@@ -5,6 +5,7 @@
  */
 package com.cv.app.inpatient.ui.entry;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -46,7 +47,6 @@ import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.ui.common.VouFormatFactory;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
-import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
@@ -64,6 +64,7 @@ import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -89,10 +90,6 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.josql.Query;
-import org.josql.QueryExecutionException;
-import org.josql.QueryParseException;
-import org.josql.QueryResults;
 import org.springframework.beans.BeanUtils;
 
 /**
@@ -100,7 +97,7 @@ import org.springframework.beans.BeanUtils;
  * @author admin
  */
 public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropagate,
-        SelectionObserver, KeyListener {
+        SelectionObserver, KeyListener, CalculateObserver {
 
     static Logger log = Logger.getLogger(DCEntry1.class.getName());
     private AbstractDataAccess dao = Global.dao;
@@ -113,6 +110,65 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private PaymentType ptCredit;
     private boolean canEdit = true;
     private final AmountLinkTableModel tblAmountLinkTableModel = new AmountLinkTableModel();
+
+    @Override
+    public void calculate() {
+        String depositeId = Util1.getPropValue("system.dc.deposite.id");
+        String discountId = Util1.getPropValue("system.dc.disc.id");
+        String paidId = Util1.getPropValue("system.dc.paid.id");
+        String refundId = Util1.getPropValue("system.dc.refund.id");
+        List<DCDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+
+        double vouTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId)
+                && !o.getService().getServiceId().toString().equals(discountId)
+                && !o.getService().getServiceId().toString().equals(paidId)
+                && !o.getService().getServiceId().toString().equals(refundId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Vou Total : " + vouTotal);
+        txtVouTotal.setValue(vouTotal);
+
+        double paidTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(depositeId)
+                || o.getService().getServiceId().toString().equals(paidId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Paid : " + paidTotal);
+        txtPaid.setValue(paidTotal);
+
+        double refundTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(refundId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Refund : " + refundTotal);
+        txtPaid.setValue(paidTotal - refundTotal);
+
+        double discTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(discountId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Discount : " + discTotal);
+        txtDiscA.setValue(discTotal);
+
+        txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+
+        calcBalance();
+    }
+
+    private double calculateAmount(DCDetailHis record) {
+        Double amount = 0d;
+
+        if (record.getChargeType() != null) {
+            if (record.getChargeType().getChargeTypeId() == 1) {
+                amount = NumberUtil.NZeroInt(record.getQuantity())
+                        * NumberUtil.NZero(record.getPrice());
+            }
+        }
+
+        record.setAmount(amount);
+        return amount;
+    }
 
     /**
      * Creates new form DCEntry1
@@ -192,7 +248,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 return;
             }
 
-            log.error("dc voucher save start : " + currVou.getOpdInvId());
+            //log.error("dc voucher save start : " + currVou.getOpdInvId());
             try {
                 Date d = new Date();
                 String strVouTotal = NumberUtil.NZero(currVou.getVouTotal()).toString();
@@ -213,7 +269,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } finally {
                 dao.close();
             }
-            log.error("dc voucher save after bk_dc : " + currVou.getOpdInvId());
+            //log.error("dc voucher save after bk_dc : " + currVou.getOpdInvId());
 
             try {
                 if (currVou.getDcStatus() != null) {
@@ -241,7 +297,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 //dao.open();
                 //dao.beginTran();
                 String vouNo = currVou.getOpdInvId();
-                List<DCDetailHis> listDetail = currVou.getListOPDDetailHis();
+                List<DCDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
+                log.error("Start Check Item : " + vouNo + " Size : " + listDetail.size());
                 for (DCDetailHis odh : listDetail) {
                     odh.setVouNo(vouNo);
                     if (odh.getOpdDetailId() == null) {
@@ -265,9 +322,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     }
 
                     dao.save(odh);
+                    log.error("Item Name : " + odh.getService().getServiceName() + " Qty : " + odh.getQuantity()
+                            + " Price : " + odh.getPrice() + " Amount : " + odh.getAmount() + " Unique ID : " + odh.getUniqueId());
                 }
+                log.error("================Save End Check Item : " + vouNo + " ================");
                 dao.save(currVou);
-                log.error("dc voucher save after save : " + currVou.getOpdInvId());
+                //log.error("dc voucher save after save : " + currVou.getOpdInvId());
                 //dao.commit();
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
@@ -305,14 +365,14 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         ams.setDcDateTime(currVou.getCreatedDate());
                         dao.save(ams);
                     }
-                    log.error("dc voucher save after admission status change : " + currVou.getOpdInvId());
+                    //log.error("dc voucher save after admission status change : " + currVou.getOpdInvId());
                     if (pt.getAdmissionNo() != null) {
                         if (pt.getAdmissionNo().equals(currVou.getAdmissionNo())) {
                             pt.setAdmissionNo(null);
                         }
                     }
                     dao.save(pt);
-                    log.error("dc voucher save after admission no set to null : " + currVou.getOpdInvId() + " : " + currVou.getAdmissionNo());
+                    //log.error("dc voucher save after admission no set to null : " + currVou.getOpdInvId() + " : " + currVou.getAdmissionNo());
                     if (admissionNo != null) {
                         if (!admissionNo.isEmpty()) {
                             List listPT = dao.findAllHSQL("select o from Patient o where o.admissionNo = '" + admissionNo + "'");
@@ -618,7 +678,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     public void print() {
         double linkTotal = 0;
         if (isValidEntry()) {
-            log.error("dc vou print start : " + currVou.getOpdInvId());
+            //log.error("dc vou print start : " + currVou.getOpdInvId());
             try {
                 Date d = new Date();
                 String strVouTotal = NumberUtil.NZero(currVou.getVouTotal()).toString();
@@ -639,7 +699,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             } finally {
                 dao.close();
             }
-            log.error("dc vou print after bk_dc : " + currVou.getOpdInvId());
+            //log.error("dc vou print after bk_dc : " + currVou.getOpdInvId());
             try {
                 if (lblStatus.getText().equals("NEW")) {
                     currVou.setCreatedBy(Global.loginUser);
@@ -658,10 +718,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
                 if (canEdit) {
                     if (!isDataLock) {
-                        dao.open();
+                        //dao.open();
                         //dao.beginTran();
                         String vouNo = currVou.getOpdInvId();
-                        List<DCDetailHis> listDetail = currVou.getListOPDDetailHis();
+                        List<DCDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
+                        log.error("Start Check Item : " + vouNo + " Size : " + listDetail.size());
                         for (DCDetailHis odh : listDetail) {
                             odh.setVouNo(vouNo);
                             if (odh.getOpdDetailId() == null) {
@@ -687,7 +748,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             }
 
                             dao.save(odh);
+                            log.error("Item Name : " + odh.getService().getServiceName() + " Qty : " + odh.getQuantity()
+                                    + " Price : " + odh.getPrice() + " Amount : " + odh.getAmount() + " Unique ID : " + odh.getUniqueId());
                         }
+                        log.error("================ Print End Check Item : " + vouNo + " ================");
                         dao.save(currVou);
                         //dao.commit();
 
@@ -696,7 +760,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
                         }
-                        log.error("dc vou print after new vou generate : " + currVou.getOpdInvId());
+                        //log.error("dc vou print after new vou generate : " + currVou.getOpdInvId());
                         deleteDetail();
                         //updateVouTotal(currVou.getOpdInvId());
 
@@ -708,7 +772,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 currVou.getVouBalance(), currVou.getDiscountA(),
                                 currVou.getPaid(), currVou.getTaxA(), desp);*/
                         uploadToAccount(currVou.getOpdInvId());
-                        log.error("dc vou print after uploadToAccount : " + currVou.getOpdInvId());
+                        //log.error("dc vou print after uploadToAccount : " + currVou.getOpdInvId());
                     }
 
                 }
@@ -771,7 +835,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
 
         backupPackage(currVou.getOpdInvId(), "DC-Print", "DC-PRINT");
-        log.error("dc vou print after backupPackage : " + currVou.getOpdInvId());
+        //log.error("dc vou print after backupPackage : " + currVou.getOpdInvId());
 
         if (currVou.getDcStatus() != null) {
             if (Util1.getPropValue("system.dc.pt.balancecheck").equals("Y")) {
@@ -784,7 +848,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 }
             }
         }
-        log.error("dc vou print finished database update : " + currVou.getOpdInvId());
+        //log.error("dc vou print finished database update : " + currVou.getOpdInvId());
 
         //Properties prop = ReportUtil.loadReportPathProperties();
         String reportName = Util1.getPropValue("report.file.dc");
@@ -1234,7 +1298,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 cboDCStatus.setSelectedItem(currVou.getDcStatus());
                 cboDiagnosis.setSelectedItem(currVou.getDiagnosis());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
-                log.error("Err : 1");
+                //log.error("Err : 1");
                 if (txtAdmissionNo.getText() != null) {
                     if (!txtAdmissionNo.getText().trim().isEmpty()) {
                         AdmissionKey key = new AdmissionKey();
@@ -1251,7 +1315,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         }
                     }
                 }
-                log.error("Err : 2");
+                //log.error("Err : 2");
                 cboAgeRange.setSelectedItem(currVou.getAgeRange());
                 txtPkgName.setText(currVou.getPkgName());
                 txtPkgPrice.setValue(currVou.getPkgPrice());
@@ -1275,7 +1339,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     txtDoctorNo.setText(currVou.getDoctor().getDoctorId());
                     txtDoctorName.setText(currVou.getDoctor().getDoctorName());
                 }
-                log.error("Err : 3");
+                //log.error("Err : 3");
                 txtVouTotal.setValue(currVou.getVouTotal());
                 txtDiscP.setValue(currVou.getDiscountP());
                 txtDiscA.setValue(currVou.getDiscountA());
@@ -1288,7 +1352,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 tableModel.setCanEdit(canEdit);
                 tableModel.setVouStatus("EDIT");
                 tableModel.setVouDate(txtDate.getText());
-                log.error("Err : 4");
+                //log.error("Err : 4");
                 //For Package
                 if (currVou.getPkgId() != null) {
                     calcPackageExtraFees(currVou);
@@ -1300,7 +1364,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 if (Util1.getPropValue("system.dc.link.amt").equals("Y")) {
                     linkAmount();
                 }
-                log.error("Err : 5");
+                //log.error("Err : 5");
             } catch (Exception ex) {
                 log.error("DCVouList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
@@ -1595,6 +1659,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
     private void initTable() {
         try {
+            tableModel.setCalObserver(this);
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
@@ -1619,8 +1684,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
 
             tblService.getModel().addTableModelListener((TableModelEvent e) -> {
-                //txtVouTotal.setValue(tableModel.getTotal());
-                String depositeId = Util1.getPropValue("system.dc.deposite.id");
+                /*String depositeId = Util1.getPropValue("system.dc.deposite.id");
                 String discountId = Util1.getPropValue("system.dc.disc.id");
                 String paidId = Util1.getPropValue("system.dc.paid.id");
                 String refundId = Util1.getPropValue("system.dc.refund.id");
@@ -1662,9 +1726,10 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     log.error("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
                 } catch (QueryExecutionException | NumberFormatException ex) {
                     log.error("JoSQLUtil.isAlreadyHave : " + ex.toString());
-                }
-                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                calcBalance();
+                }*/
+                //log.info("Model Change : " + Integer.toString((tableModel.getTotalRecord() - 1)));
+                //txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                //calcBalance();
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -2638,7 +2703,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
                     String url = rootUrl + "/dc";
                     final HttpPost request = new HttpPost(url);
-                    final List<NameValuePair> params = new ArrayList();                    
+                    final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
@@ -2678,7 +2743,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         }
     }
-
 
     private void deleteDetail() {
         String deleteSQL;
@@ -2940,6 +3004,39 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         } finally {
             dao.close();
         }
+    }
+
+    private List<DCDetailHis> getVerifiedUniqueId(String vouNo, List<DCDetailHis> listDetail) {
+        if (listDetail == null) {
+            return null;
+        }
+
+        DCDetailHis ddh = listDetail.stream().filter(o -> NumberUtil.NZeroInt(o.getUniqueId()) != 0)
+                .max(Comparator.comparingInt(DCDetailHis::getUniqueId))
+                .orElse(null);
+        int maxId = 0;
+        if (ddh != null) {
+            maxId = ddh.getUniqueId();
+        }
+
+        HashMap<Integer, DCDetailHis> hm = new HashMap();
+        for (DCDetailHis tmp : listDetail) {
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) != 0) {
+                if (hm.containsKey(tmp.getUniqueId())) {
+                    log.error("DC Unique ID Error : " + tmp.getUniqueId());
+                    maxId++;
+                    tmp.setUniqueId(maxId);
+                    tmp.setOpdDetailId(vouNo + "-" + tmp.getUniqueId().toString());
+                }
+                hm.put(tmp.getUniqueId(), tmp);
+            }
+            
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
+                tmp.setUniqueId(maxId++);
+            }
+        }
+
+        return listDetail;
     }
 
     /**

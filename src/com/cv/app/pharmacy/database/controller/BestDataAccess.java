@@ -75,9 +75,11 @@ public class BestDataAccess implements AbstractDataAccess {
         tran = session.beginTransaction();
 
         try {
+
             session.saveOrUpdate(o);
         } catch (NonUniqueObjectException ex) {
             log.error("save : " + o.toString() + ex.getMessage());
+
             session.merge(o);
         }
         session.flush();
@@ -171,14 +173,14 @@ public class BestDataAccess implements AbstractDataAccess {
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
 
-        try {
+        //try {
             open();
             tran = session.beginTransaction();
             Query query = session.createQuery(strSQL);
             lists = query.list();
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("findAll2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return lists;
     }

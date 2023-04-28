@@ -172,7 +172,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String reportName = Util1.getPropValue("report.xray.form");
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + reportName;
         Map<String, Object> params = new HashMap();
         String compName = Util1.getPropValue("report.company.name");
@@ -197,7 +197,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String reportName = Util1.getPropValue("report.ultrasound.form");
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + reportName;
         Map<String, Object> params = new HashMap();
         String compName = Util1.getPropValue("report.company.name");

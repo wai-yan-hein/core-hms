@@ -1277,7 +1277,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         rpName = Util1.isNullOrEmpty(rpName) ? "ClinicSessionCheckVoucher" : rpName;
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + rpName;
         Map<String, Object> params = new HashMap();
         String sessionName;
@@ -1408,7 +1408,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         //Properties prop = ReportUtil.loadReportPathProperties();
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + "ClinicSessionCheckDetail";
         Map<String, Object> params = new HashMap();
         params.put("data_date", "Between " + txtFrom.getText()

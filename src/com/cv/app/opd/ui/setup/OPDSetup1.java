@@ -125,6 +125,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         tblService.getColumnModel().getColumn(10).setPreferredWidth(3);//CFS
         tblService.getColumnModel().getColumn(11).setPreferredWidth(3);//Active
         tblService.getColumnModel().getColumn(12).setPreferredWidth(56);//Doctor
+        tblService.getColumnModel().getColumn(13).setPreferredWidth(25);//Cost
 
         tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblService.getSelectionModel().addListSelectionListener(
@@ -146,6 +147,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         tblService.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor());
+        tblService.getColumnModel().getColumn(13).setCellEditor(new BestTableCellEditor());
 
         try {
             JComboBox cboDoctor = new JComboBox();
