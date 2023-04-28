@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -24,15 +23,11 @@ import com.cv.app.pharmacy.database.entity.StockOpeningDetailHis;
 import com.cv.app.pharmacy.database.entity.StockOpeningHis;
 import com.cv.app.pharmacy.database.helper.MinusPlusList;
 import com.cv.app.pharmacy.database.helper.Stock;
-import com.cv.app.pharmacy.database.helper.StockExp;
+import com.cv.app.pharmacy.database.helper.StockBalance1;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilter;
-import com.cv.app.pharmacy.database.tempentity.StockBalance;
 import com.cv.app.pharmacy.database.tempentity.TmpMinusFixed;
 import com.cv.app.pharmacy.database.tempentity.TmpMinusFixedKey;
-import com.cv.app.pharmacy.database.tempentity.TmpStockOpeningDetailHisInsert;
-import com.cv.app.pharmacy.database.view.VMedRel;
-import com.cv.app.pharmacy.database.view.VStockOpToAcc;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.MedInfo;
@@ -48,7 +43,6 @@ import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.ui.common.VouFormatFactory;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
-import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import com.opencsv.CSVReader;
@@ -72,7 +66,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
-import javax.jms.MapMessage;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -100,7 +93,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     static Logger log = Logger.getLogger(StockOpening.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private GenVouNoImpl vouEngine = null;
-    //private List<StockOpeningDetailHis> listDetail = new ArrayList();
     private MedicineUP medUp = new MedicineUP(dao);
     private BestAppFocusTraversalPolicy focusPolicy;
     private StockOpeningHis currStockOpening = new StockOpeningHis();
@@ -108,7 +100,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private StockTableModel stockTableModel = new StockTableModel();
     private ItemCodeFilterTableModel codeTableModel = new ItemCodeFilterTableModel(dao, false);
     private ItemCodeFilterTableModel codeTableModel2 = new ItemCodeFilterTableModel(dao, false);
-    private List<StockBalance> listBalance;
     private List<StockOpeningDetailHis> listDetail;
     private boolean bindComplete = false;
     private TableRowSorter<TableModel> sorter;
@@ -156,10 +147,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         strRecDate = "";
         initFilterTable();
         addCodeFilterModelListener();
-
-        //sorter = new TableRowSorter(tblGround.getModel());
-        //sorter = new TableRowSorter(tblGround.getModel());
-        //tblGround.setRowSorter(sorter);
+        
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
                     + Global.machineId + "'");
@@ -404,25 +392,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             dao.close();
         }
     }
-
-    /*private void addNewRow() {
-     StockOpeningDetailHis his = new StockOpeningDetailHis();
-
-     his.setMed(new Medicine());
-     listDetail.add(his);
-     }*/
-
- /*private boolean hasNewRow() {
-     boolean status = false;
-     StockOpeningDetailHis opDetailHis = listDetail.get(listDetail.size() - 1);
-
-     String ID = opDetailHis.getMed().getMedId();
-     if (ID == null) {
-     status = true;
-     }
-
-     return status;
-     }*/
+    
     private void initOpTable() {
         if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
             tblGround.setCellSelectionEnabled(true);
@@ -457,12 +427,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         tblStock.getColumnModel().getColumn(3).setPreferredWidth(50);//Expire Date
         tblStock.getColumnModel().getColumn(4).setPreferredWidth(80);//Qty-Str
         tblStock.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
-        /*
-         * JComboBox cboAdjType = new JComboBox(); BindingUtil.BindCombo(cboAdjType,
-         * dao.findAll("AdjType"));
-         * tblDamage.getColumnModel().getColumn(6).setCellEditor(new
-         * DefaultCellEditor(cboAdjType));
-         */
     }
 
     @Override
@@ -488,7 +452,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     vouEngine.updateVouNo();
                 }
                 String strSql = sopTableModel.getDeleteSql();
-                dao.execSql(strSql);
+                if (strSql != null) {
+                    dao.execSql(strSql);
+                }
                 saveItemOpDate(listOP);
                 newForm();
             } catch (Exception ex) {
@@ -752,36 +718,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 + DateUtil.toDateStrMYSQL(txtStockDate.getText())
                 + "' group by location_id, med_id) meod on m.med_id = meod.med_id "
                 + "where m.active = true";
-
-        /*
-         * if(cboItemType.getSelectedItem() instanceof ItemType){ ItemType itemType
-         * = (ItemType)cboItemType.getSelectedItem();
-         *
-         * strSQL = strSQL + " and m.med_type_id = '" + itemType.getItemTypeCode() +
-         * "'"; }
-         *
-         * if(cboCategory.getSelectedItem() instanceof Category){ Category cat =
-         * (Category)cboCategory.getSelectedItem();
-         *
-         * strSQL = strSQL + " and m.category_id = " + cat.getCatId(); }
-         *
-         * if(cboBrand.getSelectedItem() instanceof ItemBrand){ ItemBrand itemBrand
-         * = (ItemBrand)cboBrand.getSelectedItem();
-         *
-         * strSQL = strSQL + " and m.brand_id = " + itemBrand.getBrandId(); }
-         *
-         * List<ItemCodeFilter> listCodeFilter = codeTableModel.getListCodeFilter();
-         * String tmpStr = "";
-         *
-         * for(ItemCodeFilter filterCode : listCodeFilter){ if(filterCode.getKey()
-         * != null){ if(tmpStr.length() > 0){ tmpStr = tmpStr + "'" +
-         * filterCode.getKey().getItemCode().getMedId() + "'"; }else{ tmpStr = "'" +
-         * filterCode.getKey().getItemCode().getMedId() + "'"; } } }
-         *
-         * if(!tmpStr.isEmpty()){ strSQL = strSQL + " and m.med_id in (" + tmpStr +
-         * ")";
-         }
-         */
         try {
             dao.open();
             dao.execSql(strSQLDelete, strSQL);
@@ -859,18 +795,18 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
     private void generateStockBalance() {
         try {
-            dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
+            /*dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
                     + Global.machineId + "'");
             dao.execProc("stock_balance_exp", "Opening",
                     DateUtil.toDateStrMYSQL(txtStockDate.getText()),
                     ((Location) cboStockLocation.getSelectedItem()).getLocationId().toString(),
                     Global.machineId);
-            listBalance = dao.findAll("StockBalance",
-                    "key.userId = '" + Global.machineId + "'");
-            dao.commit();
+            dao.commit();*/
             applyStockBalanceFilter();
         } catch (Exception ex) {
             log.error("generateStockBalance : " + ex.toString());
+        } finally {
+            dao.close();
         }
     }
 
@@ -878,7 +814,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
                     + Global.machineId + "'");
-            //fixedMinus1(Global.machineId);
             fixedMinus(Global.machineId);
             getFixedResult();
         } catch (Exception ex) {
@@ -888,85 +823,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         }
     }
 
-    /*private void fixedMinus(String userId) {
-        String strSql = "select location_id, med_id, exp_date, bal_qty\n"
-                + "from tmp_stock_balance_exp\n"
-                + "where user_id = '" + userId + "' and bal_qty <> 0\n"
-                + "order by location_id, med_id, exp_date, bal_qty";
-        String prvMedId = "-";
-
-        try {
-            dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
-            ResultSet rs = dao.execSQL(strSql);
-            if (rs != null) {
-                List<Stock> listMinusStock = new ArrayList();
-                List<Stock> listPlusStock = new ArrayList();
-                Medicine med = null;
-                while (rs.next()) {
-                    float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
-                    String medId = rs.getString("med_id");
-                    int locationId = rs.getInt("location_id");
-
-                    if (prvMedId.equals("-")) {
-                        prvMedId = medId;
-                        med = (Medicine) dao.find(Medicine.class, medId);
-                    }
-
-                    if (!prvMedId.equals(medId)) {
-                        listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
-                        for (Stock s : listPlusStock) {
-                            TmpMinusFixedKey key = new TmpMinusFixedKey();
-                            key.setExpDate(s.getExpDate());
-                            key.setItemId(s.getMed().getMedId());
-                            key.setLocationId(s.getLocationId());
-                            key.setUserId(userId);
-                            TmpMinusFixed tmf = new TmpMinusFixed();
-                            tmf.setKey(key);
-                            tmf.setBalance(Math.round(s.getBalance()));
-                            
-                            dao.save(tmf);
-                        }
-
-                        listMinusStock = new ArrayList();
-                        listPlusStock = new ArrayList();
-                        med = (Medicine) dao.find(Medicine.class, medId);
-                    }
-
-                    if (qty < 0) {
-                        Stock stock = new Stock(med, rs.getDate("exp_date"),
-                                null, qty, null, null, locationId);
-                        listMinusStock.add(stock);
-                    } else {
-                        Stock stock = new Stock(med, rs.getDate("exp_date"),
-                                null, qty, null, null, locationId);
-                        listPlusStock.add(stock);
-                    }
-
-                    prvMedId = medId;
-                }
-                
-                if (!listPlusStock.isEmpty()) {
-                    listPlusStock = PharmacyUtil.getStockList(listMinusStock, listPlusStock);
-                    for (Stock s : listPlusStock) {
-                        TmpMinusFixedKey key = new TmpMinusFixedKey();
-                        key.setExpDate(s.getExpDate());
-                        key.setItemId(s.getMed().getMedId());
-                        key.setLocationId(s.getLocationId());
-                        key.setUserId(userId);
-                        TmpMinusFixed tmf = new TmpMinusFixed();
-                        tmf.setKey(key);
-                        tmf.setBalance(Math.round(s.getBalance()));
-
-                        dao.save(tmf);
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            log.error("fixedMinus : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }*/
     private void fixedMinus(String userId) {
         String strSql = "select location_id, med_id, exp_date, bal_qty\n"
                 + "from tmp_stock_balance_exp\n"
@@ -993,13 +849,12 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                         prvMedId = medId;
                         med = (Medicine) dao.find(Medicine.class, medId);
                     }
-                    
+
                     String sKey = locationId + "-" + medId;
-                    
+
                     /*if (prvMedId.equals("16160002")) {
                         log.error("Error");
                     }*/
-                    
                     if (!prvMedId.equals(medId)) {
                         List<Stock> listS = new ArrayList();
                         for (String loc : locList) {
@@ -1042,13 +897,18 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                         listMinusStock = mpl.getListMinusStock();
                         listPlusStock = mpl.getListPlusStock();
                     }
-                    
+
+                    String strExpDate = rs.getString("exp_date");
+                    Date expDate = DateUtil.toDate("01/01/1900");
+                    if(!strExpDate.equals("0000-00-00")){
+                        expDate = rs.getDate("exp_date");
+                    }
                     if (qty < 0) {
-                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                        Stock stock = new Stock(med, expDate,
                                 null, qty, null, null, locationId);
                         listMinusStock.add(stock);
                     } else {
-                        Stock stock = new Stock(med, rs.getDate("exp_date"),
+                        Stock stock = new Stock(med, expDate,
                                 null, qty, null, null, locationId);
                         listPlusStock.add(stock);
                     }
@@ -1079,123 +939,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             }
         } catch (Exception ex) {
             log.error("fixedMinus : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }
-
-    private void fixedMinus1(String userId) {
-        String strSql = "select location_id, med_id, exp_date, bal_qty\n"
-                + "from tmp_stock_balance_exp\n"
-                + "where user_id = '" + userId + "' and bal_qty <> 0\n"
-                + "order by location_id, med_id, bal_qty, exp_date";
-        try {
-            dao.execSql("delete from tmp_minus_fixed where user_id = '" + userId + "'");
-            ResultSet rs = dao.execSQL(strSql);
-            if (rs != null) {
-                HashMap<String, List<StockExp>> minusHM = new HashMap();
-                String prvMedId = "-";
-                while (rs.next()) {
-                    float qty = NumberUtil.FloatZero(rs.getInt("bal_qty"));
-                    String medId = rs.getString("med_id");
-                    if (medId.equals("101119")) {
-                        log.info("Med Id : " + medId + " Qty : " + qty);
-                    }
-                    if (prvMedId.equals("-")) {
-                        prvMedId = medId;
-                    }
-
-                    if (!prvMedId.equals(medId)) {
-                        //Need to insert left stock
-                        List<StockExp> leftStockList = minusHM.get(prvMedId);
-                        if (leftStockList != null) {
-                            for (StockExp tmpSE : leftStockList) {
-                                if (NumberUtil.FloatZero(tmpSE.getBalance()) != 0) {
-                                    String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                            + " values(" + tmpSE.getLocationId() + ",'" + prvMedId + "','"
-                                            + DateUtil.toDateStr(tmpSE.getExpDate(), "yyyy-MM-dd") + "',"
-                                            + tmpSE.getBalance() + ", '" + userId + "')";
-                                    dao.execSql(strInsert);
-                                    //log.info("if (!prvMedId.equals(medId)) { : insert : " + prvMedId);
-                                }
-                            }
-                            minusHM.remove(prvMedId);
-                        }
-                    }
-
-                    List<StockExp> minusList = minusHM.get(medId);
-                    if (qty < 0) {
-                        if (minusList == null) {
-                            minusList = new ArrayList();
-                            minusHM.put(medId, minusList);
-                        }
-
-                        StockExp stock = new StockExp(medId, rs.getDate("exp_date"),
-                                rs.getInt("location_id"), qty);
-                        minusList.add(stock);
-                    } else if (qty > 0) {
-                        if (minusList == null) {
-                            String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                    + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
-                                    + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
-                                    + qty + ", '" + userId + "')";
-                            dao.execSql(strInsert);
-                            qty = 0;
-                            //log.info("if (minusList == null) { : insert : " + medId);
-                        } else {
-                            if (minusList.isEmpty()) {
-
-                            } else {
-                                StockExp tmpStk = minusList.get(0);
-                                float tmpBalance = tmpStk.getBalance();
-                                if ((tmpBalance * -1) > qty) {
-                                    float tmpQty = tmpBalance + qty;
-                                    qty = 0;
-                                    tmpStk.setBalance(tmpQty);
-                                } else if ((tmpBalance * -1) == qty) {
-                                    tmpStk.setBalance(0f);
-                                    minusList.remove(0);
-                                    qty = 0;
-                                } else {
-                                    minusList.remove(0);
-                                    qty = tmpBalance + qty;
-                                    if (!minusList.isEmpty() && qty > 0) {
-                                        List<StockExp> listS = new ArrayList();
-                                        listS.addAll(minusList);
-                                        for (StockExp stk : listS) {
-                                            tmpBalance = stk.getBalance();
-                                            if ((tmpBalance * -1) > qty) {
-                                                stk.setBalance(tmpBalance + qty);
-                                                break;
-                                            } else if ((tmpBalance * -1) == qty) {
-                                                minusList.remove(0);
-                                                qty = tmpBalance + qty;
-                                                break;
-                                            } else {
-                                                minusList.remove(0);
-                                                qty = tmpBalance + qty;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (qty != 0) {
-                                String strInsert = "insert into tmp_minus_fixed(location_id, item_id, exp_date, balance, user_id)\n"
-                                        + " values(" + rs.getInt("location_id") + ",'" + medId + "','"
-                                        + DateUtil.toDateStr(rs.getDate("exp_date"), "yyyy-MM-dd") + "',"
-                                        + qty + ", '" + userId + "')";
-                                dao.execSql(strInsert);
-                                //log.info("if (qty > 0) { insert : " + medId);
-                            }
-                        }
-                    }
-
-                    prvMedId = medId;
-                }
-            }
-        } catch (Exception ex) {
-            log.error("fixedMinus : " + ex.toString());
         } finally {
             dao.close();
         }
@@ -1241,108 +984,8 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     butCost.setEnabled(true);
                 }
             }
-            /*List<TmpStockOpeningDetailHisInsert> listFixResult = dao.findAllHSQL(
-                    "select o from TmpStockOpeningDetailHisInsert o where o.userId = '"
-                    + Global.loginUser.getUserId() + "' order by o.medId"
-            );*/
- /*if (listFixResult != null) {
-                listDetail = new ArrayList();
-                for (TmpStockOpeningDetailHisInsert oph : listFixResult) {
-                    StockOpeningDetailHis sodh = new StockOpeningDetailHis();
-                    Medicine m = (Medicine) dao.find(Medicine.class, oph.getMedId());
-                    sodh.setMed(m);
-                    ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, oph.getUnit());
-                    sodh.setUnit(iu);
-                    sodh.setExpDate(oph.getExpDate());
-                    sodh.setQty(oph.getQty().floatValue());
-                    sodh.setCostPrice(oph.getCostPrice());
-                    sodh.setSmallestQty(oph.getSmallestQty().floatValue());
-                    listDetail.add(sodh);
-                }
-
-                sopTableModel.setListDetail(listDetail);
-                sopTableModel.setStrOpDate(txtGroundDate.getText());
-            }*/
         } catch (Exception ex) {
             log.error("getFixedResult : 2 : " + ex.toString());
-        } finally {
-            dao.close();
-        }
-        //listDetail.removeAll(listBalance);
-
-    }
-
-    private void insertTmpStockDetails(String medId, Date expDate,
-            int ttlQty, double smallestCost) {
-        try {
-            String strSql = "select v from VMedRel v where v.key.medId = '"
-                    + medId + "' order by v.key.uniqueId";
-            List<VMedRel> listVMR = dao.findAllHSQL(strSql);
-
-            if (ttlQty == 0) {
-                TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-
-                tsodh.setMedId(medId);
-                tsodh.setExpDate(expDate);
-                tsodh.setQty(ttlQty);
-                tsodh.setCostPrice(listVMR.get(0).getSmallestQty() * smallestCost);
-                tsodh.setUnit(listVMR.get(0).getUnitId());
-                tsodh.setUserId(Global.machineId);
-                tsodh.setSmallestQty(0);
-
-                try {
-                    dao.save(tsodh);
-                } catch (Exception ex) {
-                    log.error("insertTmpStockDetails : 1 : " + ex.toString());
-                }
-            } else {
-                List<TmpStockOpeningDetailHisInsert> listTSODH = new ArrayList();
-                int leftQty;
-                boolean isMinus = false;
-
-                if (ttlQty < 0) {
-                    isMinus = true;
-                    leftQty = -1 * ttlQty;
-                } else {
-                    leftQty = ttlQty;
-                }
-
-                for (int i = 0; i < listVMR.size(); i++) {
-                    TmpStockOpeningDetailHisInsert tsodh = new TmpStockOpeningDetailHisInsert();
-                    int unitQty = leftQty / listVMR.get(i).getSmallestQty();
-
-                    tsodh.setMedId(medId);
-                    tsodh.setExpDate(expDate);
-                    tsodh.setCostPrice(listVMR.get(i).getSmallestQty() * smallestCost);
-                    tsodh.setUnit(listVMR.get(i).getUnitId());
-                    tsodh.setUserId(Global.machineId);
-
-                    int ttlSmallestQty = listVMR.get(i).getSmallestQty() * unitQty;
-
-                    if (isMinus) { //Minus qty
-                        tsodh.setQty(unitQty * -1);
-                        tsodh.setSmallestQty(ttlSmallestQty * -1);
-                    } else {
-                        tsodh.setQty(unitQty);
-                        tsodh.setSmallestQty(ttlSmallestQty);
-                    }
-
-                    listTSODH.add(tsodh);
-                    leftQty = leftQty - ttlSmallestQty;
-
-                    if (leftQty == 0) {
-                        i = listVMR.size();
-                    }
-                }
-
-                try {
-                    dao.saveBatch(listTSODH);
-                } catch (Exception ex) {
-                    log.error("insertTmpStockDetails : 2 : " + ex.toString());
-                }
-            }
-        } catch (Exception ex) {
-            log.error("insertTmpStockDetails : " + ex.getMessage());
         } finally {
             dao.close();
         }
@@ -1355,11 +998,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             ItemType itemType = (ItemType) cboItemType.getSelectedItem();
 
             if (!filter.isEmpty()) {
-                filter = filter + " and key.med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
+                filter = filter + " and med.med_type_id = '" + itemType.getItemTypeCode() + "'";
             } else {
-                filter = filter + "key.med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
+                filter = filter + "med.med_type_id = '" + itemType.getItemTypeCode() + "'";
             }
         }
 
@@ -1367,9 +1008,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             Category cat = (Category) cboCategory.getSelectedItem();
 
             if (!filter.isEmpty()) {
-                filter = filter + " and key.med.catId.catId = " + cat.getCatId();
+                filter = filter + " and med.category_id = " + cat.getCatId();
             } else {
-                filter = filter + "key.med.catId.catId = " + cat.getCatId();
+                filter = filter + "med.category_id = " + cat.getCatId();
             }
         }
 
@@ -1377,11 +1018,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             ItemBrand itemBrand = (ItemBrand) cboBrand.getSelectedItem();
 
             if (!filter.isEmpty()) {
-                filter = filter + " and key.med.brand.brandId = "
-                        + itemBrand.getBrandId();
+                filter = filter + " and med.brand_id = " + itemBrand.getBrandId();
             } else {
-                filter = filter + "key.med.brand.brandId = "
-                        + itemBrand.getBrandId();
+                filter = filter + "med.brand_id = " + itemBrand.getBrandId();
             }
         }
 
@@ -1400,9 +1039,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
         if (!tmpStr.isEmpty()) {
             if (!filter.isEmpty()) {
-                filter = filter + " and key.med.medId in (" + tmpStr + ")";
+                filter = filter + " and tsbe.med_id in (" + tmpStr + ")";
             } else {
-                filter = "key.med.medId in (" + tmpStr + ")";
+                filter = "tsbe.med_id in (" + tmpStr + ")";
             }
         }
 
@@ -1410,30 +1049,48 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void applyStockBalanceFilter() {
-        String className = "com.cv.app.pharmacy.database.tempentity.StockBalance";
-        String strSql = "SELECT * FROM " + className;
+        String strSql = "select tsbe.med_id, med.med_name, tsbe.exp_date, tsbe.tran_option, \n"
+                + "tsbe.bal_qty, tsbe.qty_str, med.med_rel_str, med.short_name \n"
+                + "from tmp_stock_balance_exp tsbe\n"
+                + "join medicine med on tsbe.med_id = med.med_id\n"
+                + "where tsbe.user_id = '" + Global.machineId + "' ";
         String strFilter = getStockBalanceFilter();
 
         if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
+            strSql = strSql + " and " + strFilter;
         }
 
-        if (listBalance != null) {
-            stockTableModel.setListDetail(JoSQLUtil.getResult(strSql, listBalance));
-        }
-    }
+        strSql = strSql + " order by med.med_name";
 
-    private void applyFixStockBalanceFilter() {
-        String className = "com.cv.app.pharmacy.database.entity.StockOpeningDetailHis";
-        String strSql = "SELECT * FROM " + className;
-        String strFilter = getStockBalanceFilter();
+        try {
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                List<StockBalance1> list = new ArrayList();
+                while (rs.next()) {
+                    StockBalance1 sb = new StockBalance1();
+                    sb.setBalance(rs.getFloat("bal_qty"));
+                    if (rs.getString("exp_date").equals("0000-00-00")) {
+                        sb.setExpDate(null);
+                    } else {
+                        sb.setExpDate(rs.getDate("exp_date"));
+                    }
+                    sb.setMedId(rs.getString("med_id"));
+                    sb.setMedName(rs.getString("med_name"));
+                    sb.setQtyStr(rs.getString("qty_str"));
+                    sb.setRelString(rs.getString("med_rel_str"));
+                    sb.setTranOption(rs.getString("short_name"));
 
-        if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
-        }
+                    list.add(sb);
+                }
 
-        if (listDetail != null) {
-            sopTableModel.setListDetail(JoSQLUtil.getResult(strSql, listDetail));
+                stockTableModel.setListDetail(list);
+            } else {
+                stockTableModel.setListDetail(null);
+            }
+        } catch (Exception ex) {
+            log.error("applyStockBalanceFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1457,159 +1114,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         });
     }
 
-    private String getStockOpFilter() {
-        String filter = "";
-
-        if (cboItemType1.getSelectedItem() instanceof ItemType) {
-            ItemType itemType = (ItemType) cboItemType1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and o.med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
-            } else {
-                filter = filter + "o.med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
-            }
-        }
-
-        if (cboCategory1.getSelectedItem() instanceof Category) {
-            Category cat = (Category) cboCategory1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and o.med.catId.catId = " + cat.getCatId();
-            } else {
-                filter = filter + "o.med.catId.catId = " + cat.getCatId();
-            }
-        }
-
-        if (cboBrand1.getSelectedItem() instanceof ItemBrand) {
-            ItemBrand itemBrand = (ItemBrand) cboBrand1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and o.med.brand.brandId = "
-                        + itemBrand.getBrandId();
-            } else {
-                filter = filter + "o.med.brand.brandId = "
-                        + itemBrand.getBrandId();
-            }
-        }
-
-        List<ItemCodeFilter> listCodeFilter = codeTableModel2.getListCodeFilter();
-        String tmpStr = "";
-
-        for (ItemCodeFilter filterCode : listCodeFilter) {
-            if (filterCode.getKey() != null) {
-                if (tmpStr.length() > 0) {
-                    tmpStr = tmpStr + "'" + filterCode.getKey().getItemCode().getMedId() + "'";
-                } else {
-                    tmpStr = "'" + filterCode.getKey().getItemCode().getMedId() + "'";
-                }
-            }
-        }
-
-        if (!tmpStr.isEmpty()) {
-            if (!filter.isEmpty()) {
-                filter = filter + " and o.med.medId in (" + tmpStr + ")";
-            } else {
-                filter = "o.med.medId in (" + tmpStr + ")";
-            }
-        }
-
-        return filter;
-    }
-
-    private String getStockOpFilterJOSQL() {
-        String filter = "";
-
-        if (cboItemType1.getSelectedItem() instanceof ItemType) {
-            ItemType itemType = (ItemType) cboItemType1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
-            } else {
-                filter = filter + "med.medTypeId.itemTypeCode = '"
-                        + itemType.getItemTypeCode() + "'";
-            }
-        }
-
-        if (cboCategory1.getSelectedItem() instanceof Category) {
-            Category cat = (Category) cboCategory1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and med.catId.catId = " + cat.getCatId();
-            } else {
-                filter = filter + "med.catId.catId = " + cat.getCatId();
-            }
-        }
-
-        if (cboBrand1.getSelectedItem() instanceof ItemBrand) {
-            ItemBrand itemBrand = (ItemBrand) cboBrand1.getSelectedItem();
-
-            if (!filter.isEmpty()) {
-                filter = filter + " and med.brand.brandId = "
-                        + itemBrand.getBrandId();
-            } else {
-                filter = filter + "med.brand.brandId = "
-                        + itemBrand.getBrandId();
-            }
-        }
-
-        List<ItemCodeFilter> listCodeFilter = codeTableModel2.getListCodeFilter();
-        String tmpStr = "";
-
-        for (ItemCodeFilter filterCode : listCodeFilter) {
-            if (filterCode.getKey() != null) {
-                if (tmpStr.length() > 0) {
-                    tmpStr = tmpStr + "'" + filterCode.getKey().getItemCode().getMedId() + "'";
-                } else {
-                    tmpStr = "'" + filterCode.getKey().getItemCode().getMedId() + "'";
-                }
-            }
-        }
-
-        if (!tmpStr.isEmpty()) {
-            if (!filter.isEmpty()) {
-                filter = filter + " and med.medId in (" + tmpStr + ")";
-            } else {
-                filter = "med.medId in (" + tmpStr + ")";
-            }
-        }
-
-        return filter;
-    }
-
     private void applyStockOpFilter() {
-        /*String strHSQL = "select o from TmpStockOpeningDetailHis o where o.userId = '"
-         + Global.loginUser.getUserId() + "'";
-         String strFilter = getStockOpFilter();
-         if (!strFilter.isEmpty()) {
-         strHSQL = strHSQL + " and " + strFilter + " order by uniqueId";
-         }
-         List<StockOpeningDetailHis> list = dao.findAllHSQL(strHSQL);*/
- /*String filterString = "SELECT * FROM com.cv.app.pharmacy.database.entity.StockOpeningDetailHis ";
-         String strWhere = getStockOpFilterJOSQL();
-         filterString = filterString + " where " + strWhere;
-         List<StockOpeningDetailHis> list = JoSQLUtil.getResult(
-         filterString,
-         currStockOpening.getListDetail());
-         if (list != null) {
-         sopTableModel.setListDetail(list);
-         } else {
-         sopTableModel.clear();
-         sopTableModel.addEmptyRow();
-         }*/
- /*String className = "com.cv.app.pharmacy.database.entity.StockOpeningDetailHis";
-        String strSql = "SELECT * FROM " + className;
-        String strFilter = getStockOpFilterJOSQL();
-        if (!strFilter.isEmpty()) {
-            strSql = strSql + " where " + strFilter;
-        }
-        
-        listDetail = currStockOpening.getListDetail();
-        if (listDetail != null) {
-            sopTableModel.setListDetail(JoSQLUtil.getResult(strSql, listDetail));
-        }*/
 
         if (cboItemType1.getSelectedItem() instanceof ItemType) {
             itemType = ((ItemType) cboItemType1.getSelectedItem()).getItemTypeCode();
@@ -1956,7 +1461,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         jScrollPane4 = new javax.swing.JScrollPane();
         tblCodeFilter1 = new javax.swing.JTable();
         butFillZero = new javax.swing.JButton();
-        btnToAcc = new javax.swing.JButton();
         butCost = new javax.swing.JButton();
         butCSV = new javax.swing.JButton();
 
@@ -2036,7 +1540,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -2134,7 +1638,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         tblGround.setFont(Global.textFont);
         tblGround.setModel(sopTableModel);
         tblGround.setRowHeight(23);
-        tblGround.setShowVerticalLines(false);
         tblGround.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 tblGroundFocusLost(evt);
@@ -2184,13 +1687,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             }
         });
 
-        btnToAcc.setText("To  Acc");
-        btnToAcc.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnToAccActionPerformed(evt);
-            }
-        });
-
         butCost.setText("Cost");
         butCost.setEnabled(false);
         butCost.addActionListener(new java.awt.event.ActionListener() {
@@ -2231,9 +1727,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(butFillZero)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(btnToAcc)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(98, 98, 98)
                         .addComponent(butCost)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butCSV)
@@ -2289,11 +1783,10 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butFillZero)
-                    .addComponent(btnToAcc)
                     .addComponent(butCost)
                     .addComponent(butCSV))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -2398,43 +1891,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         fillZero();
     }//GEN-LAST:event_butFillZeroActionPerformed
 
-    private void btnToAccActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnToAccActionPerformed
-        String isIntegration = Util1.getPropValue("system.integration");
-        try {
-            if (isIntegration.toUpperCase().equals("Y")) {
-                List<VStockOpToAcc> listStockOp = dao.findAllHSQL("select o from VStockOpToAcc o");
-                if (listStockOp.size() > 0) {
-                    for (int i = 0; i < listStockOp.size(); i++) {
-                        if (Global.mqConnection != null) {
-                            if (Global.mqConnection.isStatus()) {
-                                try {
-                                    ActiveMQConnection mq = Global.mqConnection;
-                                    MapMessage msg = mq.getMapMessageTemplate();
-                                    msg.setString("program", Global.programId);
-                                    msg.setString("entity", "OPENING-STOCK");
-                                    msg.setString("sourceAccId", listStockOp.get(i).getAccountId());
-                                    msg.setBoolean("deleted", false);
-                                    msg.setDouble("opAmount", listStockOp.get(i).getAmount());
-
-                                    msg.setString("queueName", "INVENTORY");
-
-                                    mq.sendMessage(Global.queueName, msg);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + listStockOp + " - " + ex);
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            log.error("btnToAccActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }//GEN-LAST:event_btnToAccActionPerformed
-
     private void butCostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCostActionPerformed
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         sopTableModel.reAssignCost(txtOpId.getText());
@@ -2463,7 +1919,6 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     }//GEN-LAST:event_butCSVActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnToAcc;
     private javax.swing.JButton butCSV;
     private javax.swing.JButton butCost;
     private javax.swing.JButton butFillZero;

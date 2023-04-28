@@ -4,7 +4,7 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
-import com.cv.app.pharmacy.database.tempentity.StockBalance;
+import com.cv.app.pharmacy.database.helper.StockBalance1;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 public class StockTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(StockTableModel.class.getName());
-    private List<StockBalance> listDetail = new ArrayList();
+    private List<StockBalance1> listDetail = new ArrayList();
     private final String[] columnNames = {"Code", "Description", "Relation-Str",
         "Exp-Date", "Qty-Str"};
     private final String codeUsage = Util1.getPropValue("system.item.code.field");
@@ -61,41 +61,21 @@ public class StockTableModel extends AbstractTableModel {
         }
 
         try {
-            StockBalance record = listDetail.get(row);
+            StockBalance1 record = listDetail.get(row);
 
             switch (column) {
                 case 0: //Code
                     if (codeUsage.equals("SHORTNAME")) {
-                        if (record.getKey() == null) {
-                            return null;
-                        } else {
-                            return record.getKey().getMed().getShortName();
-                        }
+                        return record.getTranOption();
                     } else {
-                        if (record.getKey() == null) {
-                            return null;
-                        } else {
-                            return record.getKey().getMed().getMedId();
-                        }
+                        return record.getMedId();
                     }
                 case 1: //Medicine Name
-                    if (record.getKey() == null) {
-                        return null;
-                    } else {
-                        return record.getKey().getMed().getMedName();
-                    }
+                    return record.getMedName();
                 case 2: //Relation-Str
-                    if (record.getKey() == null) {
-                        return null;
-                    } else {
-                        return record.getKey().getMed().getRelStr();
-                    }
+                    return record.getRelString();
                 case 3: //Exp-Date
-                    if (record.getKey().getExpDate().toString().equals("1900-01-01")) {
-                        return null;
-                    } else {
-                        return DateUtil.toDateStr(record.getKey().getExpDate());
-                    }
+                    return DateUtil.toDateStr(record.getExpDate(), "dd/MM/yyyy");
                 case 4: //Qty-Str
                     return record.getQtyStr();
                 default:
@@ -125,7 +105,7 @@ public class StockTableModel extends AbstractTableModel {
         return columnNames.length;
     }
 
-    public void setListDetail(List<StockBalance> listDetail) {
+    public void setListDetail(List<StockBalance1> listDetail) {
         this.listDetail = listDetail;
         fireTableDataChanged();
     }

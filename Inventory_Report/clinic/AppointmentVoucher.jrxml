@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalance" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="0"/>
@@ -61,7 +61,7 @@
 					<jr:codeExpression><![CDATA[$P{p_visit_no}]]></jr:codeExpression>
 				</jr:barbecue>
 			</componentElement>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="20" y="91" width="180" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement textAlignment="Center" verticalAlignment="Top">
 					<font fontName="Zawgyi-One" size="7"/>
@@ -75,28 +75,28 @@
 	</columnHeader>
 	<detail>
 		<band height="76" splitType="Stretch">
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="69" y="61" width="130" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{p_patient}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="###0" isBlankWhenNull="true">
 				<reportElement x="69" y="16" width="130" height="15" uuid="387ff869-1c6f-4902-8fee-9b2f57a1b4e7"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{p_book_no}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="###0" isBlankWhenNull="true">
 				<reportElement x="69" y="46" width="130" height="15" uuid="e418ad2a-b11e-4858-a249-534883963bc6"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{p_reg_no}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="" isBlankWhenNull="true">
 				<reportElement x="69" y="31" width="130" height="15" uuid="fad5c9c4-de70-4fca-a955-4aee53629fb0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9"/>
@@ -144,7 +144,7 @@
 				</textElement>
 				<text><![CDATA[Date :]]></text>
 			</staticText>
-			<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="###0" isBlankWhenNull="true">
 				<reportElement x="69" y="1" width="130" height="15" uuid="83431cfe-9778-46c6-9763-e441b3209d67"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
@@ -161,7 +161,7 @@
 	</pageFooter>
 	<summary>
 		<band height="16" splitType="Stretch">
-			<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="###0.00" isBlankWhenNull="true">
 				<reportElement x="20" y="1" width="80" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="8"/>

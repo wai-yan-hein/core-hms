@@ -744,6 +744,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     if (!Util1.isNullOrEmpty(ptt.getAdmissionNo())) {
                         cboPayment.setSelectedItem(ptCredit);
                         butAdmit.setEnabled(false);
+                        if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                            cboPayment.setSelectedItem(ptCash);
+                        }
                     } else if (!Util1.isNullOrEmpty(ptt.getOtId())) {
                         cboPayment.setSelectedItem(ptCredit);
                         butOTID.setEnabled(false);
@@ -752,9 +755,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         cboPayment.setSelectedItem(ptCash);
 
                     }
-                    if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
-                        cboPayment.setSelectedItem(ptCash);
+
+                    if (ptt.getOtId() != null) {
+                        butOTID.setEnabled(false);
+                        txtBill.setText(ptt.getOtId());
+                    } else {
+                        butOTID.setEnabled(true);
+                        txtBill.setText(null);
                     }
+                    
                     getPatientBill(ptt.getRegNo());
                     //Booking info
                     String regNo = ptt.getRegNo();
@@ -1129,7 +1138,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 txtTotalItem.setText(String.valueOf(listDetail.size()));
 
                 txtBill.setText(currSaleVou.getOtId());
-                cboPayment.setSelectedItem(ptCredit);
+                //cboPayment.setSelectedItem(ptCredit);
                 if (txtBill.getText() == null) {
                     butOTID.setEnabled(true);
                 } else if (!txtBill.getText().isEmpty()) {
@@ -4223,7 +4232,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
         }
     }
-    
+
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
             @Override
@@ -4290,7 +4299,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

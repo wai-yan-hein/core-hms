@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.OPDAutoAddIdMapping;
@@ -48,6 +49,7 @@ public class OPDTableModel extends AbstractTableModel {
     private double pkgTotal = 0.0;
     private double extraTotal = 0.0;
     String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
+    private CalculateObserver calObserver;
     
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
@@ -212,6 +214,7 @@ public class OPDTableModel extends AbstractTableModel {
                             record.setFees4(service.getFees4());
                             record.setFees5(service.getFees5());
                             record.setFees6(service.getFees6());
+                            record.setServiceCost(service.getServiceCost());
                             record.setPercent(service.isPercent());
                             record.setReferDr(referDoctor);
                             record.setLabRemark(service.getLabRemark());
@@ -337,6 +340,8 @@ public class OPDTableModel extends AbstractTableModel {
         } catch (Exception ex) {
 
         }
+        
+        calObserver.calculate();
     }
 
     @Override
@@ -407,6 +412,8 @@ public class OPDTableModel extends AbstractTableModel {
             JOptionPane.showMessageDialog(Util1.getParent(), "You cannot delete package item.",
                     "Package Item Delete", JOptionPane.ERROR_MESSAGE);
         }
+        
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -692,6 +699,7 @@ public class OPDTableModel extends AbstractTableModel {
                         record.setFees4(srv.getFees4());
                         record.setFees5(srv.getFees5());
                         record.setFees6(srv.getFees6());
+                        record.setServiceCost(srv.getServiceCost());
                         record.setPercent(srv.isPercent());
                         record.setPrice(srv.getFees());
                         record.setFees(srv.getFees());
@@ -720,6 +728,7 @@ public class OPDTableModel extends AbstractTableModel {
         record.setFees4(srv.getFees4());
         record.setFees5(srv.getFees5());
         record.setFees6(srv.getFees6());
+        record.setServiceCost(srv.getServiceCost());
         record.setPercent(srv.isPercent());
         record.setPrice(srv.getFees());
         record.setFees(srv.getFees());
@@ -755,6 +764,7 @@ public class OPDTableModel extends AbstractTableModel {
                             record.setFees4(service.getFees4());
                             record.setFees5(service.getFees5());
                             record.setFees6(service.getFees6());
+                            record.setServiceCost(service.getServiceCost());
                             record.setPercent(service.isPercent());
                             record.setPrice(service.getFees());
                             record.setFees(service.getFees());
@@ -951,5 +961,9 @@ public class OPDTableModel extends AbstractTableModel {
             status = true;
         }
         return status;
+    }
+    
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
     }
 }

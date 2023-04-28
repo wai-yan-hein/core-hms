@@ -1986,10 +1986,12 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    log.info("After REST Api called.");
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
+                            log.info("REST Api return : " + output);
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
                                 try {

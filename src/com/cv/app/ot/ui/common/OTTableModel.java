@@ -4,6 +4,7 @@
  */
 package com.cv.app.ot.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.view.VAddService;
@@ -48,7 +49,8 @@ public class OTTableModel extends AbstractTableModel {
     private int maxUniqueId = 0;
     private String delDrFee = "";
     private int autoAddCnt = 0;
-
+    private CalculateObserver calObserver;
+    
     public OTTableModel(AbstractDataAccess dao) {
         this.dao = dao;
         try {
@@ -323,6 +325,8 @@ public class OTTableModel extends AbstractTableModel {
 
             }
         }
+        
+        calObserver.calculate();
     }
 
     @Override
@@ -394,6 +398,8 @@ public class OTTableModel extends AbstractTableModel {
         if (row - 1 >= 0) {
             parent.setRowSelectionInterval(row - 1, row - 1);
         }
+        
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -789,5 +795,9 @@ public class OTTableModel extends AbstractTableModel {
         }
 
         return status;
+    }
+
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
     }
 }

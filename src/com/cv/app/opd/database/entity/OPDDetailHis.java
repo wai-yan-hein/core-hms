@@ -55,6 +55,7 @@ public class OPDDetailHis implements java.io.Serializable {
     private String fee5Id;
     private String fee6Id;
     private Integer sortOrder;
+    private Double serviceCost;
     
     @Id
     @Column(name = "opd_detail_id", unique = true, nullable = false, length=25)
@@ -369,5 +370,14 @@ public class OPDDetailHis implements java.io.Serializable {
 
     public void setSortOrder(Integer sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    @Column(name="service_cost")
+    public Double getServiceCost() {
+        return serviceCost;
+    }
+
+    public void setServiceCost(Double serviceCost) {
+        this.serviceCost = serviceCost;
     }
 }

@@ -285,7 +285,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 }
 
                 //Update to patient
-                Patient pt = currPatient.getKey().getRegister();
+                //Patient pt = currPatient.getKey().getRegister();
+                Patient pt = (Patient)dao.find(Patient.class, currPatient.getKey().getRegister().getRegNo());
                 if (currPatient.getDcStatus() == null) {
                     pt.setAdmissionNo(currPatient.getKey().getAmsNo());
                 }

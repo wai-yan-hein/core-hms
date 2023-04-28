@@ -4,6 +4,7 @@
  */
 package com.cv.app.inpatient.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.inpatient.database.entity.DCDetailHis;
 import com.cv.app.inpatient.database.entity.DCDoctorFee;
 import com.cv.app.inpatient.database.entity.InpService;
@@ -50,6 +51,7 @@ public class DCTableModel extends AbstractTableModel {
     private Double roomFee = 0.0;
     private final String roomFeeId = Util1.getPropValue("system.dc.room.fee.id");
     private String delDrFee = "";
+    private CalculateObserver calObserver;
 
     public DCTableModel(AbstractDataAccess dao) {
         this.dao = dao;
@@ -344,6 +346,8 @@ public class DCTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
+        
+        calObserver.calculate();
     }
 
     private boolean isValidDetailAmount(DCDetailHis record, double amount) {
@@ -452,6 +456,8 @@ public class DCTableModel extends AbstractTableModel {
                 }
             }
         }
+        
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -1047,5 +1053,9 @@ public class DCTableModel extends AbstractTableModel {
             }
         }
         return status;
+    }
+
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
     }
 }

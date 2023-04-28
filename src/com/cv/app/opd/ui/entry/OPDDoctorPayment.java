@@ -707,11 +707,16 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
             strSqlExp = strSqlExp + " group by source_acc_id, acc_id, dept_code, use_for, veac.exp_acc_id ";
 
             try {
+                strSql = strSql.replace("?", vouNo);
+                dao.execSql(strSql);
+                //dao.commit();
+                vouEngine.updateVouNo();
+                    
                 String appCurr = Util1.getPropValue("system.app.currency");
                 ResultSet rs = dao.execSQL(strSqlExp);
                 if (rs != null) {
-                    dao.open();
-                    dao.beginTran();
+                    //dao.open();
+                    //dao.beginTran();
                     while (rs.next()) {
                         GenExpense rec = new GenExpense();
                         rec.setExpDate(DateUtil.toDate(txtTranDate.getText()));
@@ -739,14 +744,10 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         rec.setDoctorId(selectedDrId);
                         rec.setUpp(chkUPP.isSelected());
                         rec.setDeleted(false);
-                        dao.save1(rec);
+                        dao.save(rec);
                         
                         uploadToAccount(rec.getGeneId());
                     }
-                    strSql = strSql.replace("?", vouNo);
-                    dao.execSqlT(strSql);
-                    dao.commit();
-                    vouEngine.updateVouNo();
 
                     printPayment(vouNo);
                 }
@@ -802,7 +803,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
             String toDate = DateUtil.toDateStrMYSQL(txtTo.getText());
             String reportPath = Util1.getAppWorkFolder()
                     + Util1.getPropValue("report.folder.path")
-                    + "Clinic/"
+                    + "clinic/"
                     + reportName;
             Map<String, Object> params = new HashMap();
             String compName = Util1.getPropValue("report.company.name");

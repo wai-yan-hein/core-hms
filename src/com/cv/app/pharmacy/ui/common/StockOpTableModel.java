@@ -636,7 +636,7 @@ public class StockOpTableModel extends AbstractTableModel {
     public String getDeleteSql() {
         String strSQL = null;
 
-        if (deleteList != null) {
+        if (deleteList != null && !deleteList.equals("-")) {
             strSQL = "delete from stock_op_detail_his where op_detail_id in ("
                     + deleteList + ")";
             deleteList = null;

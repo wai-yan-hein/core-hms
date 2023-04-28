@@ -5,6 +5,7 @@
  */
 package com.cv.app.ot.ui.entry;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -39,7 +40,6 @@ import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.ui.common.VouFormatFactory;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
-import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +74,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -82,10 +82,6 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-import org.josql.Query;
-import org.josql.QueryExecutionException;
-import org.josql.QueryParseException;
-import org.josql.QueryResults;
 import org.springframework.beans.BeanUtils;
 
 /**
@@ -93,7 +89,7 @@ import org.springframework.beans.BeanUtils;
  * @author winswe
  */
 public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropagate,
-        SelectionObserver, KeyListener {
+        SelectionObserver, KeyListener, CalculateObserver {
 
     static Logger log = Logger.getLogger(OPD.class.getName());
     private final AbstractDataAccess dao = Global.dao;
@@ -108,6 +104,65 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     private boolean isPaid = false;
     private boolean canEdit = true;
 
+    @Override
+    public void calculate() {
+        String depositeId = Util1.getPropValue("system.ot.deposite.id");
+        String discountId = Util1.getPropValue("system.ot.disc.id");
+        String paidId = Util1.getPropValue("system.ot.paid.id");
+        String refundId = Util1.getPropValue("system.ot.refund.id");
+        List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+        
+        double vouTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId) &&
+                        !o.getService().getServiceId().toString().equals(discountId) &&
+                        !o.getService().getServiceId().toString().equals(paidId) && 
+                        !o.getService().getServiceId().toString().equals(refundId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Vou Total : " + vouTotal);
+        txtVouTotal.setValue(vouTotal);
+        
+        double paidTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(depositeId) ||
+                        o.getService().getServiceId().toString().equals(paidId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Paid : " + paidTotal);
+        txtPaid.setValue(paidTotal);
+        
+        double refundTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(refundId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Refund : " + refundTotal);
+        txtPaid.setValue(paidTotal - refundTotal);
+
+        double discTotal = listDCDH.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .filter(o -> o.getService().getServiceId().toString().equals(discountId))
+                .mapToDouble(this::calculateAmount).sum();
+        log.info("Discount : " + discTotal);
+        txtDiscA.setValue(discTotal);        
+        
+        txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+        
+        calcBalance();
+    }
+
+    private double calculateAmount(OTDetailHis record){
+        Double amount = 0d;
+
+        if (record.getChargeType() != null) {
+            if (record.getChargeType().getChargeTypeId() == 1) {
+                amount = NumberUtil.NZeroInt(record.getQuantity())
+                        * NumberUtil.NZero(record.getPrice());
+            }
+        }
+
+        record.setAmount(amount);
+        return amount;
+    }
+    
     /**
      * Creates new form OTEntry
      */
@@ -218,7 +273,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 dao.open();
                 dao.beginTran();
                 String vouNo = currVou.getOpdInvId();
-                List<OTDetailHis> listDetail = currVou.getListOPDDetailHis();
+                List<OTDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
                 for (OTDetailHis odh : listDetail) {
                     odh.setVouNo(vouNo);
                     if (odh.getOpdDetailId() == null) {
@@ -584,7 +639,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         dao.open();
                         //dao.beginTran();
                         String vouNo = currVou.getOpdInvId();
-                        List<OTDetailHis> listDetail = currVou.getListOPDDetailHis();
+                        List<OTDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
                         for (OTDetailHis odh : listDetail) {
                             odh.setVouNo(vouNo);
                             if (odh.getOpdDetailId() == null) {
@@ -893,16 +948,22 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 if (!Util1.isNullOrEmpty(patient.getAdmissionNo())) {
                     cboPaymentType.setSelectedItem(ptCredit);
                     butAdmit.setEnabled(false);
+                    if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
+                        cboPaymentType.setSelectedItem(ptCash);
+                    }
                 } else if (!Util1.isNullOrEmpty(patient.getOtId())) {
                     cboPaymentType.setSelectedItem(ptCredit);
                     txtBill.setText(patient.getOtId());
                 } else {
                     cboPaymentType.setSelectedItem(ptCash);
                 }
-                if (Util1.getPropValue("system.admission.paytype").equals("CASH")) {
-                    cboPaymentType.setSelectedItem(ptCash);
+                if (patient.getOtId() != null) {
+                    butOTID.setEnabled(false);
+                    txtBill.setText(patient.getOtId());
+                } else {
+                    butOTID.setEnabled(true);
+                    txtBill.setText(null);
                 }
-
                 if (patient.getDoctor() != null) {
                     selected("DoctorSearch", patient.getDoctor());
                 }
@@ -1204,6 +1265,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
     private void initTable() {
         try {
+            tableModel.setCalObserver(this);
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
@@ -1230,8 +1292,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
                 @Override
                 public void tableChanged(TableModelEvent e) {
-                    //txtVouTotal.setValue(tableModel.getTotal());
-                    String depositeId = Util1.getPropValue("system.ot.deposite.id");
+                    /*String depositeId = Util1.getPropValue("system.ot.deposite.id");
                     String discountId = Util1.getPropValue("system.ot.disc.id");
                     String paidId = Util1.getPropValue("system.ot.paid.id");
                     String refundId = Util1.getPropValue("system.ot.refund.id");
@@ -1274,7 +1335,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
                     }
                     txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                    calcBalance();
+                    calcBalance();*/
                 }
             });
 
@@ -1642,7 +1703,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -1816,7 +1877,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
     }
 
-
     private void deleteDetail() {
         String deleteSQL = "delete from ot_doctor_fee where ot_detail_id in ("
                 + tableModel.getDeletedList() + ")";
@@ -1880,6 +1940,39 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
     }
 
+    private List<OTDetailHis> getVerifiedUniqueId(String vouNo, List<OTDetailHis> listDetail) {
+        if (listDetail == null) {
+            return null;
+        }
+
+        OTDetailHis ddh = listDetail.stream().filter(o -> NumberUtil.NZeroInt(o.getUniqueId()) != 0)
+                .max(Comparator.comparingInt(OTDetailHis::getUniqueId))
+                .orElse(null);
+        int maxId = 0;
+        if (ddh != null) {
+            maxId = ddh.getUniqueId();
+        }
+
+        HashMap<Integer, OTDetailHis> hm = new HashMap();
+        for (OTDetailHis tmp : listDetail) {
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) != 0) {
+                if (hm.containsKey(tmp.getUniqueId())) {
+                    log.error("OT Unique ID Error : " + tmp.getUniqueId());
+                    maxId++;
+                    tmp.setUniqueId(maxId);
+                    tmp.setOpdDetailId(vouNo + "-" + tmp.getUniqueId().toString());
+                }
+                hm.put(tmp.getUniqueId(), tmp);
+            }
+            
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
+                tmp.setUniqueId(maxId++);
+            }
+        }
+
+        return listDetail;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

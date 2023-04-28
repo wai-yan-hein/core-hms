@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.entry;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
@@ -58,6 +59,7 @@ import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +78,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -92,7 +93,7 @@ import org.springframework.beans.BeanUtils;
  * @author Eitar
  */
 public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
-        SelectionObserver, KeyListener {
+        SelectionObserver, KeyListener, CalculateObserver {
 
     static Logger log = Logger.getLogger(OPD.class.getName());
     private final AbstractDataAccess dao = Global.dao;
@@ -106,6 +107,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private PaymentType ptCredit;
     private boolean isDeleteCopy = false;
     private boolean canEdit = true;
+    String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -156,6 +158,57 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtDonorName.addKeyListener(this);
         tblService.addKeyListener(this);
         txtRemark.addKeyListener(this);
+    }
+
+    @Override
+    public void calculate() {
+        List<OPDDetailHis> list = tableModel.getListOPDDetailHis();
+        double vouTotal = list.stream().filter(o -> o.getService() != null)
+                .filter(o -> o.getService().getServiceId() != null)
+                .mapToDouble(this::calculateAmount)
+                .sum();
+        log.info("Vou Total : " + vouTotal);
+        txtVouTotal.setValue(vouTotal);
+        txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+        calcBalance();
+    }
+
+    private double calculateAmount(OPDDetailHis record) {
+        Double amount = 0d;
+        boolean isAmount = false;
+
+        if (record.getChargeType() != null) {
+            int chargeType = record.getChargeType().getChargeTypeId();
+
+            switch (chargeType) {
+                case 1: //Normal
+                    amount = NumberUtil.NZeroInt(record.getQuantity())
+                            * NumberUtil.NZero(record.getPrice());
+                    break;
+                case 2: //FOC
+                    break;
+                default:
+                    if (useOPDFactor.equals("Y")) {
+                        float factor = NumberUtil.FloatZero(record.getChargeType().getFactor());
+                        if (record.getChargeType() != null) {
+                            isAmount = record.getChargeType().getIsAmount();
+                        }
+                        if (isAmount) {
+                            double tmpPrice = NumberUtil.NZero(record.getPrice()) + factor;
+                            record.setPrice(tmpPrice);
+                        } else {
+                            double tmpPercentAmt = (NumberUtil.NZero(record.getPrice()) * factor) / 100;
+                            double tmpPrice = NumberUtil.NZero(record.getPrice()) + tmpPercentAmt;
+                            record.setPrice(tmpPrice);
+                        }
+                    }
+                    amount = NumberUtil.NZeroInt(record.getQuantity())
+                            * NumberUtil.NZero(record.getPrice());
+            }
+        }
+        record.setAmount(amount);
+
+        return amount;
     }
 
     /**
@@ -275,8 +328,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         currVou.setUpdatedDate(new Date());
                     }
 
-                    List<OPDDetailHis> listDetail = currVou.getListOPDDetailHis();
                     String vouNo = currVou.getOpdInvId();
+                    List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo,currVou.getListOPDDetailHis());
                     dao.open();
                     dao.beginTran();
                     for (OPDDetailHis odh : listDetail) {
@@ -659,8 +712,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             currVou.setUpdatedDate(new Date());
                         }
                         if (canEdit) {
-                            List<OPDDetailHis> listDetail = currVou.getListOPDDetailHis();
                             String vouNo = currVou.getOpdInvId();
+                            List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
+                            
                             dao.open();
                             dao.beginTran();
                             for (OPDDetailHis odh : listDetail) {
@@ -999,6 +1053,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void initTable() {
         try {
+            tableModel.setCalObserver(this);
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
@@ -1035,9 +1090,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
                 @Override
                 public void tableChanged(TableModelEvent e) {
-                    txtVouTotal.setValue(tableModel.getTotal());
+                    /*txtVouTotal.setValue(tableModel.getTotal());
                     txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                    calcBalance();
+                    calcBalance();*/
                 }
             });
 
@@ -1385,7 +1440,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             status = false;
         } else if (!tableModel.isValidEntry()) {
             status = false;
-        } else if (currVou.getPatient() == null) {
+        } else if (vouBalance != 0 && currVou.getPatient() == null) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -2153,6 +2208,39 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
     }
 
+    private List<OPDDetailHis> getVerifiedUniqueId(String vouNo, List<OPDDetailHis> listDetail) {
+        if (listDetail == null) {
+            return null;
+        }
+
+        OPDDetailHis ddh = listDetail.stream().filter(o -> NumberUtil.NZeroInt(o.getUniqueId()) != 0)
+                .max(Comparator.comparingInt(OPDDetailHis::getUniqueId))
+                .orElse(null);
+        int maxId = 0;
+        if (ddh != null) {
+            maxId = ddh.getUniqueId();
+        }
+
+        HashMap<Integer, OPDDetailHis> hm = new HashMap();
+        for (OPDDetailHis tmp : listDetail) {
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) != 0) {
+                if (hm.containsKey(tmp.getUniqueId())) {
+                    log.error("OPD Unique ID Error : " + tmp.getUniqueId());
+                    maxId++;
+                    tmp.setUniqueId(maxId);
+                    tmp.setOpdDetailId(vouNo + "-" + tmp.getUniqueId().toString());
+                }
+                hm.put(tmp.getUniqueId(), tmp);
+            }
+            
+            if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
+                tmp.setUniqueId(maxId++);
+            }
+        }
+
+        return listDetail;
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
