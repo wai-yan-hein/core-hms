@@ -47,8 +47,8 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -75,9 +75,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -1035,22 +1033,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             BindingUtil.BindCombo(cboTechnician,
                     dao.findAllHSQL("select o from Doctor o where o.active = true and o.drType = 'Technician' order by o.doctorName"));
             tblService.getColumnModel().getColumn(7).setCellEditor(new DefaultCellEditor(cboTechnician));
-
-            tblService.getModel().addTableModelListener(new TableModelListener() {
-
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    txtVouTotal.setValue(tableModel.getTotal());
-                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                    calcBalance();
-                }
-            });
-
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            tblService.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
-                txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-            });
-
             tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
             tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
             tblPatientBill.getTableHeader().setFont(Global.lableFont);
@@ -1270,33 +1253,48 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         genVouNo();
     }
 
-    private void calcBalance() {
-        double discount = NumberUtil.NZero(txtDiscA.getValue());
-        double tax = NumberUtil.NZero(txtTaxA.getValue());
-        double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-        double paid = NumberUtil.NZero(txtPaid.getValue());
+    private void calVouTotal() {
+        txtVouTotal.setValue(tableModel.getTotal());
+        if (cboPaymentType.getSelectedIndex() <= 0) {
+            txtPaid.setValue(NumberUtil.NZero(txtVouTotal.getValue()));
+            txtVouBalance.setValue(0.0);
+        } else {
+            txtPaid.setValue(0.0);
+            txtVouBalance.setValue(NumberUtil.NZero(txtVouTotal.getValue()));
+        }
+        txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+        txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
 
+    }
+
+    private void calculatePackage() {
         if (cboPaymentType.getSelectedItem() != null) {
-            PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
-
             if (currVou.getPkgId() != null) {
                 tableModel.calculatePkgTotal();
                 double pkgItemTotal = tableModel.getPkgTotal();
                 double pkgAmt = currVou.getPkgPrice();
-                discount = pkgItemTotal - pkgAmt;
-                //paid = vouTotal + tax - discount;
+                double diffAmt = pkgItemTotal - pkgAmt;
+                String pkgGainId = Util1.getPropValue("system.opd.pkggain.id");
+                String hsql = "select o from Service o where o.serviceId = '" + pkgGainId + "'";
+                try {
+                    List<Service> list = dao.findAllHSQL(hsql);
+                    if (!list.isEmpty()) {
+                        Service pkService = list.get(0);
+                        OPDDetailHis opd = new OPDDetailHis();
+                        opd.setService(pkService);
+                        opd.setQuantity(diffAmt < 0 ? 1 : -1);
+                        opd.setPrice(diffAmt < 0 ? diffAmt * -1 : diffAmt);
+                        opd.setAmount(opd.getQuantity() * opd.getPrice());
+                        opd.setChargeType(tableModel.getDefaultChargeType());
+                        tableModel.addOPDDetailHis(opd);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Invalid Package Id.");
+                    }
+                } catch (Exception e) {
+                    log.error("calculatePackage : " + e.getMessage());
+                }
             }
-            txtDiscA.setValue(discount);
-            if (pt.getPaymentTypeId() == 1) {
-                txtPaid.setValue((vouTotal + tax) - discount);
-                paid = NumberUtil.NZero(txtPaid.getValue());
-            } else {
-                txtPaid.setValue(0);
-                paid = 0;
-            }
-            txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
-        } else {
-            //Payment type is not selected
+            calVouTotal();
         }
     }
 
@@ -1356,7 +1354,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
@@ -1377,7 +1375,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
 
         txtVouTotal.setValue(modelTtl);
-        calcBalance();
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
 
         if (!DateUtil.isValidDate(txtDate.getText())) {
@@ -1518,7 +1515,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 txtDoctorNo.setText(doctor.getDoctorId());
                 txtDoctorName.setText((doctor.getDoctorName()));
                 txtVouTotal.setValue(tableModel.getTotal());
-                calcBalance();
                 tblService.requestFocus();
                 tableModel.addAutoServiceByDoctor();
             } catch (Exception ex) {
@@ -1700,6 +1696,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             break;
             case "PackageSelect":
                 if (selectObj != null) {
+                    tableModel.clear();
                     ClinicPackage cp = (ClinicPackage) selectObj;
                     currVou.setPkgId(cp.getId());
                     currVou.setPkgName(cp.getPackageName());
@@ -1707,11 +1704,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     txtPackageName.setText(currVou.getPkgName());
                     txtPrice.setValue(currVou.getPkgPrice());
                     butRemove.setEnabled(true);
-                    //Save package his
                     savePackage(txtVouNo.getText().trim(), currVou.getPkgId());
-                    //calcPackageExtraFees(currVou);
-                    //calcPackageGainLost("-");
                 }
+                break;
+            case "CAL-TOTAL":
+                calVouTotal();
                 break;
         }
 
@@ -1740,7 +1737,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     while (rs.next()) {
                         String itemKey = rs.getString("item_key");
                         Integer qty = rs.getInt("qty_smallest");
-                        Integer serviceId = Integer.parseInt(itemKey.replace("OPD-", ""));
+                        Integer serviceId = Integer.valueOf(itemKey.replace("OPD-", ""));
                         Service service = (Service) dao.find(Service.class, serviceId);
                         if (service != null) {
                             OPDDetailHis record = new OPDDetailHis();
@@ -1775,7 +1772,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             tableModel.addPackageItem(record);
                         }
                     }
-
+                    calculatePackage();
                     tableModel.addNewRow();
                     tableModel.dataChange();
                     rs.close();
@@ -1785,8 +1782,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             } finally {
                 dao.close();
             }
-
-            calcBalance();
         }
     }
 
@@ -2873,7 +2868,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void cboPaymentTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentTypeActionPerformed
         if (cboBindStatus) {
-            calcBalance();
+            calVouTotal();
         }
     }//GEN-LAST:event_cboPaymentTypeActionPerformed
 
@@ -3015,7 +3010,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 ams.setPatientName(pt.getPatientName());
                 ams.setReligion(pt.getReligion());
                 ams.setSex(pt.getSex());
-
                 dao.save(ams);
                 regNo.updateRegNo();
                 txtAdmissionNo.setText(ams.getKey().getAmsNo());
@@ -3053,7 +3047,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     && !Util1.getPropValue("system.opd.urgent").isEmpty()) {
                 int index = tblService.convertRowIndexToModel(tblService.getSelectedRow());
                 tableModel.showUrgentDialog(index);
-                calcBalance();
             }
         }
     }//GEN-LAST:event_tblServiceMouseClicked
@@ -3075,7 +3068,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtPrice.setValue(0);
         txtDiscA.setValue(0);
         butRemove.setEnabled(false);
-        calcBalance();
         try {
             String vouNo = txtVouNo.getText();
             String strSqlDelete = "delete from clinic_package_detail_his where dc_inv_no = '" + vouNo + "' and pkg_opt = 'OPD'";
