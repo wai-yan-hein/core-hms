@@ -669,6 +669,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         params.put("clinic_type", cboType.getSelectedItem().toString());
+        params.put("prm_adm_no", txtAdmNo.getText().trim());
 
         return params;
     }

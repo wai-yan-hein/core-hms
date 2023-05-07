@@ -35,6 +35,8 @@ public class VService implements java.io.Serializable{
     private String catName;
     private Integer migId;
     private String labRemark;
+    private Integer cusGroupId;
+    private Double cost;
     
     @Id @GeneratedValue(strategy=IDENTITY)
     @Column(name="service_id", unique=true, nullable=false)
@@ -188,6 +190,24 @@ public class VService implements java.io.Serializable{
 
     public void setLabRemark(String labRemark) {
         this.labRemark = labRemark;
+    }
+
+    @Column(name="cus_group_id")
+    public Integer getCusGroupId() {
+        return cusGroupId;
+    }
+
+    public void setCusGroupId(Integer cusGroupId) {
+        this.cusGroupId = cusGroupId;
+    }
+
+    @Column(name="service_cost")
+    public Double getCost() {
+        return cost;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
     }
     
     

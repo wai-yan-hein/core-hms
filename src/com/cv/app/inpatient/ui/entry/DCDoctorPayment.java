@@ -478,6 +478,9 @@ public class DCDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             
                             
             try {
+                String appCurr = Util1.getPropValue("system.app.currency");
+                ResultSet rs = dao.execSQL(strSqlExp);
+                
                 strSql = strSql.replace("?", vouNo);
                 log.info("Save : " + strSql);
                 //dao.open();
@@ -485,8 +488,6 @@ public class DCDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                 //dao.commit();
                 vouEngine.updateVouNo();
                 
-                String appCurr = Util1.getPropValue("system.app.currency");
-                ResultSet rs = dao.execSQL(strSqlExp);
                 if (rs != null) {
                     //dao.open();
                     //dao.beginTran();
@@ -519,6 +520,7 @@ public class DCDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                         rec.setDoctorId(selectedDrId);
                         rec.setUpp(chkUPP.isSelected());
                         rec.setDeleted(false);
+                        rec.setRecLock(Boolean.FALSE);
                         dao.save(rec);
                         uploadToAccount(rec.getGeneId());
                     }

@@ -496,8 +496,8 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
 
             ResultSet rs = dao.execSQL(strSqlExp);
             if (rs != null) {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 while (rs.next()) {
                     GenExpense rec = new GenExpense();
                     rec.setExpDate(DateUtil.toDate(tranDate));
@@ -523,18 +523,19 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setExpenseOpotion(et.getExpenseOption());
                     rec.setDoctorId(selectedDrId);
                     rec.setUpp(true);
+                    rec.setDeleted(false);
 
-                    dao.save1(rec);
+                    dao.save(rec);
                     uploadToAccount(rec.getGeneId());
                 }
                 strSql = strSql.replace("?", vouNo);
-                dao.execSqlT(strSql);
-                dao.commit();
+                dao.execSql(strSql);
+                //dao.commit();
                 vouEngine.updateVouNo();
             }
             
         } catch (Exception ex) {
-            dao.rollBack();
+            //dao.rollBack();
             log.error("save : " + ex.toString());
         } finally {
             dao.close();
@@ -745,8 +746,8 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
 
             ResultSet rs = dao.execSQL(strSqlExp);
             if (rs != null) {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 while (rs.next()) {
                     GenExpense rec = new GenExpense();
                     rec.setExpDate(DateUtil.toDate(tranDate));
@@ -767,19 +768,19 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setExpenseOpotion(et.getExpenseOption());
                     rec.setDoctorId(selectedDrId);
                     rec.setUpp(Boolean.TRUE);
-
-                    dao.save1(rec);
+                    rec.setDeleted(false);
+                    dao.save(rec);
                     uploadToAccount(rec.getGeneId());
                 }
             }
 
             strSql = strSql.replace("?", vouNo);
             log.info("Save : " + strSql);
-            dao.execSqlT(strSql);
-            dao.commit();
+            dao.execSql(strSql);
+            //dao.commit();
             vouEngine.updateVouNo();
         } catch (Exception ex) {
-            dao.rollBack();
+            //dao.rollBack();
             log.error("save : " + ex.toString());
         } finally {
             dao.close();
@@ -938,8 +939,8 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
 
             ResultSet rs = dao.execSQL(strSqlExp);
             if (rs != null) {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 while (rs.next()) {
                     GenExpense rec = new GenExpense();
                     rec.setExpDate(DateUtil.toDate(tranDate));
@@ -960,19 +961,19 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setExpenseOpotion(et.getExpenseOption());
                     rec.setDoctorId(selectedDrId);
                     rec.setUpp(Boolean.TRUE);
-
-                    dao.save1(rec);
+                    rec.setDeleted(false);
+                    dao.save(rec);
                     uploadToAccount(rec.getGeneId());
                 }
             }
 
             strSql = strSql.replace("?", vouNo);
             log.info("Save : " + strSql);
-            dao.execSqlT(strSql);
-            dao.commit();
+            dao.execSql(strSql);
+            //dao.commit();
             vouEngine.updateVouNo();
         } catch (Exception ex) {
-            dao.rollBack();
+            //dao.rollBack();
             log.error("save : " + ex.toString());
         } finally {
             dao.close();

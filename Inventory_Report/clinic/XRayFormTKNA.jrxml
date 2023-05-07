@@ -49,9 +49,9 @@ where txp.user_id = $P{p_user_id}]]>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="186" splitType="Stretch">
+		<band height="171" splitType="Stretch">
 			<staticText>
-				<reportElement x="0" y="78" width="555" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<reportElement x="206" y="46" width="288" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
 				<box>
 					<pen lineStyle="Solid" lineColor="#004ECA"/>
 					<topPen lineStyle="Solid" lineColor="#004ECA"/>
@@ -59,129 +59,173 @@ where txp.user_id = $P{p_user_id}]]>
 					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
 					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="18" isBold="true" isItalic="false"/>
 				</textElement>
 				<text><![CDATA[X' Ray Report]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="123" width="59" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="1" y="104" width="52" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Adm No. : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="143" width="59" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="1" y="124" width="52" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Name : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="385" y="103" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
+				<reportElement x="376" y="84" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Date : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="163" width="59" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="1" y="144" width="52" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Age : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="351" y="123" width="72" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
+				<reportElement x="342" y="104" width="72" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[X' Ray No : ]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement isPrintRepeatedValues="false" x="60" y="123" width="126" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836"/>
+				<reportElement isPrintRepeatedValues="false" x="60" y="104" width="189" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement isPrintRepeatedValues="false" x="60" y="143" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement isPrintRepeatedValues="false" x="60" y="124" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
+				<textElement verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement isPrintRepeatedValues="false" x="60" y="163" width="90" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1"/>
+				<reportElement isPrintRepeatedValues="false" x="60" y="144" width="189" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{age}]]></textFieldExpression>
 			</textField>
 			<image>
-				<reportElement x="0" y="0" width="230" height="75" uuid="9aa64300-3dda-4f53-a243-7721e8a0a550"/>
-				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/pan_hlaing.png"]]></imageExpression>
+				<reportElement x="117" y="0" width="83" height="75" uuid="9aa64300-3dda-4f53-a243-7721e8a0a550"/>
+				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/tkna_logo.png"]]></imageExpression>
 			</image>
 			<textField>
-				<reportElement x="255" y="30" width="288" height="22" uuid="0a5bb6cb-cd87-4816-ad1d-793ad30b4615"/>
-				<textElement textAlignment="Center" verticalAlignment="Bottom">
+				<reportElement x="206" y="2" width="288" height="22" uuid="0a5bb6cb-cd87-4816-ad1d-793ad30b4615"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One" size="12"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="255" y="56" width="288" height="15" uuid="b4881b6f-683a-4a67-81eb-c1f5392cc874"/>
-				<textElement textAlignment="Center" verticalAlignment="Top"/>
+				<reportElement x="206" y="28" width="288" height="15" uuid="b4881b6f-683a-4a67-81eb-c1f5392cc874"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="1" y="103" width="59" height="20" uuid="c6aa10ed-5a35-48a2-a278-b40d71ac958a"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="1" y="84" width="52" height="20" uuid="c6aa10ed-5a35-48a2-a278-b40d71ac958a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Reg No. : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="367" y="143" width="56" height="20" uuid="71900543-606e-4365-a77e-4595afa3dcf4"/>
+				<reportElement x="358" y="124" width="56" height="20" uuid="71900543-606e-4365-a77e-4595afa3dcf4"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[Room No :]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement isPrintRepeatedValues="false" x="60" y="103" width="78" height="20" uuid="97becd64-3ada-414d-89d3-b6499432aaef"/>
+				<reportElement isPrintRepeatedValues="false" x="60" y="84" width="189" height="20" uuid="97becd64-3ada-414d-89d3-b6499432aaef">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{patient_id}]]></textFieldExpression>
 			</textField>
 			<line>
-				<reportElement x="423" y="122" width="132" height="1" uuid="2967dbf6-a57b-4cd5-8257-707628cf0dc7"/>
+				<reportElement x="423" y="103" width="132" height="1" uuid="2967dbf6-a57b-4cd5-8257-707628cf0dc7"/>
 				<graphicElement>
 					<pen lineWidth="0.5" lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
 			<line>
-				<reportElement x="423" y="143" width="132" height="1" uuid="bbfd7eb2-8808-4f13-8a1b-7e7ab4da91e0"/>
+				<reportElement x="423" y="124" width="132" height="1" uuid="bbfd7eb2-8808-4f13-8a1b-7e7ab4da91e0"/>
 				<graphicElement>
 					<pen lineWidth="0.5" lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
 			<line>
-				<reportElement x="423" y="162" width="132" height="1" uuid="f5bf0b46-c068-450b-a852-b972fbdf03ac"/>
+				<reportElement x="423" y="143" width="132" height="1" uuid="f5bf0b46-c068-450b-a852-b972fbdf03ac"/>
 				<graphicElement>
 					<pen lineWidth="0.5" lineStyle="Dotted"/>
 				</graphicElement>
 			</line>
 			<textField isBlankWhenNull="true">
-				<reportElement isPrintRepeatedValues="false" x="423" y="123" width="132" height="20" uuid="3394c466-418f-4efc-b229-2493e18a276d"/>
+				<reportElement isPrintRepeatedValues="false" x="423" y="104" width="132" height="20" uuid="3394c466-418f-4efc-b229-2493e18a276d"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{xray_no}]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement x="60" y="105" width="189" height="1" uuid="9eafbc6c-fe8a-4d2e-adfc-0ad6f3173989">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="60" y="124" width="189" height="1" uuid="0e1a9592-8c5a-4c93-8db5-2d624ef4cd5b">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="60" y="144" width="189" height="1" uuid="3303762f-94b0-4b4e-9e38-e0093c877440">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="60" y="162" width="189" height="1" uuid="130e2af7-6270-4d64-9b9c-a1046e4c661a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
 		</band>
 	</title>
 	<detail>

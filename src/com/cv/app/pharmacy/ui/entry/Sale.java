@@ -228,6 +228,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             txtVouNo.setFormatterFactory(new VouFormatFactory());
             dao.open();
             initCombo();
+            initSpinner();
             initSaleTable();
             initExpenseTable();
             dao.close();
@@ -779,6 +780,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         + "-" + bk.getBkSerialNo();
                                 currSaleVou.setVisitId(visitId);
                                 selected("DoctorSearch", bk.getDoctor());
+                                String bookType = bk.getBkType();
+                                saleTableModel.setBookType(bookType);
                             } else if (listBK.size() > 1) {
                                 AppointmentDoctorDialog dialog = new AppointmentDoctorDialog();
                                 dialog.setLocationRelativeTo(null);
@@ -791,6 +794,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                             + "-" + selBK.getBkSerialNo();
                                     currSaleVou.setVisitId(visitId);
                                     selected("DoctorSearch", selBK.getDoctor());
+                                    String bookType = selBK.getBkType();
+                                    saleTableModel.setBookType(bookType);
                                 }
                             } else {
                                 if (ptt.getDoctor() != null) {
@@ -2046,6 +2051,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         saleTableModel.setVouStatus("NEW");
         saleTableModel.setCanEdit(canEdit);
         saleTableModel.clear();
+        saleTableModel.setBookType("-");
         isDeleteCopy = false;
         haveTransaction = false;
         //Clear text box.
@@ -3312,10 +3318,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 } else {
                     if (Util1.getPropValue("report.file.type").equals("con")) {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
-                        int count = Util1.getIntegerOne(Util1.getPropValue("system.sale.print.count"));
-                        if (Util1.getPropValue("system.pharmacy.sale.print.double").equals("Y")) {
-                            count = 2;
-                        }
+                        int count = (int) spPrint.getValue();
                         for (int i = 0; i < count; i++) {
                             ReportUtil.printJasper(jp, printerName);
                         }
@@ -4693,6 +4696,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblPatientBill = new javax.swing.JTable();
         txtBillTotal = new javax.swing.JFormattedTextField();
         jLabel4 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        spPrint = new javax.swing.JSpinner();
         jPanel13 = new javax.swing.JPanel();
         lblStatus = new javax.swing.JLabel();
         chkPrintOption = new javax.swing.JCheckBox();
@@ -5401,6 +5406,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jLabel4.setFont(Global.lableFont);
         jLabel4.setText("Total : ");
 
+        jLabel15.setText("Print Copies : ");
+
         org.jdesktop.layout.GroupLayout jPanel12Layout = new org.jdesktop.layout.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
@@ -5411,6 +5418,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(jPanel12Layout.createSequentialGroup()
                         .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                             .add(jPanel12Layout.createSequentialGroup()
+                                .add(jLabel15)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(spPrint)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                                 .add(jLabel4)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -5442,10 +5453,13 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(butOutstanding))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jScrollPane5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 98, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel4)))
+                    .add(jLabel4)
+                    .add(jLabel15)
+                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         jPanel13.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -6232,6 +6246,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
         //delete section end
     }
+    private void initSpinner() {
+        int count = Util1.getIntegerOne(Util1.getPropValue("system.sale.print.count"));
+        if (Util1.getPropValue("system.pharmacy.opd.print.double").equals("Y")) {
+            count = 2;
+        }
+        spPrint.setModel(new SpinnerNumberModel(count, 0, 10, 1));
+    }
+    
     // <editor-fold defaultstate="collapsed" desc="Control Declaration">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butAdmit;
@@ -6256,6 +6278,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
@@ -6306,6 +6329,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel lblStatus;
     private javax.swing.JLabel lblTranOption;
     private javax.swing.JPanel panelExpense;
+    private javax.swing.JSpinner spPrint;
     private javax.swing.JTable tblExpense;
     private javax.swing.JTable tblPatientBill;
     private javax.swing.JTable tblSale;

@@ -706,14 +706,15 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
 
             strSqlExp = strSqlExp + " group by source_acc_id, acc_id, dept_code, use_for, veac.exp_acc_id ";
 
-            try {
+            try {   
+                String appCurr = Util1.getPropValue("system.app.currency");
+                ResultSet rs = dao.execSQL(strSqlExp);
+                
                 strSql = strSql.replace("?", vouNo);
                 dao.execSql(strSql);
                 //dao.commit();
                 vouEngine.updateVouNo();
-                    
-                String appCurr = Util1.getPropValue("system.app.currency");
-                ResultSet rs = dao.execSQL(strSqlExp);
+                
                 if (rs != null) {
                     //dao.open();
                     //dao.beginTran();
@@ -744,6 +745,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         rec.setDoctorId(selectedDrId);
                         rec.setUpp(chkUPP.isSelected());
                         rec.setDeleted(false);
+                        rec.setRecLock(Boolean.FALSE);
                         dao.save(rec);
                         
                         uploadToAccount(rec.getGeneId());
