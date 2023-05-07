@@ -19,7 +19,6 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -866,10 +865,10 @@ public class DCTableModel extends AbstractTableModel {
                 List listPaid = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
                 try {
                     if (listPaid == null) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(paidId));
                         addService(service, paid);
                     } else if (listPaid.isEmpty()) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(paidId));
                         addService(service, paid);
                     } else {
                         DCDetailHis record = (DCDetailHis) listPaid.get(0);
@@ -893,10 +892,10 @@ public class DCTableModel extends AbstractTableModel {
                 List list = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
                 try {
                     if (list == null) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(pkgGainId));
                         addService(service, gainAmt);
                     } else if (list.isEmpty()) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(pkgGainId));
                         addService(service, gainAmt);
                     } else {
                         DCDetailHis record = (DCDetailHis) list.get(0);

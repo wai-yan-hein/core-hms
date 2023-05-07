@@ -4,7 +4,6 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.OPDAutoAddIdMapping;
@@ -337,13 +336,9 @@ public class OPDTableModel extends AbstractTableModel {
             }
         }
 
+        observer.selected("CAL-TOTAL", "CAL-TOTAL");
         calculateAmount(row);
-        //fireTableCellUpdated(row, 2);
-        //fireTableCellUpdated(row, 3);
-        fireTableCellUpdated(row, column);
-        /*if ((getRowCount() - 1) > row) {
-         parent.setRowSelectionInterval(row + 1, row + 1);
-         }*/
+        fireTableRowsUpdated(row, row);
         try {
             parent.setRowSelectionInterval(getRowCount() - 1, getRowCount() - 1);
             parent.requestFocus();
@@ -709,7 +704,6 @@ public class OPDTableModel extends AbstractTableModel {
                         record.setFees4(srv.getFees4());
                         record.setFees5(srv.getFees5());
                         record.setFees6(srv.getFees6());
-                        record.setServiceCost(srv.getServiceCost());
                         record.setPercent(srv.isPercent());
                         record.setPrice(srv.getFees());
                         record.setFees(srv.getFees());
@@ -738,7 +732,6 @@ public class OPDTableModel extends AbstractTableModel {
         record.setFees4(srv.getFees4());
         record.setFees5(srv.getFees5());
         record.setFees6(srv.getFees6());
-        record.setServiceCost(srv.getServiceCost());
         record.setPercent(srv.isPercent());
         record.setPrice(srv.getFees());
         record.setFees(srv.getFees());
@@ -774,7 +767,6 @@ public class OPDTableModel extends AbstractTableModel {
                             record.setFees4(service.getFees4());
                             record.setFees5(service.getFees5());
                             record.setFees6(service.getFees6());
-                            record.setServiceCost(service.getServiceCost());
                             record.setPercent(service.isPercent());
                             record.setPrice(service.getFees());
                             record.setFees(service.getFees());
