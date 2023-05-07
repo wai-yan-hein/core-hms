@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.OPDAutoAddIdMapping;
