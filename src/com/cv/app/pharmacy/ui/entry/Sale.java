@@ -4702,8 +4702,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         tblPatientBill = new javax.swing.JTable();
         txtBillTotal = new javax.swing.JFormattedTextField();
         jLabel4 = new javax.swing.JLabel();
-        jLabel15 = new javax.swing.JLabel();
-        spPrint = new javax.swing.JSpinner();
         jPanel13 = new javax.swing.JPanel();
         lblStatus = new javax.swing.JLabel();
         chkPrintOption = new javax.swing.JCheckBox();
@@ -5334,7 +5332,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             .add(panelExpense, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(jPanel10Layout.createSequentialGroup()
                 .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(0, 0, Short.MAX_VALUE))
+                .add(0, 20, Short.MAX_VALUE))
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -5399,8 +5397,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jLabel4.setFont(Global.lableFont);
         jLabel4.setText("Total : ");
 
-        jLabel15.setText("Print Copies : ");
-
         org.jdesktop.layout.GroupLayout jPanel12Layout = new org.jdesktop.layout.GroupLayout(jPanel12);
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
@@ -5411,10 +5407,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(jPanel12Layout.createSequentialGroup()
                         .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                             .add(jPanel12Layout.createSequentialGroup()
-                                .add(jLabel15)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(spPrint)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .add(jLabel4)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -5435,7 +5428,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .add(jScrollPane3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(lblTranOption, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -5450,9 +5443,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jLabel4)
-                    .add(jLabel15)
-                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jLabel4))
                 .addContainerGap())
         );
 
@@ -6283,13 +6274,13 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
         //delete section end
     }
-    private void initSpinner() {
+    /*private void initSpinner() {
         int count = Util1.getIntegerOne(Util1.getPropValue("system.sale.print.count"));
         if (Util1.getPropValue("system.pharmacy.opd.print.double").equals("Y")) {
             count = 2;
         }
         spPrint.setModel(new SpinnerNumberModel(count, 0, 10, 1));
-    }
+    }*/
     
     // <editor-fold defaultstate="collapsed" desc="Control Declaration">
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -6315,7 +6306,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
-    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
