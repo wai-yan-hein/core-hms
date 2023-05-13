@@ -1057,6 +1057,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void initTable() {
         try {
+            tableModel.setCalObserver(this);
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
