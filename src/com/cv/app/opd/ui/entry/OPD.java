@@ -334,9 +334,14 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     }
 
                     String vouNo = currVou.getOpdInvId();
-                    List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo,currVou.getListOPDDetailHis());
+                    List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
                     dao.open();
                     dao.beginTran();
+                    if (currVou.getPkgId() != null) {
+                        //delete detail for package
+                        String sql = "delete from opd_details_his where vou_no='" + vouNo + "'";
+                        dao.execSql(sql);
+                    }
                     for (OPDDetailHis odh : listDetail) {
                         odh.setVouNo(vouNo);
                         if (odh.getOpdDetailId() == null) {
@@ -719,7 +724,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         if (canEdit) {
                             String vouNo = currVou.getOpdInvId();
                             List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
-                            
+
                             dao.open();
                             dao.beginTran();
                             for (OPDDetailHis odh : listDetail) {
@@ -1749,7 +1754,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             break;
             case "PackageSelect":
                 if (selectObj != null) {
-                    tableModel.clear();
                     ClinicPackage cp = (ClinicPackage) selectObj;
                     currVou.setPkgId(cp.getId());
                     currVou.setPkgName(cp.getPackageName());
@@ -1770,6 +1774,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void savePackage(String vouNo, Long pkgId) {
         if (pkgId != null) {
+            tableModel.clear();
             String strSqlDelete = "delete from clinic_package_detail_his where dc_inv_no = '" + vouNo + "' and pkg_opt = 'OPD'";
             String strSql = "insert into clinic_package_detail_his(dc_inv_no, pkg_id, item_key, "
                     + "unit_qty,item_unit,qty_smallest, sys_price, usr_price, pk_detail_id, "
@@ -1809,7 +1814,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             record.setPkgItem(true);
                             double amt = record.getQuantity() * record.getFees();
                             record.setAmount(amt);
-
                             if (doctFees != null) {
                                 if (doctFees.containsKey(service.getServiceId())) {
                                     record.setPrice(doctFees.get(service.getServiceId()));
@@ -2230,7 +2234,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 }
                 hm.put(tmp.getUniqueId(), tmp);
             }
-            
+
             if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
                 tmp.setUniqueId(maxId++);
             }
@@ -2238,7 +2242,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         return listDetail;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
