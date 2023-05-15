@@ -331,27 +331,38 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private void insertOPDFilter() {
         try {
             String strSql = "insert into tmp_opd_service_filter(service_id, user_id) "
-                    + "select service_id, '" + Global.machineId + "' "
-                    + "from opd_service \n";
+                    + "select os.service_id, '" + Global.machineId + "' "
+                    + "from opd_service os \n";
             String strFilter = "";
             String delSql = "delete from tmp_opd_service_filter where user_id = '" + Global.machineId + "'";
+            boolean opdHead = false;
+            if (cboOPDHead.getSelectedItem() instanceof OPDGroup) {
+                opdHead = true;
+                OPDGroup grp = (OPDGroup) cboOPDHead.getSelectedItem();
+                strSql = strSql + ", opd_category oc \n";
+                if (strFilter.isEmpty()) {
+                    strFilter = "oc.group_id = " + grp.getGroupId().toString();
+                } else {
+                    strFilter = strFilter + " and oc.group_id = " + grp.getGroupId().toString();
+                }
+            }
 
             if (cboOPDGroup.getSelectedItem() instanceof OPDCategory) {
                 OPDCategory grp = (OPDCategory) cboOPDGroup.getSelectedItem();
                 if (strFilter.isEmpty()) {
-                    strFilter = "cat_id = " + grp.getCatId().toString();
+                    strFilter = "os.cat_id = " + grp.getCatId().toString();
                 } else {
-                    strFilter = strFilter + " and cat_id = " + grp.getCatId().toString();
+                    strFilter = strFilter + " and os.cat_id = " + grp.getCatId().toString();
                 }
             }
 
             if (cboOPDCG.getSelectedItem() instanceof OPDCusLabGroup) {
                 OPDCusLabGroup grp = (OPDCusLabGroup) cboOPDCG.getSelectedItem();
                 if (strFilter.isEmpty()) {
-                    strFilter = "cat_id in (select opd_cat_id "
+                    strFilter = "os.cat_id in (select opd_cat_id "
                             + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
                 } else {
-                    strFilter = strFilter + " and cat_id in (select opd_cat_id "
+                    strFilter = strFilter + " and os.cat_id in (select opd_cat_id "
                             + "from opd_cus_lab_group_detail where cus_grp_id = " + grp.getId() + ")";
                 }
             }
@@ -359,25 +370,30 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             String filterService = tblServiceTableModel.getFilterCodeStr();
             if (filterService != null) {
                 if (strFilter.isEmpty()) {
-                    strFilter = "service_id in (" + filterService + ")";
+                    strFilter = "os.service_id in (" + filterService + ")";
                 } else {
-                    strFilter = strFilter + " and service_id in (" + filterService + ")";
+                    strFilter = strFilter + " and os.service_id in (" + filterService + ")";
                 }
             }
 
             if (cboOPDLG.getSelectedItem() instanceof OPDLabGroup) {
                 OPDLabGroup grp = (OPDLabGroup) cboOPDLG.getSelectedItem();
                 if (strFilter.isEmpty()) {
-                    strFilter = "cus_group_id = " + grp.getId().toString();
+                    strFilter = "os.cus_group_id = " + grp.getId().toString();
                 } else {
-                    strFilter = strFilter + " and cus_group_id = " + grp.getId().toString();
+                    strFilter = strFilter + " and os.cus_group_id = " + grp.getId().toString();
                 }
             }
 
             if (!strFilter.isEmpty()) {
-                strSql = strSql + " where " + strFilter;
+                if (opdHead) {
+                    strSql = strSql + " where os.cat_id = oc.cat_id and " + strFilter;
+                } else {
+                    strSql = strSql + " where " + strFilter;
+                }
             }
 
+            //log.info("strSql : " + strSql);
             dao.execSql(delSql, strSql);
         } catch (Exception ex) {
             log.error("insertOPDFilter : " + ex.getMessage());
@@ -669,6 +685,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         }
 
         params.put("clinic_type", cboType.getSelectedItem().toString());
+        params.put("prm_adm_no", txtAdmNo.getText().trim());
 
         return params;
     }

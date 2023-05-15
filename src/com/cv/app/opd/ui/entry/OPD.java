@@ -427,6 +427,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtPatientNo.requestFocusInWindow();
         lblStatus.setText("NEW");
         tableModel.setCanEdit(canEdit);
+        tableModel.setBookType("-");
+        tableModel.setReferDoctor(null);
         assignDefaultValue();
         txtBillTotal.setText(null);
         tblPatientBillTableModel.setListPBP(new ArrayList());
@@ -1060,6 +1062,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void initTable() {
         try {
+            tableModel.setCalObserver(this);
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
@@ -1643,6 +1646,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                         + "-" + bk.getBkSerialNo();
                                 currVou.setVisitId(visitId);
                                 selected("DoctorSearch", bk.getDoctor());
+                                String bookType = bk.getBkType();
+                                tableModel.setBookType(bookType);
                             } else if (listBK.size() > 1) {
                                 AppointmentDoctorDialog dialog = new AppointmentDoctorDialog();
                                 dialog.setLocationRelativeTo(null);
@@ -1655,6 +1660,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                             + "-" + selBK.getBkSerialNo();
                                     currVou.setVisitId(visitId);
                                     selected("DoctorSearch", selBK.getDoctor());
+                                    String bookType = selBK.getBkType();
+                                    tableModel.setBookType(bookType);
                                 }
                             } else {
                                 if (patient.getDoctor() != null) {

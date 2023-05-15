@@ -1027,7 +1027,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     try {
                         dao.close();
                         //if (printMode.equals("View")) {
-                            ReportUtil.viewReport(reportPath, params, dao.getConnection());
+                        ReportUtil.viewReport(reportPath, params, dao.getConnection());
                         /*} else {
                             JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                             ReportUtil.printJasper(jp, printerName);
@@ -1077,6 +1077,53 @@ public final class Registration extends javax.swing.JPanel implements FormAction
             System.exit(-1);
         } finally {
             dao.close();
+        }
+    }
+
+    private void printForm(String formName) {
+        String reportName = "-";
+        switch (formName) {
+            case "OPD Patient Chart":
+                reportName = "OPDPatientChart";
+                break;
+            case "Casuality Out Patient Record":
+                reportName = "OPDPatientRecord";
+                break;
+        }
+
+        if (reportName.isEmpty() || reportName.equals("-")) {
+            JOptionPane.showMessageDialog(Util1.getParent(),
+                    "Invalid report.", "Invalid",
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+            try {
+                String reportPath = Util1.getAppWorkFolder()
+                        + Util1.getPropValue("report.folder.path")
+                        + "clinic/"
+                        + reportName;
+                VBooking tmpBooking = bkTableModel.getBooking(tblBooking
+                        .convertRowIndexToModel(tblBooking.getSelectedRow()));
+                Map<String, Object> params = new HashMap();
+                String compName = Util1.getPropValue("report.company.name");
+                String phoneNo = Util1.getPropValue("report.phone");
+                String address = Util1.getPropValue("report.address");
+                params.put("compName", compName);
+                params.put("phone", phoneNo);
+                params.put("comp_address", address);
+                params.put("prm_bk_id", tmpBooking.getBookingId());
+                dao.close();
+                ReportUtil.viewReport(reportPath, params, dao.getConnection());
+                dao.commit();
+            } catch (Exception ex) {
+                log.error("printForm : " + ex.getMessage());
+                if(ex.getMessage().equals("Invalid index")){
+                    JOptionPane.showMessageDialog(Util1.getParent(),
+                    "Please select patient to print.", "Invalid Patient",
+                    JOptionPane.ERROR_MESSAGE);
+                }
+            } finally {
+                dao.close();
+            }
         }
     }
 
@@ -1165,6 +1212,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jButton1 = new javax.swing.JButton();
         txtFromDate = new com.toedter.calendar.JDateChooser();
         txtToDate = new com.toedter.calendar.JDateChooser();
+        jLabel33 = new javax.swing.JLabel();
+        cboForm = new javax.swing.JComboBox<>();
+        butFormPrint = new javax.swing.JButton();
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Registration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, Global.lableFont));
 
@@ -1811,6 +1861,17 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         txtToDate.setDateFormatString("dd/MM/yyyy");
         txtToDate.setFont(Global.textFont);
 
+        jLabel33.setText("Report Form : ");
+
+        cboForm.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "OPD Patient Chart", "Casuality Out Patient Record" }));
+
+        butFormPrint.setText("Form Print");
+        butFormPrint.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butFormPrintActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1819,7 +1880,12 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel33)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboForm, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butFormPrint)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel29)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTotalRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1839,7 +1905,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cboDr, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cboDr, 0, 216, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(butRefresh)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1870,7 +1936,10 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTotalRecord, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel29)))
+                    .addComponent(jLabel29)
+                    .addComponent(jLabel33)
+                    .addComponent(cboForm, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butFormPrint)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -2134,6 +2203,11 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         searchBooking(true);
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void butFormPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFormPrintActionPerformed
+        String formName = cboForm.getSelectedItem().toString();
+        printForm(formName);
+    }//GEN-LAST:event_butFormPrintActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFormattedTextField bkDate;
     private javax.swing.JFormattedTextField bkDoctor;
@@ -2142,11 +2216,13 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JButton bkSave;
     private javax.swing.JFormattedTextField bkpatientName;
     private javax.swing.JButton butBillID;
+    private javax.swing.JButton butFormPrint;
     private javax.swing.JButton butRefresh;
     private javax.swing.JComboBox<String> cboBKType;
     private javax.swing.JComboBox cboCity;
     private javax.swing.JComboBox cboDoctor;
     private javax.swing.JComboBox<String> cboDr;
+    private javax.swing.JComboBox<String> cboForm;
     private javax.swing.JComboBox cboGender;
     private javax.swing.JComboBox<String> cboTownship;
     private javax.swing.JComboBox<String> cboType;
@@ -2177,6 +2253,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private javax.swing.JLabel jLabel30;
     private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel32;
+    private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;

@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.OPDAutoAddIdMapping;
@@ -48,6 +49,8 @@ public class OPDTableModel extends AbstractTableModel {
     private double pkgTotal = 0.0;
     private double extraTotal = 0.0;
     String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
+    private CalculateObserver calObserver;
+    private String bookType = "-";
 
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
@@ -212,6 +215,7 @@ public class OPDTableModel extends AbstractTableModel {
                         record.setFees4(service.getFees4());
                         record.setFees5(service.getFees5());
                         record.setFees6(service.getFees6());
+                        record.setServiceCost(service.getServiceCost());
                         record.setPercent(service.isPercent());
                         record.setReferDr(referDoctor);
                         record.setLabRemark(service.getLabRemark());
@@ -322,6 +326,17 @@ public class OPDTableModel extends AbstractTableModel {
                 record.setTechnician((Doctor) value);
                 break;
         }
+
+        if (bookType.equals("Emergency")) {
+            if (NumberUtil.isNumber(Util1.getPropValue("system.emergency.percent"))) {
+                float percent = Float.parseFloat(Util1.getPropValue("system.emergency.percent"));
+                double price = record.getPrice();
+                double percentPrice = price * (percent / 100);
+                log.info("Emergency Price : % " + percent + " New Price : " + percentPrice);
+                record.setPrice(NumberUtil.roundTo(price + percentPrice, 0));
+            }
+        }
+
         observer.selected("CAL-TOTAL", "CAL-TOTAL");
         calculateAmount(row);
         fireTableRowsUpdated(row, row);
@@ -332,6 +347,8 @@ public class OPDTableModel extends AbstractTableModel {
         } catch (Exception ex) {
 
         }
+
+        calObserver.calculate();
     }
 
     @Override
@@ -402,6 +419,8 @@ public class OPDTableModel extends AbstractTableModel {
             JOptionPane.showMessageDialog(Util1.getParent(), "You cannot delete package item.",
                     "Package Item Delete", JOptionPane.ERROR_MESSAGE);
         }
+
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -945,5 +964,17 @@ public class OPDTableModel extends AbstractTableModel {
             status = true;
         }
         return status;
+    }
+
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
+    }
+
+    public String getBookType() {
+        return bookType;
+    }
+
+    public void setBookType(String bookType) {
+        this.bookType = bookType;
     }
 }

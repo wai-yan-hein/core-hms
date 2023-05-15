@@ -298,7 +298,9 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date,a.desp]]>
 	<title>
 		<band height="154" splitType="Stretch">
 			<staticText>
-				<reportElement x="106" y="67" width="371" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<reportElement x="127" y="65" width="371" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineStyle="Solid" lineColor="#004ECA"/>
 					<topPen lineStyle="Solid" lineColor="#004ECA"/>
@@ -306,8 +308,8 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date,a.desp]]>
 					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
 					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="18" isBold="true" isItalic="false"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true" isItalic="false"/>
 				</textElement>
 				<text><![CDATA[OT Bill]]></text>
 			</staticText>
@@ -484,21 +486,27 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date,a.desp]]>
 				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/tkna_logo.png"]]></imageExpression>
 			</image>
 			<textField>
-				<reportElement x="105" y="33" width="372" height="17" uuid="0a5bb6cb-cd87-4816-ad1d-793ad30b4615"/>
-				<textElement textAlignment="Center">
+				<reportElement x="127" y="31" width="372" height="17" uuid="0a5bb6cb-cd87-4816-ad1d-793ad30b4615">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left">
 					<font fontName="Zawgyi-One" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{compAddress}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="51" width="372" height="15" uuid="b4881b6f-683a-4a67-81eb-c1f5392cc874"/>
-				<textElement textAlignment="Center" verticalAlignment="Top"/>
+				<reportElement x="127" y="49" width="372" height="15" uuid="b4881b6f-683a-4a67-81eb-c1f5392cc874">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="2" width="372" height="30" forecolor="#46669F" uuid="3f7c443f-5190-4499-aa51-50cf962f4d76"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Times New Roman" size="24" isBold="true"/>
+				<reportElement x="127" y="0" width="372" height="30" forecolor="#46669F" uuid="3f7c443f-5190-4499-aa51-50cf962f4d76">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="14" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
 			</textField>

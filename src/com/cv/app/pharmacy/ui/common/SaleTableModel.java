@@ -71,6 +71,7 @@ public class SaleTableModel extends AbstractTableModel {
     private StockList stockList;
     private JLabel lblRemark;
     private SaleStockTableModel stockTableModel;
+    private String bookType = "-";
 
     public SaleStockTableModel getStockTableModel() {
         return stockTableModel;
@@ -310,7 +311,7 @@ public class SaleTableModel extends AbstractTableModel {
                             if (record.getMedId().getMedId() != null) {
                                 lblRemark.setText(record.getMedId().getChemicalName());
                                 record.setExpireDate(stockTableModel.getExpireDate(record.getLocation().getLocationId()));
-                                    if (Util1.getPropValue("system.app.sale.stockBalance").equals("D")) {
+                                if (Util1.getPropValue("system.app.sale.stockBalance").equals("D")) {
                                     assignBalance(record);
                                     fireTableCellUpdated(row, 12);
                                 }
@@ -417,7 +418,7 @@ public class SaleTableModel extends AbstractTableModel {
                                         + " order by o.eqSmallestQty,o.smallestQty desc";
 
                                 List<ItemRule> listiItemRules = dao.findAllHSQL(str);
-                                if (listiItemRules.size() > 0) {
+                                if (!listiItemRules.isEmpty()) {
                                     if (NumberUtil.NZeroFloat(listiItemRules.get(0).getChekcQtyPrice()) == 1.0) {
                                         record.setPrice(listiItemRules.get(0).getPrice());
                                         //record.setAmount(record.getQuantity()*record.getPrice());
@@ -582,6 +583,16 @@ public class SaleTableModel extends AbstractTableModel {
                     break;
                 default:
                     System.out.println("invalid index");
+            }
+
+            if (bookType.equals("Emergency")) {
+                if (NumberUtil.isNumber(Util1.getPropValue("system.emergency.percent"))) {
+                    float percent = Float.parseFloat(Util1.getPropValue("system.emergency.percent"));
+                    double price = record.getPrice();
+                    double percentPrice = price * (percent / 100);
+                    log.info("Emergency Price : % " + percent + " New Price : " + percentPrice);
+                    record.setPrice(NumberUtil.roundTo(price + percentPrice, 0));
+                }
             }
 
             if (!isAmount) {
@@ -1350,5 +1361,13 @@ public class SaleTableModel extends AbstractTableModel {
         }
 
         return ttlAmt;
+    }
+
+    public String getBookType() {
+        return bookType;
+    }
+
+    public void setBookType(String bookType) {
+        this.bookType = bookType;
     }
 }

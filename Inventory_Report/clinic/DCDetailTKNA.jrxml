@@ -310,9 +310,11 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date]]>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="175" splitType="Stretch">
+		<band height="179" splitType="Stretch">
 			<staticText>
-				<reportElement x="100" y="65" width="374" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293"/>
+				<reportElement x="127" y="66" width="374" height="25" uuid="b03e0531-0a45-4f4a-9c4d-19317d79d293">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineStyle="Solid" lineColor="#004ECA"/>
 					<topPen lineStyle="Solid" lineColor="#004ECA"/>
@@ -320,206 +322,206 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date]]>
 					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
 					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="14" isBold="true" isItalic="false"/>
 				</textElement>
 				<text><![CDATA[Daily Inpatient Charges]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="1" y="95" width="80" height="20" uuid="5ead1282-6db8-4cf5-ad15-0689c8a682ec"/>
+				<reportElement x="1" y="99" width="80" height="20" uuid="5ead1282-6db8-4cf5-ad15-0689c8a682ec"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="1" y="95" width="80" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
+				<reportElement x="1" y="99" width="80" height="20" uuid="85f183e6-f47e-4e7d-a657-0c7192e842fb"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Admission No. : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="1" y="115" width="80" height="20" uuid="9caca459-21a9-4993-bf7b-9890aa6ce40e"/>
+				<reportElement x="1" y="119" width="80" height="20" uuid="9caca459-21a9-4993-bf7b-9890aa6ce40e"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="1" y="115" width="80" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
+				<reportElement x="1" y="119" width="80" height="20" uuid="2a4e81bc-c863-42fb-b7c2-a832d0d8edeb"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Patient's Name : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="1" y="135" width="80" height="20" uuid="00aef42d-7911-484b-976f-8ba7883813a3"/>
+				<reportElement x="1" y="139" width="80" height="20" uuid="00aef42d-7911-484b-976f-8ba7883813a3"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="1" y="135" width="80" height="20" uuid="0d73c8d3-1c29-4b02-972c-40325f1e50d6"/>
+				<reportElement x="1" y="139" width="80" height="20" uuid="0d73c8d3-1c29-4b02-972c-40325f1e50d6"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Doctor's name : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="1" y="155" width="80" height="20" uuid="c79d2829-f9f0-4716-9b7a-8f87cad6b983"/>
+				<reportElement x="1" y="159" width="80" height="20" uuid="c79d2829-f9f0-4716-9b7a-8f87cad6b983"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="1" y="155" width="80" height="20" uuid="36968734-3ed4-4635-98e0-d015eb48980f"/>
+				<reportElement x="1" y="159" width="80" height="20" uuid="36968734-3ed4-4635-98e0-d015eb48980f"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Period : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="81" y="95" width="192" height="20" uuid="2d296082-9d02-4c2e-ab63-2221560f8b61"/>
+				<reportElement x="81" y="99" width="192" height="20" uuid="2d296082-9d02-4c2e-ab63-2221560f8b61"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="81" y="115" width="192" height="20" uuid="a4c2f8b9-1312-48d8-bc9c-16a25da9a287"/>
+				<reportElement x="81" y="119" width="192" height="20" uuid="a4c2f8b9-1312-48d8-bc9c-16a25da9a287"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="81" y="135" width="192" height="20" uuid="9da67fcc-ac4b-4c8f-a556-67f1925d1d35"/>
+				<reportElement x="81" y="139" width="192" height="20" uuid="9da67fcc-ac4b-4c8f-a556-67f1925d1d35"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="81" y="155" width="474" height="20" uuid="a7eb5db4-fb55-4d97-b000-a85ddd47f097"/>
+				<reportElement x="81" y="159" width="474" height="20" uuid="a7eb5db4-fb55-4d97-b000-a85ddd47f097"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="273" y="95" width="52" height="20" uuid="2920e13d-0d84-41b0-b305-314df5fc5a8d"/>
+				<reportElement x="273" y="99" width="52" height="20" uuid="2920e13d-0d84-41b0-b305-314df5fc5a8d"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="273" y="95" width="52" height="20" uuid="619bbcd8-94a3-4ece-9245-195c46d4822a"/>
+				<reportElement x="273" y="99" width="52" height="20" uuid="619bbcd8-94a3-4ece-9245-195c46d4822a"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Bed No. : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="273" y="115" width="52" height="20" uuid="587f607c-fd58-459d-857e-39a6006f18e2"/>
+				<reportElement x="273" y="119" width="52" height="20" uuid="587f607c-fd58-459d-857e-39a6006f18e2"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="273" y="115" width="52" height="20" uuid="86b3f7a9-a1a0-4a6b-8059-b9ba3ef7528a"/>
+				<reportElement x="273" y="119" width="52" height="20" uuid="86b3f7a9-a1a0-4a6b-8059-b9ba3ef7528a"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Address : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="273" y="135" width="52" height="20" uuid="b35cbec5-a91f-4ef7-b74a-39416a9b1932"/>
+				<reportElement x="273" y="139" width="52" height="20" uuid="b35cbec5-a91f-4ef7-b74a-39416a9b1932"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="273" y="135" width="52" height="20" uuid="a8e10e9c-0c41-42c6-8758-e81bbd5ea0a1"/>
+				<reportElement x="273" y="139" width="52" height="20" uuid="a8e10e9c-0c41-42c6-8758-e81bbd5ea0a1"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Status : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="325" y="95" width="90" height="20" uuid="1aa9e5a4-1997-4193-a48b-12bde1ced3aa"/>
+				<reportElement x="325" y="99" width="90" height="20" uuid="1aa9e5a4-1997-4193-a48b-12bde1ced3aa"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="325" y="115" width="90" height="20" uuid="8bd1c09e-c801-4781-bee3-797494ea63b5"/>
+				<reportElement x="325" y="119" width="90" height="20" uuid="8bd1c09e-c801-4781-bee3-797494ea63b5"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="325" y="135" width="90" height="20" uuid="e2dc6404-9ae1-4723-a37e-b3000a823d90"/>
+				<reportElement x="325" y="139" width="90" height="20" uuid="e2dc6404-9ae1-4723-a37e-b3000a823d90"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="415" y="95" width="38" height="20" uuid="51d408e8-0580-44be-bcfb-d7f3ea0d6c46"/>
+				<reportElement x="415" y="99" width="38" height="20" uuid="51d408e8-0580-44be-bcfb-d7f3ea0d6c46"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="415" y="95" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
+				<reportElement x="415" y="99" width="38" height="20" uuid="09276fb6-e609-4891-b58f-5de506fd93ba"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Date : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="415" y="115" width="38" height="20" uuid="37ece8ab-1b7e-498e-ac8b-1416e04d97d2"/>
+				<reportElement x="415" y="119" width="38" height="20" uuid="37ece8ab-1b7e-498e-ac8b-1416e04d97d2"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="415" y="135" width="38" height="20" uuid="b0b46d72-6173-40f5-a43b-dc35c0feabea"/>
+				<reportElement x="415" y="139" width="38" height="20" uuid="b0b46d72-6173-40f5-a43b-dc35c0feabea"/>
 			</rectangle>
 			<staticText>
-				<reportElement x="415" y="115" width="38" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
+				<reportElement x="415" y="119" width="38" height="20" uuid="9432d717-2856-4743-a985-fd32d92a59ea"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Age : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="415" y="135" width="38" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
+				<reportElement x="415" y="139" width="38" height="20" uuid="06448b6a-2149-48be-87b8-ec2c1a339b1c"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial"/>
 				</textElement>
 				<text><![CDATA[ Sex : ]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="453" y="95" width="102" height="20" uuid="80709569-6cb2-48e5-87fd-4e3f6a67dda2"/>
+				<reportElement x="453" y="99" width="102" height="20" uuid="80709569-6cb2-48e5-87fd-4e3f6a67dda2"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="453" y="115" width="102" height="20" uuid="459d2223-05c4-4fcc-91f8-ca163e8b73a9"/>
+				<reportElement x="453" y="119" width="102" height="20" uuid="459d2223-05c4-4fcc-91f8-ca163e8b73a9"/>
 			</rectangle>
 			<rectangle>
-				<reportElement x="453" y="135" width="102" height="20" uuid="a1b4f2e8-ca84-4fcb-b49f-7a4987834e0e"/>
+				<reportElement x="453" y="139" width="102" height="20" uuid="a1b4f2e8-ca84-4fcb-b49f-7a4987834e0e"/>
 			</rectangle>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="83" y="95" width="126" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836"/>
+				<reportElement isPrintRepeatedValues="false" x="83" y="99" width="126" height="20" uuid="7265a44e-1933-42b5-8813-8d9a06796836"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{adm_no}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="83" y="115" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
+				<reportElement isPrintRepeatedValues="false" x="83" y="119" width="189" height="20" uuid="7b599d66-fbfc-4d1c-b69c-68754add901e"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{pt_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="83" y="135" width="189" height="20" uuid="7c483841-968b-4e8f-8746-55ced5ab3f21"/>
+				<reportElement isPrintRepeatedValues="false" x="83" y="139" width="189" height="20" uuid="7c483841-968b-4e8f-8746-55ced5ab3f21"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{dr_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="84" y="155" width="469" height="20" uuid="f859f1f6-69c7-43c0-84fa-2a8b015c11a3"/>
+				<reportElement isPrintRepeatedValues="false" x="84" y="159" width="469" height="20" uuid="f859f1f6-69c7-43c0-84fa-2a8b015c11a3"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{period}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="327" y="95" width="88" height="20" uuid="7ab7e749-d8e6-4399-8aaf-dd63ec3ff9c4"/>
+				<reportElement isPrintRepeatedValues="false" x="327" y="99" width="88" height="20" uuid="7ab7e749-d8e6-4399-8aaf-dd63ec3ff9c4"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{bed_no}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="327" y="115" width="88" height="20" uuid="673fd90f-7aa0-44ab-9573-0eab034be108"/>
+				<reportElement isPrintRepeatedValues="false" x="327" y="119" width="88" height="20" uuid="673fd90f-7aa0-44ab-9573-0eab034be108"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{address}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="327" y="135" width="88" height="20" uuid="e40a9c20-8fe9-4aae-b195-32a368c74203"/>
+				<reportElement isPrintRepeatedValues="false" x="327" y="139" width="88" height="20" uuid="e40a9c20-8fe9-4aae-b195-32a368c74203"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{dc_status}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="455" y="115" width="90" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1"/>
+				<reportElement isPrintRepeatedValues="false" x="455" y="119" width="90" height="20" uuid="3cab5759-da47-450f-a9b5-83ca181ebbd1"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{age}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement isPrintRepeatedValues="false" x="455" y="135" width="90" height="20" uuid="7e25f6f1-a513-41f3-91b1-24f29519b792"/>
+				<reportElement isPrintRepeatedValues="false" x="455" y="139" width="90" height="20" uuid="7e25f6f1-a513-41f3-91b1-24f29519b792"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{sex}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy h.mm a">
-				<reportElement x="453" y="95" width="100" height="20" uuid="c61abb01-e7f0-4164-954b-0f3a761e3c79"/>
+				<reportElement x="453" y="99" width="100" height="20" uuid="c61abb01-e7f0-4164-954b-0f3a761e3c79"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
@@ -528,22 +530,22 @@ order by a.TRAN_OPTION, a.tran_type, a.tran_date]]>
 				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/tkna_logo.png"]]></imageExpression>
 			</image>
 			<textField>
-				<reportElement x="100" y="1" width="372" height="30" forecolor="#46669F" uuid="6674c8f9-e34b-4261-94d6-95e4598b8d91"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Times New Roman" size="24" isBold="true"/>
+				<reportElement x="127" y="0" width="372" height="30" forecolor="#46669F" uuid="6674c8f9-e34b-4261-94d6-95e4598b8d91"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Times New Roman" size="14" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="100" y="32" width="372" height="17" uuid="ebf516b4-a2aa-4b80-947b-b84246f82e05"/>
-				<textElement textAlignment="Center">
+				<reportElement x="127" y="31" width="372" height="17" uuid="ebf516b4-a2aa-4b80-947b-b84246f82e05"/>
+				<textElement textAlignment="Left">
 					<font fontName="Zawgyi-One" size="11"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="100" y="50" width="372" height="15" uuid="a1501355-4f01-481f-8fd1-4fa0afd5e905"/>
-				<textElement textAlignment="Center" verticalAlignment="Top"/>
+				<reportElement x="127" y="49" width="372" height="15" uuid="a1501355-4f01-481f-8fd1-4fa0afd5e905"/>
+				<textElement textAlignment="Left" verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
 			</textField>
 		</band>

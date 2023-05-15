@@ -41,6 +41,7 @@ public class GenExpense implements java.io.Serializable {
     private String intgUpdStatus;
     private Boolean upp;
     private String currency;
+    private Boolean recLock;
     
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -265,5 +266,14 @@ public class GenExpense implements java.io.Serializable {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    @Column(name="rec_lock")
+    public Boolean getRecLock() {
+        return recLock;
+    }
+
+    public void setRecLock(Boolean recLock) {
+        this.recLock = recLock;
     }
 }
