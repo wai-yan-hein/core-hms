@@ -5,7 +5,6 @@
  */
 package com.cv.app.pharmacy.ui.common;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.ui.common.*;
@@ -21,13 +20,22 @@ import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.jms.MapMessage;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 /**
@@ -291,34 +299,58 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 tph.setListDetail(listPV);
 
                 dao.save(tph);
-                uploadToAccount(tph);
+                uploadToAccount(tph.getPaymentId());
             } catch (Exception e) {
                 LOGGER.error("saveTraderpayHis : " + e.getMessage());
             }
         }
     }
 
-    private void uploadToAccount(TraderPayHis tph) {
+    private void uploadToAccount(Integer vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "PAYMENT");
-                        msg.setInt("vouNo", tph.getPaymentId());
-                        msg.setString("type", "ADD");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        LOGGER.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber()
-                                + " - " + tph.getPaymentId() + " - " + ex);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/payment";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("payId", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                LOGGER.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
+                                } catch (Exception ex) {
+                                    LOGGER.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
                     }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
+                    } catch (Exception ex) {
+                        LOGGER.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
+                } catch (Exception ex) {
+                    LOGGER.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }

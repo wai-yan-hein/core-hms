@@ -4,6 +4,7 @@
  */
 package com.cv.app.inpatient.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.inpatient.database.entity.DCDetailHis;
 import com.cv.app.inpatient.database.entity.DCDoctorFee;
 import com.cv.app.inpatient.database.entity.InpService;
@@ -18,7 +19,6 @@ import com.cv.app.util.JoSQLUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +50,7 @@ public class DCTableModel extends AbstractTableModel {
     private Double roomFee = 0.0;
     private final String roomFeeId = Util1.getPropValue("system.dc.room.fee.id");
     private String delDrFee = "";
+    private CalculateObserver calObserver;
 
     public DCTableModel(AbstractDataAccess dao) {
         this.dao = dao;
@@ -344,6 +345,8 @@ public class DCTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
+        
+        calObserver.calculate();
     }
 
     private boolean isValidDetailAmount(DCDetailHis record, double amount) {
@@ -452,6 +455,8 @@ public class DCTableModel extends AbstractTableModel {
                 }
             }
         }
+        
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -639,9 +644,9 @@ public class DCTableModel extends AbstractTableModel {
         String strSelectedId = null;
         String strSQL = "select service_id from opd_service os "
                 + "where os.price_ver_id <> ifnull(os.ver_upd_id,0)";
-        ResultSet rs = dao.execSQL(strSQL);
 
         try {
+            ResultSet rs = dao.execSQL(strSQL);
             if (rs != null) {
                 while (rs.next()) {
                     String strTmpId = rs.getString("service_id");
@@ -664,7 +669,7 @@ public class DCTableModel extends AbstractTableModel {
             strSQL = "update opd_service set ver_upd_id = price_ver_id "
                     + "where service_id in (" + strSelectedId + ")";
             dao.execSql(strSQL);
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             dao.rollBack();
             log.error("updateAllFees : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
@@ -860,10 +865,10 @@ public class DCTableModel extends AbstractTableModel {
                 List listPaid = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
                 try {
                     if (listPaid == null) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(paidId));
                         addService(service, paid);
                     } else if (listPaid.isEmpty()) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(paidId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(paidId));
                         addService(service, paid);
                     } else {
                         DCDetailHis record = (DCDetailHis) listPaid.get(0);
@@ -887,10 +892,10 @@ public class DCTableModel extends AbstractTableModel {
                 List list = JoSQLUtil.getResult(strFilter, listOPDDetailHis);
                 try {
                     if (list == null) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(pkgGainId));
                         addService(service, gainAmt);
                     } else if (list.isEmpty()) {
-                        InpService service = (InpService) dao.find(InpService.class, Integer.parseInt(pkgGainId));
+                        InpService service = (InpService) dao.find(InpService.class, Integer.valueOf(pkgGainId));
                         addService(service, gainAmt);
                     } else {
                         DCDetailHis record = (DCDetailHis) list.get(0);
@@ -1047,5 +1052,9 @@ public class DCTableModel extends AbstractTableModel {
             }
         }
         return status;
+    }
+
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
     }
 }

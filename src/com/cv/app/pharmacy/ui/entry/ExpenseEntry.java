@@ -361,7 +361,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
                 String toDate = DateUtil.toDateStrMYSQL(dates[1].trim());
                 String reportPath = Util1.getAppWorkFolder()
                         + Util1.getPropValue("report.folder.path")
-                        + "Clinic/"
+                        + "clinic/"
                         + reportName;
                 Map<String, Object> params = new HashMap();
                 String compName = Util1.getPropValue("report.company.name");

@@ -11,12 +11,16 @@ import com.cv.app.pharmacy.database.entity.SysProperty;
 import com.cv.app.pharmacy.ui.common.SysPropTableModel;
 import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.Util1;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
@@ -75,8 +79,7 @@ public class SysPropSetup extends javax.swing.JPanel {
                     if (tblProperty.getCellEditor() != null) {
                         tblProperty.getCellEditor().stopCellEditing();
                     }
-                } catch (Exception ex) {
-                    //log.info(ex.toString());
+                } catch (HeadlessException ex) {
                 }
             }
 
@@ -96,6 +99,10 @@ public class SysPropSetup extends javax.swing.JPanel {
     private void initTable() {
         tblProperty.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor());
         tblProperty.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+        tblProperty.getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "selectNextColumnCell");
+        tblProperty.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblProperty.setCellSelectionEnabled(true);
     }
 
     /**
@@ -112,6 +119,7 @@ public class SysPropSetup extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         tblProperty = new javax.swing.JTable();
 
+        jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Search Property");
 
         txtFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
@@ -121,7 +129,7 @@ public class SysPropSetup extends javax.swing.JPanel {
             }
         });
 
-        tblProperty.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblProperty.setFont(Global.textFont);
         tblProperty.setModel(tableModel);
         tblProperty.setRowHeight(23);
         jScrollPane1.setViewportView(tblProperty);
@@ -149,8 +157,8 @@ public class SysPropSetup extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents

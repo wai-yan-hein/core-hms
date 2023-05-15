@@ -30,6 +30,7 @@ import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.RetInTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MarchantSearch;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.ReturnInItemSearchDialog;
@@ -51,6 +52,9 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import javax.jms.MapMessage;
 import javax.swing.*;
@@ -58,6 +62,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -794,7 +806,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 deleteDetail();
                 updateVouTotal(currRetIn.getRetInId());
                 //For upload to account
-                uploadToAccount(currRetIn);
+                uploadToAccount(currRetIn.getRetInId());
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
@@ -874,7 +886,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 try {
                     dao.execSql("update ret_in_his set deleted = true, intg_upd_status = null where ret_in_id = '" + vouNo + "'");
                     //For upload to account
-                    uploadToAccount(currRetIn);
+                    uploadToAccount(currRetIn.getRetInId());
                 } catch (Exception ex) {
                     log.error("delete error : " + ex.getMessage());
                 } finally {
@@ -936,7 +948,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         deleteDetail();
                         updateVouTotal(currRetIn.getRetInId());
                         //For upload to account
-                        uploadToAccount(currRetIn);
+                        uploadToAccount(currRetIn.getRetInId());
 
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
@@ -1048,7 +1060,11 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         boolean status = true;
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
         Patient pt = currRetIn.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        String admissionNo = "-";
+
+        if (pt != null) {
+            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        }
 
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
@@ -1086,7 +1102,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                 return false;
             }
         }
-        
+
         if (!Util1.hashPrivilege("CanEditReturnCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
                 try {
@@ -1124,7 +1140,8 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                     "No payment type.", JOptionPane.ERROR_MESSAGE);
             status = false;
             cboPayment.requestFocusInWindow();
-        } else if (vouBalance != 0 && currRetIn.getPatient() == null) {
+        } else if (vouBalance != 0 && currRetIn.getPatient() == null && currRetIn.getCustomer() == null
+                && Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registeration number.",
                     "Reg No", JOptionPane.ERROR_MESSAGE);
             status = false;
@@ -1225,7 +1242,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
                         txtCusId.setText(ptt.getRegNo());
                         txtCusName.setText(ptt.getPatientName());
                         lblOTID.setText(ptt.getOtId());
-                        
+
                         if (currRetIn.getAdmissionNo() != null) {
                             if (currRetIn.getAdmissionNo().isEmpty()) {
                                 cboPayment.setSelectedItem(ptCash);
@@ -1489,47 +1506,51 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         }
     };
 
-    private void uploadToAccount(RetInHis rih) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "RETURNIN");
-                        msg.setString("VOUCHER-NO", rih.getRetInId());
-                        /*msg.setString("remark", rih.getRemark());
-                        msg.setString("cusId", rih.getCustomer().getAccountId());
-                        msg.setBoolean("deleted", rih.isDeleted());
-                        msg.setString("retInDate", DateUtil.toDateStr(rih.getRetInDate(), "yyyy-MM-dd"));
-                        //msg.setDouble("vouTotal", rih.getVouTotal());
-                        msg.setDouble("vouTotal", rih.getBalance());
-                        msg.setDouble("payment", rih.getPaid());
-                        msg.setString("currency", rih.getCurrency().getCurrencyAccId());
-                        if (rih.getCustomer().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", rih.getCustomer().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }*/
-                        msg.setString("queueName", "INVENTORY");
-                        /*msg.setString("dept", "-");
-                        if (rih.getCustomer().getTraderGroup() != null) {
-                            if (rih.getCustomer().getTraderGroup().getDeptId() != null) {
-                                if (!rih.getCustomer().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", rih.getCustomer().getTraderGroup().getDeptId().trim());
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/returnIn";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
                                 }
                             }
-                        }*/
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + rih.getRetInId() + " - " + ex);
+                        }
                     }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update ret_in_his set intg_upd_status = null where ret_in_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }

@@ -33,6 +33,8 @@ public class BillTransferHis implements Serializable{
     private Double totalAmt;
     private String currency;
     private String tranOption;
+    private Boolean delated;
+    private Double discount;
     
     @Id @Column(name="bth_id", length=15, unique=true, nullable=false)
     public String getBthId() {
@@ -153,6 +155,24 @@ public class BillTransferHis implements Serializable{
 
     public void setTranOption(String tranOption) {
         this.tranOption = tranOption;
+    }
+
+    @Column(name="deleted")
+    public Boolean getDelated() {
+        return delated;
+    }
+
+    public void setDelated(Boolean delated) {
+        this.delated = delated;
+    }
+
+    @Column(name="discount")
+    public Double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Double discount) {
+        this.discount = discount;
     }
     
 }

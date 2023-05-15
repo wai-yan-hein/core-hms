@@ -655,7 +655,7 @@ order by a.TRAN_OPTION, a.tran_date, a.tran_type, a.desp]]>
 				<reportElement x="142" y="1" width="170" height="17" uuid="f3c3f758-479a-4a52-959f-717b6acc7b0f">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
-				<textElement verticalAlignment="Middle">
+				<textElement verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{desp}]]></textFieldExpression>

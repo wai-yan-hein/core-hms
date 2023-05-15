@@ -27,7 +27,7 @@ join relation_group rg on mr.rel_group_id = rg.rel_group_id
 join item_type itp on med.med_type_id = itp.item_type_code
 join (select distinct med_id from tmp_stock_filter where user_id = $P!{user_id}) filt on med.med_id = filt.med_id
 left join phar_system ps on med.phar_sys_id = ps.id
-where med.med_type_id in ('01','02','03','04','05','06','07','08','09','10','11','12')
+#where med.med_type_id in ('01','02','03','04','05','06','07','08','09','10','11','12')
 group by med.med_id, med.med_name, med.med_rel_str, ps.system_desp
 order by  ps.system_desp,med.med_name;]]>
 	</queryString>

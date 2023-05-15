@@ -75,9 +75,11 @@ public class BestDataAccess implements AbstractDataAccess {
         tran = session.beginTransaction();
 
         try {
+
             session.saveOrUpdate(o);
         } catch (NonUniqueObjectException ex) {
             log.error("save : " + o.toString() + ex.getMessage());
+
             session.merge(o);
         }
         session.flush();
@@ -171,14 +173,14 @@ public class BestDataAccess implements AbstractDataAccess {
         String strSQL = "select distinct v from " + entityName + " v where "
                 + filter;
 
-        try {
+        //try {
             open();
             tran = session.beginTransaction();
             Query query = session.createQuery(strSQL);
             lists = query.list();
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             log.error("findAll2 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        }*/
 
         return lists;
     }
@@ -201,18 +203,13 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public List findAllSQLQuery(String strSQL) {
+    public List findAllSQLQuery(String strSQL) throws Exception {
         List lists = null;
 
-        try {
-            open();
-            tran = session.beginTransaction();
-            SQLQuery query = session.createSQLQuery(strSQL);
-            lists = query.list();
-            //tran.commit();
-        } catch (Exception ex) {
-            log.error("findAllSQLQuery1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        open();
+        tran = session.beginTransaction();
+        SQLQuery query = session.createSQLQuery(strSQL);
+        lists = query.list();
 
         return lists;
     }
@@ -319,44 +316,41 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public void execProc(String procName, String... parameters) {
+    public void execProc(String procName, String... parameters) throws Exception {
         String strSQL = "{call " + procName + "(";
 
-        try {
-            String tmpStr = "";
-            for (int i = 0; i < parameters.length; i++) {
-                if (tmpStr.isEmpty()) {
-                    tmpStr = "?";
-                } else {
-                    tmpStr = tmpStr + ",?";
-                }
+        String tmpStr = "";
+        for (String parameter : parameters) {
+            if (tmpStr.isEmpty()) {
+                tmpStr = "?";
+            } else {
+                tmpStr = tmpStr + ",?";
             }
-
-            strSQL = strSQL + tmpStr + ")}";
-            open();
-            tran = session.beginTransaction();
-            statement = session.connection().prepareCall(strSQL);
-
-            int i = 1;
-            for (Object obj : parameters) {
-                if (obj instanceof Date) {
-                    ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
-                } else {
-                    if (obj == null) {
-                        ((CallableStatement) statement).setObject(i, obj);
-                    } else {
-                        ((CallableStatement) statement).setString(i, obj.toString());
-                    }
-                }
-
-                i++;
-            }
-
-            ((CallableStatement) statement).execute();
-            //tran.commit();
-        } catch (Exception ex) {
-            log.error("execProc : " + procName + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }
+
+        strSQL = strSQL + tmpStr + ")}";
+        open();
+        tran = session.beginTransaction();
+        statement = session.connection().prepareCall(strSQL);
+
+        int i = 1;
+        for (Object obj : parameters) {
+            if (obj instanceof Date) {
+                ((CallableStatement) statement).setString(i, DateUtil.toDateTimeStrMYSQL(obj.toString()));
+            } else {
+                if (obj == null) {
+                    ((CallableStatement) statement).setObject(i, obj);
+                } else {
+                    ((CallableStatement) statement).setString(i, obj.toString());
+                }
+            }
+
+            i++;
+        }
+
+        ((CallableStatement) statement).execute();
+        //tran.commit();
+
     }
 
     @Override
@@ -381,18 +375,14 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public ResultSet execSQL(String strSQL) {
+    public ResultSet execSQL(String strSQL) throws Exception {
         ResultSet resultSet = null;
 
-        try {
-            open();
-            tran = session.beginTransaction();
-            statement = session.connection().prepareStatement(strSQL);
-            resultSet = ((PreparedStatement) statement).executeQuery();
-            tran.commit();
-        } catch (Exception ex) {
-            log.error("execSQL1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
-        }
+        open();
+        tran = session.beginTransaction();
+        statement = session.connection().prepareStatement(strSQL);
+        resultSet = ((PreparedStatement) statement).executeQuery();
+        tran.commit();
 
         return resultSet;
     }
@@ -433,24 +423,20 @@ public class BestDataAccess implements AbstractDataAccess {
     }
 
     @Override
-    public void execSql(String... strSQLs) {
-        try {
-            open();
-            beginTran();
-            Connection con = session.connection();
-            statement = con.createStatement();
-            con.setAutoCommit(false);
+    public void execSql(String... strSQLs) throws Exception {
+        open();
+        beginTran();
+        Connection con = session.connection();
+        statement = con.createStatement();
+        con.setAutoCommit(false);
 
-            for (String strSQL : strSQLs) {
-                statement.addBatch(strSQL);
-            }
-            statement.executeBatch();
-            con.commit();
-            //con.setAutoCommit(true);
-            statement.clearBatch();
-        } catch (Exception ex) {
-            log.error("execSql1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+        for (String strSQL : strSQLs) {
+            statement.addBatch(strSQL);
         }
+        statement.executeBatch();
+        con.commit();
+        //con.setAutoCommit(true);
+        statement.clearBatch();
     }
 
     @Override

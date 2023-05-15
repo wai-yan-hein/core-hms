@@ -27,7 +27,7 @@ public class ServiceTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(ServiceTableModel.class.getName());
     private List<Service> listService = new ArrayList();
     private final String[] columnNames = {"Code", "Description", "Fees", "Srv Fee", "MO Fee",
-        "Staff Fee", "Tech Fee", "Refer Fee", "Read Fee", "%", "CFS", "Active", "Doctor"};
+        "Staff Fee", "Tech Fee", "Refer Fee", "Read Fee", "%", "CFS", "Active", "Doctor", "Cost"};
     private final AbstractDataAccess dao;
     private int catId;
     private int labGroupId;
@@ -75,6 +75,8 @@ public class ServiceTableModel extends AbstractTableModel {
                 return Boolean.class;
             case 12: //Doctor
                 return Doctor.class;
+            case 13: //Service Cost
+                return Double.class;
             default:
                 return Object.class;
         }
@@ -115,6 +117,8 @@ public class ServiceTableModel extends AbstractTableModel {
                 } else {
                     return null;
                 }
+            case 13: //Service Cost
+                return record.getServiceCost();
             default:
                 return null;
         }
@@ -238,6 +242,17 @@ public class ServiceTableModel extends AbstractTableModel {
                     record.setDoctor((Doctor) value);
                 }
                 break;
+            case 13: //Service Cost
+                if (value == null) {
+                    record.setServiceCost(NumberUtil.NZero(value));
+                } else if (NumberUtil.isNumber(value.toString())) {
+                    record.setServiceCost(NumberUtil.NZero(value));
+                } else {
+                    JOptionPane.showMessageDialog(Util1.getParent(),
+                            "Invalid number.", "Invalid Cost.",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                break;
         }
 
         if (Util1.getPropValue("system.opd.setup.autocalculate").equals("Y")) {
@@ -352,9 +367,15 @@ public class ServiceTableModel extends AbstractTableModel {
 
     private void execOpdBackup(Service record) {
         if (record.getServiceId() != null) {
-            dao.execProc("opd_backup", record.getServiceId().toString(),
-                    DateUtil.toDateTimeStrMYSQL(new Date()),
-                    Global.loginUser.getUserId());
+            try {
+                dao.execProc("opd_backup", record.getServiceId().toString(),
+                        DateUtil.toDateTimeStrMYSQL(new Date()),
+                        Global.loginUser.getUserId());
+            } catch (Exception ex) {
+                log.error("execOpdBackup : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
         }
     }
 

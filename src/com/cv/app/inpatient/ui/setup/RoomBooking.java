@@ -158,7 +158,7 @@ public class RoomBooking extends javax.swing.JPanel implements FormAction,
     private void initCombo() {
         try {
             BindingUtil.BindCombo(cboRoom,
-                    dao.findAllHSQL("select o from BuildingStructure o where o.reg_no is null order by o.description"));
+                    dao.findAllHSQL("select o from BuildingStructure o where o.regNo is null and o.structureType.typeId in (3,4) order by o.description"));
             new ComBoBoxAutoComplete(cboRoom);
         } catch (Exception ex) {
             log.error("initCombo : " + ex.getMessage());

@@ -58,7 +58,13 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
     }
 
     private void initTable() {
-        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
+        try {
+            dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblReaderEntry.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         tblReaderEntry.getColumnModel().getColumn(0).setPreferredWidth(40);//Date

@@ -43,6 +43,8 @@ public class Service implements java.io.Serializable {
     private boolean percent;
     private Integer labGroupId;
     private String labRemark;
+    private Double serviceCost;
+    
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "service_id", unique = true, nullable = false)
@@ -247,6 +249,15 @@ public class Service implements java.io.Serializable {
 
     public void setLabRemark(String labRemark) {
         this.labRemark = labRemark;
+    }
+
+    @Column(name="service_cost")
+    public Double getServiceCost() {
+        return serviceCost;
+    }
+
+    public void setServiceCost(Double serviceCost) {
+        this.serviceCost = serviceCost;
     }
     
     

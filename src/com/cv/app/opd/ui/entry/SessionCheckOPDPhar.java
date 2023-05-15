@@ -664,7 +664,7 @@ public class SessionCheckOPDPhar extends javax.swing.JPanel implements Selection
                     ));
                 }
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("applyFilter : " + ex.getMessage());
         }
 
@@ -1644,7 +1644,7 @@ public class SessionCheckOPDPhar extends javax.swing.JPanel implements Selection
         //Properties prop = ReportUtil.loadReportPathProperties();
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + "ClinicSessionCheckPhar";
         Map<String, Object> params = new HashMap();
         params.put("data_date", "Between " + txtFrom.getText()

@@ -285,7 +285,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 }
 
                 //Update to patient
-                Patient pt = currPatient.getKey().getRegister();
+                //Patient pt = currPatient.getKey().getRegister();
+                Patient pt = (Patient)dao.find(Patient.class, currPatient.getKey().getRegister().getRegNo());
                 if (currPatient.getDcStatus() == null) {
                     pt.setAdmissionNo(currPatient.getKey().getAmsNo());
                 }
@@ -682,8 +683,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private boolean isValidRoom(BuildingStructure b) {
         if (lblStatus.getText().equals("NEW")) {
             String sql = "select reg_no from building_structure where id = " + b.getId() + "";
-            ResultSet rs = dao.execSQL(sql);
+            
             try {
+                ResultSet rs = dao.execSQL(sql);
                 if (rs.next()) {
                     String no = rs.getString("reg_no");
                     if (no != null) {
@@ -691,7 +693,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                         return false;
                     }
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage());
 
             }
@@ -996,7 +998,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
                 } else {
                     pt.setAdmissionNo(admNo);
                     ams.setDcStatus(null);
-                    ams.setAmsDate(null);
+                    ams.setDcDateTime(null);
                     dao.save(pt);
                     dao.save(ams);
 

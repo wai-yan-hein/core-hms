@@ -8,12 +8,14 @@ import com.cv.app.common.Global;
 import static com.cv.app.common.Global.dao;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
+import com.cv.app.common.TotalEvent;
 import com.cv.app.opd.database.entity.BTDKey;
 import com.cv.app.opd.database.entity.BillTransferDetailHis;
 import com.cv.app.opd.database.entity.BillTransferHis;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.helper.BillTransferDetail;
 import com.cv.app.opd.ui.common.BillTransferTableModel;
+import static com.cv.app.opd.ui.entry.BillPayment.log;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -26,6 +28,9 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,13 +39,20 @@ import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author cv-svr
  */
-public class BillTransfer extends javax.swing.JPanel implements SelectionObserver {
+public class BillTransfer extends javax.swing.JPanel implements SelectionObserver, TotalEvent {
 
     static Logger log = Logger.getLogger(BillTransfer.class.getName());
     private final int mouseClick = 2;
@@ -64,6 +76,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             vouEngine = new GenVouNoImpl(dao, "WHOBillTransfer", DateUtil.getPeriod(txtTranDate.getText()));
             genVouNo();
             initTable();
+            model.setEvent(this);
         } catch (Exception ex) {
             log.error("BillTransfer : " + ex.getMessage());
         } finally {
@@ -247,6 +260,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             if (rs != null) {
                 List<BillTransferDetail> list = new ArrayList();
                 double ttlAmt = 0;
+                double ttlBalance = 0;
                 while (rs.next()) {
                     String pdStatus = "OPD";
                     if (!rs.getString("admission_no").equals("-")) {
@@ -267,20 +281,25 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                             rs.getDouble("amt"),
                             rs.getInt("pay_type")
                     );
-
+                    //btd.setpStatus(true);
+                    btd.setBalance(rs.getDouble("amt"));
                     list.add(btd);
                     ttlAmt += NumberUtil.NZero(btd.getAmount());
+                    ttlBalance += NumberUtil.NZero(btd.getBalance());
                 }
 
                 if (!list.isEmpty()) {
                     model.setListBTD(list);
                     txtTotalRecords.setValue(list.size());
                     txtTotal.setValue(ttlAmt);
+                    txtTtlBal.setValue(ttlBalance);
                 } else {
                     model.clear();
                     txtTotalRecords.setValue(0);
                     txtTotal.setValue(0d);
+                    txtTtlBal.setValue(0);
                 }
+                txtTtlPaid.setValue(0);
             }
         } catch (Exception ex) {
             log.error("search : " + strSql);
@@ -300,6 +319,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         tblTransaction.getColumnModel().getColumn(6).setPreferredWidth(30);//Discount
         tblTransaction.getColumnModel().getColumn(7).setPreferredWidth(30);//Paid
         tblTransaction.getColumnModel().getColumn(8).setPreferredWidth(30);//Balance
+        tblTransaction.getColumnModel().getColumn(9).setPreferredWidth(5);//Balance
 
         tblTransaction.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
     }
@@ -333,6 +353,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         return status;
     }
 
+    private String getSelCurrency(){
+        Currency curr = (Currency)cboCurrency.getSelectedItem();
+        return curr.getCurrencyCode();
+    }
+    
     private void save() {
         try {
             Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
@@ -349,15 +374,20 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             Date createdDate = new Date();
             String vouNo = txtTranVouNo.getText();
             String selType = cboType.getSelectedItem().toString();
-
-            List<BillTransferDetail> listBTD = model.getListBTD();
+            String selCurrency = getSelCurrency();
+            
+            List<BillTransferDetail> listBTD = model.getSaveData();
             double totalAmt = 0;
+            double totalDisc = 0;
+            int uniqueId = 1;
             for (BillTransferDetail btd : listBTD) {
                 BTDKey key = new BTDKey();
                 key.setBthId(txtTranVouNo.getText());
                 key.setRegNo(Util1.isNull(btd.getRegNo(), "-"));
-
+                key.setUniqueId(uniqueId);
+                
                 BillTransferDetailHis btdh = new BillTransferDetailHis();
+                btdh.setAdmissionNo(btd.getAdmissionNo());
                 btdh.setKey(key);
                 btdh.setAmount(btd.getAmount());
                 if (NumberUtil.NZero(btd.getPaid()) == 0) {
@@ -369,6 +399,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 btdh.setDiscount(btd.getDiscount());
                 btdh.setPaid(btd.getPaid());
                 dao.save(btdh);
+                uniqueId++;
 
                 PatientBillPayment pbp = new PatientBillPayment();
                 if (Util1.getNullTo(btd.getAdmissionNo(), "-").equals("-")) {
@@ -384,17 +415,22 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 pbp.setBillTypeId(btd.getPayTypeId());
                 pbp.setCreatedBy(Global.loginUser.getUserId());
                 pbp.setCreatedDate(createdDate);
-                pbp.setCurrency("MMK");
+                pbp.setCurrency(selCurrency);
                 pbp.setPayAmt(btd.getPaid());
                 totalAmt += NumberUtil.NZero(btd.getPaid());
+                totalDisc += NumberUtil.NZero(btd.getDiscount());
                 pbp.setPayDate(DateUtil.toDate(txtTranDate.getText()));
                 pbp.setRegNo(btd.getRegNo());
                 pbp.setRemark(vouNo + "@" + selType);
                 pbp.setDiscount(btd.getDiscount());
                 dao.save(pbp);
+                uploadToAccount(pbp.getId());
             }
 
+            
             BillTransferHis bth = new BillTransferHis();
+            bth.setCurrency(selCurrency);
+            bth.setDelated(Boolean.FALSE);
             bth.setBillType(billType);
             bth.setBthId(vouNo);
             bth.setCreatedDate(createdDate);
@@ -405,6 +441,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             bth.setTranDate(DateUtil.toDate(txtTranDate.getText()));
             bth.setUserId(Global.loginUser.getUserId());
             bth.setTotalAmt(totalAmt);
+            bth.setDiscount(totalDisc);
+            
             switch (selType) {
                 case "Bill Transfer":
                     bth.setTranOption("BILLTRANSFER");
@@ -455,10 +493,12 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             BTDKey key = new BTDKey();
             key.setBthId(txtTranVouNo.getText());
             key.setRegNo(Util1.isNull(btd.getRegNo(), "-"));
-
+            key.setUniqueId(1);
+            
             BillTransferDetailHis btdh = new BillTransferDetailHis();
             btdh.setKey(key);
             btdh.setAmount(btd.getAmount());
+            
             if (NumberUtil.NZero(btd.getPaid()) == 0) {
                 btd.setPaid(NumberUtil.NZero(btd.getAmount()) - NumberUtil.NZero(btd.getDiscount()));
             }
@@ -467,7 +507,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             btdh.setBalance(balance);
             btdh.setDiscount(btd.getDiscount());
             btdh.setPaid(btd.getPaid());
-
+            btdh.setAdmissionNo(btd.getAdmissionNo());
+            
             dao.save(btdh);
 
             PatientBillPayment pbp = new PatientBillPayment();
@@ -491,8 +532,12 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             pbp.setRemark(vouNo + "@" + selType);
             pbp.setDiscount(btd.getDiscount());
             dao.save(pbp);
-
+            uploadToAccount(pbp.getId());
+            
+            //String selCurrency = getSelCurrency();
             BillTransferHis bth = new BillTransferHis();
+            bth.setCurrency(curr.getCurrencyCode());
+            bth.setDelated(Boolean.FALSE);
             bth.setBillType(billType);
             bth.setBthId(vouNo);
             bth.setCreatedDate(createdDate);
@@ -531,6 +576,76 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         }
     }
 
+    @Override
+    public void assignTotal(){
+        List<BillTransferDetail> listBTD = model.getListBTD();
+        if(listBTD != null){
+            double ttlDisc = 0;
+            double ttlPaid = 0;
+            double ttlBal = 0;
+            
+            for(BillTransferDetail btd : listBTD){
+                ttlDisc += NumberUtil.NZero(btd.getDiscount());
+                ttlPaid += NumberUtil.NZero(btd.getPaid());
+                ttlBal += NumberUtil.NZero(btd.getBalance());
+            }
+            
+            txtTtlPaid.setValue(ttlPaid);
+            txtTtlBal.setValue(ttlBal);
+            txtTtlDisc.setValue(ttlDisc);
+        }
+    }
+    
+    private void uploadToAccount(Integer vouNo) {
+        String isIntegration = Util1.getPropValue("system.integration");
+        if (isIntegration.toUpperCase().equals("Y")) {
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/opdReceive";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("id", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("uploadToAccount BillTransfer Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                } catch (Exception ex) {
+                    log.error("uploadToAccount BillTransfer error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -558,6 +673,12 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         jLabel3 = new javax.swing.JLabel();
         txtFilter = new javax.swing.JTextField();
         cboType = new javax.swing.JComboBox<>();
+        jLabel4 = new javax.swing.JLabel();
+        txtTtlPaid = new javax.swing.JFormattedTextField();
+        jLabel5 = new javax.swing.JLabel();
+        txtTtlBal = new javax.swing.JFormattedTextField();
+        jLabel6 = new javax.swing.JLabel();
+        txtTtlDisc = new javax.swing.JFormattedTextField();
 
         txtDataFrom.setBorder(javax.swing.BorderFactory.createTitledBorder("Balance Date"));
         txtDataFrom.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -581,6 +702,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         txtTranDate.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtTranDateMouseClicked(evt);
+            }
+        });
+        txtTranDate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtTranDateActionPerformed(evt);
             }
         });
 
@@ -624,7 +750,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         txtTotal.setEditable(false);
         txtTotal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
-        jLabel1.setText("Total Amount :");
+        jLabel1.setText("Total Amt :");
 
         jLabel2.setText("Total Records : ");
 
@@ -646,6 +772,26 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
 
         cboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bill Transfer", "Fixed Balance", "Bill Payment" }));
         cboType.setBorder(javax.swing.BorderFactory.createTitledBorder("Type"));
+        cboType.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboTypeActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Total Paid : ");
+
+        txtTtlPaid.setEditable(false);
+        txtTtlPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        jLabel5.setText("Balance : ");
+
+        txtTtlBal.setEditable(false);
+        txtTtlBal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        jLabel6.setText("Total Disc : ");
+
+        txtTtlDisc.setEditable(false);
+        txtTtlDisc.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -657,20 +803,32 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                     .addComponent(jScrollPane1)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addGap(2, 2, 2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTotalRecords, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtFilter)
+                        .addComponent(txtFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTtlDisc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTtlPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTtlBal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(txtDataFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboBillType, 0, 70, Short.MAX_VALUE)
+                        .addComponent(cboBillType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -682,15 +840,17 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtCustomer)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, 41, Short.MAX_VALUE)
+                        .addComponent(txtRemark)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butTransfer)))
+                        .addComponent(butTransfer, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtDataFrom, txtTranDate});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtTotal, txtTtlBal, txtTtlDisc, txtTtlPaid});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -717,7 +877,13 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                     .addComponent(jLabel2)
                     .addComponent(txtTotalRecords, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
-                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(txtTtlPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel5)
+                    .addComponent(txtTtlBal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel6)
+                    .addComponent(txtTtlDisc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -762,7 +928,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     private void butTransferActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTransferActionPerformed
         if (isValidEntry()) {
             save();
-            clear();
+            //clear();
         }
     }//GEN-LAST:event_butTransferActionPerformed
 
@@ -803,6 +969,27 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         }
     }//GEN-LAST:event_txtFilterKeyReleased
 
+    private void txtTranDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtTranDateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtTranDateActionPerformed
+
+    private void cboTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTypeActionPerformed
+        String option = cboType.getSelectedItem().toString();
+        switch(option){
+            case "Bill Transfer":
+                butTransfer.setText("Transfer");
+                break;
+            case "Fixed Balance":
+                butTransfer.setText("Fix");
+                break;
+            case "Bill Payment":
+                butTransfer.setText("Pay");
+                break;
+            default:
+                butTransfer.setText("Transfer");
+        }
+    }//GEN-LAST:event_cboTypeActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butSearch;
@@ -813,6 +1000,9 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblTransaction;
     private javax.swing.JTextField txtCustomer;
@@ -823,5 +1013,8 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JFormattedTextField txtTotalRecords;
     private javax.swing.JFormattedTextField txtTranDate;
     private javax.swing.JFormattedTextField txtTranVouNo;
+    private javax.swing.JFormattedTextField txtTtlBal;
+    private javax.swing.JFormattedTextField txtTtlDisc;
+    private javax.swing.JFormattedTextField txtTtlPaid;
     // End of variables declaration//GEN-END:variables
 }

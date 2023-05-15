@@ -29,6 +29,7 @@ import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
 import com.cv.app.pharmacy.ui.common.TraderCodeCellEditor;
+import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.OutstandingStockList;
 import com.cv.app.pharmacy.ui.util.StockIssueListDialog;
@@ -45,6 +46,9 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +60,10 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 
 /**
@@ -261,7 +269,7 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
                     vouEngine.updateVouNo();
                 }
                 deleteDetail();
-                uploadToAccount(sih);
+                uploadToAccount(sih.getIssueId());
                 newForm();
             } catch (Exception ex) {
                 dao.rollBack();
@@ -730,8 +738,14 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
     };
 
     private void deleteDetail() {
-        String deleteSql = issueTableModel.getDeleteSql();
-        dao.execSql(deleteSql);
+        try {
+            String deleteSql = issueTableModel.getDeleteSql();
+            dao.execSql(deleteSql);
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Action actionTblServiceEnterKey = new AbstractAction() {
@@ -764,35 +778,33 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
         }
     };
 
-    private void uploadToAccount(StockIssueHis sih) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "STOCKISSUE");
-                        msg.setString("VOUCHER-NO", sih.getIssueId());
-                        msg.setString("queueName", "INVENTORY");
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + sih.getIssueId() + " - " + ex);
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = Util1.getPropValue("system.intg.api.url") + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
                     }
-                } else {
-                    log.error("Connection status error : " + sih.getIssueId());
                 }
-            } else {
-                log.error("Connection error : " + sih.getIssueId());
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update stock_issue_his set intg_upd_status = null where issue_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
             }
+
         }
     }
-
+    
     private void insertStockFilterCode(String medId) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + Global.machineId + "'";

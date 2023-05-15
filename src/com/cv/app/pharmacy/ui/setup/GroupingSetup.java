@@ -392,14 +392,20 @@ public class GroupingSetup extends javax.swing.JPanel implements TreeSelectionLi
     }
 
     private void removeGrouping(int groupId) {
-        String strSqlDeleteDetail1 = "delete from item_group_detail where group_id = " + groupId;
-        String strSqlDeleteDetail2 = "delete from item_group_detail where group_id in "
-                + "(select group_id from item_group where parent_group_id = " + groupId + ")";
-        String strSqlDeleteGroup1 = "delete from item_group where parent_group_id = " + groupId;
-        String strSqlDeleteGroup2 = "delete from item_group where group_id = " + groupId;
+        try {
+            String strSqlDeleteDetail1 = "delete from item_group_detail where group_id = " + groupId;
+            String strSqlDeleteDetail2 = "delete from item_group_detail where group_id in "
+                    + "(select group_id from item_group where parent_group_id = " + groupId + ")";
+            String strSqlDeleteGroup1 = "delete from item_group where parent_group_id = " + groupId;
+            String strSqlDeleteGroup2 = "delete from item_group where group_id = " + groupId;
 
-        dao.execSql(strSqlDeleteDetail1, strSqlDeleteDetail2, strSqlDeleteGroup1,
-                strSqlDeleteGroup2);
+            dao.execSql(strSqlDeleteDetail1, strSqlDeleteDetail2, strSqlDeleteGroup1,
+                    strSqlDeleteGroup2);
+        } catch (Exception ex) {
+            log.error("removeGrouping : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     @Override

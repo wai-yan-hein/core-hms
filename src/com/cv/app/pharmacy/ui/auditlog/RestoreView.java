@@ -75,6 +75,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -91,6 +94,10 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.springframework.beans.BeanUtils;
@@ -1725,7 +1732,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                     dao.save(currSaleVou);
 
                     //Upload to Account
-                    uploadToAccount(currSaleVou);
+                    uploadToAccount(currSaleVou.getSaleInvId());
 
                     if (!Util1.getPropValue("system.app.usage.type").equals("School")
                             || !Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
@@ -2503,47 +2510,30 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
 
     }
 
-    private void uploadToAccount(SaleHis sh) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "SALE");
-                        msg.setString("vouNo", sh.getSaleInvId());
-                        msg.setString("remark", sh.getRemark());
-                        msg.setString("cusId", sh.getCustomerId().getAccountId());
-                        msg.setString("saleDate", DateUtil.toDateStr(sh.getSaleDate(), "yyyy-MM-dd"));
-                        msg.setBoolean("deleted", sh.getDeleted());
-                        msg.setDouble("vouTotal", sh.getVouTotal());
-                        msg.setDouble("discount", sh.getDiscount());
-                        msg.setDouble("payment", sh.getPaid());
-                        msg.setDouble("tax", sh.getTaxAmt());
-                        msg.setString("currency", sh.getCurrencyId().getCurrencyAccId());
-                        if (sh.getCustomerId().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", sh.getCustomerId().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }
-                        msg.setString("queueName", "INVENTORY");
-
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + sh.getSaleInvId() + " - " + ex);
+            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                String url = Util1.getPropValue("system.intg.api.url") + vouNo;
+                HttpGet request = new HttpGet(url);
+                CloseableHttpResponse response = httpClient.execute(request);
+                // Handle the response
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                    String output;
+                    while ((output = br.readLine()) != null) {
+                        log.info("return from server : " + output);
                     }
-                } else {
-                    log.error("Connection status error : " + sh.getSaleInvId());
                 }
-            } else {
-                log.error("Connection error : " + sh.getSaleInvId());
+            } catch (IOException e) {
+                try {
+                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
             }
+
         }
     }
 
@@ -2582,7 +2572,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -2652,9 +2642,15 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void execTraderBalanceWithUPV() {
-        dao.execProc("get_trader_unpaid_vou", Global.machineId,
-                DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
-                DateUtil.toDateStrMYSQL(txtDueDate.getText()));
+        try {
+            dao.execProc("get_trader_unpaid_vou", Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
+                    DateUtil.toDateStrMYSQL(txtDueDate.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderBalanceWithUPV : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private boolean isOverDue(String traderId) {
@@ -3919,7 +3915,7 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
             dao.save(currSaleVou);
             vouEngine.updateVouNo();
             //Upload to Account
-            uploadToAccount(currSaleVou);
+            uploadToAccount(currSaleVou.getSaleInvId());
             newForm();
             deleteDetail();
         } catch (Exception ex) {
@@ -4013,26 +4009,33 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
     }
 
     private void deleteDetail() {
-        String deleteSQL;
+        try {
+            String deleteSQL;
 
-        //All detail section need to explicity delete
-        //because of save function only delete to join table
-        deleteSQL = saleTableModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
+            //All detail section need to explicity delete
+            //because of save function only delete to join table
+            deleteSQL = saleTableModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+
+            deleteSQL = expTableModel.getDeleteSql();
+            if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+
+            if (deleteOutstandList != null) {
+                dao.execSql("delete from sale_outstanding where outstanding_id in ("
+                        + deleteOutstandList + ")");
+                deleteOutstandList = null;
+            }
+            //delete section end
+        } catch (Exception ex) {
+            log.error("deleteDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
 
-        deleteSQL = expTableModel.getDeleteSql();
-        if (deleteSQL != null) {
-            dao.execSql(deleteSQL);
-        }
-
-        if (deleteOutstandList != null) {
-            dao.execSql("delete from sale_outstanding where outstanding_id in ("
-                    + deleteOutstandList + ")");
-            deleteOutstandList = null;
-        }
-        //delete section end
     }
     // <editor-fold defaultstate="collapsed" desc="Control Declaration">
     // Variables declaration - do not modify//GEN-BEGIN:variables

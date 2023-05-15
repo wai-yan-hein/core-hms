@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BillTranListDetail" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="fe80a5c1-f40a-45a0-93ab-f26625ccdb12">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="New Data Adapter "/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="463"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="523"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<parameter name="prm_compName" class="java.lang.String"/>
+	<parameter name="prm_type_desp" class="java.lang.String"/>
+	<parameter name="prm_del_desp" class="java.lang.String"/>
+	<parameter name="prm_vouno" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select bth.tran_date, bth.bth_id, concat(bth.trader_id, '-', t.trader_name) as customer, bth.currency_id, bth.remark,
+btdh.reg_no, btdh.admission_no, pd.patient_name, btdh.discount, btdh.paid, bth.deleted
+from bill_transfer_his bth
+join bill_transfer_detail_his btdh on bth.bth_id = btdh.bth_id
+left join patient_detail pd on btdh.reg_no = pd.reg_no
+left join trader t on bth.trader_id = t.trader_id
+where bth.bth_id =  $P{prm_vouno} 
+order by pd.patient_name]]>
+	</queryString>
+	<field name="tran_date" class="java.sql.Date"/>
+	<field name="bth_id" class="java.lang.String"/>
+	<field name="customer" class="java.lang.String"/>
+	<field name="currency_id" class="java.lang.String"/>
+	<field name="remark" class="java.lang.String"/>
+	<field name="reg_no" class="java.lang.String"/>
+	<field name="admission_no" class="java.lang.String"/>
+	<field name="patient_name" class="java.lang.String"/>
+	<field name="discount" class="java.lang.Double"/>
+	<field name="paid" class="java.lang.Double"/>
+	<variable name="ttl_amount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{paid}]]></variableExpression>
+	</variable>
+	<variable name="ttl_discount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{discount}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="52" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="20" width="339" height="32" uuid="0744a360-3d21-49ab-bc13-490e233438c1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Bill Transfer Transaction Details]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="0" width="554" height="20" uuid="1333feb8-3002-4b66-920e-d26f344d3d63"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prm_compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="392" y="37" width="71" height="15" uuid="c1750861-13e5-486c-ba6b-3de1e6dba1b8"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="463" y="37" width="92" height="15" uuid="cfc6ac8b-e5b6-48b8-9417-0a84109ba523"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="53" splitType="Stretch">
+			<staticText>
+				<reportElement x="1" y="0" width="46" height="15" uuid="21361a26-c09b-4330-88e3-01fab84728c7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Vou No : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="37" width="56" height="15" uuid="5b706c6f-6912-4352-9d0f-dce37bd422c0">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reg No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="62" y="37" width="56" height="15" uuid="7083bd38-99aa-4c7f-a111-55d85de4626f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Adm No.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="126" y="37" width="154" height="15" uuid="575dccf1-9659-4d37-a434-b840538aaa1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="484" y="37" width="70" height="15" uuid="54f644d0-cabc-4cb9-89c9-04a9605c7c40"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="157" y="0" width="30" height="15" uuid="691acecf-2979-4328-a962-6461d8c5f92d">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date : ]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="36" width="555" height="1" uuid="766ee192-ff3f-4c97-a88c-d0d46b53309b"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="52" width="555" height="1" uuid="212bdb17-5f57-457a-b199-38e540ac214d"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="407" y="37" width="72" height="15" uuid="d20e5c8e-7489-4802-a5d8-adc0c0e5e644">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Discount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="18" width="59" height="15" uuid="4c5b6f1d-95e2-4045-9768-b6785627930e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Tran Type : ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="61" y="18" width="129" height="15" uuid="799e8813-be20-46b3-956a-f0c122dca319"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prm_type_desp}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="204" y="18" width="45" height="15" uuid="ed1a25c9-31db-463a-8e2a-69e8c59a3ba2">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Remark : ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="251" y="18" width="151" height="15" uuid="12eb1761-f741-4d94-8b88-1bd4a9a87c8d"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{remark}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="456" y="0" width="52" height="15" uuid="0a3e84b0-ace6-43d4-b75b-d15d65206d4d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Top">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Currency : ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="511" y="0" width="44" height="15" uuid="9c84dcf2-29ca-4f39-b540-380649aa7803"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{currency_id}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="51" y="0" width="106" height="15" uuid="331649e3-a5f5-48ff-b971-bef9eea9fd79"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{bth_id}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="190" y="0" width="56" height="15" uuid="238febfe-c2e4-4ea5-a2a3-213f8d2b3811">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="253" y="0" width="59" height="15" uuid="50c6fa51-cd9d-4e0d-8f41-4d50f5975284">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Bill To : ]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="315" y="0" width="137" height="15" uuid="b219ee15-08bd-4ba8-b116-089487749941"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{customer}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="56" height="20" uuid="e3e5a4ac-cf05-4b8e-890f-cda158dc5784">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{reg_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="62" y="0" width="56" height="20" uuid="b74fb196-e6a0-434f-be89-8d08c049c452">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="126" y="0" width="154" height="20" uuid="3b1e36f1-42be-4aaf-9062-9daca17f9ce8">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{patient_name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="484" y="0" width="70" height="20" uuid="5550158e-e92d-4b9b-83ee-88c4ff82b4a2">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{paid}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="20" width="555" height="1" uuid="aa4a84ac-de5a-43b0-8a3f-6454c4eb206e"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="407" y="0" width="72" height="20" uuid="14d2795e-9b99-4a6b-9d29-350a58486ac3">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{discount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="16" splitType="Stretch">
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="483" y="1" width="72" height="15" uuid="3030a4db-6f12-47f8-93df-f546622f14a0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_amount}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="353" y="1" width="50" height="15" uuid="d775f748-b168-48d1-b7d6-03fc4ecce87e"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total : ]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="0" width="555" height="1" uuid="5953d6c6-4cc6-4039-8b08-0177824b1153"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+				<reportElement x="407" y="1" width="72" height="15" uuid="22aabcfb-f407-48c0-b49e-8deeca853833">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_discount}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="1" width="64" height="15" uuid="84363b66-a1bb-4267-a5f0-2ef87501da1f"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prm_del_desp}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

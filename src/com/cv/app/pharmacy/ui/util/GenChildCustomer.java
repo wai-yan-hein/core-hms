@@ -21,18 +21,21 @@ import org.springframework.richclient.application.Application;
  * @author winswe
  */
 public class GenChildCustomer extends javax.swing.JDialog {
+
     private final AbstractDataAccess dao;
     private final Customer cus;
     private final CusGroupGenStatusTableModel model;
+
     /**
      * Creates new form GenChildCustomer
+     *
      * @param cus
      * @param dao
      */
     public GenChildCustomer(Customer cus, AbstractDataAccess dao) {
         super(Application.instance().getActiveWindow().getControl(), true);
         initComponents();
-        
+
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screen = toolkit.getScreenSize();
         int x = (screen.width - this.getWidth()) / 2;
@@ -48,42 +51,43 @@ public class GenChildCustomer extends javax.swing.JDialog {
         this.show();
     }
 
-    private List<CusGroupGenStatus> getChildData(){
+    private List<CusGroupGenStatus> getChildData() {
         List<CusGroupGenStatus> listCGGS = new ArrayList();
         String groupId = "-";
-        if(cus.getTraderGroup() != null){
+        if (cus.getTraderGroup() != null) {
             groupId = cus.getTraderGroup().getGroupId();
         }
-        String strSql = "select t.trader_id, cg.group_id, cg.group_name, if(ifnull(t.trader_id,'-') = '-', false, true) status " +
-            "from customer_group cg left join trader t on cg.group_id = t.group_id and t.parent = '" + cus.getTraderId()
+        String strSql = "select t.trader_id, cg.group_id, cg.group_name, if(ifnull(t.trader_id,'-') = '-', false, true) status "
+                + "from customer_group cg left join trader t on cg.group_id = t.group_id and t.parent = '" + cus.getTraderId()
                 + "' where cg.group_id <> '" + groupId + "'";
-        ResultSet resultSet = dao.execSQL(strSql);
-        
-        try{
-            while (resultSet.next()) {
-                CusGroupGenStatus cggs = new CusGroupGenStatus(resultSet.getString("group_id"),
-                    resultSet.getString("group_name"), resultSet.getBoolean("status"),
-                    resultSet.getString("trader_id"));
 
-                listCGGS.add(cggs);
-            }
-        }catch(Exception ex){
-            
-        }finally{
-            try{
+        try {
+            ResultSet resultSet = dao.execSQL(strSql);
+            if (resultSet != null) {
+                while (resultSet.next()) {
+                    CusGroupGenStatus cggs = new CusGroupGenStatus(resultSet.getString("group_id"),
+                            resultSet.getString("group_name"), resultSet.getBoolean("status"),
+                            resultSet.getString("trader_id"));
+
+                    listCGGS.add(cggs);
+                }
                 resultSet.close();
-            }catch(Exception ex){}
+            }
+        } catch (Exception ex) {
+
+        } finally {
+
         }
-        
+
         return listCGGS;
     }
-    
-    private void initTable(){
+
+    private void initTable() {
         tblCusChild.getColumnModel().getColumn(0).setPreferredWidth(50);
         tblCusChild.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblCusChild.getColumnModel().getColumn(2).setPreferredWidth(50);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

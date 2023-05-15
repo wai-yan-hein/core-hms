@@ -23,7 +23,7 @@ public class RelationPriceTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(RelationPriceTableModel.class.getName());
     private List<RelationGroup> listRelationGroup = new ArrayList();
-    private final String[] columnNames = {"Unit Qty", "Unit", "Sale Price", "Sale Price A",
+    private final String[] columnNames = {"Qty", "Unit", "Sale Price", "Sale Price A",
         "Sale Price B", "Sale Price C", "Sale Price D", "Sale Price E", "Barcode"};
     private JTable parent;
     private JCheckBox chkCalculate;
@@ -334,7 +334,8 @@ public class RelationPriceTableModel extends AbstractTableModel {
                     } else {
                         strUnitSmallest = strUnitSmallest + "/" + String.valueOf(smallestQty);
                     }
-                } /*else {
+                }
+                /*else {
                     relationGroup.setSmallestQty(new Float(1));
                     if (strUnitSmallest.isEmpty()) {
                         strUnitSmallest = String.valueOf(1);
@@ -403,7 +404,7 @@ public class RelationPriceTableModel extends AbstractTableModel {
 
             fireTableRowsDeleted(row, row);
         }
-        
+
         genRelCodeAndRelStr();
     }
 
@@ -459,7 +460,7 @@ public class RelationPriceTableModel extends AbstractTableModel {
     }
 
     public String getUnitSmallest() {
-        if(unitSmallest == null){
+        if (unitSmallest == null) {
             genRelCodeAndRelStr();
         }
         return unitSmallest;
@@ -470,7 +471,7 @@ public class RelationPriceTableModel extends AbstractTableModel {
     }
 
     public String getUnitStr() {
-        if(unitSmallest == null){
+        if (unitSmallest == null) {
             genRelCodeAndRelStr();
         }
         return unitStr;

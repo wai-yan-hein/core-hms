@@ -75,7 +75,7 @@ public class SystemMigrationSQL extends javax.swing.JPanel {
             while (rs.next()) {
                 hmIngZgy.put(rs.getInt("integrakeycode"), rs.getInt("zawgyikeycode"));
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("initFont : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
         } finally {
             dao.close();

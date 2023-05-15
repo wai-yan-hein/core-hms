@@ -388,8 +388,13 @@ public class DateUtil {
 
     public static String toDateTimeStr(Date date, String format) {
         DateFormat dateFormat = new SimpleDateFormat(format);
-
-        return dateFormat.format(date);
+        String strDate = null;
+        try{
+            strDate = dateFormat.format(date);
+        }catch(Exception ex){
+            
+        }
+        return strDate;
     }
 
     public static boolean isValidSession(String stTime,

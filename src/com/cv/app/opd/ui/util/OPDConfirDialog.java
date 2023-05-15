@@ -123,7 +123,9 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         double paid;
         
         if(currOPDHis.getPaymentType().getPaymentTypeId().equals(1)){
-            txtPaid.setValue(vouTotal - (disc + tax));
+            if(Util1.getPropValue("system.opdpatient.mustpaid").equals("Y")){
+                txtPaid.setValue(vouTotal - (disc + tax));
+            }
         }
         paid = NumberUtil.NZero(txtPaid.getValue());
         

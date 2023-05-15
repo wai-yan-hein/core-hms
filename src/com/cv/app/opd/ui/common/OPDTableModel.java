@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.CalculateObserver;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.OPDAutoAddIdMapping;
@@ -48,7 +49,9 @@ public class OPDTableModel extends AbstractTableModel {
     private double pkgTotal = 0.0;
     private double extraTotal = 0.0;
     String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
-    
+    private CalculateObserver calObserver;
+    private String bookType = "-";
+
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
         this.observer = observer;
@@ -201,68 +204,69 @@ public class OPDTableModel extends AbstractTableModel {
         switch (column) {
             case 0: //Code
                 try {
-                    if (value != null) {
-                        if (value instanceof Service) {
-                            Service service = (Service) value;
-                            record.setService(service);
-                            record.setQuantity(1);
-                            record.setFees1(service.getFees1());
-                            record.setFees2(service.getFees2());
-                            record.setFees3(service.getFees3());
-                            record.setFees4(service.getFees4());
-                            record.setFees5(service.getFees5());
-                            record.setFees6(service.getFees6());
-                            record.setPercent(service.isPercent());
-                            record.setReferDr(referDoctor);
-                            record.setLabRemark(service.getLabRemark());
-                            record.setFees(service.getFees());
+                if (value != null) {
+                    if (value instanceof Service) {
+                        Service service = (Service) value;
+                        record.setService(service);
+                        record.setQuantity(1);
+                        record.setFees1(service.getFees1());
+                        record.setFees2(service.getFees2());
+                        record.setFees3(service.getFees3());
+                        record.setFees4(service.getFees4());
+                        record.setFees5(service.getFees5());
+                        record.setFees6(service.getFees6());
+                        record.setServiceCost(service.getServiceCost());
+                        record.setPercent(service.isPercent());
+                        record.setReferDr(referDoctor);
+                        record.setLabRemark(service.getLabRemark());
+                        record.setFees(service.getFees());
 
-                            if (doctFees != null) {
-                                if (doctFees.containsKey(service.getServiceId())) {
-                                    record.setPrice(doctFees.get(service.getServiceId()));
-                                } else {
-                                    record.setPrice(service.getFees());
-                                }
+                        if (doctFees != null) {
+                            if (doctFees.containsKey(service.getServiceId())) {
+                                record.setPrice(doctFees.get(service.getServiceId()));
                             } else {
                                 record.setPrice(service.getFees());
                             }
+                        } else {
+                            record.setPrice(service.getFees());
+                        }
 
-                            record.setFeesVersionId(service.getPriceVersionId());
-                            record.setChargeType(defaultChargeType);
-                            updateAllFees();
-                            if (service.getDoctor() != null) {
-                                observer.selected("DoctorSearch", service.getDoctor());
-                            }
+                        record.setFeesVersionId(service.getPriceVersionId());
+                        record.setChargeType(defaultChargeType);
+                        updateAllFees();
+                        if (service.getDoctor() != null) {
+                            observer.selected("DoctorSearch", service.getDoctor());
+                        }
 
-                            if (!Util1.getPropValue("system.opd.idforauto").equals("-")
-                                    && getRowCount() == 1) {
-                                if (Util1.getPropValue("system.opd.idforauto").equals(record.getService().getServiceId().toString())) {
-                                    if (!Util1.getPropValue("system.opd.autoid").equals("-")
-                                            && getRowCount() == 1) {
-                                        int id = NumberUtil.NZeroInt(Util1.getPropValue("system.opd.autoid"));
-                                        Service tmpService = (Service) dao.find(Service.class, id);
-                                        if (tmpService != null) {
-                                            addAutoService(tmpService);
-                                        }
-                                    } else {
-                                        addAutoService(service.getServiceId());
+                        if (!Util1.getPropValue("system.opd.idforauto").equals("-")
+                                && getRowCount() == 1) {
+                            if (Util1.getPropValue("system.opd.idforauto").equals(record.getService().getServiceId().toString())) {
+                                if (!Util1.getPropValue("system.opd.autoid").equals("-")
+                                        && getRowCount() == 1) {
+                                    int id = NumberUtil.NZeroInt(Util1.getPropValue("system.opd.autoid"));
+                                    Service tmpService = (Service) dao.find(Service.class, id);
+                                    if (tmpService != null) {
+                                        addAutoService(tmpService);
                                     }
                                 } else {
                                     addAutoService(service.getServiceId());
                                 }
+                            } else {
+                                addAutoService(service.getServiceId());
                             }
-                            // else{
-                            //addAutoService(service.getServiceId());
-                            // }
                         }
+                        // else{
+                        //addAutoService(service.getServiceId());
+                        // }
                     }
-                } catch (Exception ex) {
-                    log.error("setValueAt code : " + ex.getMessage());
-                } finally {
-                    dao.close();
                 }
-                addNewRow();
-                break;
+            } catch (Exception ex) {
+                log.error("setValueAt code : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            addNewRow();
+            break;
             case 1: //Description
                 /*if (value != null) {
                  if (value instanceof Service) {
@@ -301,17 +305,17 @@ public class OPDTableModel extends AbstractTableModel {
                 break;
             case 4: //Charge Type
                 try {
-                    record.setChargeType((ChargeType) value);
-                    if (record.getService() != null) {
-                        Service tmpService = (Service) dao.find(Service.class, record.getService().getServiceId());
-                        record.setPrice(tmpService.getFees());
-                    }
-                } catch (Exception ex) {
-                    log.error("setValueAt Charge Type : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                record.setChargeType((ChargeType) value);
+                if (record.getService() != null) {
+                    Service tmpService = (Service) dao.find(Service.class, record.getService().getServiceId());
+                    record.setPrice(tmpService.getFees());
                 }
-                break;
+            } catch (Exception ex) {
+                log.error("setValueAt Charge Type : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case 5: //Rrefer Dr
                 record.setReferDr((Doctor) value);
                 break;
@@ -323,13 +327,19 @@ public class OPDTableModel extends AbstractTableModel {
                 break;
         }
 
+        if (bookType.equals("Emergency")) {
+            if (NumberUtil.isNumber(Util1.getPropValue("system.emergency.percent"))) {
+                float percent = Float.parseFloat(Util1.getPropValue("system.emergency.percent"));
+                double price = record.getPrice();
+                double percentPrice = price * (percent / 100);
+                log.info("Emergency Price : % " + percent + " New Price : " + percentPrice);
+                record.setPrice(NumberUtil.roundTo(price + percentPrice, 0));
+            }
+        }
+
+        observer.selected("CAL-TOTAL", "CAL-TOTAL");
         calculateAmount(row);
-        //fireTableCellUpdated(row, 2);
-        //fireTableCellUpdated(row, 3);
-        fireTableCellUpdated(row, column);
-        /*if ((getRowCount() - 1) > row) {
-         parent.setRowSelectionInterval(row + 1, row + 1);
-         }*/
+        fireTableRowsUpdated(row, row);
         try {
             parent.setRowSelectionInterval(getRowCount() - 1, getRowCount() - 1);
             parent.requestFocus();
@@ -337,6 +347,8 @@ public class OPDTableModel extends AbstractTableModel {
         } catch (Exception ex) {
 
         }
+
+        calObserver.calculate();
     }
 
     @Override
@@ -407,6 +419,8 @@ public class OPDTableModel extends AbstractTableModel {
             JOptionPane.showMessageDialog(Util1.getParent(), "You cannot delete package item.",
                     "Package Item Delete", JOptionPane.ERROR_MESSAGE);
         }
+
+        calObserver.calculate();
     }
 
     public void addNewRow() {
@@ -455,7 +469,7 @@ public class OPDTableModel extends AbstractTableModel {
         record.setAmount(amount);
     }
 
-    private void calculateAmount(OPDDetailHis record){
+    private void calculateAmount(OPDDetailHis record) {
         Double amount = null;
         boolean isAmount = false;
 
@@ -490,25 +504,24 @@ public class OPDTableModel extends AbstractTableModel {
         }
         record.setAmount(amount);
     }
-    
+
     public double getTotal() {
         double total = 0.0;
         if (listOPDDetailHis != null) {
             if (!listOPDDetailHis.isEmpty()) {
-                for(OPDDetailHis odh : listOPDDetailHis){
+                for (OPDDetailHis odh : listOPDDetailHis) {
                     calculateAmount(odh);
                     total += NumberUtil.NZero(odh.getAmount());
                 }
             }
         }
-        
+
         /*if (listOPDDetailHis != null) {
             if (!listOPDDetailHis.isEmpty()) {
                 total = listOPDDetailHis.stream().map(odh -> NumberUtil.NZero(odh.getAmount()))
                         .reduce(total, (accumulator, _item) -> accumulator + _item);
             }
         }*/
-        
         return total;
     }
 
@@ -601,9 +614,9 @@ public class OPDTableModel extends AbstractTableModel {
         String strSelectedId = null;
         String strSQL = "select service_id from opd_service os "
                 + "where os.price_ver_id <> ifnull(os.ver_upd_id,0)";
-        ResultSet rs = dao.execSQL(strSQL);
 
         try {
+            ResultSet rs = dao.execSQL(strSQL);
             if (rs != null) {
                 while (rs.next()) {
                     String strTmpId = rs.getString("service_id");
@@ -951,5 +964,17 @@ public class OPDTableModel extends AbstractTableModel {
             status = true;
         }
         return status;
+    }
+
+    public void setCalObserver(CalculateObserver calObserver) {
+        this.calObserver = calObserver;
+    }
+
+    public String getBookType() {
+        return bookType;
+    }
+
+    public void setBookType(String bookType) {
+        this.bookType = bookType;
     }
 }

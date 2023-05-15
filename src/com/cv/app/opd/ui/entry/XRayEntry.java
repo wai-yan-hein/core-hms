@@ -66,7 +66,13 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
     }
 
     private void initTable() {
-        dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
+        try {
+            dao.execSql("delete from tmp_xray_print where user_id = '" + Global.machineId + "'");
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
         tblReaderEntry.getTableHeader().setFont(Global.lableFont);
         //Adjust column width
         tblReaderEntry.getColumnModel().getColumn(0).setPreferredWidth(40);//Date
@@ -166,7 +172,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String reportName = Util1.getPropValue("report.xray.form");
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + reportName;
         Map<String, Object> params = new HashMap();
         String compName = Util1.getPropValue("report.company.name");
@@ -191,7 +197,7 @@ public class XRayEntry extends javax.swing.JPanel implements KeyPropagate, Selec
         String reportName = Util1.getPropValue("report.ultrasound.form");
         String reportPath = Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path")
-                + "Clinic/"
+                + "clinic/"
                 + reportName;
         Map<String, Object> params = new HashMap();
         String compName = Util1.getPropValue("report.company.name");

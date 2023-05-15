@@ -23,6 +23,7 @@ import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.RetOutTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import static com.cv.app.pharmacy.ui.entry.ReturnIn.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -41,6 +42,9 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,6 +58,14 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -170,7 +182,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         } catch (Exception ex) {
 
         }
-        String deleteSQL;
+        //String deleteSQL;
         canEdit = true;
         //Clear text box.
         txtVouNo.setText("");
@@ -190,10 +202,10 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
         //All detail section need to explicity delete
         //because of save function only delete to join table
-        deleteSQL = retOutTableModel.getDeleteSql();
+        /*deleteSQL = retOutTableModel.getDeleteSql();
         if (deleteSQL != null) {
             dao.execSql(deleteSQL);
-        }
+        }*/
     }
 
     // <editor-fold defaultstate="collapsed" desc="initCombo">
@@ -229,7 +241,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         } finally {
             dao.close();
         }
-        
+
         return null;
     }
 
@@ -667,8 +679,13 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 dao.save1(currRetOut);
                 dao.commit();
 
+                String deleteSQL = retOutTableModel.getDeleteSql();
+                if (deleteSQL != null) {
+                    dao.execSql(deleteSQL);
+                }
+
                 //For upload to account
-                uploadToAccount(currRetOut);
+                uploadToAccount(currRetOut.getRetOutId());
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
@@ -731,8 +748,8 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
             if (yes_no == 0) {
                 currRetOut.setDeleted(true);
                 currRetOut.setIntgUpdStatus(null);
-                
-                try{
+
+                try {
                     dao.execProc("bkreturnout",
                             currRetOut.getRetOutId(),
                             Global.loginUser.getUserId(),
@@ -740,12 +757,12 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                             currRetOut.getVouTotal().toString(),
                             currRetOut.getPaid().toString(),
                             currRetOut.getBalance().toString());
-                }catch(Exception ex){
+                } catch (Exception ex) {
                     log.error("bkreturnout : " + ex.getMessage());
-                }finally{
+                } finally {
                     dao.close();
                 }
-                
+
                 String vouNo = currRetOut.getRetOutId();
                 try {
                     dao.execSql("update ret_out_his set deleted = true, intg_upd_status = null where ret_out_id = '" + vouNo + "'");
@@ -754,11 +771,11 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 } finally {
                     dao.close();
                 }
-                
+
                 //For upload to account
-                uploadToAccount(currRetOut);
+                uploadToAccount(currRetOut.getRetOutId());
                 newForm();
-                
+
                 //save();
             }
         }
@@ -798,7 +815,7 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                         dao.save1(currRetOut);
                         dao.commit();
                         //For upload to account
-                        uploadToAccount(currRetOut);
+                        uploadToAccount(currRetOut.getRetOutId());
 
                         if (lblStatus.getText().equals("NEW")) {
                             vouEngine.updateVouNo();
@@ -1183,67 +1200,73 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         }
     };
 
-    private void uploadToAccount(RetOutHis roh) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "RETURNOUT");
-                        msg.setString("VOUCHER-NO", roh.getRetOutId());
-                        /*msg.setString("remark", roh.getRemark());
-                        msg.setString("cusId", roh.getCustomer().getAccountId());
-                        msg.setString("retOutDate", DateUtil.toDateStr(roh.getRetOutDate(), "yyyy-MM-dd"));
-                        msg.setBoolean("deleted", roh.isDeleted());
-                        //msg.setDouble("vouTotal", roh.getVouTotal());
-                        msg.setDouble("vouTotal", roh.getBalance());
-                        msg.setDouble("payment", roh.getPaid());
-                        msg.setString("currency", roh.getCurrency().getCurrencyAccId());
-                        if (roh.getCustomer().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", roh.getCustomer().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }*/
-                        msg.setString("queueName", "INVENTORY");
-                        /*msg.setString("dept", "-");
-                        if (roh.getCustomer().getTraderGroup() != null) {
-                            if (roh.getCustomer().getTraderGroup().getDeptId() != null) {
-                                if (!roh.getCustomer().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", roh.getCustomer().getTraderGroup().getDeptId().trim());
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/returnOut";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
                                 }
                             }
-                        }*/
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + roh.getRetOutId() + " - " + ex);
+                        }
                     }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
+                }
+            } else {
+                try {
+                    dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }
     }
 
     private void setEditStatus(String invId) {
-        //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Sale' "
-                + " and o.tranInvId = '" + invId + "'");*/
-        if (!Util1.hashPrivilege("CanEditReturnOutCheckPoint")) {
-            List list = dao.findAllSQLQuery(
-                    "select * from c_bk_sale_his where sale_inv_id = '" + invId + "'");
-            if (list != null) {
-                canEdit = list.isEmpty();
+        try {
+            if (!Util1.hashPrivilege("CanEditReturnOutCheckPoint")) {
+                List list = dao.findAllSQLQuery(
+                        "select * from c_bk_ret_out_his where ret_out_id = '" + invId + "'");
+                if (list != null) {
+                    canEdit = list.isEmpty();
+                } else {
+                    canEdit = true;
+                }
             } else {
                 canEdit = true;
             }
-        } else {
-            canEdit = true;
+        } catch (Exception ex) {
+            log.error("setEditStatus : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

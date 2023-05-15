@@ -262,7 +262,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
             }
             String reportPath = Util1.getAppWorkFolder()
                     + Util1.getPropValue("report.folder.path")
-                    + "Clinic/" + reportFile;
+                    + "clinic/" + reportFile;
 
             dao.close();
             ReportUtil.viewReport(reportPath, params, dao.getConnection());

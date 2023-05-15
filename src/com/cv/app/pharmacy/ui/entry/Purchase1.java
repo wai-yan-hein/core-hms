@@ -29,6 +29,7 @@ import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.PurchaseExpTableModel;
 import com.cv.app.pharmacy.ui.common.PurchaseTableModel1;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
+import static com.cv.app.pharmacy.ui.entry.Purchase.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.PriceChangeDialog;
 import com.cv.app.pharmacy.ui.util.PromoVou;
@@ -57,6 +58,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -68,6 +72,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -978,7 +990,7 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
                     deleteDetail();
                     updateVouTotal(currPurVou.getPurInvId());
                     //For upload to account
-                    uploadToAccount(currPurVou);
+                    uploadToAccount(currPurVou.getPurInvId());
                     dao.getPro("update_pur_price", currPurVou.getPurInvId());
                     newForm();
                 } catch (Exception ex) {
@@ -1145,7 +1157,7 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
                     updateVouTotal(currPurVou.getPurInvId());
 
                     //For upload to account
-                    uploadToAccount(currPurVou);
+                    uploadToAccount(currPurVou.getPurInvId());
                     dao.getPro("update_pur_price", currPurVou.getPurInvId());
 
                     String reportPath = Util1.getAppWorkFolder()
@@ -1249,20 +1261,22 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
     }
 
     private void setEditStatus(String invId) {
-        //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Return In' "
-                + " and o.tranInvId = '" + invId + "'");*/
-        if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
-            List list = dao.findAllSQLQuery(
-                    "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
-            if (list != null) {
-                canEdit = list.isEmpty();
+        try {
+            if (!Util1.hashPrivilege("CanEditPurchaseCheckPoint")) {
+                List list = dao.findAllSQLQuery(
+                        "select * from c_bk_pur_his where pur_inv_id = '" + invId + "'");
+                if (list != null) {
+                    canEdit = list.isEmpty();
+                } else {
+                    canEdit = true;
+                }
             } else {
                 canEdit = true;
             }
-        } else {
-            canEdit = true;
+        } catch (Exception ex) {
+            log.error("setEditStatus : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1960,96 +1974,51 @@ public class Purchase1 extends javax.swing.JPanel implements SelectionObserver, 
         }
     }
 
-    /*private void uploadToAccount(PurHis ph) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "PURCHASE");
-                        msg.setString("vouNo", ph.getPurInvId());
-                        msg.setString("remark", ph.getRemark());
-                        msg.setString("purDate", DateUtil.toDateStr(ph.getPurDate(), "yyyy-MM-dd"));
-                        msg.setString("cusId", ph.getCustomerId().getAccountId());
-                        msg.setBoolean("deleted", ph.getDeleted());
-                        //msg.setDouble("vouTotal", ph.getVouTotal());
-                        msg.setDouble("vouTotal", ph.getBalance());
-                        msg.setDouble("discount", ph.getDiscount());
-                        msg.setDouble("payment", ph.getPaid());
-                        msg.setDouble("tax", ph.getTaxAmt());
-                        msg.setString("currency", ph.getCurrency().getCurrencyAccId());
-                        if (ph.getCustomerId().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", ph.getCustomerId().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }
-                        msg.setString("queueName", "INVENTORY");
-                        msg.setString("dept", "-");
-                        if (ph.getCustomerId().getTraderGroup() != null) {
-                            if (ph.getCustomerId().getTraderGroup().getDeptId() != null) {
-                                if (!ph.getCustomerId().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", ph.getCustomerId().getTraderGroup().getDeptId().trim());
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/purchase";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
                                 }
                             }
                         }
-                        mq.sendMessage(Global.queueName, msg);
+                    }
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
                     } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ph.getPurInvId() + " - " + ex);
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
                     }
                 }
-            }
-        }
-    }*/
-    private void uploadToAccount(PurHis ph) {
-        String isIntegration = Util1.getPropValue("system.integration");
-        if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("program", Global.programId);
-                        msg.setString("entity", "PURCHASE");
-                        msg.setString("VOUCHER-NO", ph.getPurInvId());
-                        /*msg.setString("remark", ph.getRemark());
-                        msg.setString("purDate", DateUtil.toDateStr(ph.getPurDate(), "yyyy-MM-dd"));
-                        msg.setString("cusId", ph.getCustomerId().getAccountId());
-                        msg.setBoolean("deleted", ph.getDeleted());
-                        //msg.setDouble("vouTotal", ph.getVouTotal());
-                        msg.setDouble("vouTotal", ph.getBalance());
-                        msg.setDouble("discount", ph.getDiscount());
-                        msg.setDouble("payment", ph.getPaid());
-                        msg.setDouble("tax", ph.getTaxAmt());
-                        msg.setString("currency", ph.getCurrency().getCurrencyAccId());
-                        if (ph.getCustomerId().getTraderGroup() != null) {
-                            msg.setString("sourceAccId", ph.getCustomerId().getTraderGroup().getAccountId());
-                        } else {
-                            msg.setString("sourceAccId", "-");
-                        }*/
-                        msg.setString("queueName", "INVENTORY");
-                        /*msg.setString("dept", "-");
-                        if (ph.getCustomerId().getTraderGroup() != null) {
-                            if (ph.getCustomerId().getTraderGroup().getDeptId() != null) {
-                                if (!ph.getCustomerId().getTraderGroup().getDeptId().isEmpty()) {
-                                    msg.setString("dept", ph.getCustomerId().getTraderGroup().getDeptId().trim());
-                                }
-                            }
-                        }*/
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + ph.getPurInvId() + " - " + ex);
-                    }
+            } else {
+                try {
+                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
                 }
             }
         }

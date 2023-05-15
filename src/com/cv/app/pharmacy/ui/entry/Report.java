@@ -1021,6 +1021,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             case "StockBalanceKS":
             case "StockBalanceAllLoc":
             case "StockBalanceSystem":
+                try {
                 if (!chkMinus.isSelected()) {
                     if (strSql.isEmpty()) {
                         strSql = "a.bal_qty < 0";
@@ -1053,11 +1054,14 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             + Global.machineId + "' group by user_id, location_id, med_id) a "
                             + "where (" + strSql + ")) dt on t.user_id = dt.user_id and t.med_id = dt.med_id and t.location_id = dt.location_id "
                             + "where t.user_id = '" + Global.machineId + "'";
-                    //System.out.println("Test : " + strSql);
-                    //strSql = "delete t from tmp_stock_balance_exp t where " + strSql;
                     dao.execSql(strSql);
                 }
-                break;
+            } catch (Exception ex) {
+                log.error("clearValue : StockBalanceExp : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+            break;
             case "StockMovementExp":
             case "StockMovementExpKS":
             case "StockMovement":
@@ -1264,129 +1268,108 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void execStockMovementExp() {
-        Integer location = 0;
+        try {
+            Integer location = 0;
 
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            location = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                location = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            }
+
+            dao.execProc("stock_movement_exp",
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()),
+                    location.toString(),
+                    Global.machineId);
+            fixedMinus(Global.machineId);
+        } catch (Exception ex) {
+            log.error("execStockMovementExp : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        dao.execProc("stock_movement_exp",
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()),
-                location.toString(),
-                Global.machineId);
-        fixedMinus(Global.machineId);
     }
 
     private void execStockMovementExp1(String report) {
-        Integer location = 0;
-
-        if (cboLocation.getSelectedItem() instanceof Location) {
-            location = ((Location) cboLocation.getSelectedItem()).getLocationId();
-        }
-
-        dao.execProc("stock_movement_exp1",
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()),
-                location.toString(),
-                Global.machineId);
-
-        String strSql = "update tmp_stock_balance_exp tsbe, v_med_cost_price vmcp\n"
-                + "set tsbe.pur_price = vmcp.cost_price, tsbe.pur_unit = vmcp.cost_unit\n"
-                + "where tsbe.med_id = vmcp.med_id and tsbe.user_id = '" + Global.machineId + "'";
-
-        dao.execSql(strSql);
-
-        switch (report) {
-            case "StockMovementExpKSReOrder":
-                if (!chkMinus.isSelected()) {
-                    String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)<0)";
-                    dao.execSql(strMinusDelete);
-                }
-
-                if (!chkZero.isSelected()) {
-                    String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)=0)";
-                    dao.execSql(strZeroDelete);
-                }
-
-                if (!chkPlus.isSelected()) {
-                    String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)>0)";
-                    dao.execSql(strPlusDelete);
-                }
-                break;
-            case "StockMovementExpKSReOrderNoSale":
-            case "StockMovementExpKSReOrderNoPur":
-            case "StockMovementExpKSReOrderChem":
-                if (!chkMinus.isSelected()) {
-                    String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and (vsm.ttl_stock_balance<0)";
-                    dao.execSql(strMinusDelete);
-                }
-
-                if (!chkZero.isSelected()) {
-                    String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and (vsm.ttl_stock_balance=0)";
-                    dao.execSql(strZeroDelete);
-                }
-
-                if (!chkPlus.isSelected()) {
-                    String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
-                            + Global.machineId + "' and med_id in "
-                            + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
-                            + Global.machineId + "' and (vsm.ttl_stock_balance>0)";
-                    dao.execSql(strPlusDelete);
-                }
-                break;
-        }
-        fixedMinus(Global.machineId);
-    }
-
-    /*private void execTraderBalanceWithoutPay() {
-        String strSql = "delete from tmp_trader_bal_date where user_id = '"
-                + Global.machineId + "' and trader_id in (select distinct trader_id \n"
-                + "from payment_his where pay_date between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                + "' and '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' and deleted = false)";
         try {
-            dao.execProc("trader_balance_date",
-                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
+            Integer location = 0;
+
+            if (cboLocation.getSelectedItem() instanceof Location) {
+                location = ((Location) cboLocation.getSelectedItem()).getLocationId();
+            }
+
+            dao.execProc("stock_movement_exp1",
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()),
+                    location.toString(),
                     Global.machineId);
+
+            String strSql = "update tmp_stock_balance_exp tsbe, v_med_cost_price vmcp\n"
+                    + "set tsbe.pur_price = vmcp.cost_price, tsbe.pur_unit = vmcp.cost_unit\n"
+                    + "where tsbe.med_id = vmcp.med_id and tsbe.user_id = '" + Global.machineId + "'";
+
             dao.execSql(strSql);
+
+            switch (report) {
+                case "StockMovementExpKSReOrder":
+                    if (!chkMinus.isSelected()) {
+                        String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)<0)";
+                        dao.execSql(strMinusDelete);
+                    }
+
+                    if (!chkZero.isSelected()) {
+                        String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)=0)";
+                        dao.execSql(strZeroDelete);
+                    }
+
+                    if (!chkPlus.isSelected()) {
+                        String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and ((vsm.ttl_sale*-1)-vsm.ttl_stock_balance)>0)";
+                        dao.execSql(strPlusDelete);
+                    }
+                    break;
+                case "StockMovementExpKSReOrderNoSale":
+                case "StockMovementExpKSReOrderNoPur":
+                case "StockMovementExpKSReOrderChem":
+                    if (!chkMinus.isSelected()) {
+                        String strMinusDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and (vsm.ttl_stock_balance<0)";
+                        dao.execSql(strMinusDelete);
+                    }
+
+                    if (!chkZero.isSelected()) {
+                        String strZeroDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and (vsm.ttl_stock_balance=0)";
+                        dao.execSql(strZeroDelete);
+                    }
+
+                    if (!chkPlus.isSelected()) {
+                        String strPlusDelete = "delete from tmp_stock_balance_exp where user_id = '"
+                                + Global.machineId + "' and med_id in "
+                                + "(select med_id from v_stock_movement_exp1 vsm where user_id = '"
+                                + Global.machineId + "' and (vsm.ttl_stock_balance>0)";
+                        dao.execSql(strPlusDelete);
+                    }
+                    break;
+            }
+            fixedMinus(Global.machineId);
         } catch (Exception ex) {
-            log.error("execTraderBalanceWithoutPay : " + ex.getMessage());
+            log.error("execStockMovementExp1 : " + ex.getMessage());
         } finally {
             dao.close();
         }
     }
 
-    private void execTraderBalanceWithoutSale() {
-        String strSql = "delete from tmp_trader_bal_date where user_id = '"
-                + Global.machineId + "' and trader_id in (select distinct cus_id \n"
-                + "from sale_his where date(sale_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
-                + "' and '" + DateUtil.toDateStrMYSQL(txtFrom.getText()) + "' and deleted = false)";
-        try {
-            dao.execProc("trader_balance_date",
-                    DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()),
-                    Global.machineId);
-            dao.execSql(strSql);
-        } catch (Exception ex) {
-            log.error("execTraderBalanceWithoutPay : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }*/
     private void execTraderBalanceDate() {
         try {
             dao.execProc("trader_balance_date",
@@ -1438,37 +1421,67 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void execTraderBalanceDetail() {
-        dao.execProc("trader_balance_detail",
-                Global.machineId,
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()));
+        try {
+            dao.execProc("trader_balance_detail",
+                    Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderBalanceDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void supplierTraderBalanceDetail() {
-        dao.execProc("trader_balance_detail1",
-                Global.machineId,
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()));
+        try {
+            dao.execProc("trader_balance_detail1",
+                    Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()));
+        } catch (Exception ex) {
+            log.error("supplierTraderBalanceDetail : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void supplierTraderBalanceSummary() {
-        dao.execProc("trader_opening",
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                Global.machineId);
+        try {
+            dao.execProc("trader_opening",
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    Global.machineId);
+        } catch (Exception ex) {
+            log.error("supplierTraderBalanceSummary : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void execTraderBalanceDetailRemark() {
-        dao.execProc("trader_balance_detail_remark",
-                Global.machineId,
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()));
+        try {
+            dao.execProc("trader_balance_detail_remark",
+                    Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderBalanceDetailRemark : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void execTraderInOutSummary() {
-        dao.execProc("trader_bal_in_out_summary",
-                Global.machineId,
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()));
+        try {
+            dao.execProc("trader_bal_in_out_summary",
+                    Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderInOutSummary : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void execStockInOutBal() {
@@ -1532,9 +1545,15 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
          curr = "All";
          }*/
 
-        dao.execProc("session_report", from, to, strSession, vouUserId, machineId,
-                locationId, tranType, deleted, strSource, curr, traderId, sign, paidCurr,
-                strAmount, Global.machineId);
+        try {
+            dao.execProc("session_report", from, to, strSession, vouUserId, machineId,
+                    locationId, tranType, deleted, strSource, curr, traderId, sign, paidCurr,
+                    strAmount, Global.machineId);
+        } catch (Exception ex) {
+            log.error("printSessionRpt : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private Map getParameter(String report) {
@@ -1931,14 +1950,20 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void deleteTmpData() {
-        String strSql1 = "delete from tmp_item_code_filter_rpt where user_id ='"
-                + Global.machineId + "'";
-        String strSql2 = "delete from tmp_trader_filter where user_id ='"
-                + Global.machineId + "'";
-        String strSql3 = "delete from tmp_doctor_filter where user_id ='"
-                + Global.machineId + "'";
+        try {
+            String strSql1 = "delete from tmp_item_code_filter_rpt where user_id ='"
+                    + Global.machineId + "'";
+            String strSql2 = "delete from tmp_trader_filter where user_id ='"
+                    + Global.machineId + "'";
+            String strSql3 = "delete from tmp_doctor_filter where user_id ='"
+                    + Global.machineId + "'";
 
-        dao.execSql(strSql1, strSql2, strSql3);
+            dao.execSql(strSql1, strSql2, strSql3);
+        } catch (Exception ex) {
+            log.error("deleteTmpData : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /*private void fillBarcode() {
@@ -2021,63 +2046,62 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             log.error("fixfMinusBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
         }
 
-        dao.execProc("fix_minus", Global.machineId);
-        dao.commit();
-        dao.execProc("insert_cost", DateUtil.toDateStrMYSQL(stockDate),
-                Global.machineId);
-        dao.commit();
-
         String strSQL = "select distinct med_id from tmp_stock_balance_exp where user_id = '"
                 + Global.machineId + "'";
-        ResultSet resultSet = dao.execSQL(strSQL);
 
         try {
-            while (resultSet.next()) {
-                String medId = resultSet.getString("med_id");
-                strSQL = "select v from TmpMinusFixed v where v.key.userId = '"
-                        + Global.machineId + "' and v.key.itemId = '"
-                        + medId + "' and balance <> 0 order by v.key.expDate desc";
-                List<TmpMinusFixed> listTMF = dao.findAllHSQL(strSQL);
-                strSQL = "select v from TmpCostDetails v where v.userId = '"
-                        + Global.machineId + "' and v.itemId = '"
-                        + medId + "' order by v.tranDate desc, v.tranId";
-                List<TmpCostDetails> listTCD = dao.findAllHSQL(strSQL);
+            dao.execProc("fix_minus", Global.machineId);
+            dao.commit();
+            dao.execProc("insert_cost", DateUtil.toDateStrMYSQL(stockDate),
+                    Global.machineId);
+            dao.commit();
+            ResultSet resultSet = dao.execSQL(strSQL);
+            if (resultSet != null) {
+                while (resultSet.next()) {
+                    String medId = resultSet.getString("med_id");
+                    strSQL = "select v from TmpMinusFixed v where v.key.userId = '"
+                            + Global.machineId + "' and v.key.itemId = '"
+                            + medId + "' and balance <> 0 order by v.key.expDate desc";
+                    List<TmpMinusFixed> listTMF = dao.findAllHSQL(strSQL);
+                    strSQL = "select v from TmpCostDetails v where v.userId = '"
+                            + Global.machineId + "' and v.itemId = '"
+                            + medId + "' order by v.tranDate desc, v.tranId";
+                    List<TmpCostDetails> listTCD = dao.findAllHSQL(strSQL);
 
-                //Calculate cost with first in first out
-                if (listTCD != null) {
-                    if (listTCD.size() > 0) {
-                        for (TmpMinusFixed tmf : listTMF) {
-                            int leftQty = tmf.getBalance();
-                            do {
-                                TmpCostDetails tcd = listTCD.get(0);
-                                int costQty = tcd.getTtlQty();
-                                double cost = tcd.getSmallestCost();
-                                int tmpQty = 0;
+                    //Calculate cost with first in first out
+                    if (listTCD != null) {
+                        if (listTCD.size() > 0) {
+                            for (TmpMinusFixed tmf : listTMF) {
+                                int leftQty = tmf.getBalance();
+                                do {
+                                    TmpCostDetails tcd = listTCD.get(0);
+                                    int costQty = tcd.getTtlQty();
+                                    double cost = tcd.getSmallestCost();
+                                    int tmpQty = 0;
 
-                                if (leftQty >= costQty) {
-                                    tmpQty = costQty;
-                                    leftQty = leftQty - costQty;
-                                    listTCD.remove(tcd);
-                                } else if (leftQty < costQty) {
-                                    tmpQty = leftQty;
-                                    leftQty = 0;
-                                    tcd.setTtlQty(costQty - leftQty);
-                                }
+                                    if (leftQty >= costQty) {
+                                        tmpQty = costQty;
+                                        leftQty = leftQty - costQty;
+                                        listTCD.remove(tcd);
+                                    } else if (leftQty < costQty) {
+                                        tmpQty = leftQty;
+                                        leftQty = 0;
+                                        tcd.setTtlQty(costQty - leftQty);
+                                    }
 
-                                insertTmpStockDetails(medId, tmf.getKey().getExpDate(),
-                                        tmpQty, cost, tmf.getKey().getLocationId());
-                            } while (leftQty != 0);
+                                    insertTmpStockDetails(medId, tmf.getKey().getExpDate(),
+                                            tmpQty, cost, tmf.getKey().getLocationId());
+                                } while (leftQty != 0);
+                            }
                         }
                     }
                 }
+                resultSet.close();
             }
         } catch (Exception ex) {
             log.error("fixMinusBalance : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {
-            try {
-                resultSet.close();
-            } catch (Exception ex) {
-            }
+
         }
     }
 
@@ -2225,102 +2249,108 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
     public void insertMonthFilter(String from, String to, String userId,
             Map<String, Object> params, int location) {
-        Date dFrom = DateUtil.toDate(from);
-        Date dTo = DateUtil.toDate(to);
-        int fromYear = DateUtil.getDatePart(dFrom, "yyyy");
-        int fromMonth = DateUtil.getDatePart(dFrom, "MM");
-        int toYear = DateUtil.getDatePart(dTo, "yyyy");
-        int toMonth = DateUtil.getDatePart(dTo, "MM");
-        String strField = "";
-        String strSql = "";
+        try {
+            Date dFrom = DateUtil.toDate(from);
+            Date dTo = DateUtil.toDate(to);
+            int fromYear = DateUtil.getDatePart(dFrom, "yyyy");
+            int fromMonth = DateUtil.getDatePart(dFrom, "MM");
+            int toYear = DateUtil.getDatePart(dTo, "yyyy");
+            int toMonth = DateUtil.getDatePart(dTo, "MM");
+            String strField = "";
+            String strSql = "";
 
-        dao.execSql("delete from tmp_month_filter where user_id = '" + userId + "'");
-        dao.execSql("delete from tmp_phar_yearly_summary where user_id = '" + userId + "'");
+            dao.execSql("delete from tmp_month_filter where user_id = '" + userId + "'");
+            dao.execSql("delete from tmp_phar_yearly_summary where user_id = '" + userId + "'");
 
-        for (int i = 1; i <= 12; i++) {
-            if (fromMonth > 12 && fromYear < toYear) {
-                fromMonth = 1;
-                fromYear++;
-            } else if (fromMonth > toMonth && fromYear == toYear) {
-                fromYear = toYear + 1;
-            }
+            for (int i = 1; i <= 12; i++) {
+                if (fromMonth > 12 && fromYear < toYear) {
+                    fromMonth = 1;
+                    fromYear++;
+                } else if (fromMonth > toMonth && fromYear == toYear) {
+                    fromYear = toYear + 1;
+                }
 
-            String ym = fromMonth + "-" + fromYear;
-            if (fromYear <= toYear) {
-                params.put("m" + i, ym);
-                if (strSql.isEmpty()) {
-                    strSql = "sum(case y_m when '" + ym + "' then ttl_s_qty else 0 end) as " + "s_m" + i
-                            + ",sum(case y_m when '" + ym + "' then ttl_p_qty else 0 end) as " + "p_m" + i;
+                String ym = fromMonth + "-" + fromYear;
+                if (fromYear <= toYear) {
+                    params.put("m" + i, ym);
+                    if (strSql.isEmpty()) {
+                        strSql = "sum(case y_m when '" + ym + "' then ttl_s_qty else 0 end) as " + "s_m" + i
+                                + ",sum(case y_m when '" + ym + "' then ttl_p_qty else 0 end) as " + "p_m" + i;
+                    } else {
+                        strSql = strSql + ", sum(case y_m when '" + ym + "' then ttl_s_qty else 0 end) as " + "s_m" + i
+                                + ",sum(case y_m when '" + ym + "' then ttl_p_qty else 0 end) as " + "p_m" + i;
+                    }
                 } else {
-                    strSql = strSql + ", sum(case y_m when '" + ym + "' then ttl_s_qty else 0 end) as " + "s_m" + i
-                            + ",sum(case y_m when '" + ym + "' then ttl_p_qty else 0 end) as " + "p_m" + i;
+                    params.put("m" + i, " ");
+                    if (strSql.isEmpty()) {
+                        strSql = "0 as " + "s_m" + i
+                                + ", 0 as p_m" + i;
+                    } else {
+                        strSql = strSql + ", 0 as " + "s_m" + i
+                                + ", 0 as p_m" + i;
+                    }
                 }
-            } else {
-                params.put("m" + i, " ");
-                if (strSql.isEmpty()) {
-                    strSql = "0 as " + "s_m" + i
-                            + ", 0 as p_m" + i;
+
+                if (strField.isEmpty()) {
+                    strField = "s_m" + i + ",p_m" + i;
                 } else {
-                    strSql = strSql + ", 0 as " + "s_m" + i
-                            + ", 0 as p_m" + i;
+                    strField = strField + ",s_m" + i + ",p_m" + i;
                 }
-            }
 
-            if (strField.isEmpty()) {
-                strField = "s_m" + i + ",p_m" + i;
-            } else {
-                strField = strField + ",s_m" + i + ",p_m" + i;
-            }
-
-            if (fromMonth <= 12 && fromYear <= toYear) {
-                TmpMonthFilter tmf = new TmpMonthFilter(userId,
-                        ym, fromMonth, fromYear);
-                try {
-                    dao.save(tmf);
-                } catch (Exception ex) {
-                    log.error("insertMonthFilter : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                if (fromMonth <= 12 && fromYear <= toYear) {
+                    TmpMonthFilter tmf = new TmpMonthFilter(userId,
+                            ym, fromMonth, fromYear);
+                    try {
+                        dao.save(tmf);
+                    } catch (Exception ex) {
+                        log.error("insertMonthFilter : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                    }
                 }
+
+                fromMonth++;
             }
 
-            fromMonth++;
+            strSql = "insert into tmp_phar_yearly_summary(user_id, item_code, " + strField + ") "
+                    + "select '" + userId + "', med_id," + strSql + " from ("
+                    + "select a.med_id, a.y_m, ifnull(b.ttl_s_qty,0) ttl_s_qty, ifnull(c.ttl_p_qty,0) ttl_p_qty\n"
+                    + "from (\n"
+                    + "select distinct tsf.med_id, tsf.user_id, tmf.y_m, tmf.f_m, tmf.f_y\n"
+                    + "from (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf, tmp_month_filter tmf\n"
+                    + "where tsf.user_id = tmf.user_id\n"
+                    + "and tsf.user_id = '" + userId + "' and tmf.user_id = '" + userId + "') a \n"
+                    + "left join\n"
+                    + "(select concat(month(vs.sale_date),'-',year(vs.sale_date)) y_m, vs.med_id,\n"
+                    + "sum(ifnull(vs.sale_smallest_qty,0)) as ttl_s_qty, tsf.user_id\n"
+                    + "from v_sale vs join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vs.med_id = tsf.med_id where deleted = false and "
+                    + "tsf.user_id = '" + userId + "' and date(vs.sale_date) between '"
+                    + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
+                    + " and (vs.location_id = " + location + " or " + location + " = 0) \n"
+                    + "group by concat(month(sale_date),'-',year(sale_date)), med_id,tsf.user_id) b\n"
+                    + "on a.med_id = b.med_id and a.y_m = b.y_m and a.user_id = b.user_id\n"
+                    + "left join\n"
+                    + "(select concat(month(vp.pur_date),'-',year(vp.pur_date)) y_m, vp.med_id,\n"
+                    + "sum(ifnull(vp.pur_smallest_qty,0)) as ttl_p_qty, tsf.user_id\n"
+                    + "from v_purchase vp join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vp.med_id = tsf.med_id \n"
+                    + "where vp.deleted = false and tsf.user_id = '" + userId + "' and "
+                    + " date(vp.pur_date) between '" + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
+                    + " and (vp.location = " + location + " or " + location + " = 0) \n"
+                    + "group by concat(month(vp.pur_date),'-',year(vp.pur_date)), vp.med_id, tsf.user_id) c\n"
+                    + "on a.med_id = c.med_id and a.y_m = c.y_m and a.user_id = c.user_id\n"
+                    + "order by a.f_y, a.f_m"
+                    + ") a group by med_id";
+
+            dao.execSql(strSql);
+            dao.execSql("update tmp_phar_yearly_summary \n"
+                    + "set s_total = (ifnull(s_m1,0)+ifnull(s_m2,0)+ifnull(s_m3,0)+ifnull(s_m4,0)+ifnull(s_m5,0)+ifnull(s_m6,0)\n"
+                    + "+ifnull(s_m7,0)+ifnull(s_m8,0)+ifnull(s_m9,0)+ifnull(s_m10,0)+ifnull(s_m11,0)+ifnull(s_m12,0)),\n"
+                    + "p_total = (ifnull(p_m1,0)+ifnull(p_m2,0)+ifnull(p_m3,0)+ifnull(p_m4,0)+ifnull(p_m5,0)+ifnull(p_m6,0)\n"
+                    + "+ifnull(p_m7,0)+ifnull(p_m8,0)+ifnull(p_m9,0)+ifnull(p_m10,0)+ifnull(p_m11,0)+ifnull(p_m12,0))\n"
+                    + "where user_id = '" + userId + "'");
+        } catch (Exception ex) {
+            log.error("insertMonthFilter : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
-
-        strSql = "insert into tmp_phar_yearly_summary(user_id, item_code, " + strField + ") "
-                + "select '" + userId + "', med_id," + strSql + " from ("
-                + "select a.med_id, a.y_m, ifnull(b.ttl_s_qty,0) ttl_s_qty, ifnull(c.ttl_p_qty,0) ttl_p_qty\n"
-                + "from (\n"
-                + "select distinct tsf.med_id, tsf.user_id, tmf.y_m, tmf.f_m, tmf.f_y\n"
-                + "from (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf, tmp_month_filter tmf\n"
-                + "where tsf.user_id = tmf.user_id\n"
-                + "and tsf.user_id = '" + userId + "' and tmf.user_id = '" + userId + "') a \n"
-                + "left join\n"
-                + "(select concat(month(vs.sale_date),'-',year(vs.sale_date)) y_m, vs.med_id,\n"
-                + "sum(ifnull(vs.sale_smallest_qty,0)) as ttl_s_qty, tsf.user_id\n"
-                + "from v_sale vs join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vs.med_id = tsf.med_id where deleted = false and "
-                + "tsf.user_id = '" + userId + "' and date(vs.sale_date) between '"
-                + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
-                + " and (vs.location_id = " + location + " or " + location + " = 0) \n"
-                + "group by concat(month(sale_date),'-',year(sale_date)), med_id,tsf.user_id) b\n"
-                + "on a.med_id = b.med_id and a.y_m = b.y_m and a.user_id = b.user_id\n"
-                + "left join\n"
-                + "(select concat(month(vp.pur_date),'-',year(vp.pur_date)) y_m, vp.med_id,\n"
-                + "sum(ifnull(vp.pur_smallest_qty,0)) as ttl_p_qty, tsf.user_id\n"
-                + "from v_purchase vp join (select distinct med_id, user_id from tmp_stock_filter where user_id = '" + userId + "') tsf on vp.med_id = tsf.med_id \n"
-                + "where vp.deleted = false and tsf.user_id = '" + userId + "' and "
-                + " date(vp.pur_date) between '" + DateUtil.toDateStrMYSQL(from) + "' and '" + DateUtil.toDateStrMYSQL(to) + "' "
-                + " and (vp.location = " + location + " or " + location + " = 0) \n"
-                + "group by concat(month(vp.pur_date),'-',year(vp.pur_date)), vp.med_id, tsf.user_id) c\n"
-                + "on a.med_id = c.med_id and a.y_m = c.y_m and a.user_id = c.user_id\n"
-                + "order by a.f_y, a.f_m"
-                + ") a group by med_id";
-
-        dao.execSql(strSql);
-        dao.execSql("update tmp_phar_yearly_summary \n"
-                + "set s_total = (ifnull(s_m1,0)+ifnull(s_m2,0)+ifnull(s_m3,0)+ifnull(s_m4,0)+ifnull(s_m5,0)+ifnull(s_m6,0)\n"
-                + "+ifnull(s_m7,0)+ifnull(s_m8,0)+ifnull(s_m9,0)+ifnull(s_m10,0)+ifnull(s_m11,0)+ifnull(s_m12,0)),\n"
-                + "p_total = (ifnull(p_m1,0)+ifnull(p_m2,0)+ifnull(p_m3,0)+ifnull(p_m4,0)+ifnull(p_m5,0)+ifnull(p_m6,0)\n"
-                + "+ifnull(p_m7,0)+ifnull(p_m8,0)+ifnull(p_m9,0)+ifnull(p_m10,0)+ifnull(p_m11,0)+ifnull(p_m12,0))\n"
-                + "where user_id = '" + userId + "'");
     }
 
     private class CodeTableUnitCellEditor extends javax.swing.AbstractCellEditor implements TableCellEditor {
@@ -2893,10 +2923,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }
 
     private void execTraderBalance() {
-        dao.execProc("trader_balance_detail1",
-                Global.machineId,
-                DateUtil.toDateStrMYSQL(txtFrom.getText()),
-                DateUtil.toDateStrMYSQL(txtTo.getText()));
+        try {
+            dao.execProc("trader_balance_detail1",
+                    Global.machineId,
+                    DateUtil.toDateStrMYSQL(txtFrom.getText()),
+                    DateUtil.toDateStrMYSQL(txtTo.getText()));
+        } catch (Exception ex) {
+            log.error("execTraderBalance : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /*private void fixedMinus(String userId) {
@@ -3044,13 +3080,12 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         prvMedId = medId;
                         med = (Medicine) dao.find(Medicine.class, medId);
                     }
-                    
+
                     String sKey = locationId + "-" + medId;
-                    
+
                     /*if (prvMedId.equals("16160002")) {
                         log.error("Error");
                     }*/
-                    
                     if (!prvMedId.equals(medId)) {
                         List<Stock> listS = new ArrayList();
                         for (String loc : locList) {
@@ -3093,7 +3128,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         listMinusStock = mpl.getListMinusStock();
                         listPlusStock = mpl.getListPlusStock();
                     }
-                    
+
                     if (qty < 0) {
                         Stock stock = new Stock(med, rs.getDate("exp_date"),
                                 null, qty, null, null, locationId);
@@ -3250,7 +3285,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         butPrint = new javax.swing.JButton();
         chkMinus = new javax.swing.JCheckBox();
@@ -3296,14 +3330,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         cboExpenseType = new javax.swing.JComboBox();
         jLabel17 = new javax.swing.JLabel();
         cboCustomG = new javax.swing.JComboBox<>();
-        jLabel18 = new javax.swing.JLabel();
-        cboSession = new javax.swing.JComboBox();
         jLabel20 = new javax.swing.JLabel();
         cboLocGroup = new javax.swing.JComboBox();
         jLabel5 = new javax.swing.JLabel();
         cboSystem = new javax.swing.JComboBox<>();
-        jLabel22 = new javax.swing.JLabel();
-        cboDoctor = new javax.swing.JComboBox<>();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblItemCodeFilter = new javax.swing.JTable();
@@ -3320,17 +3350,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         txtAdmNo = new javax.swing.JTextField();
         txtAdmName = new javax.swing.JTextField();
         butItemPaste = new javax.swing.JButton();
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+        jLabel18 = new javax.swing.JLabel();
+        jLabel22 = new javax.swing.JLabel();
+        cboSession = new javax.swing.JComboBox();
+        cboDoctor = new javax.swing.JComboBox<>();
 
         butPrint.setFont(Global.lableFont);
         butPrint.setText("Print");
@@ -3395,7 +3418,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboItemStatus, 0, 110, Short.MAX_VALUE)))
+                        .addComponent(cboItemStatus, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -3440,7 +3463,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(cboReportType, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -3448,7 +3471,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addComponent(cboReportType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 265, Short.MAX_VALUE))
+                .addComponent(jScrollPane1))
         );
 
         jLabel1.setFont(Global.lableFont);
@@ -3560,11 +3583,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         cboCustomG.setFont(Global.textFont);
 
-        jLabel18.setFont(Global.lableFont);
-        jLabel18.setText("Session");
-
-        cboSession.setFont(Global.textFont);
-
         jLabel20.setFont(Global.lableFont);
         jLabel20.setText("Loc-Group");
 
@@ -3572,11 +3590,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
 
         jLabel5.setFont(Global.lableFont);
         jLabel5.setText("System");
-
-        jLabel22.setFont(Global.lableFont);
-        jLabel22.setText("Doctor");
-
-        cboDoctor.setFont(Global.textFont);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -3587,100 +3600,66 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addGap(10, 10, 10)
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel3Layout.createSequentialGroup()
                                 .addContainerGap()
                                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGap(18, 18, 18)
-                                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(cboItemType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cboToLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 204, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cboPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(cboVouStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel20)
+                                    .addComponent(jLabel5)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel8)
+                                    .addComponent(jLabel10)
+                                    .addComponent(jLabel11)
+                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel13, javax.swing.GroupLayout.Alignment.TRAILING))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                                 .addContainerGap()
-                                .addComponent(lblDueDate)
-                                .addGap(22, 22, 22)
+                                .addComponent(lblDueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cboCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboBrand, javax.swing.GroupLayout.PREFERRED_SIZE, 212, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboToLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 204, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboExpenseType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
                                 .addComponent(txtDueDate, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtDueTo, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addGap(10, 10, 10)
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(txtFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(cboCustomG, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboLocGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboSystem, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboVouStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboItemType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addGap(18, 18, 18)
-                                .addComponent(cboLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel20)
-                                .addGap(18, 18, 18)
-                                .addComponent(cboLocGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                        .addComponent(jLabel11)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cboBrand, javax.swing.GroupLayout.PREFERRED_SIZE, 212, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                        .addComponent(jLabel10)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cboCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                        .addComponent(jLabel8)
-                                        .addGap(18, 18, 18)
-                                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(18, 18, 18)
-                                .addComponent(cboCustomG, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(jPanel3Layout.createSequentialGroup()
-                                    .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(cboDoctor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGroup(jPanel3Layout.createSequentialGroup()
-                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                                .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(cboExpenseType, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                                .addComponent(jLabel13)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                                .addComponent(jLabel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addGap(18, 18, 18)
-                                                .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                        .addGroup(jPanel3Layout.createSequentialGroup()
-                                            .addComponent(jLabel5)
-                                            .addGap(18, 18, 18)
-                                            .addComponent(cboSystem, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                    .addGap(0, 0, Short.MAX_VALUE))))))
-                .addContainerGap())
+                        .addGap(145, 145, 145)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtFrom, txtTo});
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel12, jLabel13, jLabel20, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9, lblDueDate});
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel12, jLabel13, jLabel14, jLabel17, jLabel20, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9, lblDueDate});
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboBrand, cboCategory, cboCurrency, cboCusGroup, cboCustomG, cboExpenseType, cboItemType, cboPayment, cboSession, cboToLocation, cboTownship, cboVouStatus});
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboBrand, cboCategory, cboCurrency, cboCusGroup, cboCustomG, cboExpenseType, cboItemType, cboPayment, cboToLocation, cboTownship, cboVouStatus});
+
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboLocGroup, cboLocation});
 
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3752,15 +3731,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel17)
                     .addComponent(cboCustomG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel18))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel22)
-                    .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(44, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         tblItemCodeFilter.setFont(Global.textFont);
@@ -3850,18 +3821,29 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
             }
         });
 
+        jLabel18.setFont(Global.lableFont);
+        jLabel18.setText("Session");
+
+        jLabel22.setFont(Global.lableFont);
+        jLabel22.setText("Doctor");
+
+        cboSession.setFont(Global.textFont);
+
+        cboDoctor.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
+                .addGap(11, 11, 11)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(txtAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtAdmName, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(txtAdmName, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                             .addComponent(butItemPaste)
@@ -3879,22 +3861,37 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addComponent(txtPtName))))
                 .addGap(0, 10, Short.MAX_VALUE))
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel18, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
+
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel18, jLabel22});
+
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {cboDoctor, cboSession});
+
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(jLabel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lblTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(butItemPaste))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(16, 16, 16)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel15)
                     .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3904,7 +3901,15 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     .addComponent(jLabel19)
                     .addComponent(txtAdmNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtAdmName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cboSession, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel18))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel22)
+                    .addComponent(cboDoctor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -3919,11 +3924,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGap(12, 12, 12)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3931,13 +3933,16 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -4164,7 +4169,6 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;

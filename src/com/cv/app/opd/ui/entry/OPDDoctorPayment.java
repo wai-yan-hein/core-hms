@@ -27,6 +27,9 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +38,14 @@ import java.util.List;
 import java.util.Map;
 import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
@@ -190,7 +201,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
         switch (et.getSysCode()) {
             case "OPDCF": //CF Fee Payment
                 if (et.getNeedDr()) {
-                    strSql = strSql + " and doctor_id = '" + selectedDrId
+                    strSql = strSql + " and ifnull(refer_doctor_id,doctor_id) = '" + selectedDrId
                             + "' and ifnull(fee1_id,'')=''";
                 } else {
                     strSql = strSql + " and ifnull(fee1_id,'')=''";
@@ -386,7 +397,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + "JOIN opd_details_his odh on oh.opd_inv_id = odh.vou_no "
                                 + "JOIN opd_service os on odh.service_id = os.service_id "
                                 + "set fee1_id = '?' "
-                                + "where oh.deleted = 0 and oh.doctor_id = '" + selectedDrId + "'\n"
+                                + "where oh.deleted = 0 and ifnull(odh.refer_doctor_id,oh.doctor_id) = '" + selectedDrId + "'\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and ifnull(fee1_id,'')='' ";
@@ -695,12 +706,18 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
 
             strSqlExp = strSqlExp + " group by source_acc_id, acc_id, dept_code, use_for, veac.exp_acc_id ";
 
-            try {
+            try {   
                 String appCurr = Util1.getPropValue("system.app.currency");
                 ResultSet rs = dao.execSQL(strSqlExp);
+                
+                strSql = strSql.replace("?", vouNo);
+                dao.execSql(strSql);
+                //dao.commit();
+                vouEngine.updateVouNo();
+                
                 if (rs != null) {
-                    dao.open();
-                    dao.beginTran();
+                    //dao.open();
+                    //dao.beginTran();
                     while (rs.next()) {
                         GenExpense rec = new GenExpense();
                         rec.setExpDate(DateUtil.toDate(txtTranDate.getText()));
@@ -728,12 +745,11 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         rec.setDoctorId(selectedDrId);
                         rec.setUpp(chkUPP.isSelected());
                         rec.setDeleted(false);
-                        dao.save1(rec);
+                        rec.setRecLock(Boolean.FALSE);
+                        dao.save(rec);
+                        
+                        uploadToAccount(rec.getGeneId());
                     }
-                    strSql = strSql.replace("?", vouNo);
-                    dao.execSqlT(strSql);
-                    dao.commit();
-                    vouEngine.updateVouNo();
 
                     printPayment(vouNo);
                 }
@@ -746,7 +762,6 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
 
             clear();
         }
-        uploadToAccount(vouNo);
     }
 
     private void print() {
@@ -790,7 +805,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
             String toDate = DateUtil.toDateStrMYSQL(txtTo.getText());
             String reportPath = Util1.getAppWorkFolder()
                     + Util1.getPropValue("report.folder.path")
-                    + "Clinic/"
+                    + "clinic/"
                     + reportName;
             Map<String, Object> params = new HashMap();
             String compName = Util1.getPropValue("report.company.name");
@@ -842,29 +857,52 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
         genVouNo();
     }
 
-    private void uploadToAccount(String vouNo) {
+    private void uploadToAccount(Long vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            if (!Global.mqConnection.isStatus()) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }
-            if (Global.mqConnection != null) {
-                if (Global.mqConnection.isStatus()) {
-                    try {
-                        ActiveMQConnection mq = Global.mqConnection;
-                        MapMessage msg = mq.getMapMessageTemplate();
-                        msg.setString("entity", "EXPENSE");
-                        msg.setString("VOUCHER-NO", "OPD-" + vouNo);
-                        mq.sendMessage(Global.queueName, msg);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount : " + ex.getStackTrace()[0].getLineNumber() + " - " + vouNo + " - " + ex);
+            String rootUrl = Util1.getPropValue("system.intg.api.url");
+
+            if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
+                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    String url = rootUrl + "/expense";
+                    final HttpPost request = new HttpPost(url);
+                    final List<NameValuePair> params = new ArrayList();
+                    params.add(new BasicNameValuePair("expId", vouNo.toString()));
+                    request.setEntity(new UrlEncodedFormEntity(params));
+                    CloseableHttpResponse response = httpClient.execute(request);
+                    // Handle the response
+                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                        String output;
+                        while ((output = br.readLine()) != null) {
+                            if (!output.equals("Sent")) {
+                                log.error("Error in server : " + vouNo + " : " + output);
+                                try {
+                                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                                } catch (Exception ex) {
+                                    log.error("uploadToAccount error 1: " + ex.getMessage());
+                                } finally {
+                                    dao.close();
+                                }
+                            }
+                        }
                     }
-                } else {
-                    log.error("Connection status error : " + vouNo);
+                } catch (IOException e) {
+                    try {
+                        dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error : " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                 }
             } else {
-                log.error("Connection error : " + vouNo);
+                try {
+                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                } catch (Exception ex) {
+                    log.error("uploadToAccount error : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
             }
         }
     }

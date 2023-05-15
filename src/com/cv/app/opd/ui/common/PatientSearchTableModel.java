@@ -16,7 +16,7 @@ import javax.swing.table.AbstractTableModel;
 public class PatientSearchTableModel extends AbstractTableModel {
 
     private List<Patient> listPatient = new ArrayList();
-    private String[] columnNames = {"Reg-No", "Name", "Adm-No", "Father Name", "City", "Doctor"};
+    private String[] columnNames = {"Reg-No", "Name", "Adm-No", "Father Name", "Township", "Doctor"};
 
     @Override
     public String getColumnName(int column) {
@@ -47,8 +47,8 @@ public class PatientSearchTableModel extends AbstractTableModel {
             case 3: //Father Name
                 return record.getFatherName();
             case 4: //City
-                if (record.getCity() != null) {
-                    return record.getCity().getCityName();
+                if (record.getTownship() != null) {
+                    return record.getTownship().getTownshipName();
                 } else {
                     return null;
                 }

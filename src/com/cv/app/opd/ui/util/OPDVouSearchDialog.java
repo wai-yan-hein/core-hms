@@ -507,7 +507,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             }
             txtTotalAmount.setValue(ttlAmt);
 
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             log.error("getSearchVoucher : " + ex.toString());
         } finally {
             dao.close();

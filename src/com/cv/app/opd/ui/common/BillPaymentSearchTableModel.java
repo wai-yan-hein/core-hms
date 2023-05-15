@@ -17,8 +17,8 @@ import javax.swing.table.AbstractTableModel;
 public class BillPaymentSearchTableModel extends AbstractTableModel {
 
     private List<VPatientBillPayment> listVPBP = new ArrayList();
-    private String[] columnNames = {"Reg No.", "Date", "Patient Name", "Bill Type",
-        "Remark", "Discount", "Pay Amount"};
+    private final String[] columnNames = {"Date", "Reg No.", "Adm No.", 
+        "Patient Name", "Bill Type", "Remark", "Discount", "Pay Amount"};
 
     @Override
     public String getColumnName(int column) {
@@ -33,15 +33,16 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
     @Override
     public Class getColumnClass(int column) {
         switch (column) {
-            case 0: //Reg No.
-            case 1://Date
-            case 2: //Patient Name
-            case 3: //Bill Type
-            case 4: //Remark
+            case 0: //Date
+            case 1: //Reg No.
+            case 2: //Adm No.
+            case 3: //Patient Name
+            case 4: //Bill Type
+            case 5: //Remark
                 return String.class;
-            case 5: //Discount
+            case 6: //Discount
                 return Double.class;
-            case 6: //Pay Amount
+            case 7: //Pay Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -53,24 +54,23 @@ public class BillPaymentSearchTableModel extends AbstractTableModel {
         VPatientBillPayment record = listVPBP.get(row);
 
         switch (column) {
-            case 0: //Reg No.
-                return record.getRegNo();
-            case 1://date
-                if (record.getCreatedDate() != null) {
-                    return DateUtil.toDateStr(record.getCreatedDate());
+            case 0: //Date
+                if (record.getPayDate() != null) {
+                    return DateUtil.toDateStr(record.getPayDate());
                 } else {
-                    return record.getCreatedDate();
+                    return record.getPayDate();
                 }
-
+            case 1: //Reg No.
+                return record.getRegNo();
             case 2: //Patient Name
                 return record.getPatientName();
-            case 3: //Bill Type
+            case 4: //Bill Type
                 return record.getBillName();
-            case 4: //Remark
+            case 5: //Remark
                 return record.getRemark();
-            case 5: //Discount
+            case 6: //Discount
                 return record.getDiscount();
-            case 6: //Pay Amount;
+            case 7: //Pay Amount;
                 return record.getPayAmt();
             default:
                 return null;

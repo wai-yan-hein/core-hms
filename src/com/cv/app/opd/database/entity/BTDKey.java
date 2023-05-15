@@ -17,6 +17,7 @@ import javax.persistence.Embeddable;
 public class BTDKey implements Serializable{
     private String bthId;
     private String regNo;
+    private Integer uniqueId;
 
     @Column(name="bth_id", length=15)
     public String getBthId() {
@@ -34,6 +35,15 @@ public class BTDKey implements Serializable{
 
     public void setRegNo(String regNo) {
         this.regNo = regNo;
+    }
+
+    @Column(name="unique_id")
+    public Integer getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(Integer uniqueId) {
+        this.uniqueId = uniqueId;
     }
 
     @Override
