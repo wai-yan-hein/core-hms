@@ -292,7 +292,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 pv.setVouPaid(vp.getCurrentPaid());
                 pv.setVouBal(vp.getCurrentPaid());
                 pv.setVouDate(vp.getTranDate());
-                pv.setDiscount(vp.getDiscount());
+                pv.setDiscount(vp.getCurrentDiscount());
                 pv.setVouType(vp.getVouType());
                 List<PaymentVou> listPV = new ArrayList();
                 listPV.add(pv);

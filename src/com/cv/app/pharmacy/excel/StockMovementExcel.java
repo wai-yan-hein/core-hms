@@ -101,7 +101,7 @@ public class StockMovementExcel extends GenExcel {
             hmType.put("med_id", POIUtil.FormatType.TEXT);
             hmType.put("med_name", POIUtil.FormatType.TEXT);
             hmType.put("rel_str", POIUtil.FormatType.TEXT);
-            hmType.put("ttl_op", POIUtil.FormatType.TEXT);
+            hmType.put("ttl_op", POIUtil.FormatType.FLOAT);
             hmType.put("ttl_pur", POIUtil.FormatType.FLOAT);
             hmType.put("ttl_rec", POIUtil.FormatType.FLOAT);
             hmType.put("ttl_trn_to", POIUtil.FormatType.FLOAT);
