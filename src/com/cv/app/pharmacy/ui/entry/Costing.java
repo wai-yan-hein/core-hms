@@ -235,11 +235,10 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                     + "loc_ttl_small_qty = null, loc_ttl_cost = null where user_id = '" + userId + "'");
 
             if (!strLocation.equals("0")) {
-                /*dao.execProc("stock_balance_exp", "Opening",
-                    DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                    strLocation, userId);*/
                 stockBalanceExp("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
                         strLocation, userId);
+                /*stockBalanceExp("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        "0", userId);*/
                 dao.execSql("update tmp_stock_costing tsc, (\n"
                         + "select med_id, sum(ifnull(bal_qty,0)) ttl_bal_qty\n"
                         + "from tmp_stock_balance_exp\n"
