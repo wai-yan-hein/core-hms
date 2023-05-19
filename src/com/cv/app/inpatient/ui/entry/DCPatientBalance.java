@@ -736,7 +736,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 String admitDate = DateUtil.toDateTimeStr(ams.getAmsDate(), "yyyy-MM-dd");
                 double ttlExpense = getTotalExpense(regNo, amsNo, admitDate, tranDate);
                 double ttlPayment = getTotalPayment(regNo, amsNo, admitDate, tranDate);
-
+                log.info("Reg No : " + regNo);
                 cptb.setCheckBalance(ttlExpense - ttlPayment);
 
                 if (cptb.isError()) {
