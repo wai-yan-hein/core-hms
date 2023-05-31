@@ -3068,7 +3068,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             }
                         }
                     } catch (Exception ex) {
-                        dao.rollBack();
+                        //dao.rollBack();
                         log.error("print : " + currSaleVou.getSaleInvId() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                         JOptionPane.showMessageDialog(Util1.getParent(), "Error cannot print.",
                                 "Sale print", JOptionPane.ERROR_MESSAGE);

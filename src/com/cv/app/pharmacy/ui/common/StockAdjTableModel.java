@@ -445,6 +445,11 @@ public class StockAdjTableModel extends AbstractTableModel {
         }
 
         AdjDetailHis rodh = listDetail.get(row);
+        if(rodh.getMedicineId() == null){
+            return;
+        }else if(rodh.getMedicineId().getMedId() == null){
+            return;
+        }
         String key = "";
 
         if (rodh.getMedicineId() != null && rodh.getAdjType() != null
