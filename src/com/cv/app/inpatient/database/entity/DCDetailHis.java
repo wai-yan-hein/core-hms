@@ -43,9 +43,10 @@ public class DCDetailHis implements java.io.Serializable {
     private String payId3;
     private String payId4;
     private String payId5;
-    
+    private Boolean needDoctor = false;
+
     @Id
-    @Column(name = "dc_detail_id", unique = true, nullable = false, length=25)
+    @Column(name = "dc_detail_id", unique = true, nullable = false, length = 25)
     public String getOpdDetailId() {
         return opdDetailId;
     }
@@ -128,7 +129,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.readerStatus = readerStatus;
     }
 
-    @Column(name="srv_fee1")
+    @Column(name = "srv_fee1")
     public Double getSrvFee1() {
         return srvFee1;
     }
@@ -137,7 +138,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.srvFee1 = srvFee1;
     }
 
-    @Column(name="srv_fee2")
+    @Column(name = "srv_fee2")
     public Double getSrvFee2() {
         return srvFee2;
     }
@@ -146,7 +147,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.srvFee2 = srvFee2;
     }
 
-    @Column(name="srv_fee3")
+    @Column(name = "srv_fee3")
     public Double getSrvFee3() {
         return srvFee3;
     }
@@ -155,7 +156,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.srvFee3 = srvFee3;
     }
 
-    @Column(name="srv_fee4")
+    @Column(name = "srv_fee4")
     public Double getSrvFee4() {
         return srvFee4;
     }
@@ -164,7 +165,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.srvFee4 = srvFee4;
     }
 
-    @Column(name="srv_fee5")
+    @Column(name = "srv_fee5")
     public Double getSrvFee5() {
         return srvFee5;
     }
@@ -187,7 +188,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.listDCDF = listDCDF;
     }
 
-    @Column(name="vou_no", length=25)
+    @Column(name = "vou_no", length = 25)
     public String getVouNo() {
         return vouNo;
     }
@@ -196,7 +197,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.vouNo = vouNo;
     }
 
-    @Column(name="pay_id1", length=15)
+    @Column(name = "pay_id1", length = 15)
     public String getPayId1() {
         return payId1;
     }
@@ -205,7 +206,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.payId1 = payId1;
     }
 
-    @Column(name="pay_id2", length=15)
+    @Column(name = "pay_id2", length = 15)
     public String getPayId2() {
         return payId2;
     }
@@ -214,7 +215,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.payId2 = payId2;
     }
 
-    @Column(name="pay_id3", length=15)
+    @Column(name = "pay_id3", length = 15)
     public String getPayId3() {
         return payId3;
     }
@@ -223,7 +224,7 @@ public class DCDetailHis implements java.io.Serializable {
         this.payId3 = payId3;
     }
 
-    @Column(name="pay_id4", length=15)
+    @Column(name = "pay_id4", length = 15)
     public String getPayId4() {
         return payId4;
     }
@@ -232,12 +233,25 @@ public class DCDetailHis implements java.io.Serializable {
         this.payId4 = payId4;
     }
 
-    @Column(name="pay_id5", length=15)
+    @Column(name = "pay_id5", length = 15)
     public String getPayId5() {
         return payId5;
     }
 
     public void setPayId5(String payId5) {
         this.payId5 = payId5;
+    }
+
+    @Column(name="need_doctor")
+    public Boolean isNeedDoctor() {
+        return needDoctor;
+    }
+
+    public void setNeedDoctor(Boolean needDoctor) {
+        if (needDoctor == null) {
+            this.needDoctor = false;
+        } else {
+            this.needDoctor = needDoctor;
+        }
     }
 }

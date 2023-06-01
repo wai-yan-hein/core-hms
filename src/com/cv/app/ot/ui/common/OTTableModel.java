@@ -80,6 +80,10 @@ public class OTTableModel extends AbstractTableModel {
         OTDetailHis record = listOPDDetailHis.get(row);
         boolean isAlreadyP = isAlreadyPay(record);
 
+        if(column ==3 && record.isNeedDoctor()){
+            return false;
+        }
+        
         if (column == 1 || column == 3 || column == 8) {
             if (column == 3) {
                 if (record.getService() == null) {
@@ -250,6 +254,7 @@ public class OTTableModel extends AbstractTableModel {
                             record.setChargeType(defaultChargeType);
                             serviceId = service.getServiceId();
                             boolean status = isNeedDetail(serviceId);
+                            record.setNeedDoctor(status);
                             if (status) {
                                 doctorFeePopup(record);
                             }

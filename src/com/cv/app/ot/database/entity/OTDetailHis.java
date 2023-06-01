@@ -43,6 +43,7 @@ public class OTDetailHis implements java.io.Serializable {
     private String payId3;
     private String payId4;
     private String payId5;
+    private Boolean needDoctor = false;
     
     @Id
     @Column(name = "ot_detail_id", unique = true, nullable = false, length=25)
@@ -234,5 +235,18 @@ public class OTDetailHis implements java.io.Serializable {
 
     public void setPayId5(String payId5) {
         this.payId5 = payId5;
+    }
+
+    @Column(name="need_doctor")
+    public Boolean isNeedDoctor() {
+        return needDoctor;
+    }
+
+    public void setNeedDoctor(Boolean needDoctor) {
+        if (needDoctor == null) {
+            this.needDoctor = false;
+        } else {
+            this.needDoctor = needDoctor;
+        }
     }
 }
