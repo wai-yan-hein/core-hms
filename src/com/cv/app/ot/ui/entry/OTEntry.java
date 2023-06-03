@@ -111,25 +111,25 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         String paidId = Util1.getPropValue("system.ot.paid.id");
         String refundId = Util1.getPropValue("system.ot.refund.id");
         List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-        
+
         double vouTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
-                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId) &&
-                        !o.getService().getServiceId().toString().equals(discountId) &&
-                        !o.getService().getServiceId().toString().equals(paidId) && 
-                        !o.getService().getServiceId().toString().equals(refundId))
+                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId)
+                && !o.getService().getServiceId().toString().equals(discountId)
+                && !o.getService().getServiceId().toString().equals(paidId)
+                && !o.getService().getServiceId().toString().equals(refundId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Vou Total : " + vouTotal);
         txtVouTotal.setValue(vouTotal);
-        
+
         double paidTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
-                .filter(o -> o.getService().getServiceId().toString().equals(depositeId) ||
-                        o.getService().getServiceId().toString().equals(paidId))
+                .filter(o -> o.getService().getServiceId().toString().equals(depositeId)
+                || o.getService().getServiceId().toString().equals(paidId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Paid : " + paidTotal);
         txtPaid.setValue(paidTotal);
-        
+
         double refundTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
                 .filter(o -> o.getService().getServiceId().toString().equals(refundId))
@@ -142,14 +142,14 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 .filter(o -> o.getService().getServiceId().toString().equals(discountId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Discount : " + discTotal);
-        txtDiscA.setValue(discTotal);        
-        
+        txtDiscA.setValue(discTotal);
+
         txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-        
+
         calcBalance();
     }
 
-    private double calculateAmount(OTDetailHis record){
+    private double calculateAmount(OTDetailHis record) {
         Double amount = 0d;
 
         if (record.getChargeType() != null) {
@@ -162,7 +162,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         record.setAmount(amount);
         return amount;
     }
-    
+
     /**
      * Creates new form OTEntry
      */
@@ -1840,19 +1840,19 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }
@@ -1964,7 +1964,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 }
                 hm.put(tmp.getUniqueId(), tmp);
             }
-            
+
             if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
                 tmp.setUniqueId(maxId++);
             }
@@ -1972,7 +1972,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
         return listDetail;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

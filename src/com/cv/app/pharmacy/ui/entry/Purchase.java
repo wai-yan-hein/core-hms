@@ -1986,6 +1986,13 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     log.info("After REST Api called.");
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
@@ -1994,13 +2001,6 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                             log.info("REST Api return : " + output);
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }

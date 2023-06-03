@@ -3983,19 +3983,19 @@ public class Sale1 extends javax.swing.JPanel implements SelectionObserver, Form
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }

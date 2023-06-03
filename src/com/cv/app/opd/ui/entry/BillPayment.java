@@ -94,7 +94,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
             if (!listPBP.isEmpty()) {
                 dao.saveBatch(listPBP);
-                for(PatientBillPayment pbp : listPBP){
+                for (PatientBillPayment pbp : listPBP) {
                     uploadToAccount(pbp.getId());
                 }
                 newForm();
@@ -426,19 +426,19 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                     params.add(new BasicNameValuePair("id", vouNo.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillPayment error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("uploadToAccount BillPayment Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount BillPayment error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }
@@ -462,7 +462,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

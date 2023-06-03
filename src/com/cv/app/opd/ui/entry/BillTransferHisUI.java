@@ -341,8 +341,8 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
                 + "and remark = '" + id + "@" + type + "'";
         try {
             ResultSet rs = dao.execSQL(strSql);
-            if(rs != null){
-                while(rs.next()){
+            if (rs != null) {
+                while (rs.next()) {
                     uploadToAccount(rs.getInt("id"));
                 }
             }
@@ -506,19 +506,19 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
                     params.add(new BasicNameValuePair("id", vouNo.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("uploadToAccount BillTransfer Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }
@@ -542,7 +542,7 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -915,7 +915,7 @@ public class BillTransferHisUI extends javax.swing.JPanel implements SelectionOb
     }//GEN-LAST:event_butClearActionPerformed
 
     private void butDeleteMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_butDeleteMouseClicked
-        
+
     }//GEN-LAST:event_butDeleteMouseClicked
 
     private void butHPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butHPrintActionPerformed

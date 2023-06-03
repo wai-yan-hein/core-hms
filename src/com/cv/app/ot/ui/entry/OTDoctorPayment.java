@@ -510,13 +510,13 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
             try {
                 String appCurr = Util1.getPropValue("system.app.currency");
                 ResultSet rs = dao.execSQL(strSqlExp);
-                
+
                 strSql = strSql.replace("?", vouNo);
                 log.info("Save : " + strSql);
                 dao.execSql(strSql);
                 //dao.commit();
                 vouEngine.updateVouNo();
-                
+
                 if (rs != null) {
                     //dao.open();
                     //dao.beginTran();
@@ -551,11 +551,11 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                         rec.setDeleted(false);
                         rec.setRecLock(Boolean.FALSE);
                         dao.save(rec);
-                        
+
                         uploadToAccount(rec.getGeneId());
                     }
                 }
-                
+
                 printPayment(vouNo);
             } catch (Exception ex) {
                 dao.rollBack();
@@ -664,19 +664,19 @@ public class OTDoctorPayment extends javax.swing.JPanel implements KeyPropagate,
                     params.add(new BasicNameValuePair("expId", vouNo.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }
