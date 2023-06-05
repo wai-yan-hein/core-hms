@@ -597,7 +597,6 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
 
             if (yes_no == 0) {
                 currDamage.setDeleted(true);
-                currDamage.setIntgUpdStatus(null);
                 save();
             }
         }
@@ -720,7 +719,6 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             currDamage.setRemark(txtRemark.getText());
             //currDamage.setTotalAmount(NumberUtil.NZero(txtTotalAmount.getText()));
             currDamage.setDeleted(Util1.getNullTo(currDamage.isDeleted()));
-            currDamage.setIntgUpdStatus(null);
             //String appCurr = Util1.getPropValue("system.app.currency");
             String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             currDamage.setCurrencyId(appCurr);
@@ -887,12 +885,12 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -944,7 +942,7 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
             }
         } catch (Exception ex) {
             log.error("setEditStatus : " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
     }

@@ -51,7 +51,6 @@ public class TraderPayHis implements java.io.Serializable {
     private Currency parentCurr;
     private Date payDt;
     private Double discount;
-    private String intgUpdStatus;
     private TraderPayAccount payAccount;
 
     @Id
@@ -270,14 +269,6 @@ public class TraderPayHis implements java.io.Serializable {
         this.discount = discount;
     }
 
-    @Column(name = "intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
 
     @ManyToOne
     @JoinColumn(name = "pay_id")

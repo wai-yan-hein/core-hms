@@ -36,12 +36,14 @@ import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 
 /**
@@ -94,8 +96,8 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
             if (!listPBP.isEmpty()) {
                 dao.saveBatch(listPBP);
-                for(PatientBillPayment pbp : listPBP){
-                    uploadToAccount(pbp.getId());
+                for (PatientBillPayment pbp : listPBP) {
+                    uploadToAccount(pbp.getId().toString());
                 }
                 newForm();
             }
@@ -191,7 +193,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                         Double totalBalance = 0.0;
                         String appCurr = Util1.getPropValue("system.app.currency");
                         try ( //dao.open();
-                                 ResultSet resultSet = dao.getPro("patient_bill_payment",
+                                ResultSet resultSet = dao.getPro("patient_bill_payment",
                                         patient.getRegNo(), DateUtil.toDateStrMYSQL(txtPayDate.getText()), appCurr,
                                         Global.machineId)) {
                             while (resultSet.next()) {
@@ -395,11 +397,11 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                 if (row >= 0) {
                     int y = JOptionPane.showConfirmDialog(this, "Are you sure to delete?");
                     if (y == JOptionPane.YES_OPTION) {
-                        int billId = tblBillPaymentSearchTableModel.getBillId(row);
+                        Integer billId = tblBillPaymentSearchTableModel.getBillId(row);
                         String sql = "update opd_patient_bill_payment set deleted = 1, intg_upd_status = null where id=" + billId + "";
                         dao.execSql(sql);
                         tblBillPaymentSearchTableModel.remove(row);
-                        uploadToAccount(billId);
+                        uploadToAccount(billId.toString());
                     }
                 }
             } else {
@@ -413,56 +415,48 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         }
     }
 
-    private void uploadToAccount(Integer vouNo) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/opdReceive";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("id", vouNo.toString()));
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("uploadToAccount BillPayment Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount BillPayment error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount BillPayment error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                } catch (Exception ex) {
-                    log.error("uploadToAccount BillPayment error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
     }
-    
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+        } catch (Exception ex) {
+            log.error("uploadToAccount BillPayment error : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -52,7 +52,7 @@ public class DCHis implements java.io.Serializable {
     private String remark;
     private Integer session;
     private String patientName;
-    
+
     private Currency paidCurrnecy;
     private Double paidCurrAmount;
     private Double paidCurrExRate;
@@ -63,13 +63,12 @@ public class DCHis implements java.io.Serializable {
     private String migId;
     private Diagnosis diagnosis;
     private AgeRange ageRange;
-    
+
     private Long pkgId;
     private String pkgName;
     private Double pkgPrice;
-    private String intgUpdStatus;
     private String btId; //Bill transfer id
-    
+
     @Id
     @Column(name = "dc_inv_id", unique = true, nullable = false, length = 15)
     public String getOpdInvId() {
@@ -320,7 +319,7 @@ public class DCHis implements java.io.Serializable {
         this.patientName = patientName;
     }
 
-    @Column(name="donor_name", length=500)
+    @Column(name = "donor_name", length = 500)
     public String getDonorName() {
         return donorName;
     }
@@ -329,7 +328,7 @@ public class DCHis implements java.io.Serializable {
         this.donorName = donorName;
     }
 
-    @Column(name="admission_no", length=15)
+    @Column(name = "admission_no", length = 15)
     public String getAdmissionNo() {
         return admissionNo;
     }
@@ -339,7 +338,7 @@ public class DCHis implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name="dc_status")
+    @JoinColumn(name = "dc_status")
     public DCStatus getDcStatus() {
         return dcStatus;
     }
@@ -347,8 +346,8 @@ public class DCHis implements java.io.Serializable {
     public void setDcStatus(DCStatus dcStatus) {
         this.dcStatus = dcStatus;
     }
-    
-    @Column(name="mig_id", length=25)
+
+    @Column(name = "mig_id", length = 25)
     public String getMigId() {
         return migId;
     }
@@ -358,7 +357,7 @@ public class DCHis implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name="diagnosis_id")
+    @JoinColumn(name = "diagnosis_id")
     public Diagnosis getDiagnosis() {
         return diagnosis;
     }
@@ -368,7 +367,7 @@ public class DCHis implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name="age_range")
+    @JoinColumn(name = "age_range")
     public AgeRange getAgeRange() {
         return ageRange;
     }
@@ -377,7 +376,7 @@ public class DCHis implements java.io.Serializable {
         this.ageRange = ageRange;
     }
 
-    @Column(name="package_id")
+    @Column(name = "package_id")
     public Long getPkgId() {
         return pkgId;
     }
@@ -386,7 +385,7 @@ public class DCHis implements java.io.Serializable {
         this.pkgId = pkgId;
     }
 
-    @Column(name="package_name", length=500)
+    @Column(name = "package_name", length = 500)
     public String getPkgName() {
         return pkgName;
     }
@@ -395,7 +394,7 @@ public class DCHis implements java.io.Serializable {
         this.pkgName = pkgName;
     }
 
-    @Column(name="package_price")
+    @Column(name = "package_price")
     public Double getPkgPrice() {
         return pkgPrice;
     }
@@ -403,17 +402,8 @@ public class DCHis implements java.io.Serializable {
     public void setPkgPrice(Double pkgPrice) {
         this.pkgPrice = pkgPrice;
     }
-    
-    @Column(name = "intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
 
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-    
-    @Column(name="bt_id", length=15)
+    @Column(name = "bt_id", length = 15)
     public String getBtId() {
         return btId;
     }

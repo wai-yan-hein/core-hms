@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Properties;
 import org.apache.log4j.Logger;
@@ -207,6 +208,15 @@ public class Util1 {
         return obj == null || obj.toString().isEmpty();
     }
 
+    public static String getServerIp(String hostName) {
+        try {
+            InetAddress address = InetAddress.getByName(hostName);
+            return address.getHostAddress();
+        } catch (UnknownHostException e) {
+            System.out.println("Unable to resolve hostname: " + hostName);
+        }
+        return "127.0.0.1";
+    }
 
     /*public static String execHttpPost(String url, List<BasicNameValuePair> parms) {
         CloseableHttpClient httpclient = HttpClients.createDefault();

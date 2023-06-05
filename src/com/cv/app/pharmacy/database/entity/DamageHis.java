@@ -31,9 +31,8 @@ public class DamageHis implements java.io.Serializable {
     private Double totalAmount;
     private String migId;
     private String currencyId;
-    private String intgUpdStatus;
     private Long exrId;
-    
+
     @ManyToOne
     @JoinColumn(name = "created_by")
     public Appuser getCreatedBy() {
@@ -156,8 +155,8 @@ public class DamageHis implements java.io.Serializable {
     public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
     }
-    
-    @Column(name="mig_id", length=25)
+
+    @Column(name = "mig_id", length = 25)
     public String getMigId() {
         return migId;
     }
@@ -166,7 +165,7 @@ public class DamageHis implements java.io.Serializable {
         this.migId = migId;
     }
 
-    @Column(name="currency_id", length=15)
+    @Column(name = "currency_id", length = 15)
     public String getCurrencyId() {
         return currencyId;
     }
@@ -175,16 +174,7 @@ public class DamageHis implements java.io.Serializable {
         this.currencyId = currencyId;
     }
 
-    @Column(name="intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-    
-    @Column(name="exr_id")
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }

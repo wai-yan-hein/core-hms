@@ -633,9 +633,6 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 } finally {
                     dao.close();
                 }
-                /*currAdjust.setDeleted(true);
-                currAdjust.setIntgUpdStatus(null);
-                save();*/
                 clear();
             }
         }
@@ -732,7 +729,6 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
             //String appCurr = Util1.getPropValue("system.app.currency");
             String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             currAdjust.setCurrencyId(appCurr);
-            currAdjust.setIntgUpdStatus(null);
             if (lblStatus.getText().equals("NEW")) {
                 currAdjust.setDeleted(false);
             }
@@ -892,12 +888,12 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -915,7 +911,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
 
         }
     }
-    
+
     private Long getExchangeId(String strDate, String curr) {
         long id = 0;
         if (Util1.getPropValue("system.multicurrency").equals("Y")) {

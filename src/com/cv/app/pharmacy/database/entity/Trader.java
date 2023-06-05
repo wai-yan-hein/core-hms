@@ -37,14 +37,13 @@ public class Trader implements java.io.Serializable {
     private PayMethod payMethod;
     private String remark;
     private String accountId;
-    private String intgUpdStatus; //For integration update status
     private CustomerGroup traderGroup;
     private Integer migId;
     private BusinessType businessType;
     private Float expensePercent;
     private String stuCode;
     private String discrimator;
-    
+
     public Trader() {
     }
 
@@ -182,7 +181,7 @@ public class Trader implements java.io.Serializable {
         this.payMethod = payMethod;
     }
 
-    @Column(name="remark", length=255)
+    @Column(name = "remark", length = 255)
     public String getRemark() {
         return remark;
     }
@@ -191,7 +190,7 @@ public class Trader implements java.io.Serializable {
         this.remark = remark;
     }
 
-    @Column(name="account_id")
+    @Column(name = "account_id")
     public String getAccountId() {
         return accountId;
     }
@@ -199,18 +198,9 @@ public class Trader implements java.io.Serializable {
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
-    
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
 
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-    
     @ManyToOne
-    @JoinColumn(name="group_id")
+    @JoinColumn(name = "group_id")
     public CustomerGroup getTraderGroup() {
         return traderGroup;
     }
@@ -219,7 +209,7 @@ public class Trader implements java.io.Serializable {
         this.traderGroup = traderGroup;
     }
 
-    @Column(name="mig_id")
+    @Column(name = "mig_id")
     public Integer getMigId() {
         return migId;
     }
@@ -229,7 +219,7 @@ public class Trader implements java.io.Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name="business_id")
+    @JoinColumn(name = "business_id")
     public BusinessType getBusinessType() {
         return businessType;
     }
@@ -238,7 +228,7 @@ public class Trader implements java.io.Serializable {
         this.businessType = businessType;
     }
 
-    @Column(name="expense_p")
+    @Column(name = "expense_p")
     public Float getExpensePercent() {
         return expensePercent;
     }
@@ -247,7 +237,7 @@ public class Trader implements java.io.Serializable {
         this.expensePercent = expensePercent;
     }
 
-    @Column(name="stu_no", length=25)
+    @Column(name = "stu_no", length = 25)
     public String getStuCode() {
         return stuCode;
     }
@@ -256,7 +246,7 @@ public class Trader implements java.io.Serializable {
         this.stuCode = stuCode;
     }
 
-    @Column(name="discriminator", insertable=false, updatable=false)
+    @Column(name = "discriminator", insertable = false, updatable = false)
     public String getDiscrimator() {
         return discrimator;
     }

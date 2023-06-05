@@ -31,9 +31,8 @@ public class AdjHis implements java.io.Serializable {
     private Double amount;
     private String migId;
     private String currencyId;
-    private String intgUpdStatus;
     private Long exrId;
-    
+
     @Temporal(TemporalType.DATE)
     @Column(name = "adj_date")
     public Date getAdjDate() {
@@ -157,7 +156,7 @@ public class AdjHis implements java.io.Serializable {
         this.amount = amount;
     }
 
-    @Column(name="mig_id", length=25)
+    @Column(name = "mig_id", length = 25)
     public String getMigId() {
         return migId;
     }
@@ -166,7 +165,7 @@ public class AdjHis implements java.io.Serializable {
         this.migId = migId;
     }
 
-    @Column(name="currency_id", length=15)
+    @Column(name = "currency_id", length = 15)
     public String getCurrencyId() {
         return currencyId;
     }
@@ -175,16 +174,7 @@ public class AdjHis implements java.io.Serializable {
         this.currencyId = currencyId;
     }
 
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
-    @Column(name="exr_id")
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }

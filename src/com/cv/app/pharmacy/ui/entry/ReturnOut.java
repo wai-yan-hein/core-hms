@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -23,7 +22,6 @@ import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.RetOutTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
-import static com.cv.app.pharmacy.ui.entry.ReturnIn.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.UtilDialog;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
@@ -42,9 +40,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -53,19 +49,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -747,8 +743,6 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
 
             if (yes_no == 0) {
                 currRetOut.setDeleted(true);
-                currRetOut.setIntgUpdStatus(null);
-
                 try {
                     dao.execProc("bkreturnout",
                             currRetOut.getRetOutId(),
@@ -928,8 +922,6 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
             currRetOut.setPaid(NumberUtil.getDouble(txtVouPaid.getText()));
             currRetOut.setBalance(NumberUtil.getDouble(txtVouBalance.getText()));
             currRetOut.setDeleted(Util1.getNullTo(currRetOut.isDeleted()));
-            currRetOut.setIntgUpdStatus(null);
-
             if (lblStatus.getText().equals("NEW")) {
                 currRetOut.setDeleted(false);
                 currRetOut.setRetOutDate(DateUtil.toDateTime(txtReturnOutDate.getText()));
@@ -1204,50 +1196,42 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/returnOut";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update ret_out_his set intg_upd_status = null where ret_out_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("uploadToAccount error : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     private void setEditStatus(String invId) {

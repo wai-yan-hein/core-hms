@@ -660,7 +660,6 @@ public class SaleVouPrint extends javax.swing.JPanel implements SelectionObserve
                 tph.setLocation(location);
 
                 try {
-                    sh.setIntgUpdStatus(null);
                     dao.open();
                     dao.save(tph);
                     sh.setPaymentId(tph.getPaymentId());

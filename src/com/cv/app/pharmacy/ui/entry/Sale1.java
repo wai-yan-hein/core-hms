@@ -3272,7 +3272,6 @@ public class Sale1 extends javax.swing.JPanel implements SelectionObserver, Form
             currSaleVou.setPaidCurrencyExRate(1.0);
             currSaleVou.setPaidCurrencyAmt(currSaleVou.getPaid());
             currSaleVou.setPaidCurrency(currSaleVou.getCurrencyId());
-            currSaleVou.setIntgUpdStatus(null);
 
             if (Util1.getPropValue("system.app.usage.type").equals("School")) {
                 currSaleVou.setStuName(txtCusName.getText());

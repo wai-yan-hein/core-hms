@@ -40,7 +40,6 @@ public class Trader1 implements java.io.Serializable {
     private PayMethod payMethod;
     private String remark;
     private String accountId;
-    private String intgUpdStatus; //For integration update status
     private CustomerGroup traderGroup;
     private Integer migId;
     private BusinessType businessType;
@@ -201,15 +200,7 @@ public class Trader1 implements java.io.Serializable {
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
-    
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
+  
     
     @ManyToOne
     @JoinColumn(name="group_id")

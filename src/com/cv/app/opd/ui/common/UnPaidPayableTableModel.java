@@ -4,7 +4,6 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.helper.OPDDrPayment;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
@@ -13,23 +12,21 @@ import com.cv.app.pharmacy.database.entity.GenExpense;
 import com.cv.app.pharmacy.util.GenVouNoImpl;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.jms.MapMessage;
 import javax.swing.table.AbstractTableModel;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 
 /**
@@ -526,14 +523,14 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setDeleted(false);
 
                     dao.save(rec);
-                    uploadToAccount(rec.getGeneId());
+                    uploadToAccount(rec.getGeneId().toString());
                 }
                 strSql = strSql.replace("?", vouNo);
                 dao.execSql(strSql);
                 //dao.commit();
                 vouEngine.updateVouNo();
             }
-            
+
         } catch (Exception ex) {
             //dao.rollBack();
             log.error("save : " + ex.toString());
@@ -770,7 +767,7 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setUpp(Boolean.TRUE);
                     rec.setDeleted(false);
                     dao.save(rec);
-                    uploadToAccount(rec.getGeneId());
+                    uploadToAccount(rec.getGeneId().toString());
                 }
             }
 
@@ -963,7 +960,7 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     rec.setUpp(Boolean.TRUE);
                     rec.setDeleted(false);
                     dao.save(rec);
-                    uploadToAccount(rec.getGeneId());
+                    uploadToAccount(rec.getGeneId().toString());
                 }
             }
 
@@ -980,53 +977,46 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
         }
     }
 
-    private void uploadToAccount(Long vouNo) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/expense";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("expId", vouNo.toString()));
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
     }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("uploadToAccount error : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+    }
+
 }
