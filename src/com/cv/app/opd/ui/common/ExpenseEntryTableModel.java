@@ -228,8 +228,8 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                             + "GenExpense o where o.vouNo = '" + ge.getVouNo() + "'\n"
                             + " and o.expenseOpotion = '" + ge.getExpenseOption() + "'");
                     if (listGE != null) {
-                        dao.open();
-                        dao.beginTran();
+                        //dao.open();
+                        //dao.beginTran();
                         if (!listGE.isEmpty()) {
                             String deleteId = "";
                             for (GenExpense tmpGE : listGE) {
@@ -243,7 +243,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                 tmpGE.setDeleted(true);
                                 tmpGE.setUpdatedBy(Global.loginUser.getUserId());
                                 tmpGE.setUpdatedDate(new Date());
-                                dao.save1(tmpGE);
+                                dao.save(tmpGE);
                             }
 
                             if (!deleteId.isEmpty()) {
@@ -258,10 +258,10 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                         + DateUtil.getTodayDateTimeStrMYSQL() + "', lock_dt, currency_id \n"
                                         + "from gen_expense\n"
                                         + "where gene_id in (" + deleteId + ")";
-                                dao.execSqlT(strSql);
+                                dao.execSql(strSql);
                             }
                         }
-                        dao.commit();
+                        //dao.commit();
                     }
                     //dao.open();
                     //String strSql = "delete from gen_expense where gene_id = " + ge.getExpId();
@@ -271,7 +271,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                     uploadToAccount(ge.getExpId().toString());
                 } catch (Exception ex) {
                     log.error("deleteGenExpense : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-                    dao.rollBack();
+                    //dao.rollBack();
                 } finally {
                     dao.close();
                 }
@@ -289,7 +289,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/expense";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -333,8 +333,8 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
 
         if (vouNo != null) {
             try {
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 String strSql = "-";
                 //String strSql = "delete from gen_expense where vou_no = '" + vouNo + "'";
                 //dao.execSqlT(strSql);
@@ -363,7 +363,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                 strSql = "update opd_details_his set fee3_id = null where fee3_id = '" + vouNo + "'";
                                 break;
                         }
-                        dao.execSqlT(strSql);
+                        dao.execSql(strSql);
                         break;
                     case "OT":
                         sysCode = et.getSysCode();
@@ -385,7 +385,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                 strSql = "update ot_details_his set pay_id4 = null, fee4_pay_amt = null where pay_id4 = '" + vouNo + "'";
                                 break;
                         }
-                        dao.execSqlT(strSql);
+                        dao.execSql(strSql);
                         break;
                     case "DC":
                         sysCode = et.getSysCode();
@@ -407,12 +407,12 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                 strSql = "update dc_details_his set pay_id4 = null, fee4_pay_amt = null where pay_id4 = '" + vouNo + "'";
                                 break;
                         }
-                        dao.execSqlT(strSql);
+                        dao.execSql(strSql);
                         break;
                 }
-                dao.commit();
+                //dao.commit();
             } catch (Exception ex) {
-                dao.rollBack();
+                //dao.rollBack();
                 log.error("updateOption : " + ex.toString());
             } finally {
                 dao.close();
@@ -491,7 +491,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                 }
             } catch (Exception ex) {
                 log.error("saveData : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-                dao.rollBack();
+                //dao.rollBack();
             } finally {
                 dao.close();
             }
@@ -512,6 +512,59 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
     public void setSelectRow(int row) {
         if (row != -1) {
             expType = listGenExpense.get(row).getTranType();
+        }
+    }
+
+    public void deleteAll() {
+        for (VGenExpense ge : listGenExpense) {
+            if (ge.getTranType().equals("GENERAL_EXPENSE")) {
+                try {
+                    List<GenExpense> listGE = dao.findAllHSQL("select o from \n"
+                            + "GenExpense o where o.vouNo = '" + ge.getVouNo() + "'\n"
+                            + " and o.expenseOpotion = '" + ge.getExpenseOption() + "'");
+                    if (listGE != null) {
+                        if (!listGE.isEmpty()) {
+                            String deleteId = "";
+                            for (GenExpense tmpGE : listGE) {
+                                if (tmpGE.getGeneId() != null) {
+                                    if (deleteId.isEmpty()) {
+                                        deleteId = tmpGE.getGeneId().toString();
+                                    } else {
+                                        deleteId = deleteId + "," + tmpGE.getGeneId().toString();
+                                    }
+                                }
+                                tmpGE.setDeleted(true);
+                                tmpGE.setUpdatedBy(Global.loginUser.getUserId());
+                                tmpGE.setUpdatedDate(new Date());
+                                dao.save(tmpGE);
+                            }
+
+                            if (!deleteId.isEmpty()) {
+                                String strSql = "insert into gen_expense_log(gene_id, exp_amount, desp, exp_date, created_by, created_date,\n"
+                                        + "  updated_by, updated_date, remark, session_id, exp_type, dr_amt, location_id, intg_upd_status,\n"
+                                        + "  vou_no, source_acc_id, acc_id, dept_id, paid_for, expense_option, doctor_id, deleted,\n"
+                                        + "  machine_id, action_user, action_name, action_time, lock_dt, currency_id)\n"
+                                        + "select gene_id, exp_amount, desp, exp_date, created_by, created_date,\n"
+                                        + "  updated_by, updated_date, remark, session_id, exp_type, dr_amt, location_id, intg_upd_status,\n"
+                                        + "  vou_no, source_acc_id, acc_id, dept_id, paid_for, expense_option, doctor_id, deleted,\n"
+                                        + "  " + Global.machineId + ",'" + Global.loginUser.getUserId() + "','DELETE','"
+                                        + DateUtil.getTodayDateTimeStrMYSQL() + "', lock_dt, currency_id \n"
+                                        + "from gen_expense\n"
+                                        + "where gene_id in (" + deleteId + ")";
+                                dao.execSql(strSql);
+                            }
+                        }
+                    }
+                    uploadToAccount(ge.getExpId().toString());
+                } catch (Exception ex) {
+                    log.error("deleteGenExpense : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                    //dao.rollBack();
+                } finally {
+                    dao.close();
+                }
+
+                updateOption(ge);
+            }
         }
     }
 }
