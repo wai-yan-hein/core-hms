@@ -492,7 +492,6 @@ public class CustomerGroupSetup extends javax.swing.JPanel {
     private void butSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveActionPerformed
         try {
             if (isValidEntry()) {
-                currCustomerGroup.setIntgUpdStatus(null);
                 dao.save(currCustomerGroup);
 
                 //Upload to account

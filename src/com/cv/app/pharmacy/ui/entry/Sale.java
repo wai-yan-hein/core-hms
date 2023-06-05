@@ -114,12 +114,14 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.springframework.beans.BeanUtils;
@@ -772,7 +774,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         butOTID.setEnabled(true);
                         txtBill.setText(null);
                     }
-                    
+
                     getPatientBill(ptt.getRegNo());
                     //Booking info
                     String regNo = ptt.getRegNo();
@@ -2608,7 +2610,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             if (yes_no == 0) {
                 currSaleVou.setDeleted(true);
-                currSaleVou.setIntgUpdStatus(null);
                 //save();
                 //save1();
                 try {
@@ -2678,7 +2679,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             if (yes_no == 0) {
                 isDeleteCopy = true;
                 currSaleVou.setDeleted(true);
-                currSaleVou.setIntgUpdStatus(null);
                 String vouNo = currSaleVou.getSaleInvId();
                 String traderId = "-";
 
@@ -3068,7 +3068,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                             }
                         }
                     } catch (Exception ex) {
-                        dao.rollBack();
+                        //dao.rollBack();
                         log.error("print : " + currSaleVou.getSaleInvId() + " : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                         JOptionPane.showMessageDialog(Util1.getParent(), "Error cannot print.",
                                 "Sale print", JOptionPane.ERROR_MESSAGE);
@@ -3353,7 +3353,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             String admissionNo = "-";
             if (pt != null) {
-                admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+                admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
             } else {
                 if (Util1.getPropValue("system.sale.patientmusthave").equals("Y")) {
                     if (currSaleVou.getCustomerId() == null) {
@@ -3524,7 +3524,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             currSaleVou.setPaidCurrencyExRate(1.0);
             currSaleVou.setPaidCurrencyAmt(currSaleVou.getPaid());
             currSaleVou.setPaidCurrency(currSaleVou.getCurrencyId());
-            currSaleVou.setIntgUpdStatus(null);
 
             /*if (Util1.getPropValue("system.app.usage.type").equals("School")) {
                 currSaleVou.setStuName(txtCusName.getText());
@@ -4193,50 +4192,42 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/sale";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update sale_his set intg_upd_status = null where sale_inv_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("sale updateNull: " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     public void timerFocus() {
@@ -4305,7 +4296,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

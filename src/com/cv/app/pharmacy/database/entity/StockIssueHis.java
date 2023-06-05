@@ -23,7 +23,8 @@ import org.hibernate.annotations.GenerationTime;
  */
 @Entity
 @Table(name = "stock_issue_his")
-public class StockIssueHis implements java.io.Serializable{
+public class StockIssueHis implements java.io.Serializable {
+
     private String issueId;
     private Date issueDate;
     private Location location;
@@ -35,13 +36,12 @@ public class StockIssueHis implements java.io.Serializable{
     private Date updatedDate;
     private List<StockIssueDetailHis> listDetail;
     private Double ttlAmt;
-    private String intgUpdStatus;
     private String currencyId;
     private Long exrId;
     private Location toLocation;
-    
+
     @ManyToOne
-    @JoinColumn(name="created_by")
+    @JoinColumn(name = "created_by")
     public Appuser getCreatedBy() {
         return createdBy;
     }
@@ -50,9 +50,9 @@ public class StockIssueHis implements java.io.Serializable{
         this.createdBy = createdBy;
     }
 
-    @Column(name = "created_date", insertable=false, updatable=false, 
-            columnDefinition="timestamp default current_timestamp")
-    @org.hibernate.annotations.Generated(value=GenerationTime.INSERT)
+    @Column(name = "created_date", insertable = false, updatable = false,
+            columnDefinition = "timestamp default current_timestamp")
+    @org.hibernate.annotations.Generated(value = GenerationTime.INSERT)
     @Temporal(TemporalType.TIMESTAMP)
     public Date getCreatedDate() {
         return createdDate;
@@ -62,7 +62,7 @@ public class StockIssueHis implements java.io.Serializable{
         this.createdDate = createdDate;
     }
 
-    @Column(name="deleted")
+    @Column(name = "deleted")
     public boolean isDeleted() {
         return deleted;
     }
@@ -72,7 +72,7 @@ public class StockIssueHis implements java.io.Serializable{
     }
 
     @Temporal(TemporalType.DATE)
-    @Column(name="issue_date", nullable=false)
+    @Column(name = "issue_date", nullable = false)
     public Date getIssueDate() {
         return issueDate;
     }
@@ -82,7 +82,7 @@ public class StockIssueHis implements java.io.Serializable{
     }
 
     @Id
-    @Column(name="issue_id", unique=true, nullable=false, length=15)
+    @Column(name = "issue_id", unique = true, nullable = false, length = 15)
     public String getIssueId() {
         return issueId;
     }
@@ -92,7 +92,7 @@ public class StockIssueHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="location_id")
+    @JoinColumn(name = "location_id")
     public Location getLocation() {
         return location;
     }
@@ -101,7 +101,7 @@ public class StockIssueHis implements java.io.Serializable{
         this.location = location;
     }
 
-    @Column(name="remark")
+    @Column(name = "remark")
     public String getRemark() {
         return remark;
     }
@@ -111,7 +111,7 @@ public class StockIssueHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="updated_by")
+    @JoinColumn(name = "updated_by")
     public Appuser getUpdatedBy() {
         return updatedBy;
     }
@@ -142,7 +142,7 @@ public class StockIssueHis implements java.io.Serializable{
         this.listDetail = listDetail;
     }
 
-    @Column(name="ttl_amt")
+    @Column(name = "ttl_amt")
     public Double getTtlAmt() {
         return ttlAmt;
     }
@@ -151,16 +151,7 @@ public class StockIssueHis implements java.io.Serializable{
         this.ttlAmt = ttlAmt;
     }
 
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
-    @Column(name="currency_id", length=15)
+    @Column(name = "currency_id", length = 15)
     public String getCurrencyId() {
         return currencyId;
     }
@@ -168,8 +159,8 @@ public class StockIssueHis implements java.io.Serializable{
     public void setCurrencyId(String currencyId) {
         this.currencyId = currencyId;
     }
-    
-    @Column(name="exr_id")
+
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }
@@ -179,7 +170,7 @@ public class StockIssueHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="to_location_id")
+    @JoinColumn(name = "to_location_id")
     public Location getToLocation() {
         return toLocation;
     }

@@ -64,7 +64,6 @@ public class SaleHis implements java.io.Serializable {
 
     private String migId;
     private String ptType; //Patient Type
-    private String intgUpdStatus;
     private String otId;
     private Double paymentAmt; //For payment process
     private Boolean isOverdue;
@@ -73,7 +72,7 @@ public class SaleHis implements java.io.Serializable {
     private Boolean isPrinted;
     private Long exrId;
     private String btId; //Bill transfer id
-    
+
     public SaleHis() {
     }
 
@@ -522,15 +521,6 @@ public class SaleHis implements java.io.Serializable {
         this.ptType = ptType;
     }
 
-    @Column(name = "intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
     @Column(name = "ot_id", length = 15)
     public String getOtId() {
         return otId;
@@ -601,7 +591,7 @@ public class SaleHis implements java.io.Serializable {
         this.exrId = exrId;
     }
 
-    @Column(name="bt_id", length=15)
+    @Column(name = "bt_id", length = 15)
     public String getBtId() {
         return btId;
     }

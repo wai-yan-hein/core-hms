@@ -53,9 +53,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -77,12 +75,14 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.Timer;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 
@@ -506,7 +506,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 }
 
                 currVou.setDeleted(true);
-                currVou.setIntgUpdStatus(null);
                 try {
                     //dao.save(currVou);
                     String vouNo = currVou.getOpdInvId();
@@ -1316,7 +1315,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void calVouTotal() {
         txtVouTotal.setValue(tableModel.getTotal());
-        if (cboPaymentType.getSelectedIndex() <= 0) {
+        PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+        if (pt.getPaymentTypeId() == 1) {
             txtPaid.setValue(NumberUtil.NZero(txtVouTotal.getValue()));
             txtVouBalance.setValue(0.0);
         } else {
@@ -1503,8 +1503,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             } else {
                 currVou.setOtId(null);
             }
-            currVou.setIntgUpdStatus(null);
-
             try {
                 //check patient dob
                 Patient patient = (Patient) dao.find(Patient.class, txtPatientNo.getText());
@@ -2137,50 +2135,42 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/opd";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("opd updateNull : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     private void deleteDetail() {
@@ -2327,6 +2317,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel16 = new javax.swing.JLabel();
         jLabel18 = new javax.swing.JLabel();
         spPrint = new javax.swing.JSpinner();
+        butRefresh = new javax.swing.JButton();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Vou No ");
@@ -2784,6 +2775,13 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         spPrint.setFont(Global.textFont);
 
+        butRefresh.setText("Refresh");
+        butRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRefreshActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -2874,6 +2872,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         .addComponent(jLabel18)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(spPrint, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butRefresh)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
@@ -2933,7 +2933,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel18)
-                        .addComponent(spPrint, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(spPrint, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(butRefresh)))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -3194,9 +3195,26 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
     }//GEN-LAST:event_butOTIDActionPerformed
 
+    private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed
+        if (lblStatus.getText().equals("EDIT")) {
+            try {
+                String vouNo = currVou.getOpdInvId();
+                dao.execSql("update opd_his set intg_upd_status = null where opd_inv_id = '" + vouNo + "'");
+                uploadToAccount(vouNo);
+            } catch (Exception ex) {
+                log.error("");
+            } finally {
+                dao.close();
+            }
+
+            newForm();
+        }
+    }//GEN-LAST:event_butRefreshActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butAdmit;
     private javax.swing.JButton butOTID;
+    private javax.swing.JButton butRefresh;
     private javax.swing.JButton butRemove;
     private javax.swing.JComboBox cboCurrency;
     private javax.swing.JComboBox cboPaymentType;

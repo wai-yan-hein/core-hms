@@ -4,7 +4,6 @@
  */
 package com.cv.app.pharmacy.ui.entry;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.BestAppFocusTraversalPolicy;
 import com.cv.app.common.ComBoBoxAutoComplete;
 import com.cv.app.common.Global;
@@ -31,7 +30,6 @@ import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.PurchaseExpTableModel;
 import com.cv.app.pharmacy.ui.common.PurchaseTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
-import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.PriceChangeDialog;
 import com.cv.app.pharmacy.ui.util.PromoVou;
@@ -54,32 +52,31 @@ import com.cv.app.util.Util1;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 import org.jdesktop.observablecollections.ObservableCollections;
 
@@ -1043,8 +1040,6 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
             if (yes_no == 0) {
                 currPurVou.setDeleted(true);
-                currPurVou.setIntgUpdStatus(null);
-
                 try {
                     Date d = new Date();
                     dao.execProc("bkpur",
@@ -1359,7 +1354,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
@@ -1414,8 +1409,6 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
             currPurVou.setCashOut(chkCashOut.isSelected());
             currPurVou.setRefNo(txtRefNo.getText());
             currPurVou.setDeleted(Util1.getNullTo(currPurVou.getDeleted()));
-            currPurVou.setIntgUpdStatus(null);
-
             if (lblStatus.getText().equals("NEW")) {
                 currPurVou.setDeleted(false);
                 currPurVou.setPurDate(DateUtil.toDateTime(txtPurDate.getText()));
@@ -1977,52 +1970,42 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/purchase";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    log.info("After REST Api called.");
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            log.info("REST Api return : " + output);
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update pur_his set intg_upd_status = null where pur_inv_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("purchase updateNull: " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     private void updateVouTotal(String vouNo) {

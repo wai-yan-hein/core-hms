@@ -4,7 +4,6 @@
  */
 package com.cv.app.opd.ui.common;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.ExpenseType;
@@ -20,18 +19,17 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 
 /**
@@ -243,7 +241,6 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                     }
                                 }
                                 tmpGE.setDeleted(true);
-                                tmpGE.setIntgUpdStatus(null);
                                 tmpGE.setUpdatedBy(Global.loginUser.getUserId());
                                 tmpGE.setUpdatedDate(new Date());
                                 dao.save1(tmpGE);
@@ -271,7 +268,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                     //dao.execSql(strSql);
                     listGenExpense.remove(row);
                     fireTableRowsDeleted(0, listGenExpense.size() - 1);
-                    uploadToAccount(ge.getExpId());
+                    uploadToAccount(ge.getExpId().toString());
                 } catch (Exception ex) {
                     log.error("deleteGenExpense : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
                     dao.rollBack();
@@ -287,54 +284,46 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
         }
     }
 
-    private void uploadToAccount(Long vouNo) {
+    private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/expense";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("expId", vouNo.toString()));
+                    params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update gen_expense set intg_upd_status = null where gene_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("uploadToAccount error : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     private void updateOption(VGenExpense ge) {
@@ -496,8 +485,6 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                     rec.setRemark(ge.getRemark());
                     rec.setLocation(ge.getLocation());
                     rec.setDrAmt(ge.getDrAmt());
-                    rec.setIntgUpdStatus(null);
-
                     dao.open();
                     dao.save(rec);
                     ge.setExpId(rec.getGeneId());

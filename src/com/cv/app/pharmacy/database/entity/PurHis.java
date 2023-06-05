@@ -46,7 +46,6 @@ public class PurHis implements java.io.Serializable{
     private Double exRateP; //for parent currency
     private List<PurchaseOutstand> listOuts;
     private String migId;
-    private String intgUpdStatus;
     
     private String promoDesp;
     private Date promoStartDate;
@@ -408,15 +407,7 @@ public class PurHis implements java.io.Serializable{
         this.promoGetComplete = promoGetComplete;
     }
 
-    @Column(name="intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-    
+   
     @Column(name="exr_id")
     public Long getExrId() {
         return exrId;

@@ -77,9 +77,13 @@ public class DCTableModel extends AbstractTableModel {
         if (!canEdit) {
             return false;
         }
+        
         DCDetailHis record = listOPDDetailHis.get(row);
         boolean isAlreadyP = isAlreadyPay(record);
-
+        if(column ==3 && record.isNeedDoctor()){
+            return false;
+        }
+        
         if (column == 1 || column == 3 || column == 5) {
             if (column == 3) {
                 if (record.getService() == null) {
@@ -279,7 +283,9 @@ public class DCTableModel extends AbstractTableModel {
                             record.setListDCDF(null);
                             record.setFeesVersionId(service.getPriceVersionId());
                             record.setChargeType(defaultChargeType);
-                            if (isNeedDetail(service.getServiceId())) {
+                            boolean status = isNeedDetail(service.getServiceId());
+                            record.setNeedDoctor(status);
+                            if (status) {
                                 doctorFeePopup(record);
                             }
                             addAutoService(service.getServiceId());

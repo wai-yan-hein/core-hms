@@ -543,7 +543,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                             DateUtil.toDateTimeStrMYSQL(d));
                 }
                 //For BK Pagolay
-                currCustomer.setIntgUpdStatus(null);
                 dao.save(currCustomer);
 
                 //For integration with account
@@ -594,7 +593,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                         "Customer Delete", JOptionPane.YES_NO_OPTION);
 
                 if (yes_no == 0) {
-                    currCustomer.setIntgUpdStatus(null);
                     dao.delete(currCustomer);
 
                     //For integration with account

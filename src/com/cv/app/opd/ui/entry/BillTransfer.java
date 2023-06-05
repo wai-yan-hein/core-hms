@@ -353,11 +353,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
         return status;
     }
 
-    private String getSelCurrency(){
-        Currency curr = (Currency)cboCurrency.getSelectedItem();
+    private String getSelCurrency() {
+        Currency curr = (Currency) cboCurrency.getSelectedItem();
         return curr.getCurrencyCode();
     }
-    
+
     private void save() {
         try {
             Date vouSaleDate = DateUtil.toDate(txtTranDate.getText());
@@ -375,7 +375,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             String vouNo = txtTranVouNo.getText();
             String selType = cboType.getSelectedItem().toString();
             String selCurrency = getSelCurrency();
-            
+
             List<BillTransferDetail> listBTD = model.getSaveData();
             double totalAmt = 0;
             double totalDisc = 0;
@@ -385,7 +385,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 key.setBthId(txtTranVouNo.getText());
                 key.setRegNo(Util1.isNull(btd.getRegNo(), "-"));
                 key.setUniqueId(uniqueId);
-                
+
                 BillTransferDetailHis btdh = new BillTransferDetailHis();
                 btdh.setAdmissionNo(btd.getAdmissionNo());
                 btdh.setKey(key);
@@ -427,7 +427,6 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 uploadToAccount(pbp.getId());
             }
 
-            
             BillTransferHis bth = new BillTransferHis();
             bth.setCurrency(selCurrency);
             bth.setDelated(Boolean.FALSE);
@@ -442,7 +441,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             bth.setUserId(Global.loginUser.getUserId());
             bth.setTotalAmt(totalAmt);
             bth.setDiscount(totalDisc);
-            
+
             switch (selType) {
                 case "Bill Transfer":
                     bth.setTranOption("BILLTRANSFER");
@@ -494,11 +493,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             key.setBthId(txtTranVouNo.getText());
             key.setRegNo(Util1.isNull(btd.getRegNo(), "-"));
             key.setUniqueId(1);
-            
+
             BillTransferDetailHis btdh = new BillTransferDetailHis();
             btdh.setKey(key);
             btdh.setAmount(btd.getAmount());
-            
+
             if (NumberUtil.NZero(btd.getPaid()) == 0) {
                 btd.setPaid(NumberUtil.NZero(btd.getAmount()) - NumberUtil.NZero(btd.getDiscount()));
             }
@@ -508,7 +507,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             btdh.setDiscount(btd.getDiscount());
             btdh.setPaid(btd.getPaid());
             btdh.setAdmissionNo(btd.getAdmissionNo());
-            
+
             dao.save(btdh);
 
             PatientBillPayment pbp = new PatientBillPayment();
@@ -533,7 +532,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             pbp.setDiscount(btd.getDiscount());
             dao.save(pbp);
             uploadToAccount(pbp.getId());
-            
+
             //String selCurrency = getSelCurrency();
             BillTransferHis bth = new BillTransferHis();
             bth.setCurrency(curr.getCurrencyCode());
@@ -577,25 +576,25 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
     }
 
     @Override
-    public void assignTotal(){
+    public void assignTotal() {
         List<BillTransferDetail> listBTD = model.getListBTD();
-        if(listBTD != null){
+        if (listBTD != null) {
             double ttlDisc = 0;
             double ttlPaid = 0;
             double ttlBal = 0;
-            
-            for(BillTransferDetail btd : listBTD){
+
+            for (BillTransferDetail btd : listBTD) {
                 ttlDisc += NumberUtil.NZero(btd.getDiscount());
                 ttlPaid += NumberUtil.NZero(btd.getPaid());
                 ttlBal += NumberUtil.NZero(btd.getBalance());
             }
-            
+
             txtTtlPaid.setValue(ttlPaid);
             txtTtlBal.setValue(ttlBal);
             txtTtlDisc.setValue(ttlDisc);
         }
     }
-    
+
     private void uploadToAccount(Integer vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
@@ -609,19 +608,19 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                     params.add(new BasicNameValuePair("id", vouNo.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("uploadToAccount BillTransfer Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update opd_patient_bill_payment set intg_upd_status = null where id = " + vouNo);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount BillTransfer error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }
@@ -645,7 +644,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
             }
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -975,7 +974,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
 
     private void cboTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTypeActionPerformed
         String option = cboType.getSelectedItem().toString();
-        switch(option){
+        switch (option) {
             case "Bill Transfer":
                 butTransfer.setText("Transfer");
                 break;

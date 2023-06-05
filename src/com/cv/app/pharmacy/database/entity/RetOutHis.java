@@ -15,7 +15,8 @@ import org.hibernate.annotations.GenerationTime;
  */
 @Entity
 @Table(name = "ret_out_his")
-public class RetOutHis implements java.io.Serializable{
+public class RetOutHis implements java.io.Serializable {
+
     private String retOutId;
     private Date retOutDate;
     private Trader customer;
@@ -37,10 +38,9 @@ public class RetOutHis implements java.io.Serializable{
     private Double exRateP;
     //=================================
     private String migId;
-    private String intgUpdStatus;
     private Long exrId;
-    
-    @Column(name="balance")
+
+    @Column(name = "balance")
     public Double getBalance() {
         return balance;
     }
@@ -50,7 +50,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="created_by")
+    @JoinColumn(name = "created_by")
     public Appuser getCreatedBy() {
         return createdBy;
     }
@@ -59,9 +59,9 @@ public class RetOutHis implements java.io.Serializable{
         this.createdBy = createdBy;
     }
 
-    @Column(name = "created_date", insertable=false, updatable=false, 
-            columnDefinition="timestamp default current_timestamp")
-    @org.hibernate.annotations.Generated(value=GenerationTime.INSERT)
+    @Column(name = "created_date", insertable = false, updatable = false,
+            columnDefinition = "timestamp default current_timestamp")
+    @org.hibernate.annotations.Generated(value = GenerationTime.INSERT)
     @Temporal(TemporalType.TIMESTAMP)
     public Date getCreatedDate() {
         return createdDate;
@@ -72,7 +72,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="cus_id")
+    @JoinColumn(name = "cus_id")
     public Trader getCustomer() {
         return customer;
     }
@@ -81,7 +81,7 @@ public class RetOutHis implements java.io.Serializable{
         this.customer = customer;
     }
 
-    @Column(name="deleted")
+    @Column(name = "deleted")
     public Boolean isDeleted() {
         return deleted;
     }
@@ -91,7 +91,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="location")
+    @JoinColumn(name = "location")
     public Location getLocation() {
         return location;
     }
@@ -100,7 +100,7 @@ public class RetOutHis implements java.io.Serializable{
         this.location = location;
     }
 
-    @Column(name="paid")
+    @Column(name = "paid")
     public Double getPaid() {
         return paid;
     }
@@ -110,7 +110,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="payment_type")
+    @JoinColumn(name = "payment_type")
     public PaymentType getPaymentType() {
         return paymentType;
     }
@@ -119,7 +119,7 @@ public class RetOutHis implements java.io.Serializable{
         this.paymentType = paymentType;
     }
 
-    @Column(name="remark", length=25)
+    @Column(name = "remark", length = 25)
     public String getRemark() {
         return remark;
     }
@@ -129,7 +129,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="ret_out_date")
+    @Column(name = "ret_out_date")
     public Date getRetOutDate() {
         return retOutDate;
     }
@@ -139,7 +139,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @Id
-    @Column(name="ret_out_id", unique=true, nullable=false, length=15)
+    @Column(name = "ret_out_id", unique = true, nullable = false, length = 15)
     public String getRetOutId() {
         return retOutId;
     }
@@ -148,7 +148,7 @@ public class RetOutHis implements java.io.Serializable{
         this.retOutId = retOutId;
     }
 
-    @Column(name="session_id")
+    @Column(name = "session_id")
     public Integer getSession() {
         return session;
     }
@@ -158,7 +158,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="updated_by")
+    @JoinColumn(name = "updated_by")
     public Appuser getUpdatedBy() {
         return updatedBy;
     }
@@ -168,7 +168,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updated_date")
+    @Column(name = "updated_date")
     public Date getUpdatedDate() {
         return updatedDate;
     }
@@ -177,7 +177,7 @@ public class RetOutHis implements java.io.Serializable{
         this.updatedDate = updatedDate;
     }
 
-    @Column(name="vou_total")
+    @Column(name = "vou_total")
     public Double getVouTotal() {
         return vouTotal;
     }
@@ -185,7 +185,7 @@ public class RetOutHis implements java.io.Serializable{
     public void setVouTotal(Double vouTotal) {
         this.vouTotal = vouTotal;
     }
-    
+
     /*@OneToMany(cascade=CascadeType.ALL)
     @JoinTable(name = "ret_out_join", joinColumns = { @JoinColumn(name = "ret_out_id") }, 
             inverseJoinColumns = { @JoinColumn(name = "ret_out_detail_id") })
@@ -200,7 +200,7 @@ public class RetOutHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="currency")
+    @JoinColumn(name = "currency")
     public Currency getCurrency() {
         return currency;
     }
@@ -209,7 +209,7 @@ public class RetOutHis implements java.io.Serializable{
         this.currency = currency;
     }
 
-    @Column(name="exchange_rate_p")
+    @Column(name = "exchange_rate_p")
     public Double getExRateP() {
         return exRateP;
     }
@@ -217,8 +217,8 @@ public class RetOutHis implements java.io.Serializable{
     public void setExRateP(Double exRateP) {
         this.exRateP = exRateP;
     }
-    
-    @Column(name="mig_id", length=25)
+
+    @Column(name = "mig_id", length = 25)
     public String getMigId() {
         return migId;
     }
@@ -227,16 +227,7 @@ public class RetOutHis implements java.io.Serializable{
         this.migId = migId;
     }
 
-    @Column(name="intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-    
-    @Column(name="exr_id")
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }

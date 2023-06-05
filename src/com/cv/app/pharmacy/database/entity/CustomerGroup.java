@@ -22,7 +22,6 @@ public class CustomerGroup implements java.io.Serializable{
     private String groupId;
     private String groupName;
     private String accountId;
-    private String intgUpdStatus; //For integration update status
     private String reportName;
     private Date updatedDate;
     private String deptId;
@@ -64,15 +63,6 @@ public class CustomerGroup implements java.io.Serializable{
         this.accountId = accountId;
     }
     
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
     @Column(name="report_name", length=500)
     public String getReportName() {
         return reportName;

@@ -16,7 +16,8 @@ import org.hibernate.annotations.GenerationTime;
  */
 @Entity
 @Table(name = "ret_in_his")
-public class RetInHis implements java.io.Serializable{
+public class RetInHis implements java.io.Serializable {
+
     private String retInId;
     private Date retInDate;
     private Trader customer;
@@ -41,17 +42,16 @@ public class RetInHis implements java.io.Serializable{
     private String regNo;
     private String stuNo;
     private String stuName;
-    
+
     private Patient patient;
     private String migId;
     private String admissionNo;
     private String ptType; //Patient Type
-    private String intgUpdStatus;
     private String otId;
     private Long exrId;
     private String btId; //Bill transfer id
-    
-    @Column(name="balance")
+
+    @Column(name = "balance")
     public Double getBalance() {
         return balance;
     }
@@ -61,7 +61,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="created_by")
+    @JoinColumn(name = "created_by")
     public Appuser getCreatedBy() {
         return createdBy;
     }
@@ -70,9 +70,9 @@ public class RetInHis implements java.io.Serializable{
         this.createdBy = createdBy;
     }
 
-    @Column(name = "created_date", insertable=false, updatable=false, 
-            columnDefinition="timestamp default current_timestamp")
-    @org.hibernate.annotations.Generated(value=GenerationTime.INSERT)
+    @Column(name = "created_date", insertable = false, updatable = false,
+            columnDefinition = "timestamp default current_timestamp")
+    @org.hibernate.annotations.Generated(value = GenerationTime.INSERT)
     @Temporal(TemporalType.TIMESTAMP)
     public Date getCreatedDate() {
         return createdDate;
@@ -83,7 +83,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="cus_id")
+    @JoinColumn(name = "cus_id")
     public Trader getCustomer() {
         return customer;
     }
@@ -92,7 +92,7 @@ public class RetInHis implements java.io.Serializable{
         this.customer = customer;
     }
 
-    @Column(name="deleted")
+    @Column(name = "deleted")
     public Boolean isDeleted() {
         return deleted;
     }
@@ -102,7 +102,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="location")
+    @JoinColumn(name = "location")
     public Location getLocation() {
         return location;
     }
@@ -111,7 +111,7 @@ public class RetInHis implements java.io.Serializable{
         this.location = location;
     }
 
-    @Column(name="paid")
+    @Column(name = "paid")
     public Double getPaid() {
         return paid;
     }
@@ -121,7 +121,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="payment_type")
+    @JoinColumn(name = "payment_type")
     public PaymentType getPaymentType() {
         return paymentType;
     }
@@ -130,7 +130,7 @@ public class RetInHis implements java.io.Serializable{
         this.paymentType = paymentType;
     }
 
-    @Column(name="remark", length=25)
+    @Column(name = "remark", length = 25)
     public String getRemark() {
         return remark;
     }
@@ -140,7 +140,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="ret_in_date")
+    @Column(name = "ret_in_date")
     public Date getRetInDate() {
         return retInDate;
     }
@@ -150,7 +150,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @Id
-    @Column(name="ret_in_id", unique=true, nullable=false, length=15)
+    @Column(name = "ret_in_id", unique = true, nullable = false, length = 15)
     public String getRetInId() {
         return retInId;
     }
@@ -159,7 +159,7 @@ public class RetInHis implements java.io.Serializable{
         this.retInId = retInId;
     }
 
-    @Column(name="session_id")
+    @Column(name = "session_id")
     public Integer getSession() {
         return session;
     }
@@ -169,7 +169,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="updated_by")
+    @JoinColumn(name = "updated_by")
     public Appuser getUpdatedBy() {
         return updatedBy;
     }
@@ -179,7 +179,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="updated_date")
+    @Column(name = "updated_date")
     public Date getUpdatedDate() {
         return updatedDate;
     }
@@ -188,7 +188,7 @@ public class RetInHis implements java.io.Serializable{
         this.updatedDate = updatedDate;
     }
 
-    @Column(name="vou_total")
+    @Column(name = "vou_total")
     public Double getVouTotal() {
         return vouTotal;
     }
@@ -211,7 +211,7 @@ public class RetInHis implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="currency")
+    @JoinColumn(name = "currency")
     public Currency getCurrency() {
         return currency;
     }
@@ -220,7 +220,7 @@ public class RetInHis implements java.io.Serializable{
         this.currency = currency;
     }
 
-    @Column(name="exchange_rate_p")
+    @Column(name = "exchange_rate_p")
     public Double getExRateP() {
         return exRateP;
     }
@@ -229,7 +229,7 @@ public class RetInHis implements java.io.Serializable{
         this.exRateP = exRateP;
     }
 
-    @Column(name="stu_reg_no", length=15)
+    @Column(name = "stu_reg_no", length = 15)
     public String getRegNo() {
         return regNo;
     }
@@ -238,7 +238,7 @@ public class RetInHis implements java.io.Serializable{
         this.regNo = regNo;
     }
 
-    @Column(name="stu_no", length=25)
+    @Column(name = "stu_no", length = 25)
     public String getStuNo() {
         return stuNo;
     }
@@ -247,7 +247,7 @@ public class RetInHis implements java.io.Serializable{
         this.stuNo = stuNo;
     }
 
-    @Column(name="stu_name", length=255)
+    @Column(name = "stu_name", length = 255)
     public String getStuName() {
         return stuName;
     }
@@ -265,8 +265,8 @@ public class RetInHis implements java.io.Serializable{
     public void setPatient(Patient patient) {
         this.patient = patient;
     }
-    
-    @Column(name="mig_id", length=25)
+
+    @Column(name = "mig_id", length = 25)
     public String getMigId() {
         return migId;
     }
@@ -275,7 +275,7 @@ public class RetInHis implements java.io.Serializable{
         this.migId = migId;
     }
 
-    @Column(name="admission_no", length=15)
+    @Column(name = "admission_no", length = 15)
     public String getAdmissionNo() {
         return admissionNo;
     }
@@ -283,8 +283,8 @@ public class RetInHis implements java.io.Serializable{
     public void setAdmissionNo(String admissionNo) {
         this.admissionNo = admissionNo;
     }
-    
-    @Column(name="patient_type", length=15)
+
+    @Column(name = "patient_type", length = 15)
     public String getPtType() {
         return ptType;
     }
@@ -293,16 +293,7 @@ public class RetInHis implements java.io.Serializable{
         this.ptType = ptType;
     }
 
-    @Column(name="intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
-    @Column(name="ot_id", length=15)
+    @Column(name = "ot_id", length = 15)
     public String getOtId() {
         return otId;
     }
@@ -310,8 +301,8 @@ public class RetInHis implements java.io.Serializable{
     public void setOtId(String otId) {
         this.otId = otId;
     }
-    
-    @Column(name="exr_id")
+
+    @Column(name = "exr_id")
     public Long getExrId() {
         return exrId;
     }
@@ -319,8 +310,8 @@ public class RetInHis implements java.io.Serializable{
     public void setExrId(Long exrId) {
         this.exrId = exrId;
     }
-    
-    @Column(name="bt_id", length=15)
+
+    @Column(name = "bt_id", length = 15)
     public String getBtId() {
         return btId;
     }

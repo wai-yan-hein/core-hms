@@ -41,7 +41,6 @@ public class VSession implements java.io.Serializable {
     private Integer expType;
     private String expTypeDesp;
     private Double expIn;
-    private String intgUpdStatus;
     private String sessionName;
     private String payType;
     private String groupId;
@@ -285,14 +284,6 @@ public class VSession implements java.io.Serializable {
         this.expIn = expIn;
     }
 
-    @Column(name = "intg_upd_status")
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
 
     @Column(name="session_name")
     public String getSessionName() {

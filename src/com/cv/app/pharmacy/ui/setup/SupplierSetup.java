@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -406,7 +407,6 @@ public class SupplierSetup extends javax.swing.JPanel implements FormAction, Key
                             DateUtil.toDateTimeStrMYSQL(d));
                 }
                 //For BK Pagolay
-                currSupplier.setIntgUpdStatus(null);
                 dao.save(currSupplier);
 
                 //For integration with account
@@ -455,7 +455,6 @@ public class SupplierSetup extends javax.swing.JPanel implements FormAction, Key
                         "Spllier Delete", JOptionPane.YES_NO_OPTION);
 
                 if (yes_no == 0) {
-                    currSupplier.setIntgUpdStatus(null);
                     dao.delete(currSupplier);
 
                     //For integration with account
@@ -566,7 +565,7 @@ public class SupplierSetup extends javax.swing.JPanel implements FormAction, Key
                 msg.setString("coa", "-");
             }
             mq.sendMessage(Global.queueName, msg);
-        } catch (Exception ex) {
+        } catch (JMSException ex) {
             log.error("uploadCustomer : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
         }
     }

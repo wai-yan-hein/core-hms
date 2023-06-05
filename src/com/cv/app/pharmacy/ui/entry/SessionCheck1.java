@@ -322,15 +322,7 @@ public class SessionCheck1 extends javax.swing.JPanel implements SelectionObserv
         }
 
         if (!cboSend.getSelectedItem().toString().equals("All")) {
-            String strStauts = cboSend.getSelectedItem().toString();
             String isStatus = "";
-
-            if (strStauts.equals("Send")) {
-                isStatus = " s.intgUpdStatus <> null";
-            } else if (strStauts.equals("Not Send")) {
-                isStatus = " s.intgUpdStatus = null";
-            }
-
             if (strWhere.isEmpty()) {
                 strWhere = isStatus;
             } else {

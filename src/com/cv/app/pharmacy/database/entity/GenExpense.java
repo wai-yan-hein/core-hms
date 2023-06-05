@@ -38,11 +38,10 @@ public class GenExpense implements java.io.Serializable {
     private String expenseOpotion;
     private String doctorId;
     private Boolean deleted;
-    private String intgUpdStatus;
     private Boolean upp;
     private String currency;
     private Boolean recLock;
-    
+
     @Id
     @GeneratedValue(strategy = IDENTITY)
     @Column(name = "gene_id", unique = true, nullable = false)
@@ -178,7 +177,7 @@ public class GenExpense implements java.io.Serializable {
         this.vouNo = vouNo;
     }
 
-    @Column(name="source_acc_id", length=15)
+    @Column(name = "source_acc_id", length = 15)
     public String getSourceAccId() {
         return sourceAccId;
     }
@@ -187,7 +186,7 @@ public class GenExpense implements java.io.Serializable {
         this.sourceAccId = sourceAccId;
     }
 
-    @Column(name="acc_id", length=15)
+    @Column(name = "acc_id", length = 15)
     public String getAccId() {
         return accId;
     }
@@ -196,7 +195,7 @@ public class GenExpense implements java.io.Serializable {
         this.accId = accId;
     }
 
-    @Column(name="dept_id", length=15)
+    @Column(name = "dept_id", length = 15)
     public String getDeptId() {
         return deptId;
     }
@@ -205,7 +204,7 @@ public class GenExpense implements java.io.Serializable {
         this.deptId = deptId;
     }
 
-    @Column(name="paid_for", length=15)
+    @Column(name = "paid_for", length = 15)
     public String getPaidFor() {
         return paidFor;
     }
@@ -214,7 +213,7 @@ public class GenExpense implements java.io.Serializable {
         this.paidFor = paidFor;
     }
 
-    @Column(name="expense_option", length=15)
+    @Column(name = "expense_option", length = 15)
     public String getExpenseOpotion() {
         return expenseOpotion;
     }
@@ -223,7 +222,7 @@ public class GenExpense implements java.io.Serializable {
         this.expenseOpotion = expenseOpotion;
     }
 
-    @Column(name="doctor_id", length=15)
+    @Column(name = "doctor_id", length = 15)
     public String getDoctorId() {
         return doctorId;
     }
@@ -232,7 +231,7 @@ public class GenExpense implements java.io.Serializable {
         this.doctorId = doctorId;
     }
 
-    @Column(name="deleted")
+    @Column(name = "deleted")
     public Boolean getDeleted() {
         return deleted;
     }
@@ -241,16 +240,7 @@ public class GenExpense implements java.io.Serializable {
         this.deleted = deleted;
     }
 
-    @Column(name="intg_upd_status", length=5)
-    public String getIntgUpdStatus() {
-        return intgUpdStatus;
-    }
-
-    public void setIntgUpdStatus(String intgUpdStatus) {
-        this.intgUpdStatus = intgUpdStatus;
-    }
-
-    @Column(name="un_paid_status")
+    @Column(name = "un_paid_status")
     public Boolean getUpp() {
         return upp;
     }
@@ -259,7 +249,7 @@ public class GenExpense implements java.io.Serializable {
         this.upp = upp;
     }
 
-    @Column(name="currency_id", length=15)
+    @Column(name = "currency_id", length = 15)
     public String getCurrency() {
         return currency;
     }
@@ -268,7 +258,7 @@ public class GenExpense implements java.io.Serializable {
         this.currency = currency;
     }
 
-    @Column(name="rec_lock")
+    @Column(name = "rec_lock")
     public Boolean getRecLock() {
         return recLock;
     }

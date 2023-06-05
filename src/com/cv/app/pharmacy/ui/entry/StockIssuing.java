@@ -341,7 +341,6 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
 
         if (yes_no == 0) {
             sih.setDeleted(true);
-            sih.setIntgUpdStatus(null);
             save();
         }
     }
@@ -472,7 +471,6 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
             sih.setIssueDate(DateUtil.toDate(txtIssueDate.getText()));
             sih.setLocation((Location) cboLocation.getSelectedItem());
             sih.setToLocation((Location) cboToLocation.getSelectedItem());
-            sih.setIntgUpdStatus(null);
             //String appCurr = Util1.getPropValue("system.app.currency");
             String appCurr = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             sih.setCurrencyId(appCurr);
@@ -781,12 +779,12 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
-            try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 String url = Util1.getPropValue("system.intg.api.url") + vouNo;
                 HttpGet request = new HttpGet(url);
                 CloseableHttpResponse response = httpClient.execute(request);
                 // Handle the response
-                try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                     String output;
                     while ((output = br.readLine()) != null) {
                         log.info("return from server : " + output);
@@ -804,7 +802,7 @@ public class StockIssuing extends javax.swing.JPanel implements SelectionObserve
 
         }
     }
-    
+
     private void insertStockFilterCode(String medId) {
         String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
                 + Global.machineId + "'";

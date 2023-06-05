@@ -43,6 +43,7 @@ import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -75,12 +76,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 
@@ -111,25 +114,25 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         String paidId = Util1.getPropValue("system.ot.paid.id");
         String refundId = Util1.getPropValue("system.ot.refund.id");
         List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-        
+
         double vouTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
-                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId) &&
-                        !o.getService().getServiceId().toString().equals(discountId) &&
-                        !o.getService().getServiceId().toString().equals(paidId) && 
-                        !o.getService().getServiceId().toString().equals(refundId))
+                .filter(o -> !o.getService().getServiceId().toString().equals(depositeId)
+                && !o.getService().getServiceId().toString().equals(discountId)
+                && !o.getService().getServiceId().toString().equals(paidId)
+                && !o.getService().getServiceId().toString().equals(refundId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Vou Total : " + vouTotal);
         txtVouTotal.setValue(vouTotal);
-        
+
         double paidTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
-                .filter(o -> o.getService().getServiceId().toString().equals(depositeId) ||
-                        o.getService().getServiceId().toString().equals(paidId))
+                .filter(o -> o.getService().getServiceId().toString().equals(depositeId)
+                || o.getService().getServiceId().toString().equals(paidId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Paid : " + paidTotal);
         txtPaid.setValue(paidTotal);
-        
+
         double refundTotal = listDCDH.stream().filter(o -> o.getService() != null)
                 .filter(o -> o.getService().getServiceId() != null)
                 .filter(o -> o.getService().getServiceId().toString().equals(refundId))
@@ -142,14 +145,14 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 .filter(o -> o.getService().getServiceId().toString().equals(discountId))
                 .mapToDouble(this::calculateAmount).sum();
         log.info("Discount : " + discTotal);
-        txtDiscA.setValue(discTotal);        
-        
+        txtDiscA.setValue(discTotal);
+
         txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-        
+
         calcBalance();
     }
 
-    private double calculateAmount(OTDetailHis record){
+    private double calculateAmount(OTDetailHis record) {
         Double amount = 0d;
 
         if (record.getChargeType() != null) {
@@ -162,7 +165,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         record.setAmount(amount);
         return amount;
     }
-    
+
     /**
      * Creates new form OTEntry
      */
@@ -441,7 +444,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
                 try {
                     currVou.setDeleted(true);
-                    currVou.setIntgUpdStatus(null);
                     //currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
                     //dao.save(currVou);
                     String vouNo = currVou.getOpdInvId();
@@ -514,7 +516,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
             try {
                 currVou.setDeleted(true);
-                currVou.setIntgUpdStatus(null);
                 currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
                 dao.save(currVou);
                 if (lblStatus.getText().equals("NEW")) {
@@ -1380,7 +1381,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
     private boolean isValidEntry() {
         boolean status = true;
         Patient pt = currVou.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
 
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
@@ -1429,7 +1430,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                                 "Check Point", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException ex) {
                     log.error("isValidEntry : " + ex.toString());
                 }
             }
@@ -1493,8 +1494,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
             currVou.setPatientName(txtPatientName.getText());
             currVou.setAdmissionNo(txtAdmissionNo.getText());
-            currVou.setIntgUpdStatus(null);
-
             if (lblStatus.getText().equals("EDIT") || lblStatus.getText().equals("DELETED")) {
                 currVou.setUpdatedBy(Global.loginUser);
                 currVou.setUpdatedDate(new Date());
@@ -1703,7 +1702,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                     ResultSet resultSet = dao.getPro("patient_bill_payment",
+                    ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -1831,50 +1830,42 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/ot";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
-                    } catch (Exception ex) {
-                        log.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
-                } catch (Exception ex) {
-                    log.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(vouNo);
                 }
             }
+        } else {
+            updateNull(vouNo);
         }
+    }
+
+    private void updateNull(String vouNo) {
+        try {
+            dao.execSql("update ot_his set intg_upd_status = null where ot_inv_id = '" + vouNo + "'");
+        } catch (Exception ex) {
+            log.error("uploadToAccount error : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
     private void deleteDetail() {
@@ -1964,7 +1955,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 }
                 hm.put(tmp.getUniqueId(), tmp);
             }
-            
+
             if (NumberUtil.NZeroInt(tmp.getUniqueId()) == 0) {
                 tmp.setUniqueId(maxId++);
             }
@@ -1972,7 +1963,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
 
         return listDetail;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
