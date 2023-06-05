@@ -383,7 +383,6 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
         }
 
         //strSql = strSql + " and p.discm = 'C'";
-
         return strSql;
     }
 
@@ -631,19 +630,19 @@ public class CustomerPayment extends javax.swing.JPanel implements SelectionObse
                     params.add(new BasicNameValuePair("payId", vouNo.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
+                    try {
+                        dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
+                    } catch (Exception ex) {
+                        log.error("uploadToAccount error 1: " + ex.getMessage());
+                    } finally {
+                        dao.close();
+                    }
                     // Handle the response
                     try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
                         String output;
                         while ((output = br.readLine()) != null) {
                             if (!output.equals("Sent")) {
                                 log.error("Error in server : " + vouNo + " : " + output);
-                                try {
-                                    dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
-                                } catch (Exception ex) {
-                                    log.error("uploadToAccount error 1: " + ex.getMessage());
-                                } finally {
-                                    dao.close();
-                                }
                             }
                         }
                     }

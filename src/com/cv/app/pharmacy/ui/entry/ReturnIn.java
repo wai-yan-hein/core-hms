@@ -1064,7 +1064,7 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         String admissionNo = "-";
 
         if (pt != null) {
-            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+            admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
         }
 
         if (!admissionNo.equals("-")) {

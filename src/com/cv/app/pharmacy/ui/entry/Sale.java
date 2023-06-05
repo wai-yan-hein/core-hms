@@ -3353,7 +3353,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             String admissionNo = "-";
             if (pt != null) {
-                admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+                admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
             } else {
                 if (Util1.getPropValue("system.sale.patientmusthave").equals("Y")) {
                     if (currSaleVou.getCustomerId() == null) {

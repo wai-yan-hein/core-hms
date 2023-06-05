@@ -1967,7 +1967,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private boolean isValidEntry() {
         boolean status = true;
         Patient pt = currVou.getPatient();
-        String admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+        String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
 
         if (!admissionNo.equals("-")) {
             AdmissionKey key = new AdmissionKey();
