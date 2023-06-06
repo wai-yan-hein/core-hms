@@ -429,7 +429,6 @@ public class ExpenseEntry extends javax.swing.JPanel {
         cboType = new javax.swing.JComboBox<>();
         butFefresh = new javax.swing.JButton();
         chkUPP = new javax.swing.JCheckBox();
-        butDeleteAll = new javax.swing.JButton();
 
         jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Date ");
@@ -553,13 +552,6 @@ public class ExpenseEntry extends javax.swing.JPanel {
             }
         });
 
-        butDeleteAll.setText("Delete All");
-        butDeleteAll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butDeleteAllActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -604,8 +596,6 @@ public class ExpenseEntry extends javax.swing.JPanel {
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTtlRecords, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(butDeleteAll)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -639,15 +629,14 @@ public class ExpenseEntry extends javax.swing.JPanel {
                     .addComponent(butFefresh)
                     .addComponent(chkUPP))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel2)
                         .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel7)
-                        .addComponent(txtTtlRecords, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(butDeleteAll))
+                        .addComponent(txtTtlRecords, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(txtDRAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(4, 4, 4))
         );
@@ -770,12 +759,7 @@ public class ExpenseEntry extends javax.swing.JPanel {
         getExpense();
     }//GEN-LAST:event_chkUPPActionPerformed
 
-    private void butDeleteAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butDeleteAllActionPerformed
-        tableModel.deleteAll();
-    }//GEN-LAST:event_butDeleteAllActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton butDeleteAll;
     private javax.swing.JButton butFefresh;
     private javax.swing.JButton butLock;
     private javax.swing.JComboBox<String> cboDoctor;
