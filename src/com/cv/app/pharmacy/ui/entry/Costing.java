@@ -27,12 +27,12 @@ import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.StockCostingDetailTableModel;
 import com.cv.app.pharmacy.ui.common.StockCostingTableModel;
-import static com.cv.app.pharmacy.ui.entry.Report.log;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
@@ -206,14 +206,14 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 strLocation = "0";
             }
 
-            if(strMethod.equals("AVG") || strMethod.equals("FIFO")){
+            if (strMethod.equals("AVG") || strMethod.equals("FIFO")) {
                 dao.execProc("insert_cost_detail",
-                    "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                    Global.machineId, strMethod);
-            }else{
+                        "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        Global.machineId, strMethod);
+            } else {
                 insertCostDetailPurOP("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
                         strMethod);
-            }            
+            }
 
             dao.commit();
             dao.close();
@@ -229,6 +229,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
     private void insertCostDetailPurOP(String costFor, String costDate, String method) {
         String userId = Global.machineId;
         String strDelete = "delete from tmp_costing_detail where cost_for = '" + costFor + "' and user_id = '" + userId + "'";
+
         String strSql = "select tsc.med_id item_id, bal_qty ttl_stock, cost_price.tran_date, cost_price.tran_option, \n"
                 + "         cost_price.ttl_qty, cost_price.smallest_cost, cost_price, item_unit\n"
                 + "    from tmp_stock_costing tsc, \n"
@@ -255,6 +256,34 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "           group by vso.med_id, vso.op_date, vso.cost_price, vso.item_unit) cost_price\n"
                 + "   where tsc.med_id = cost_price.item_id and tsc.user_id = prm_user_id and tsc.tran_option = prm_cost_for\n"
                 + "   order by item_id, cost_price.tran_date desc, cost_price desc";
+
+        if (method.equals("AVG (OP&PUR)")) {
+            strSql = "select tsc.med_id item_id, sum(bal_qty) ttl_stock, prm_cost_date as tran_date, '-' as tran_option, \n"
+                    + "         sum(cost_price.ttl_qty) as ttl_qty, sum(if(cost_price.ttl_qty=0,0,(cost_price.ttl_cost/cost_price.ttl_qty))) as smallest_cost, \n"
+                    + "         sum(cost_price.ttl_cost) as cost_price, '-' as item_unit\n"
+                    + "    from tmp_stock_costing tsc, \n"
+                    + "         (select 'Purchase' tran_option, vpur.med_id item_id, \n"
+                    + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, sum(pur_qty*pur_unit_cost) ttl_cost\n"
+                    + "            from v_purchase vpur, (select med_id, min(op_date) op_date\n"
+                    + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                    + "                                    group by med_id) tsf,\n"
+                    + "				 v_medicine vm\n"
+                    + "           where vpur.med_id = tsf.med_id and deleted = false and date(pur_date) >= op_date\n"
+                    + "			 and vpur.med_id = vm.med_id and vpur.pur_unit = vm.item_unit\n"
+                    + "			 and date(pur_date) <= prm_cost_date\n"
+                    + "           group by vpur.med_id\n"
+                    + "           union all\n"
+                    + "          select 'Opening' tran_option, vso.med_id item_id, \n"
+                    + "				 sum(vso.op_smallest_qty) ttl_qty, sum(vso.op_qty*vso.cost_price) ttl_cost\n"
+                    + "            from v_stock_op vso, tmp_stock_filter tsf, v_medicine vm\n"
+                    + "		   where vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
+                    + "             and vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
+                    + "             and vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                    + "           group by vso.med_id) cost_price\n"
+                    + "   where tsc.med_id = cost_price.item_id and tsc.user_id = prm_user_id and tsc.tran_option = 'Opening'\n"
+                    + "   group by tsc.med_id\n"
+                    + "   order by item_id";
+        }
 
         strSql = strSql.replace("prm_user_id", "'" + userId + "'")
                 .replace("prm_cost_date", "'" + costDate + "'")
@@ -1495,8 +1524,10 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
   }//GEN-LAST:event_txtCostDateMouseClicked
 
     private void butCalculateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCalculateActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         DateUtil.setStartTime();
         calculate();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         log.info("calculate duration : " + DateUtil.getDuration());
     }//GEN-LAST:event_butCalculateActionPerformed
 

@@ -794,20 +794,22 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     }
 
     private void generateStockBalance() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            /*dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
+            dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
                     + Global.machineId + "'");
             dao.execProc("stock_balance_exp", "Opening",
                     DateUtil.toDateStrMYSQL(txtStockDate.getText()),
                     ((Location) cboStockLocation.getSelectedItem()).getLocationId().toString(),
                     Global.machineId);
-            dao.commit();*/
+            dao.commit();
             applyStockBalanceFilter();
         } catch (Exception ex) {
             log.error("generateStockBalance : " + ex.toString());
         } finally {
             dao.close();
         }
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
 
     private void fixMinusBalance() {
@@ -1882,9 +1884,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     }//GEN-LAST:event_cboBrand1ActionPerformed
 
   private void butFixActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFixActionPerformed
-      //this.setCursor(Util1.getWaitCursor());
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
       fixMinusBalance();
-      //this.setCursor(Util1.getDefaultCursor());
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
   }//GEN-LAST:event_butFixActionPerformed
 
     private void butFillZeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butFillZeroActionPerformed

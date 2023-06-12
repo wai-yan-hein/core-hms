@@ -37,6 +37,7 @@ import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -2256,9 +2257,11 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     }// </editor-fold>//GEN-END:initComponents
 
   private void butSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSearchActionPerformed
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
       DateUtil.setStartTime();
       search();
       log.info("search duration : " + DateUtil.getDuration());
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
   }//GEN-LAST:event_butSearchActionPerformed
 
   private void txtFromMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFromMouseClicked

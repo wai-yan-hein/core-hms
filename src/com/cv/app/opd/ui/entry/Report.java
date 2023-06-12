@@ -58,6 +58,7 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
@@ -1783,6 +1784,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }//GEN-LAST:event_txtRegNoActionPerformed
 
     private void butPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPrintActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         Menu menu = (Menu) cboReportType.getSelectedItem();
         if (menu != null) {
             int index = tblReport.convertRowIndexToModel(tblReport.getSelectedRow());
@@ -1934,6 +1936,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         "No Report Selection", JOptionPane.ERROR_MESSAGE);
             }
         }
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_butPrintActionPerformed
 
     private void butExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butExcelActionPerformed
