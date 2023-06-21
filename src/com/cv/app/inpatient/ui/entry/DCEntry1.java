@@ -3090,7 +3090,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         jLabel14 = new javax.swing.JLabel();
         butCheckBill = new javax.swing.JButton();
         butPkgEdit = new javax.swing.JButton();
-        butBillDetail = new javax.swing.JButton();
         chkDetails = new javax.swing.JCheckBox();
         chkA5 = new javax.swing.JCheckBox();
         jPanel7 = new javax.swing.JPanel();
@@ -3551,9 +3550,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         });
 
-        butBillDetail.setFont(Global.lableFont);
-        butBillDetail.setText("Bill Detail");
-
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -3576,12 +3572,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                 .addComponent(butPkgRemove, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(txtPkgName)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(butBillDetail)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
-                                        .addComponent(butCheckBill)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(butPkgEdit)))
+                                .addComponent(butCheckBill)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(butPkgEdit)
                                 .addGap(0, 0, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
@@ -3608,9 +3601,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butCheckBill)
                     .addComponent(butPkgEdit))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(butBillDetail)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(36, Short.MAX_VALUE))
         );
 
         chkDetails.setFont(Global.lableFont);
@@ -4236,7 +4227,6 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butAdmit;
-    private javax.swing.JButton butBillDetail;
     private javax.swing.JButton butCheckBill;
     private javax.swing.JButton butPkgEdit;
     private javax.swing.JButton butPkgRemove;
