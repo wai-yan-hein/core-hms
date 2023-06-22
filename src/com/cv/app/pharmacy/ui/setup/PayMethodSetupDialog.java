@@ -8,9 +8,11 @@ package com.cv.app.pharmacy.ui.setup;
 import com.cv.app.common.Global;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import com.cv.app.pharmacy.database.entity.PayBy;
-import com.cv.app.pharmacy.ui.common.PayByTableModel;
+import com.cv.app.pharmacy.database.entity.PayMethod;
+import com.cv.app.pharmacy.ui.common.PayMethodTableModel;
+import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
+import java.util.Date;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
@@ -25,12 +27,12 @@ import org.hibernate.exception.ConstraintViolationException;
  *
  * @author winswe
  */
-public class PayBySetupDialog extends javax.swing.JDialog {
+public class PayMethodSetupDialog extends javax.swing.JDialog {
 
-    static Logger log = Logger.getLogger(PayBySetupDialog.class.getName());
+    static Logger log = Logger.getLogger(PayMethodSetupDialog.class.getName());
     private final AbstractDataAccess dao = Global.dao; // Data access object.    
-    private PayByTableModel ltTableModel = new PayByTableModel();
-    private PayBy payBy = new PayBy();
+    private PayMethodTableModel ltTableModel = new PayMethodTableModel();
+    private PayMethod pMethod = new PayMethod();
     private int selectedRow = -1;
     private final TableRowSorter<TableModel> sorter;
     private final StartWithRowFilter swrf;
@@ -38,7 +40,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
     /**
      * Creates new form LocationTypeSetupDialog
      */
-    public PayBySetupDialog() {
+    public PayMethodSetupDialog() {
         super(Util1.getParent(), true);
         initComponents();
 
@@ -58,18 +60,21 @@ public class PayBySetupDialog extends javax.swing.JDialog {
         tblLocationType.setRowSorter(sorter);
     }
 
-    public void setPayBy(PayBy pb) {
-        payBy = pb;
-        txtTypeName.setText(pb.getDesp());
-        chkStatus.setSelected(pb.getActiveStatus());
+    public void setPayBy(PayMethod pm) {
+        pMethod = pm;
+        txtTypeName.setText(pm.getMethodDesp());
+        txtAmount.setText(NumberUtil.NZero(pm.getAllowAmt()).toString());
+        txtFactor.setText(NumberUtil.NZeroInt(pm.getFactor()).toString());
+        cboGroupCode.setSelectedItem(pm.getGroupCode());
         lblStatus.setText("EDIT");
     }
 
     private void clear() {
         selectedRow = -1;
-        chkStatus.setSelected(true);
-        payBy = new PayBy();
+        pMethod = new PayMethod();
         txtTypeName.setText(null);
+        txtFactor.setText(null);
+        txtAmount.setText(null);
         lblStatus.setText("NEW");
         setFocus();
         tblLocationType.clearSelection();
@@ -81,7 +86,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
     private void initTable() {
         //Get Category from database.
         try {
-            ltTableModel.setListPB(dao.findAllHSQL("select o from PayBy o order by o.desp"));
+            ltTableModel.setList(dao.findAllHSQL("select o from PayMethod o order by o.methodDesp"));
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {
@@ -100,7 +105,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
                 }
 
                 if (selectedRow >= 0) {
-                    setPayBy(ltTableModel.getPayBy(selectedRow));
+                    setPayBy(ltTableModel.getPayMethod(selectedRow));
                 }
             }
         });
@@ -116,8 +121,11 @@ public class PayBySetupDialog extends javax.swing.JDialog {
         if (Util1.nullToBlankStr(txtTypeName.getText()).equals("")) {
             status = false;
         } else {
-            payBy.setDesp(txtTypeName.getText().trim());
-            payBy.setActiveStatus(chkStatus.isSelected());
+            pMethod.setMethodDesp(txtTypeName.getText().trim());
+            pMethod.setUpdatedDate(new Date());
+            pMethod.setAllowAmt(NumberUtil.getDouble(txtAmount.getText()));
+            pMethod.setFactor(NumberUtil.NZeroInt(txtFactor.getText()));
+            pMethod.setGroupCode(cboGroupCode.getSelectedItem().toString());
         }
 
         return status;
@@ -130,7 +138,7 @@ public class PayBySetupDialog extends javax.swing.JDialog {
                         "Delete", JOptionPane.YES_NO_OPTION);
 
                 if (yes_no == 0) {
-                    dao.delete(payBy);
+                    dao.delete(pMethod);
                     int tmpRow = selectedRow;
                     selectedRow = -1;
                     ltTableModel.delete(tmpRow);
@@ -168,11 +176,15 @@ public class PayBySetupDialog extends javax.swing.JDialog {
         butSave = new javax.swing.JButton();
         butDelete = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
-        chkStatus = new javax.swing.JCheckBox();
+        cboGroupCode = new javax.swing.JComboBox<>();
+        jLabel3 = new javax.swing.JLabel();
+        txtFactor = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        txtAmount = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Location Type Setup");
-        setMinimumSize(new java.awt.Dimension(500, 400));
+        setTitle("Pay Method Setup");
+        setMinimumSize(new java.awt.Dimension(800, 500));
 
         lblStatus.setText("NEW");
 
@@ -185,11 +197,10 @@ public class PayBySetupDialog extends javax.swing.JDialog {
         tblLocationType.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblLocationType.setModel(ltTableModel);
         tblLocationType.setRowHeight(23);
-        tblLocationType.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblLocationType);
 
         jLabel1.setFont(Global.lableFont);
-        jLabel1.setText("Desp");
+        jLabel1.setText("Name");
 
         txtTypeName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
 
@@ -217,7 +228,13 @@ public class PayBySetupDialog extends javax.swing.JDialog {
             }
         });
 
-        jLabel2.setText("Status");
+        jLabel2.setText("Group Code");
+
+        cboGroupCode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "DISCOUNT", "PAID", "TAX" }));
+
+        jLabel3.setText("Factor");
+
+        jLabel4.setText("Amount");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -226,31 +243,39 @@ public class PayBySetupDialog extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtFilter)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE))
+                    .addComponent(txtFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtTypeName))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(lblStatus)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
                         .addComponent(butSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butDelete)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butClear))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblStatus)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(chkStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboGroupCode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtFactor))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtAmount))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTypeName)))
                 .addContainerGap())
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
@@ -259,23 +284,29 @@ public class PayBySetupDialog extends javax.swing.JDialog {
                     .addComponent(jLabel1)
                     .addComponent(txtTypeName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 239, Short.MAX_VALUE)
-                        .addGap(14, 14, 14))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
-                            .addComponent(chkStatus))
-                        .addGap(15, 15, 15)
+                            .addComponent(cboGroupCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(txtFactor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(txtAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(butClear)
                             .addComponent(butSave)
-                            .addComponent(butDelete))
-                        .addGap(17, 17, 17)
-                        .addComponent(lblStatus)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(butDelete)
+                            .addComponent(lblStatus))
+                        .addGap(0, 125, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGap(14, 14, 14))
         );
 
         pack();
@@ -300,11 +331,11 @@ public class PayBySetupDialog extends javax.swing.JDialog {
     private void butSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveActionPerformed
         try {
             if (isValidEntry()) {
-                dao.save(payBy);
+                dao.save(pMethod);
                 if (lblStatus.getText().equals("NEW")) {
-                    ltTableModel.addPayBy(payBy);
+                    ltTableModel.addPayMethod(pMethod);
                 } else {
-                    ltTableModel.setPayBy(selectedRow, payBy);
+                    ltTableModel.setPayMethod(selectedRow, pMethod);
                 }
                 clear();
             }
@@ -327,12 +358,16 @@ public class PayBySetupDialog extends javax.swing.JDialog {
     private javax.swing.JButton butClear;
     private javax.swing.JButton butDelete;
     private javax.swing.JButton butSave;
-    private javax.swing.JCheckBox chkStatus;
+    private javax.swing.JComboBox<String> cboGroupCode;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblLocationType;
+    private javax.swing.JTextField txtAmount;
+    private javax.swing.JTextField txtFactor;
     private javax.swing.JTextField txtFilter;
     private javax.swing.JTextField txtTypeName;
     // End of variables declaration//GEN-END:variables

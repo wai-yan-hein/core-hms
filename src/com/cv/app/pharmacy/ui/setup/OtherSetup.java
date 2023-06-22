@@ -182,7 +182,7 @@ public class OtherSetup extends javax.swing.JPanel {
             }
         });
 
-        butPayBy.setText("Pay By");
+        butPayBy.setText("Pay Method");
         butPayBy.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butPayByActionPerformed(evt);
@@ -206,7 +206,7 @@ public class OtherSetup extends javax.swing.JPanel {
                     .addComponent(butCurrencySetup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(butCusGroupSetup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(butLocationSetup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(butPaymentTypeSetup, javax.swing.GroupLayout.PREFERRED_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(butPaymentTypeSetup, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
                     .addComponent(butSessionSetup, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(butChargeType, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(butExpenseType, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -336,7 +336,7 @@ public class OtherSetup extends javax.swing.JPanel {
     }//GEN-LAST:event_butTraderPayAccountActionPerformed
 
     private void butPayByActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPayByActionPerformed
-        PayBySetupDialog dialog = new PayBySetupDialog();
+        PayMethodSetupDialog dialog = new PayMethodSetupDialog();
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
     }//GEN-LAST:event_butPayByActionPerformed
