@@ -9,6 +9,9 @@ import com.cv.app.opd.database.entity.OPDHis;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -33,6 +36,11 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         this.currOPDHis = currOPDHis;
         initTextBoxAlign();
         initControl();
+        txtDiscountP.addKeyListener(keyListener);
+        txtDiscountA.addKeyListener(keyListener);
+        txtTaxP.addKeyListener(keyListener);
+        txtTaxA.addKeyListener(keyListener);
+        txtPaid.addKeyListener(keyListener);
         setVisible(true);
         
         formActionKeyMapping(txtPtNo);
@@ -46,6 +54,65 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         formActionKeyMapping(txtBalance);
     }
 
+    private final KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyTyped(KeyEvent e) {
+            System.out.println("keyTyped");
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            System.out.println("keyPressed");
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            String name = "-";
+            if (e.getSource() instanceof JFormattedTextField) {
+                name = ((JFormattedTextField) e.getSource()).getName();
+                if (name == null) {
+                    name = "-";
+                }
+            }
+
+            switch (name) {
+                case "txtDiscountP":
+                    if (NumberUtil.NZero(txtDiscountP.getText()) > 0) {
+                        txtDiscountA.setEnabled(false);
+                    } else {
+                        txtDiscountA.setEnabled(true);
+                    }
+                    calcDiscount("Percent");
+                    break;
+                case "txtDiscountA":
+                    calcDiscount("Amt");
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtTaxA.requestFocus();
+                    }
+                    break;
+                case "txtTaxP":
+                    if (NumberUtil.NZero(txtTaxP.getText()) > 0) {
+                        txtTaxA.setEnabled(false);
+                    } else {
+                        txtTaxA.setEnabled(true);
+                    }
+                    calcTax("Percent");
+                    break;
+                case "txtTaxA":
+                    calcTax("Amt");
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtPaid.requestFocus();
+                    }
+                    break;
+                case "txtPaid":
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        txtDiscountA.requestFocus();
+                    }
+                    break;
+            }
+        }
+    };
+    
     private void initControl(){
         if(currOPDHis.getPatient() != null){
           txtPtNo.setText(currOPDHis.getPatient().getRegNo());
@@ -89,8 +156,8 @@ public class OPDConfirDialog extends javax.swing.JDialog {
     private void calcDiscount(String opt){
         switch(opt){
             case "Percent":
-                double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-                double percent = NumberUtil.NZero(txtDiscountP.getValue());
+                double vouTotal = NumberUtil.NZero(txtVouTotal.getText());
+                double percent = NumberUtil.NZero(txtDiscountP.getText());
                 txtDiscountA.setValue((vouTotal * percent)/100);
                 break;
             case "Amt":
@@ -104,8 +171,8 @@ public class OPDConfirDialog extends javax.swing.JDialog {
     private void calcTax(String opt){
         switch(opt){
             case "Percent":
-                double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-                double percent = NumberUtil.NZero(txtTaxP.getValue());
+                double vouTotal = NumberUtil.NZero(txtVouTotal.getText());
+                double percent = NumberUtil.NZero(txtTaxP.getText());
                 txtTaxA.setValue((vouTotal * percent)/100);
                 break;
             case "Amt":
@@ -117,17 +184,19 @@ public class OPDConfirDialog extends javax.swing.JDialog {
     }
     
     private void calcBalance(){
-        double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-        double disc = NumberUtil.NZero(txtDiscountA.getValue());
-        double tax = NumberUtil.NZero(txtTaxA.getValue());
+        double vouTotal = NumberUtil.NZero(txtVouTotal.getText());
+        double disc = NumberUtil.NZero(txtDiscountA.getText());
+        double tax = NumberUtil.NZero(txtTaxA.getText());
         double paid;
         
         if(currOPDHis.getPaymentType().getPaymentTypeId().equals(1)){
-            if(Util1.getPropValue("system.opdpatient.mustpaid").equals("Y")){
-                txtPaid.setValue(vouTotal - (disc + tax));
-            }
+            txtPaid.setValue(vouTotal - (disc + tax));
+            //This checking move to validation
+            //if(Util1.getPropValue("system.opdpatient.mustpaid").equals("Y")){
+                
+            //}
         }
-        paid = NumberUtil.NZero(txtPaid.getValue());
+        paid = NumberUtil.NZero(txtPaid.getText());
         
         txtBalance.setValue(vouTotal - (disc + tax + paid));
     }
@@ -226,6 +295,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         txtVouTotal.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
 
         txtDiscountP.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtDiscountP.setName("txtDiscountP"); // NOI18N
         txtDiscountP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtDiscountPActionPerformed(evt);
@@ -233,6 +303,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         });
 
         txtDiscountA.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtDiscountA.setName("txtDiscountA"); // NOI18N
         txtDiscountA.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtDiscountAActionPerformed(evt);
@@ -240,6 +311,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         });
 
         txtTaxP.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtTaxP.setName("txtTaxP"); // NOI18N
         txtTaxP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTaxPActionPerformed(evt);
@@ -247,6 +319,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         });
 
         txtTaxA.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtTaxA.setName("txtTaxA"); // NOI18N
         txtTaxA.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtTaxAActionPerformed(evt);
@@ -254,6 +327,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
         });
 
         txtPaid.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtPaid.setName("txtPaid"); // NOI18N
         txtPaid.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtPaidActionPerformed(evt);
@@ -294,7 +368,7 @@ public class OPDConfirDialog extends javax.swing.JDialog {
                                 .addComponent(txtPtName, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(txtTaxP, javax.swing.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
+                                    .addComponent(txtTaxP)
                                     .addComponent(txtDiscountP))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

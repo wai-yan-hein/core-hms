@@ -66,6 +66,8 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
         txtAmount.setText(NumberUtil.NZero(pm.getAllowAmt()).toString());
         txtFactor.setText(NumberUtil.NZeroInt(pm.getFactor()).toString());
         cboGroupCode.setSelectedItem(pm.getGroupCode());
+        txtTraderId.setText(pm.getTraderId());
+        
         lblStatus.setText("EDIT");
     }
 
@@ -75,6 +77,7 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
         txtTypeName.setText(null);
         txtFactor.setText(null);
         txtAmount.setText(null);
+        txtTraderId.setText(null);
         lblStatus.setText("NEW");
         setFocus();
         tblLocationType.clearSelection();
@@ -126,6 +129,7 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
             pMethod.setAllowAmt(NumberUtil.getDouble(txtAmount.getText()));
             pMethod.setFactor(NumberUtil.NZeroInt(txtFactor.getText()));
             pMethod.setGroupCode(cboGroupCode.getSelectedItem().toString());
+            pMethod.setTraderId(txtTraderId.getText().trim());
         }
 
         return status;
@@ -181,6 +185,8 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
         txtFactor = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         txtAmount = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        txtTraderId = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Pay Method Setup");
@@ -230,11 +236,13 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
 
         jLabel2.setText("Group Code");
 
-        cboGroupCode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "DISCOUNT", "PAID", "TAX" }));
+        cboGroupCode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "BILLTRANSFER", "DISCOUNT", "PAID", "TAX" }));
 
         jLabel3.setText("Factor");
 
         jLabel4.setText("Amount");
+
+        jLabel5.setText("Trader Id");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -249,32 +257,36 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(lblStatus)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(butSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butDelete)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butClear))
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtTraderId))
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboGroupCode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(cboGroupCode, 0, 244, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtFactor))
+                        .addComponent(txtFactor, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtAmount))
+                        .addComponent(txtAmount, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtTypeName)))
+                        .addComponent(txtTypeName, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4, jLabel5});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -287,6 +299,9 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                        .addGap(14, 14, 14))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
                             .addComponent(cboGroupCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -298,15 +313,17 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel4)
                             .addComponent(txtAmount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(txtTraderId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 61, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(butClear)
                             .addComponent(butSave)
                             .addComponent(butDelete)
                             .addComponent(lblStatus))
-                        .addGap(0, 125, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addGap(14, 14, 14))
+                        .addGap(60, 60, 60))))
         );
 
         pack();
@@ -363,12 +380,14 @@ public class PayMethodSetupDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JTable tblLocationType;
     private javax.swing.JTextField txtAmount;
     private javax.swing.JTextField txtFactor;
     private javax.swing.JTextField txtFilter;
+    private javax.swing.JTextField txtTraderId;
     private javax.swing.JTextField txtTypeName;
     // End of variables declaration//GEN-END:variables
 }

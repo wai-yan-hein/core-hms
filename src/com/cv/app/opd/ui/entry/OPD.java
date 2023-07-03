@@ -1317,15 +1317,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtVouTotal.setValue(tableModel.getTotal());
         PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
         if (pt.getPaymentTypeId() == 1) {
-            txtPaid.setValue(NumberUtil.NZero(txtVouTotal.getValue()));
-            txtVouBalance.setValue(0.0);
+            txtPaid.setValue(NumberUtil.NZero(txtVouTotal.getText())
+                    + NumberUtil.NZero(txtTaxA.getText()) - NumberUtil.NZero(txtDiscA.getText()));
         } else {
             txtPaid.setValue(0.0);
-            txtVouBalance.setValue(NumberUtil.NZero(txtVouTotal.getValue()));
         }
+
+        double balance = NumberUtil.NZero(txtVouTotal.getText()) + NumberUtil.NZero(txtTaxA.getText())
+                - NumberUtil.NZero(txtDiscA.getText()) - NumberUtil.NZero(txtPaid.getText());
+        txtVouBalance.setValue(balance);
         txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
         txtRecNo.setText(Integer.toString(tblService.getSelectedRow() + 1));
-
     }
 
     private void calculatePackage() {
@@ -1435,8 +1437,32 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             return false;
         }
 
-        txtVouTotal.setValue(modelTtl);
+        calVouTotal();
+        double paid = NumberUtil.NZero(txtPaid.getText());
+        double disc = NumberUtil.NZero(txtDiscA.getText());
+        double tax = NumberUtil.NZero(txtTaxA.getText());
+
+        int payType = ((PaymentType) cboPaymentType.getSelectedItem()).getPaymentTypeId();
+        if (payType == 1) {
+
+            if ((vouTtl + tax) != (paid + disc)) {
+                log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error : vouTtl : "
+                        + vouTtl + " Paid : " + paid);
+                JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher paid.",
+                        "Paid Error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
+        if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y")) {
+            if (vouBalance != 0) {
+                log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + vouBalance);
+                JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                        "Paid Error", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
 
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());
@@ -1479,6 +1505,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setPatientName(txtPatientName.getText());
             currVou.setAdmissionNo(txtAdmissionNo.getText());
             currVou.setAge(NumberUtil.NZeroInt(txtAge.getText()));
+
+            if (payType == 1) {
+                if ((NumberUtil.NZero(currVou.getVouTotal()) + NumberUtil.NZero(currVou.getTaxA()))
+                        != (NumberUtil.NZero(currVou.getPaid()) + NumberUtil.NZero(currVou.getDiscountA()))) {
+                    log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error 2: vouTtl : "
+                            + vouTtl + " Paid : " + paid);
+                    JOptionPane.showMessageDialog(Util1.getParent(), "2 Please check voucher paid.",
+                            "Paid Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
 
             if (lblStatus.getText().equals("EDIT") || lblStatus.getText().equals("DELETED")) {
                 currVou.setUpdatedBy(Global.loginUser);
@@ -2136,7 +2173,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/opd";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();

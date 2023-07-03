@@ -20,7 +20,7 @@ from v_stock_movement vsm
 join v_med_unit_smallest_rel med on vsm.med_id = med.med_id
 join location loc on vsm.location_id = loc.location_id
 where  vsm.user_id = $P{user_id}
-order by vsm.location_id, vsm.ttl_stock_balance]]>
+order by vsm.location_id, vsm.ttl_stock_balance desc]]>
 	</queryString>
 	<field name="user_id" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>

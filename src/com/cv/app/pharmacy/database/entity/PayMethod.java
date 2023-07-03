@@ -26,6 +26,7 @@ public class PayMethod implements java.io.Serializable {
     private String groupCode;
     private Integer factor;
     private Double allowAmt;
+    private String traderId;
 
     @Column(name = "method_desc", unique = true, length = 50)
     public String getMethodDesp() {
@@ -86,5 +87,14 @@ public class PayMethod implements java.io.Serializable {
 
     public void setAllowAmt(Double allowAmt) {
         this.allowAmt = allowAmt;
+    }
+
+    @Column(name="trader_id")
+    public String getTraderId() {
+        return traderId;
+    }
+
+    public void setTraderId(String traderId) {
+        this.traderId = traderId;
     }
 }
