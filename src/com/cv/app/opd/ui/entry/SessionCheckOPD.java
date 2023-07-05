@@ -19,6 +19,7 @@ import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.SessionFilter;
 import com.cv.app.pharmacy.database.helper.SessionTtl;
 import com.cv.app.pharmacy.ui.common.SessionTotalTableModel;
+import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -181,7 +182,8 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         tblSession.getColumnModel().getColumn(11).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(12).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(13).setPreferredWidth(15);
-
+        tblSession.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        
         tblTotal.getTableHeader().setFont(Global.lableFont);
         tblTotal.getColumnModel().getColumn(0).setPreferredWidth(100);//Desp
         tblTotal.getColumnModel().getColumn(1).setPreferredWidth(7);//Currency

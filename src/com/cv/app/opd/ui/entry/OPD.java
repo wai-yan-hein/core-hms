@@ -955,7 +955,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
         params.put("REPORT_CONNECTION", dao.getConnection());
-        params.put("user_desp", "*Thanks You.*");
+        params.put("user_desp", "Customer Voucher, Thanks You.");
         params.put("bill_id", Util1.isNull(txtBill.getText(), "-"));
         params.put("IMAGE_PATH", Util1.getAppWorkFolder()
                 + Util1.getPropValue("report.folder.path"));
@@ -980,10 +980,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 ReportUtil.viewReport(reportPath, params, tableModel.getListOPDDetailHis());
             }
         } else if (Util1.getPropValue("report.file.type").equals("con")) {
-            JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
             int count = (int) spPrint.getValue();
             for (int i = 0; i < count; i++) {
+                JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                 ReportUtil.printJasper(jp, printerName);
+                params.put("user_desp", "Receive Voucher, Thanks You.");
             }
         } else {
             JasperPrint jp = ReportUtil.getReport(reportPath, params, tableModel.getListOPDDetailHis());

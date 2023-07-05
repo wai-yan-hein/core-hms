@@ -8,6 +8,7 @@ import com.cv.app.opd.database.view.VSessionClinic;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.JoSQLUtil;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
@@ -67,7 +68,7 @@ public class SessionCheckTableModel extends AbstractTableModel{
 
         switch (column) {
             case 0: //Tran Date
-                return DateUtil.toDateStr(record.getTranDate());
+                return DateUtil.toDateStr(record.getTranDate(), "dd/MM/yyyy hh:mm aa");
             case 1: //Inv-No
                 if(record.isDeleted()){
                     return record.getVouId() + "*";
