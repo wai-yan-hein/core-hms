@@ -49,6 +49,7 @@ public class LoginDialog extends javax.swing.JDialog {
 
     /**
      * Creates new form BestLoginDialog
+     *
      * @param modal
      */
     public LoginDialog(java.awt.Frame parent, boolean modal) {
@@ -376,6 +377,8 @@ public class LoginDialog extends javax.swing.JDialog {
 
             try {
                 dao.open();
+                String sql = "select * from appuser wher user_short_name ='" + txtLoginName.getText() + "' and password='" + txtPassword.getText() + "'";
+                log.info(sql);
                 listAppUser = dao.findAllHSQL("from Appuser usr where usr.userShortName = '"
                         + txtLoginName.getText() + "' and password = '" + txtPassword.getText() + "'");
                 dao.close();

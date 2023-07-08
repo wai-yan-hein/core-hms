@@ -767,11 +767,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         if (currVou.getPatient() != null) {
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
-                        /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                                currVou.getVouBalance(), currVou.getDiscountA(),
-                                currVou.getPaid(), currVou.getTaxA(), desp);*/
                         uploadToAccount(currVou.getOpdInvId());
-                        //log.error("dc vou print after uploadToAccount : " + currVou.getOpdInvId());
                     }
 
                 }
@@ -1562,11 +1558,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             double tax = NumberUtil.NZero(txtTaxA.getValue());
             double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
 
-            /*if (pt.getPaymentTypeId() == 1) {
+            if (pt.getPaymentTypeId() == 1) {
                 if (vouTotal != 0) {
                     txtPaid.setValue((vouTotal + tax) - discount);
                 }
-            }*/
+            }
             double paid = NumberUtil.NZero(txtPaid.getValue());
             txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
         } else {
