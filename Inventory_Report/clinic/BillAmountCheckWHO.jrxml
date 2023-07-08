@@ -64,7 +64,7 @@ and (oh.patient_id = $P{reg_no} or '-' = $P{reg_no})
 and (oh.deleted = false)
 group by oh.patient_id, pd.patient_name, oc.group_name, pt.payment_type_name) a
 group by a.patient_id, a.patient_name, a.cat_name, a.payment_type_name) a
-order by a.patient_name, a.cat_name]]>
+order by a.patient_name, a.patient_id,a.cat_name]]>
 	</queryString>
 	<field name="patient_id" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>

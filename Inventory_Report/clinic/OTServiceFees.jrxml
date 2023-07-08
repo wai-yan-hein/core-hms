@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TraderList" language="groovy" columnCount="2" pageWidth="595" pageHeight="842" columnWidth="270" columnSpacing="15" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7eeac684-39ed-404c-8898-fcbd8d71a74a">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -9,7 +10,7 @@
 		<![CDATA[select oc.group_name, os.service_code, os.service_name, os.srv_fees
 from ot_service os, ot_group oc, tmp_ot_service_filter tosf
 where os.group_id = oc.group_id and os.service_id = tosf.service_id
-and tosf.user_id = $P{user_id}
+and tosf.user_id = $P{user_id} and os.act_status = true
 order by oc.group_name, os.service_name]]>
 	</queryString>
 	<field name="group_name" class="java.lang.String">
@@ -158,7 +159,7 @@ order by oc.group_name, os.service_name]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{service_name}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0;(#,##0)">
+			<textField pattern="#,##0;(#,##0)" isBlankWhenNull="true">
 				<reportElement x="204" y="0" width="60" height="20" uuid="780ad283-2ab4-46c8-ac4e-8d817568f5e5"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial"/>

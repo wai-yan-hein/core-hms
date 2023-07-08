@@ -91,6 +91,7 @@ import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -3973,7 +3974,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
   }//GEN-LAST:event_txtToMouseClicked
 
     private void butPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPrintActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         reportGeneration();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_butPrintActionPerformed
 
     private void chkMinusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkMinusActionPerformed
@@ -4053,8 +4056,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     }//GEN-LAST:event_tblDoctorFilterFocusLost
 
     private void butExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butExcelActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         generateExcel();
-        //listMethod();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_butExcelActionPerformed
 
     private void txtDueToMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDueToMouseClicked

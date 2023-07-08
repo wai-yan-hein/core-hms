@@ -60,7 +60,7 @@ public class VSessionClinic implements java.io.Serializable{
         this.tranOption = tranOption;
     }
 
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name="tran_date")
     public Date getTranDate() {
         return tranDate;

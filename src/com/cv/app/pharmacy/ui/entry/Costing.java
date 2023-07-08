@@ -27,14 +27,15 @@ import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.StockCostingDetailTableModel;
 import com.cv.app.pharmacy.ui.common.StockCostingTableModel;
-import static com.cv.app.pharmacy.ui.entry.Report.log;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.sql.ResultSet;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -205,9 +206,14 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 strLocation = "0";
             }
 
-            dao.execProc("insert_cost_detail",
-                    "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
-                    Global.machineId, strMethod);
+            if (strMethod.equals("AVG") || strMethod.equals("FIFO")) {
+                dao.execProc("insert_cost_detail",
+                        "Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        Global.machineId, strMethod);
+            } else {
+                insertCostDetailPurOP("Opening", DateUtil.toDateStrMYSQL(txtCostDate.getText()),
+                        strMethod);
+            }
 
             dao.commit();
             dao.close();
@@ -217,6 +223,188 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
             log.error("calculate : " + ex.getMessage());
         } finally {
             dao.close();
+        }
+    }
+
+    private void insertCostDetailPurOP(String costFor, String costDate, String method) {
+        String userId = Global.machineId;
+        String strDelete = "delete from tmp_costing_detail where cost_for = '" + costFor + "' and user_id = '" + userId + "'";
+
+        String strSql = "select tsc.med_id item_id, bal_qty ttl_stock, cost_price.tran_date, cost_price.tran_option, \n"
+                + "         cost_price.ttl_qty, cost_price.smallest_cost, cost_price, item_unit\n"
+                + "    from tmp_stock_costing tsc, \n"
+                + "         (select 'Purchase' tran_option, vpur.med_id item_id, pur_date tran_date, \n"
+                + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, pur_unit_cost cost_price, \n"
+                + "                 (pur_unit_cost/vm.smallest_qty) smallest_cost, vpur.pur_unit item_unit\n"
+                + "            from v_purchase vpur, (select med_id, min(op_date) op_date\n"
+                + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                + "                                    group by med_id) tsf,\n"
+                + "				 v_medicine vm\n"
+                + "           where vpur.med_id = tsf.med_id and deleted = false and date(pur_date) >= op_date\n"
+                + "			 and vpur.med_id = vm.med_id and vpur.pur_unit = vm.item_unit\n"
+                + "			 and date(pur_date) <= prm_cost_date and vm.active = true\n"
+                + "           group by vpur.med_id, pur_date, pur_unit_cost, vpur.pur_unit\n"
+                + "           union all\n"
+                + "          select 'Opening' tran_option, vso.med_id item_id, vso.op_date tran_date, \n"
+                + "				 sum(vso.op_smallest_qty) ttl_qty, vso.cost_price, \n"
+                + "				 (vso.cost_price/vm.smallest_qty) smallest_cost, vso.item_unit\n"
+                + "            from v_stock_op vso, tmp_stock_filter tsf, v_medicine vm\n"
+                + "		   where vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
+                + "             and vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
+                + "             and vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "			 and vm.active = true\n"
+                + "           group by vso.med_id, vso.op_date, vso.cost_price, vso.item_unit) cost_price\n"
+                + "   where tsc.med_id = cost_price.item_id and tsc.user_id = prm_user_id and tsc.tran_option = prm_cost_for\n"
+                + "   order by item_id, cost_price.tran_date desc, cost_price desc";
+
+        if (method.equals("AVG (OP&PUR)")) {
+            strSql = "select tsc.med_id item_id, sum(bal_qty) ttl_stock, prm_cost_date as tran_date, '-' as tran_option, \n"
+                    + "         sum(cost_price.ttl_qty) as ttl_qty, sum(if(cost_price.ttl_qty=0,0,(cost_price.ttl_cost/cost_price.ttl_qty))) as smallest_cost, \n"
+                    + "         sum(cost_price.ttl_cost) as cost_price, '-' as item_unit\n"
+                    + "    from tmp_stock_costing tsc, \n"
+                    + "         (select 'Purchase' tran_option, vpur.med_id item_id, \n"
+                    + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, sum(pur_qty*pur_unit_cost) ttl_cost\n"
+                    + "            from v_purchase vpur, (select med_id, min(op_date) op_date\n"
+                    + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                    + "                                    group by med_id) tsf,\n"
+                    + "				 v_medicine vm\n"
+                    + "           where vpur.med_id = tsf.med_id and deleted = false and date(pur_date) >= op_date\n"
+                    + "			 and vpur.med_id = vm.med_id and vpur.pur_unit = vm.item_unit\n"
+                    + "			 and date(pur_date) <= prm_cost_date\n"
+                    + "           group by vpur.med_id\n"
+                    + "           union all\n"
+                    + "          select 'Opening' tran_option, vso.med_id item_id, \n"
+                    + "				 sum(vso.op_smallest_qty) ttl_qty, sum(vso.op_qty*vso.cost_price) ttl_cost\n"
+                    + "            from v_stock_op vso, tmp_stock_filter tsf, v_medicine vm\n"
+                    + "		   where vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
+                    + "             and vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
+                    + "             and vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                    + "           group by vso.med_id) cost_price\n"
+                    + "   where tsc.med_id = cost_price.item_id and tsc.user_id = prm_user_id and tsc.tran_option = 'Opening'\n"
+                    + "   group by tsc.med_id\n"
+                    + "   order by item_id";
+        }
+
+        strSql = strSql.replace("prm_user_id", "'" + userId + "'")
+                .replace("prm_cost_date", "'" + costDate + "'")
+                .replace("prm_cost_for", "'" + costFor + "'");
+        try {
+            dao.execSql(strDelete);
+            ResultSet rs = dao.execSQL(strSql);
+            if (rs != null) {
+                String prvItemId = "-";
+                String itemId;
+                Double totalStock;
+                String tranDate;
+                String tranOption;
+                Double ttlQty;
+                Double smallestCost;
+                Double unitCost;
+                String unit;
+                Double leftStock = 0.0;
+                Double prvTtlStock = 0.0;
+                String prvTranDate = "-";
+                Double prvTtlQty = 0.0;
+                Double prvCost = 0.0;
+                Double prvLeftStock = 0.0;
+                Double prvSmallestCost = 0.0;
+                String prvTranOption = "-";
+                Double costQty;
+
+                while (rs.next()) {
+                    itemId = rs.getString("item_id");
+                    if (itemId.equals("101094")) {
+                        log.info("Error Tran : " + itemId);
+                    }
+                    totalStock = rs.getDouble("ttl_stock");
+                    tranDate = DateUtil.toDateStrMYSQL(DateUtil.toDateStr(rs.getDate("tran_date")));
+                    tranOption = rs.getString("tran_option");
+                    ttlQty = rs.getDouble("ttl_qty");
+                    smallestCost = rs.getDouble("smallest_cost");
+                    unitCost = rs.getDouble("cost_price");
+                    unit = rs.getString("item_unit");
+
+                    if (!prvItemId.equals(itemId)) {
+                        if (leftStock > 0.0) {
+                            String tmpSql = "insert into tmp_costing_detail(item_id, ttl_stock, tran_date, tran_option, ttl_qty, \n"
+                                    + "					cost_price, cost_qty, smallest_cost, user_id, cost_for, item_unit)\n"
+                                    + "		values('" + prvItemId + "', " + prvTtlStock + ", '" + prvTranDate
+                                    + "', 'ERR', " + prvTtlQty + ",\n"
+                                    + prvCost + ", " + prvLeftStock + ", " + prvSmallestCost + ", '" + userId + "',\n'"
+                                    + costFor + "', '" + unit + "')";
+                            dao.execSql(tmpSql);
+                        }
+
+                        prvItemId = itemId;
+                        prvTtlStock = totalStock;
+                        prvTranDate = tranDate;
+                        prvTranOption = tranOption;
+                        prvTtlQty = ttlQty;
+                        prvSmallestCost = smallestCost;
+                        prvCost = unitCost;
+                        leftStock = totalStock;
+                    }
+
+                    if (leftStock > 0) {
+                        if (leftStock >= ttlQty) {
+                            costQty = ttlQty;
+                            leftStock = leftStock - ttlQty;
+                        } else {
+                            costQty = leftStock;
+                            leftStock = 0.0;
+                        }
+
+                        if (costQty > 0) {
+                            String tmpSql1 = "insert into tmp_costing_detail(item_id, ttl_stock, tran_date, tran_option, ttl_qty, \n"
+                                    + "					cost_price, cost_qty, smallest_cost, user_id, cost_for, item_unit)\n"
+                                    + "	  values('" + itemId + "', " + totalStock + ", '" + tranDate + "', '" + tranOption + "', " + ttlQty + ",\n"
+                                    + unitCost + ", " + costQty + ", " + smallestCost + ", '" + userId + "',\n'"
+                                    + costFor + "' , '" + unit + "')";
+                            dao.execSql(tmpSql1);
+                        }
+                    }
+                }
+
+                //rs.close();
+                if (method.equals("FIFO (OP&PUR)")) {
+                    String tmpSql2 = "update tmp_stock_costing tsc, (select item_id, sum(cost_qty*smallest_cost) ttl_cost, user_id\n"
+                            + "						    from tmp_costing_detail\n"
+                            + "					      where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "					      group by item_id, user_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    tmpSql2 = tmpSql2.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(tmpSql2);
+                } else if (method.equals("AVG (OP&PUR)")) {
+                    String tmpSql3 = "update tmp_costing_detail tcd, (\n"
+                            + "	select user_id, item_id, sum(ttl_qty) ttl_qty, sum(ttl_qty*smallest_cost) ttl_amt, \n"
+                            + "		(sum(ttl_qty*smallest_cost)/sum(ttl_qty)) as avg_cost\n"
+                            + "	  from tmp_costing_detail\n"
+                            + "	  where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "	  group by user_id,item_id) avgc\n"
+                            + "	set tcd.smallest_cost = avgc.avg_cost\n"
+                            + "	where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";
+                    tmpSql3 = tmpSql3.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    String tmpSql4 = "update tmp_stock_costing tsc, \n"
+                            + "               (select user_id, item_id, sum(cost_qty*smallest_cost) ttl_cost\n"
+                            + "				  from tmp_costing_detail\n"
+                            + "				 where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "				 group by user_id,item_id) cd\n"
+                            + "		   set total_cost = cd.ttl_cost\n"
+                            + "		 where tsc.med_id = cd.item_id and tsc.user_id = cd.user_id\n"
+                            + "		   and tsc.user_id = prm_user_id and tran_option = prm_cost_for";
+                    tmpSql4 = tmpSql4.replace("prm_user_id", "'" + userId + "'")
+                            .replace("prm_cost_for", "'" + costFor + "'");
+                    dao.execSql(tmpSql3, tmpSql4);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("insertCostDetail : " + ex.toString());
+        } finally {
+            //dao.close();
         }
     }
 
@@ -943,7 +1131,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
         jLabel8.setText("Method :");
 
         cboMethod.setFont(Global.textFont);
-        cboMethod.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AVG", "FIFO" }));
+        cboMethod.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "AVG", "AVG (OP&PUR)", "FIFO", "FIFO (OP&PUR)" }));
 
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel10.setText("Summary");
@@ -969,7 +1157,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                         .addComponent(jLabel12)
                         .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(cboMethod, 0, 146, Short.MAX_VALUE)
+                            .addComponent(cboMethod, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(cboLocG, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
@@ -1336,8 +1524,10 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
   }//GEN-LAST:event_txtCostDateMouseClicked
 
     private void butCalculateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCalculateActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         DateUtil.setStartTime();
         calculate();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         log.info("calculate duration : " + DateUtil.getDuration());
     }//GEN-LAST:event_butCalculateActionPerformed
 

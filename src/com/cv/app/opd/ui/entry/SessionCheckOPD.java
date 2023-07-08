@@ -19,11 +19,13 @@ import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.SessionFilter;
 import com.cv.app.pharmacy.database.helper.SessionTtl;
 import com.cv.app.pharmacy.ui.common.SessionTotalTableModel;
+import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -180,7 +182,8 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         tblSession.getColumnModel().getColumn(11).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(12).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(13).setPreferredWidth(15);
-
+        tblSession.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        
         tblTotal.getTableHeader().setFont(Global.lableFont);
         tblTotal.getColumnModel().getColumn(0).setPreferredWidth(100);//Desp
         tblTotal.getColumnModel().getColumn(1).setPreferredWidth(7);//Currency
@@ -1237,7 +1240,9 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     }//GEN-LAST:event_txtToMouseClicked
 
     private void butSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSearchActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         search();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_butSearchActionPerformed
 
     private void cboTranTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTranTypeActionPerformed

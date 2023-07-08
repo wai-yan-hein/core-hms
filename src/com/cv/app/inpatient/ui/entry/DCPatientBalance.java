@@ -399,7 +399,7 @@ public class DCPatientBalance extends javax.swing.JPanel {
                 + "and date(oh.opd_date) between '" + admitDate + "' and '" + tranDate + "' \n"
                 + "union all\n"
                 + "select 'OPD' as tran_option,date(oh.opd_date) as tran_date, oh.opd_inv_id as vou_no,\n"
-                + "'OPD Paid' as item_name, 1 as qty, oh.disc_a as price , ifnull(oh.disc_a,0) as amount, 1 as unique_id, 'OPD' as group_name \n"
+                + "'OPD Paid' as item_name, 1 as qty, oh.paid as price , ifnull(oh.paid,0) as amount, 1 as unique_id, 'OPD' as group_name \n"
                 + "from opd_his oh\n"
                 + "where oh.deleted = false and  oh.patient_id = '" + regNo + "' and oh.admission_no = '" + admNo + "' \n"
                 + "and date(oh.opd_date) between '" + admitDate + "' and '" + tranDate + "' \n"

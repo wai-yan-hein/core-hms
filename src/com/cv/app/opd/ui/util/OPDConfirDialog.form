@@ -189,6 +189,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Zawgyi-One" size="12" style="0"/>
         </Property>
+        <Property name="name" type="java.lang.String" value="txtDiscountP" noResource="true"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtDiscountPActionPerformed"/>
@@ -199,6 +200,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Zawgyi-One" size="12" style="0"/>
         </Property>
+        <Property name="name" type="java.lang.String" value="txtDiscountA" noResource="true"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtDiscountAActionPerformed"/>
@@ -209,6 +211,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Zawgyi-One" size="12" style="0"/>
         </Property>
+        <Property name="name" type="java.lang.String" value="txtTaxP" noResource="true"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtTaxPActionPerformed"/>
@@ -219,6 +222,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Zawgyi-One" size="12" style="0"/>
         </Property>
+        <Property name="name" type="java.lang.String" value="txtTaxA" noResource="true"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtTaxAActionPerformed"/>
@@ -229,6 +233,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Zawgyi-One" size="12" style="0"/>
         </Property>
+        <Property name="name" type="java.lang.String" value="txtPaid" noResource="true"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtPaidActionPerformed"/>

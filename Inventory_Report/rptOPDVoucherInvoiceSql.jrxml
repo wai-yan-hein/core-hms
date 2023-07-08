@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptOPDVoucherInvoiceSql" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="59190260-2ffa-41d9-871f-648d2ec89d42">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="cv_inv"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -35,6 +35,7 @@
 	</parameter>
 	<parameter name="phoneNo" class="java.lang.String"/>
 	<parameter name="age" class="java.lang.Integer"/>
+	<parameter name="user_desp" class="java.lang.String"/>
 	<queryString language="SQL">
 		<![CDATA[select service_name, qty, price, amount 
 from v_opd 
@@ -227,7 +228,7 @@ where opd_inv_id =  $P{invoiceNo}]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="177" splitType="Stretch">
+		<band height="184" splitType="Stretch">
 			<staticText>
 				<reportElement x="85" y="0" width="57" height="15" uuid="8c0156a5-8123-417b-a15c-93c7c66868a2"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -262,13 +263,6 @@ where opd_inv_id =  $P{invoiceNo}]]>
 					<font fontName="Arial" size="8" isBold="false"/>
 				</textElement>
 				<text><![CDATA[Balance :]]></text>
-			</staticText>
-			<staticText>
-				<reportElement positionType="Float" x="9" y="151" width="194" height="15" uuid="32fc144a-acf9-4445-9df3-68c1be014d0e"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="8" isBold="true"/>
-				</textElement>
-				<text><![CDATA[* Thank You *]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight" pattern="###0.00" isBlankWhenNull="true">
 				<reportElement positionType="Float" x="9" y="165" width="48" height="12" uuid="93b8c655-a1ce-41ff-bdaf-854383c066d1"/>
@@ -381,6 +375,15 @@ where opd_inv_id =  $P{invoiceNo}]]>
 				</textElement>
 				<text><![CDATA[ဓာတ္ခြဲခန္း/ဓာတ္မွန္ အေျဖလာယူလွ်င္ ဤေဘာက္ခ်ာျပန္ယူလာပါရန္]]></text>
 			</staticText>
+			<textField>
+				<reportElement x="9" y="150" width="194" height="15" uuid="3a8cb92a-18ca-4493-a907-8a23928b89ee">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{user_desp}]]></textFieldExpression>
+			</textField>
 		</band>
 	</summary>
 </jasperReport>

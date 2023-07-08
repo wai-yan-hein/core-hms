@@ -21,8 +21,9 @@ import javax.persistence.TemporalType;
  * @author WSwe
  */
 @Entity
-@Table(name="v_gen_expense")
-public class VGenExpense implements java.io.Serializable{
+@Table(name = "v_gen_expense")
+public class VGenExpense implements java.io.Serializable {
+
     private Long expId;
     private Double expAmt;
     private String desp;
@@ -41,9 +42,9 @@ public class VGenExpense implements java.io.Serializable{
     private Date lockDT;
     private Date updatedDate;
     private Boolean upp;
-    
+
     @Id
-    @Column(name="expense_id")
+    @Column(name = "expense_id")
     public Long getExpId() {
         return expId;
     }
@@ -52,7 +53,7 @@ public class VGenExpense implements java.io.Serializable{
         this.expId = expId;
     }
 
-    @Column(name="exp_amount")
+    @Column(name = "exp_amount")
     public Double getExpAmt() {
         return expAmt;
     }
@@ -61,7 +62,7 @@ public class VGenExpense implements java.io.Serializable{
         this.expAmt = expAmt;
     }
 
-    @Column(name="desp")
+    @Column(name = "desp")
     public String getDesp() {
         return desp;
     }
@@ -70,7 +71,7 @@ public class VGenExpense implements java.io.Serializable{
         this.desp = desp;
     }
 
-    @Column(name="exp_date")
+    @Column(name = "exp_date")
     @Temporal(TemporalType.DATE)
     public Date getExpnDate() {
         return expnDate;
@@ -80,7 +81,7 @@ public class VGenExpense implements java.io.Serializable{
         this.expnDate = expnDate;
     }
 
-    @Column(name="remark")
+    @Column(name = "remark")
     public String getRemark() {
         return remark;
     }
@@ -89,7 +90,7 @@ public class VGenExpense implements java.io.Serializable{
         this.remark = remark;
     }
 
-    @Column(name="session_id")
+    @Column(name = "session_id")
     public Integer getSessionId() {
         return sessionId;
     }
@@ -99,7 +100,7 @@ public class VGenExpense implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="exp_type")
+    @JoinColumn(name = "exp_type")
     public ExpenseType getExpType() {
         return expType;
     }
@@ -108,7 +109,7 @@ public class VGenExpense implements java.io.Serializable{
         this.expType = expType;
     }
 
-    @Column(name="tran_type")
+    @Column(name = "tran_type")
     public String getTranType() {
         return tranType;
     }
@@ -117,7 +118,7 @@ public class VGenExpense implements java.io.Serializable{
         this.tranType = tranType;
     }
 
-    @Column(name="dr_amt")
+    @Column(name = "dr_amt")
     public Double getDrAmt() {
         return drAmt;
     }
@@ -127,7 +128,7 @@ public class VGenExpense implements java.io.Serializable{
     }
 
     @ManyToOne
-    @JoinColumn(name="location_id")
+    @JoinColumn(name = "location_id")
     public Location getLocation() {
         return location;
     }
@@ -136,7 +137,7 @@ public class VGenExpense implements java.io.Serializable{
         this.location = location;
     }
 
-    @Column(name="expense_option")
+    @Column(name = "expense_option")
     public String getExpenseOption() {
         return expenseOption;
     }
@@ -145,7 +146,7 @@ public class VGenExpense implements java.io.Serializable{
         this.expenseOption = expenseOption;
     }
 
-    @Column(name="vou_no")
+    @Column(name = "vou_no")
     public String getVouNo() {
         return vouNo;
     }
@@ -154,7 +155,7 @@ public class VGenExpense implements java.io.Serializable{
         this.vouNo = vouNo;
     }
 
-    @Column(name="deleted")
+    @Column(name = "deleted")
     public Boolean getDeleted() {
         return deleted;
     }
@@ -163,7 +164,7 @@ public class VGenExpense implements java.io.Serializable{
         this.deleted = deleted;
     }
 
-    @Column(name="doctor_id")
+    @Column(name = "doctor_id")
     public String getDrId() {
         return drId;
     }
@@ -172,16 +173,20 @@ public class VGenExpense implements java.io.Serializable{
         this.drId = drId;
     }
 
-    @Column(name="rec_lock")
+    @Column(name = "rec_lock")
     public Boolean getRecLock() {
-        return recLock;
+        if (recLock == null) {
+            return false;
+        } else {
+            return recLock;
+        }
     }
 
     public void setRecLock(Boolean recLock) {
         this.recLock = recLock;
     }
 
-    @Column(name="lock_dt")
+    @Column(name = "lock_dt")
     @Temporal(TemporalType.TIMESTAMP)
     public Date getLockDT() {
         return lockDT;
@@ -191,7 +196,7 @@ public class VGenExpense implements java.io.Serializable{
         this.lockDT = lockDT;
     }
 
-    @Column(name="updated_date")
+    @Column(name = "updated_date")
     @Temporal(TemporalType.TIMESTAMP)
     public Date getUpdatedDate() {
         return updatedDate;
@@ -201,7 +206,7 @@ public class VGenExpense implements java.io.Serializable{
         this.updatedDate = updatedDate;
     }
 
-    @Column(name="upp")
+    @Column(name = "upp")
     public Boolean getUpp() {
         return upp;
     }
