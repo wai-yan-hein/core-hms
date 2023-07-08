@@ -679,9 +679,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         if (currVou.getPatient() != null) {
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
-                        /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                                currVou.getVouBalance(), currVou.getDiscountA(),
-                                currVou.getPaid(), currVou.getTaxA(), desp);*/
                         uploadToAccount(currVou.getOpdInvId());
 
                     }
@@ -1203,6 +1200,12 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         double discount = NumberUtil.NZero(txtDiscA.getValue());
         double tax = NumberUtil.NZero(txtTaxA.getValue());
         double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
+        PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+        if (pt.getPaymentTypeId() == 1) {
+            txtPaid.setValue((vouTotal + tax) - discount);
+        } else {
+            txtPaid.setValue(0);
+        }
         double paid = NumberUtil.NZero(txtPaid.getValue());
         txtVouBalance.setValue((vouTotal + tax) - (discount + paid));
     }

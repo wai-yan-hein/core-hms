@@ -513,9 +513,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
                     }
-                    /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                            currVou.getVouBalance(), currVou.getDiscountA(),
-                            currVou.getPaid(), currVou.getTaxA(), "");*/
                     uploadToAccount(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
@@ -590,9 +587,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();
                 }
-                /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                        currVou.getVouBalance(), currVou.getDiscountA(),
-                        currVou.getPaid(), currVou.getTaxA(), "");*/
                 uploadToAccount(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
@@ -633,7 +627,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setListOPDDetailHis(listDetail);
             currVou.setDeleted(false);
 
-            if (tmpVou.getListOPDDetailHis().size() > 0) {
+            if (!tmpVou.getListOPDDetailHis().isEmpty()) {
                 //tableModel.clear();
                 tableModel.setListOPDDetailHis(listDetail);
             }
@@ -768,10 +762,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             if (currVou.getPatient() != null) {
                                 desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                             }
-                            /*uploadToAccount(currVou.getOpdInvId(), currVou.isDeleted(),
-                                    currVou.getVouBalance(), currVou.getDiscountA(),
-                                    currVou.getPaid(), currVou.getTaxA(),
-                                    desp);*/
+                            uploadToAccount(currVou.getOpdInvId());
                         }
                     } catch (Exception ex) {
                         dao.rollBack();
