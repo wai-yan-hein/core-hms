@@ -15,7 +15,6 @@ import com.cv.app.opd.database.entity.BillTransferHis;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.opd.database.helper.BillTransferDetail;
 import com.cv.app.opd.ui.common.BillTransferTableModel;
-import static com.cv.app.opd.ui.entry.BillPayment.log;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -423,6 +422,7 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 pbp.setRegNo(btd.getRegNo());
                 pbp.setRemark(vouNo + "@" + selType);
                 pbp.setDiscount(btd.getDiscount());
+                pbp.setDelete(Boolean.FALSE);
                 dao.save(pbp);
                 uploadToAccount(pbp.getId());
             }

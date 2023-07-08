@@ -110,7 +110,7 @@ from tmp_bill_payment where user_id = $P{user_id}) tbp join (
 from tmp_bill_payment where user_id = $P{user_id}) tbp join (
                      select reg_no, currency_id, date(pay_date) pay_date, (sum(ifnull(pay_amt,0)+ifnull(discount,0))) amt
 		  from opd_patient_bill_payment
-		 where reg_no is not null and deleted = false
+		 where reg_no is not null and ifnull(deleted,false) = false
 		 group by reg_no, currency_id, date(pay_date)) opbp on tbp.reg_no = opbp.reg_no
                  and tbp.currency = opbp.currency_id and date(opbp.pay_date) between tbp.op_date and $P{to_date}
 		  left join patient_detail pd on tbp.reg_no = pd.reg_no
