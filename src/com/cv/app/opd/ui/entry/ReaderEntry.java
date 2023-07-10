@@ -191,26 +191,20 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
         txtFrom = new javax.swing.JFormattedTextField();
-        jLabel2 = new javax.swing.JLabel();
         txtTo = new javax.swing.JFormattedTextField();
-        jLabel3 = new javax.swing.JLabel();
         cboService = new javax.swing.JComboBox<>();
-        jLabel4 = new javax.swing.JLabel();
         txtRegNo = new javax.swing.JTextField();
         txtPtName = new javax.swing.JTextField();
         butSearch = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblReaderEntry = new javax.swing.JTable();
-        jLabel5 = new javax.swing.JLabel();
         cboOPDCG = new javax.swing.JComboBox<>();
         cboComplete = new javax.swing.JComboBox<>();
         butPrint = new javax.swing.JButton();
+        jCheckBox1 = new javax.swing.JCheckBox();
 
-        jLabel1.setFont(Global.lableFont);
-        jLabel1.setText("From ");
-
+        txtFrom.setBorder(javax.swing.BorderFactory.createTitledBorder("From"));
         txtFrom.setFont(Global.textFont);
         txtFrom.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -228,9 +222,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
             }
         });
 
-        jLabel2.setFont(Global.lableFont);
-        jLabel2.setText("To ");
-
+        txtTo.setBorder(javax.swing.BorderFactory.createTitledBorder("To"));
         txtTo.setFont(Global.textFont);
         txtTo.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -243,15 +235,11 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
             }
         });
 
-        jLabel3.setFont(Global.lableFont);
-        jLabel3.setText("Service ");
-
         cboService.setFont(Global.textFont);
-
-        jLabel4.setFont(Global.lableFont);
-        jLabel4.setText("Patient ");
+        cboService.setBorder(javax.swing.BorderFactory.createTitledBorder("Service"));
 
         txtRegNo.setFont(Global.textFont);
+        txtRegNo.setBorder(javax.swing.BorderFactory.createTitledBorder("Reg No."));
         txtRegNo.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtRegNoFocusGained(evt);
@@ -264,6 +252,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         });
 
         txtPtName.setFont(Global.textFont);
+        txtPtName.setBorder(javax.swing.BorderFactory.createTitledBorder("Name"));
         txtPtName.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtPtNameFocusGained(evt);
@@ -287,13 +276,12 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         tblReaderEntry.setRowHeight(23);
         jScrollPane1.setViewportView(tblReaderEntry);
 
-        jLabel5.setFont(Global.lableFont);
-        jLabel5.setText("OPD CG");
-
         cboOPDCG.setFont(Global.textFont);
+        cboOPDCG.setBorder(javax.swing.BorderFactory.createTitledBorder("OPD CG"));
 
         cboComplete.setFont(Global.textFont);
         cboComplete.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "Complete", "In-Complete" }));
+        cboComplete.setBorder(javax.swing.BorderFactory.createTitledBorder("Status"));
 
         butPrint.setText("Print");
         butPrint.addActionListener(new java.awt.event.ActionListener() {
@@ -301,6 +289,8 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                 butPrintActionPerformed(evt);
             }
         });
+
+        jCheckBox1.setText("Check Miss Reader");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -311,29 +301,21 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(txtFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cboService, 0, 92, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel5)
+                        .addComponent(cboService, 0, 75, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboOPDCG, 0, 81, Short.MAX_VALUE)
+                        .addComponent(cboOPDCG, 0, 75, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel4)
+                        .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtPtName, javax.swing.GroupLayout.DEFAULT_SIZE, 68, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtPtName, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                        .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jCheckBox1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butSearch)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -344,23 +326,21 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(txtFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3)
-                    .addComponent(cboService, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4)
-                    .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(butSearch)
-                    .addComponent(jLabel5)
-                    .addComponent(cboOPDCG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(butPrint))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboService, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtPtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboOPDCG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jCheckBox1)
+                        .addComponent(butSearch)
+                        .addComponent(butPrint)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 76, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -448,11 +428,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
     private javax.swing.JComboBox<String> cboComplete;
     private javax.swing.JComboBox<String> cboOPDCG;
     private javax.swing.JComboBox<String> cboService;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
+    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblReaderEntry;
     private javax.swing.JFormattedTextField txtFrom;

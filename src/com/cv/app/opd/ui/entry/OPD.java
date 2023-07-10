@@ -13,6 +13,7 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
 import com.cv.app.inpatient.ui.util.PackageSearchDialog;
+import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.ClinicPackage;
 import com.cv.app.opd.database.entity.Doctor;
@@ -366,14 +367,22 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         //double ttlBill = Double.parseDouble(txtBillTotal.getText());
                         if (chkCloseBill.isSelected()) {
                             Patient pt = currVou.getPatient();
+                            BillOpeningHis boh = null;
                             if (pt != null) {
                                 if (pt.getOtId() != null) {
                                     log.error("Bill Close Save ==> OT Vou No : " + currVou.getOpdInvId()
                                             + " Reg No : " + pt.getRegNo() + " User Id : " + Global.loginUser.getUserId()
                                             + " Bill Id : " + pt.getOtId());
+                                    boh = (BillOpeningHis)dao.find(BillOpeningHis.class, pt.getOtId());
+                                    boh.setStatus(false);
+                                    boh.setBillCLDate(new Date());
+                                    boh.setCloseBy(Global.loginUser.getUserId());
                                 }
                                 pt.setOtId(null);
                                 dao.save(pt);
+                                if(boh != null){
+                                    dao.save(boh);
+                                }
                             }
                         }
                     } catch (Exception ex) {
@@ -2269,6 +2278,45 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         return listDetail;
     }
 
+    private void openBill() {
+        try {
+            Patient pt = (Patient) dao.find(Patient.class, txtPatientNo.getText().trim());
+            if (pt != null) {
+                if (pt.getOtId() == null) {
+                    RegNo regNo = new RegNo(dao, "OT-ID");
+                    pt.setOtId(regNo.getRegNo());
+                    dao.save(pt);
+                    regNo.updateRegNo();
+                    txtBill.setText(pt.getOtId());
+                    cboPaymentType.setSelectedItem(ptCredit);
+                    butOTID.setEnabled(false);
+                    
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(pt.getAdmissionNo());
+                    boh.setBillId(pt.getOtId());
+                    boh.setBillOPDate(new Date());
+                    boh.setOpenBy(Global.loginUser.getUserId());
+                    boh.setRegNo(pt.getRegNo());
+                    boh.setStatus(true);
+                    dao.save(boh);
+                } else {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
+                            "Bill Id", JOptionPane.ERROR_MESSAGE);
+                    txtBill.setText(pt.getOtId());
+                    butOTID.setEnabled(false);
+                }
+            } else {
+                log.error("openBill : Invalid registration number :" + txtPatientNo.getText().trim());
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            log.error("openBill : " + txtPatientNo.getText().trim() + " : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -3207,21 +3255,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     }//GEN-LAST:event_butRemoveActionPerformed
 
     private void butOTIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOTIDActionPerformed
-        try {
-            RegNo regNo = new RegNo(dao, "OT-ID");
-            Patient pt = currVou.getPatient();
-            if (pt != null) {
-                pt.setOtId(regNo.getRegNo());
-                dao.save(pt);
-                regNo.updateRegNo();
-                txtBill.setText(pt.getOtId());
-                butOTID.setEnabled(false);
-            }
-        } catch (Exception ex) {
-            log.error("butOTIDActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
+        openBill();
     }//GEN-LAST:event_butOTIDActionPerformed
 
     private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed

@@ -12,6 +12,7 @@ import com.cv.app.common.RegNo;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
@@ -92,9 +93,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -4185,15 +4184,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/sale";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
-                    
+
                     CloseableHttpResponse response = httpClient.execute(request);
-                    
+
                     log.info(url + response.toString());
                 } catch (IOException e) {
                     log.error("uploadToAccount : " + e.getMessage());
@@ -4290,7 +4289,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -4597,6 +4596,45 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
 
         return status;
+    }
+
+    private void openBill() {
+        try {
+            Patient pt = (Patient) dao.find(Patient.class, txtCusId.getText().trim());
+            if (pt != null) {
+                if (pt.getOtId() == null) {
+                    RegNo regNo = new RegNo(dao, "OT-ID");
+                    pt.setOtId(regNo.getRegNo());
+                    dao.save(pt);
+                    regNo.updateRegNo();
+                    txtBill.setText(pt.getOtId());
+                    cboPayment.setSelectedItem(ptCredit);
+                    butOTID.setEnabled(false);
+                    
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(pt.getAdmissionNo());
+                    boh.setBillId(pt.getOtId());
+                    boh.setBillOPDate(new Date());
+                    boh.setOpenBy(Global.loginUser.getUserId());
+                    boh.setRegNo(pt.getRegNo());
+                    boh.setStatus(true);
+                    dao.save(boh);
+                } else {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
+                            "Bill Id", JOptionPane.ERROR_MESSAGE);
+                    txtBill.setText(pt.getOtId());
+                    butOTID.setEnabled(false);
+                }
+            } else {
+                log.error("openBill : Invalid registration number :" + txtCusId.getText().trim());
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            log.error("openBill : " + txtCusId.getText().trim() + " : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     /**
@@ -5810,22 +5848,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }//GEN-LAST:event_tblSaleFocusLost
 
     private void butOTIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOTIDActionPerformed
-        try {
-            RegNo regNo = new RegNo(dao, "OT-ID");
-            Patient pt = currSaleVou.getPatientId();
-            if (pt != null) {
-                pt.setOtId(regNo.getRegNo());
-                dao.save(pt);
-                regNo.updateRegNo();
-                txtBill.setText(pt.getOtId());
-                cboPayment.setSelectedItem(ptCredit);
-                butOTID.setEnabled(false);
-            }
-        } catch (Exception ex) {
-            log.error("butOTIDActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
+        openBill();
     }//GEN-LAST:event_butOTIDActionPerformed
 
     private void butAdmitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butAdmitActionPerformed
@@ -5903,15 +5926,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         if (strWeek != null) {
                             int week = Integer.parseInt(strWeek);
                             txtDueDate.setText(DateUtil.subDateTo(
-                                DateUtil.toDate(txtSaleDate.getText()), (week * 7)));
+                                    DateUtil.toDate(txtSaleDate.getText()), (week * 7)));
+                        }
                     }
                 }
+            } else {
+                txtDiscP.setText(null);
+                txtVouDiscount.setText(null);
             }
-        } else {
-            txtDiscP.setText(null);
-            txtVouDiscount.setText(null);
-        }
-        calculateTotalAmount();
+            calculateTotalAmount();
         }
     }//GEN-LAST:event_cboPaymentActionPerformed
 
@@ -5939,7 +5962,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (evt.getClickCount() == mouseClick) {
             if (!canEdit) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                    "Check Point", JOptionPane.ERROR_MESSAGE);
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
@@ -5962,7 +5985,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (evt.getClickCount() == mouseClick) {
             if (!canEdit) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                    "Check Point", JOptionPane.ERROR_MESSAGE);
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
@@ -6012,7 +6035,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private void txtDrNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDrNameMouseClicked
         if (!canEdit) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                "Check Point", JOptionPane.ERROR_MESSAGE);
+                    "Check Point", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
@@ -6030,7 +6053,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (evt.getClickCount() == mouseClick) {
             if (!canEdit) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                    "Check Point", JOptionPane.ERROR_MESSAGE);
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
@@ -6088,7 +6111,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         if (evt.getClickCount() == 2) {
             if (!canEdit) {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                    "Check Point", JOptionPane.ERROR_MESSAGE);
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
@@ -6116,7 +6139,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 locationId = ((Location) cboLocation.getSelectedItem()).getLocationId();
             }
             TraderSearchDialog dialog = new TraderSearchDialog(this,
-                "Customer List", locationId);
+                    "Customer List", locationId);
             dialog.setTitle("Customer List");
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);

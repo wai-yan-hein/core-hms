@@ -6,9 +6,11 @@ package com.cv.app.opd.ui.entry;
 
 import com.cv.app.common.Global;
 import com.cv.app.common.RegNo;
+import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
+import java.util.Date;
 import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
 
@@ -37,6 +39,15 @@ public class BillProcess extends javax.swing.JPanel {
                     pt.setOtId(regNo.getRegNo());
                     dao.save(pt);
                     regNo.updateRegNo();
+                    
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(pt.getAdmissionNo());
+                    boh.setBillId(pt.getOtId());
+                    boh.setBillOPDate(new Date());
+                    boh.setOpenBy(Global.loginUser.getUserId());
+                    boh.setRegNo(pt.getRegNo());
+                    boh.setStatus(true);
+                    dao.save(boh);
                 } else {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
                                 "Bill Id", JOptionPane.ERROR_MESSAGE);
