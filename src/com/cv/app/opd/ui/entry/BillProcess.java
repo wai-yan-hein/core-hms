@@ -8,13 +8,18 @@ import com.cv.app.common.Global;
 import com.cv.app.common.RegNo;
 import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Patient;
+import com.cv.app.opd.ui.common.OpenBillPatientTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
 
 /**
@@ -26,7 +31,9 @@ public class BillProcess extends javax.swing.JPanel {
     static Logger log = Logger.getLogger(BillProcess.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private Patient obPatient = null;
-    
+    private final OpenBillPatientTableModel patientMode = new OpenBillPatientTableModel();
+    private BillOpeningHis currRecord = null;
+
     /**
      * Creates new form BillProcess
      */
@@ -34,10 +41,14 @@ public class BillProcess extends javax.swing.JPanel {
         initComponents();
         initTable();
         getBillOpen();
-        butOBClear.setEnabled(false);
+        butOpen.setEnabled(false);
+        butCloseBill.setEnabled(false);
+        butBillMarge.setEnabled(false);
+        butVouAdd.setEnabled(false);
     }
 
     private void openBill() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             Patient pt = (Patient) dao.find(Patient.class, txtOBRegNo.getText().trim());
             if (pt != null) {
@@ -56,6 +67,8 @@ public class BillProcess extends javax.swing.JPanel {
                     boh.setStatus(true);
                     dao.save(boh);
                     butOpen.setEnabled(false);
+                    txtOBBillId.setText(pt.getOtId());
+                    getBillOpen();
                 } else {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
                             "Bill Id", JOptionPane.ERROR_MESSAGE);
@@ -69,71 +82,138 @@ public class BillProcess extends javax.swing.JPanel {
         } finally {
             dao.close();
         }
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
-    
+
     private void getBillOpen() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            ResultSet rs = dao.execSQL("select a.bill_id, a.reg_no, a.adm_no, a.bill_op_date, b.patient_name\n"
+            ResultSet rs = dao.execSQL("select a.bill_id, a.reg_no, a.adm_no, "
+                    + "a.bill_op_date, b.patient_name, a.op_cl_status \n"
                     + "from (select * from bill_opening_his where op_cl_status = true) a\n"
                     + "join patient_detail b on a.reg_no = b.reg_no\n"
                     + "order by b.patient_name");
-            if(rs != null){
+            if (rs != null) {
                 List<BillOpeningHis> list = new ArrayList();
-                while(rs.next()){
+                while (rs.next()) {
                     BillOpeningHis boh = new BillOpeningHis();
                     boh.setAdmNo(rs.getString("adm_no"));
                     boh.setBillId(rs.getString("bill_id"));
                     boh.setBillOPDate(rs.getDate("bill_op_date"));
                     boh.setPtName(rs.getString("patient_name"));
                     boh.setRegNo(rs.getString("reg_no"));
-                    
+                    boh.setStatus(rs.getBoolean("op_cl_status"));
                     list.add(boh);
                 }
-                
-                
+
+                patientMode.setList(list);
             }
         } catch (Exception ex) {
             log.error("getBillOpen : " + ex.getMessage());
         } finally {
             dao.close();
         }
-    }
-    
-    private void initTable(){
-        
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
 
-    private void clearOB(){
+    private void initTable() {
+        tblPatientList.getColumnModel().getColumn(0).setPreferredWidth(50); //Date
+        tblPatientList.getColumnModel().getColumn(1).setPreferredWidth(30); //Bill Id
+        tblPatientList.getColumnModel().getColumn(2).setPreferredWidth(30); //Reg No.
+        tblPatientList.getColumnModel().getColumn(3).setPreferredWidth(30); //Adm No.
+        tblPatientList.getColumnModel().getColumn(4).setPreferredWidth(170); //Name
+
+        tblPatientList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblPatientList.getSelectionModel().addListSelectionListener(
+                new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (tblPatientList.getSelectedRow() >= 0) {
+                    int selectRow = tblPatientList.convertRowIndexToModel(tblPatientList.getSelectedRow());
+                    if (selectRow >= 0) {
+                        BillOpeningHis record = patientMode.getData(selectRow);
+                        selectRecord(record);
+                    }
+                }
+            }
+        });
+    }
+
+    private void selectRecord(BillOpeningHis record) {
+        currRecord = record;
+        txtBillId.setText(record.getBillId());
+        txtRegNo.setText(record.getRegNo());
+        txtAdmNo.setText(record.getAdmNo());
+        txtName.setText(record.getPtName());
+        boolean status = record.getStatus();
+        butVouAdd.setEnabled(status);
+        butBillMarge.setEnabled(status);
+        butCloseBill.setEnabled(status);
+        txtBillId.setEnabled(false);
+        txtAdmNo.setEnabled(false);
+    }
+
+    private void clearOB() {
         txtOBRegNo.setText(null);
         txtOBName.setText(null);
         txtOBBillId.setText(null);
         butOBClear.setEnabled(true);
         obPatient = null;
     }
-    
-    private void getOBPatient(){
-        try{
-            obPatient = (Patient)dao.find(Patient.class, txtOBRegNo.getText().trim());
-            if(obPatient != null){
+
+    private void getOBPatient() {
+        try {
+            obPatient = (Patient) dao.find(Patient.class, txtOBRegNo.getText().trim());
+            if (obPatient != null) {
                 txtOBBillId.setText(obPatient.getOtId());
                 txtOBName.setText(obPatient.getPatientName());
                 txtOBRegNo.setText(obPatient.getRegNo());
-                if(obPatient.getOtId() == null){
+                if (obPatient.getOtId() == null) {
                     butOpen.setEnabled(true);
-                }else{
+                } else {
                     butOpen.setEnabled(false);
                 }
-            }else{
+            } else {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
                         "Invalid Patient", JOptionPane.ERROR_MESSAGE);
                 obPatient = null;
             }
-        }catch(Exception ex){
+        } catch (Exception ex) {
             log.error("getOBPatient : " + ex.getMessage());
-        }finally{
+        } finally {
             dao.close();
         }
     }
+
+    private void closeBill() {
+        if (currRecord.getBillId() != null) {
+            int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to close bill?",
+                    "Bill Close", JOptionPane.YES_NO_OPTION);
+
+            if (yes_no == 0) {
+                try {
+                    BillOpeningHis record = (BillOpeningHis) dao.find(BillOpeningHis.class,
+                            currRecord.getBillId());
+                    record.setBillCLDate(new Date());
+                    record.setCloseBy(Global.loginUser.getUserId());
+                    record.setStatus(false);
+                    
+                    Patient pt = (Patient) dao.find(Patient.class, currRecord.getRegNo());
+                    pt.setOtId(null);
+                    
+                    dao.save(record);
+                    dao.save(pt);
+                    
+                    getBillOpen();
+                } catch (Exception ex) {
+                    log.error("closeBill : Bill Id : " + currRecord.getBillId() + " : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -147,6 +227,7 @@ public class BillProcess extends javax.swing.JPanel {
         txtFilter = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblPatientList = new javax.swing.JTable();
+        butRefresh = new javax.swing.JButton();
         txtRegNo = new javax.swing.JTextField();
         txtAdmNo = new javax.swing.JTextField();
         txtName = new javax.swing.JTextField();
@@ -162,6 +243,8 @@ public class BillProcess extends javax.swing.JPanel {
         butBillMarge = new javax.swing.JButton();
         butVouAdd = new javax.swing.JButton();
         txtTtlPaid = new javax.swing.JFormattedTextField();
+        butClearBill = new javax.swing.JButton();
+        butPrint = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         txtOBRegNo = new javax.swing.JTextField();
         txtOBName = new javax.swing.JTextField();
@@ -172,19 +255,17 @@ public class BillProcess extends javax.swing.JPanel {
 
         txtFilter.setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
 
-        tblPatientList.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
+        tblPatientList.setFont(Global.textFont);
+        tblPatientList.setModel(patientMode);
         tblPatientList.setRowHeight(23);
         jScrollPane1.setViewportView(tblPatientList);
+
+        butRefresh.setText("Refresh");
+        butRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRefreshActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -193,15 +274,20 @@ public class BillProcess extends javax.swing.JPanel {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtFilter)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 624, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 642, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butRefresh)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butRefresh))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
                 .addContainerGap())
@@ -210,7 +296,6 @@ public class BillProcess extends javax.swing.JPanel {
         txtRegNo.setEditable(false);
         txtRegNo.setBorder(javax.swing.BorderFactory.createTitledBorder("Reg No."));
 
-        txtAdmNo.setEditable(false);
         txtAdmNo.setBorder(javax.swing.BorderFactory.createTitledBorder("Adm No."));
 
         txtName.setEditable(false);
@@ -218,6 +303,7 @@ public class BillProcess extends javax.swing.JPanel {
 
         txtBillId.setBorder(javax.swing.BorderFactory.createTitledBorder("Bill Id"));
 
+        jTable1.setFont(Global.textFont);
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
@@ -245,6 +331,11 @@ public class BillProcess extends javax.swing.JPanel {
         txtVouTotal.setBorder(javax.swing.BorderFactory.createTitledBorder("Vou Total"));
 
         butCloseBill.setText("Close Bill");
+        butCloseBill.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butCloseBillActionPerformed(evt);
+            }
+        });
 
         butBillMarge.setText("Bill Marge");
 
@@ -252,6 +343,10 @@ public class BillProcess extends javax.swing.JPanel {
 
         txtTtlPaid.setEditable(false);
         txtTtlPaid.setBorder(javax.swing.BorderFactory.createTitledBorder("Ttl Paid"));
+
+        butClearBill.setText("Clear Bill");
+
+        butPrint.setText("Pring");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -263,27 +358,30 @@ public class BillProcess extends javax.swing.JPanel {
                 .addComponent(butBillMarge)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(butVouAdd)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(txtVouTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTtlVouTax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(butClearBill)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTtlVouDisc, javax.swing.GroupLayout.PREFERRED_SIZE, 135, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(butPrint)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTtlPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtVouTotal, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTtlVouBal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(txtTtlVouTax, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTtlVouDisc, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTtlPaid, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTtlVouBal, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE))
         );
-
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtTtlPaid, txtTtlVouBal, txtTtlVouDisc, txtTtlVouTax, txtVouTotal});
-
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(txtTtlVouBal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(butCloseBill)
                 .addComponent(butBillMarge)
-                .addComponent(butVouAdd))
+                .addComponent(butVouAdd)
+                .addComponent(butClearBill)
+                .addComponent(butPrint))
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(txtTtlVouDisc, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addComponent(txtTtlVouTax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -418,12 +516,23 @@ public class BillProcess extends javax.swing.JPanel {
         getOBPatient();
     }//GEN-LAST:event_txtOBRegNoActionPerformed
 
+    private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed
+        getBillOpen();
+    }//GEN-LAST:event_butRefreshActionPerformed
+
+    private void butCloseBillActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCloseBillActionPerformed
+        closeBill();
+    }//GEN-LAST:event_butCloseBillActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butBillMarge;
+    private javax.swing.JButton butClearBill;
     private javax.swing.JButton butCloseBill;
     private javax.swing.JButton butOBClear;
     private javax.swing.JButton butOpen;
+    private javax.swing.JButton butPrint;
+    private javax.swing.JButton butRefresh;
     private javax.swing.JButton butVouAdd;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;

@@ -71,10 +71,14 @@
               <Group type="102" attributes="0">
                   <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="txtFilter" max="32767" attributes="0"/>
-                      <Component id="jScrollPane1" pref="624" max="32767" attributes="0"/>
+                      <Component id="jScrollPane1" pref="642" max="32767" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <Component id="txtFilter" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="butRefresh" min="-2" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
-                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -82,8 +86,11 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="0" attributes="0">
                   <EmptySpace min="-2" max="-2" attributes="0"/>
-                  <Component id="txtFilter" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="txtFilter" min="-2" max="-2" attributes="0"/>
+                      <Component id="butRefresh" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Component id="jScrollPane1" pref="439" max="32767" attributes="0"/>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
@@ -109,19 +116,25 @@
           <SubComponents>
             <Component class="javax.swing.JTable" name="tblPatientList">
               <Properties>
-                <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="4" rowCount="4">
-                    <Column editable="true" title="Title 1" type="java.lang.Object"/>
-                    <Column editable="true" title="Title 2" type="java.lang.Object"/>
-                    <Column editable="true" title="Title 3" type="java.lang.Object"/>
-                    <Column editable="true" title="Title 4" type="java.lang.Object"/>
-                  </Table>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="Global.textFont" type="code"/>
+                </Property>
+                <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="patientMode" type="code"/>
                 </Property>
                 <Property name="rowHeight" type="int" value="23"/>
               </Properties>
             </Component>
           </SubComponents>
         </Container>
+        <Component class="javax.swing.JButton" name="butRefresh">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Refresh"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="butRefreshActionPerformed"/>
+          </Events>
+        </Component>
       </SubComponents>
     </Container>
     <Component class="javax.swing.JTextField" name="txtRegNo">
@@ -136,7 +149,6 @@
     </Component>
     <Component class="javax.swing.JTextField" name="txtAdmNo">
       <Properties>
-        <Property name="editable" type="boolean" value="false"/>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
             <TitledBorder title="Adm No."/>
@@ -172,6 +184,9 @@
       <SubComponents>
         <Component class="javax.swing.JTable" name="jTable1">
           <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="Global.textFont" type="code"/>
+            </Property>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
               <Table columnCount="4" rowCount="4">
                 <Column editable="true" title="Title 1" type="java.lang.Object"/>
@@ -192,20 +207,24 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="1" attributes="0">
                   <Component id="butCloseBill" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Component id="butBillMarge" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Component id="butVouAdd" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="32767" attributes="0"/>
-                  <Component id="txtVouTotal" linkSize="3" min="-2" pref="119" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="txtTtlVouTax" linkSize="3" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="txtTtlVouDisc" linkSize="3" min="-2" pref="135" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="txtTtlPaid" linkSize="3" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="txtTtlVouBal" linkSize="3" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="butClearBill" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="butPrint" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="txtVouTotal" pref="99" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="txtTtlVouTax" pref="99" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="txtTtlVouDisc" pref="99" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="txtTtlPaid" pref="99" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Component id="txtTtlVouBal" pref="98" max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -216,6 +235,8 @@
                   <Component id="butCloseBill" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="butBillMarge" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="butVouAdd" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="butClearBill" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="butPrint" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <Group type="103" alignment="0" groupAlignment="3" attributes="0">
                   <Component id="txtTtlVouDisc" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -271,6 +292,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Close Bill"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="butCloseBillActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="butBillMarge">
           <Properties>
@@ -290,6 +314,16 @@
                 <TitledBorder title="Ttl Paid"/>
               </Border>
             </Property>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="butClearBill">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Clear Bill"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="butPrint">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Pring"/>
           </Properties>
         </Component>
       </SubComponents>

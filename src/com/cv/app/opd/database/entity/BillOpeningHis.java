@@ -59,6 +59,9 @@ public class BillOpeningHis implements Serializable{
 
     @Column(name="op_cl_status")
     public Boolean getStatus() {
+        if(status == null){
+            return false;
+        }
         return status;
     }
 
