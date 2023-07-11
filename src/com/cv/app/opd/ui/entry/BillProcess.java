@@ -10,7 +10,10 @@ import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.util.Util1;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
 
@@ -22,12 +25,16 @@ public class BillProcess extends javax.swing.JPanel {
 
     static Logger log = Logger.getLogger(BillProcess.class.getName());
     private final AbstractDataAccess dao = Global.dao;
-
+    private Patient obPatient = null;
+    
     /**
      * Creates new form BillProcess
      */
     public BillProcess() {
         initComponents();
+        initTable();
+        getBillOpen();
+        butOBClear.setEnabled(false);
     }
 
     private void openBill() {
@@ -39,7 +46,7 @@ public class BillProcess extends javax.swing.JPanel {
                     pt.setOtId(regNo.getRegNo());
                     dao.save(pt);
                     regNo.updateRegNo();
-                    
+
                     BillOpeningHis boh = new BillOpeningHis();
                     boh.setAdmNo(pt.getAdmissionNo());
                     boh.setBillId(pt.getOtId());
@@ -48,13 +55,14 @@ public class BillProcess extends javax.swing.JPanel {
                     boh.setRegNo(pt.getRegNo());
                     boh.setStatus(true);
                     dao.save(boh);
+                    butOpen.setEnabled(false);
                 } else {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
-                                "Bill Id", JOptionPane.ERROR_MESSAGE);
+                            "Bill Id", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
-                                "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
             log.error("openBill : " + txtOBRegNo.getText().trim() + " : " + ex.getMessage());
@@ -62,7 +70,70 @@ public class BillProcess extends javax.swing.JPanel {
             dao.close();
         }
     }
+    
+    private void getBillOpen() {
+        try {
+            ResultSet rs = dao.execSQL("select a.bill_id, a.reg_no, a.adm_no, a.bill_op_date, b.patient_name\n"
+                    + "from (select * from bill_opening_his where op_cl_status = true) a\n"
+                    + "join patient_detail b on a.reg_no = b.reg_no\n"
+                    + "order by b.patient_name");
+            if(rs != null){
+                List<BillOpeningHis> list = new ArrayList();
+                while(rs.next()){
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(rs.getString("adm_no"));
+                    boh.setBillId(rs.getString("bill_id"));
+                    boh.setBillOPDate(rs.getDate("bill_op_date"));
+                    boh.setPtName(rs.getString("patient_name"));
+                    boh.setRegNo(rs.getString("reg_no"));
+                    
+                    list.add(boh);
+                }
+                
+                
+            }
+        } catch (Exception ex) {
+            log.error("getBillOpen : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void initTable(){
+        
+    }
 
+    private void clearOB(){
+        txtOBRegNo.setText(null);
+        txtOBName.setText(null);
+        txtOBBillId.setText(null);
+        butOBClear.setEnabled(true);
+        obPatient = null;
+    }
+    
+    private void getOBPatient(){
+        try{
+            obPatient = (Patient)dao.find(Patient.class, txtOBRegNo.getText().trim());
+            if(obPatient != null){
+                txtOBBillId.setText(obPatient.getOtId());
+                txtOBName.setText(obPatient.getPatientName());
+                txtOBRegNo.setText(obPatient.getRegNo());
+                if(obPatient.getOtId() == null){
+                    butOpen.setEnabled(true);
+                }else{
+                    butOpen.setEnabled(false);
+                }
+            }else{
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+                obPatient = null;
+            }
+        }catch(Exception ex){
+            log.error("getOBPatient : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -94,8 +165,10 @@ public class BillProcess extends javax.swing.JPanel {
         jPanel3 = new javax.swing.JPanel();
         txtOBRegNo = new javax.swing.JTextField();
         txtOBName = new javax.swing.JTextField();
-        butClear = new javax.swing.JButton();
-        txtOpen = new javax.swing.JButton();
+        butOBClear = new javax.swing.JButton();
+        butOpen = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        txtOBBillId = new javax.swing.JTextField();
 
         txtFilter.setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
 
@@ -110,6 +183,7 @@ public class BillProcess extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tblPatientList.setRowHeight(23);
         jScrollPane1.setViewportView(tblPatientList);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -155,6 +229,7 @@ public class BillProcess extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        jTable1.setRowHeight(23);
         jScrollPane2.setViewportView(jTable1);
 
         txtTtlVouBal.setEditable(false);
@@ -218,28 +293,51 @@ public class BillProcess extends javax.swing.JPanel {
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Open Bill"));
 
+        txtOBRegNo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtOBRegNoActionPerformed(evt);
+            }
+        });
+
         txtOBName.setEditable(false);
 
-        butClear.setText("Clear");
+        butOBClear.setText("Clear");
+        butOBClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butOBClearActionPerformed(evt);
+            }
+        });
 
-        txtOpen.setText("Open");
+        butOpen.setText("Open");
+        butOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butOpenActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setText("Bill ID");
+
+        txtOBBillId.setEditable(false);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(txtOBRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtOBName, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(txtOpen)
+                        .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butClear)))
+                        .addComponent(txtOBBillId)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butOpen)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butOBClear)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -249,9 +347,13 @@ public class BillProcess extends javax.swing.JPanel {
                     .addComponent(txtOBRegNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtOBName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(butClear)
-                    .addComponent(txtOpen))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(butOBClear)
+                        .addComponent(butOpen))
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel1)
+                        .addComponent(txtOBBillId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(0, 125, Short.MAX_VALUE))
         );
 
@@ -304,12 +406,26 @@ public class BillProcess extends javax.swing.JPanel {
 
     }// </editor-fold>//GEN-END:initComponents
 
+    private void butOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOpenActionPerformed
+        openBill();
+    }//GEN-LAST:event_butOpenActionPerformed
+
+    private void butOBClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOBClearActionPerformed
+        clearOB();
+    }//GEN-LAST:event_butOBClearActionPerformed
+
+    private void txtOBRegNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtOBRegNoActionPerformed
+        getOBPatient();
+    }//GEN-LAST:event_txtOBRegNoActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butBillMarge;
-    private javax.swing.JButton butClear;
     private javax.swing.JButton butCloseBill;
+    private javax.swing.JButton butOBClear;
+    private javax.swing.JButton butOpen;
     private javax.swing.JButton butVouAdd;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -321,9 +437,9 @@ public class BillProcess extends javax.swing.JPanel {
     private javax.swing.JTextField txtBillId;
     private javax.swing.JTextField txtFilter;
     private javax.swing.JTextField txtName;
+    private javax.swing.JTextField txtOBBillId;
     private javax.swing.JTextField txtOBName;
     private javax.swing.JTextField txtOBRegNo;
-    private javax.swing.JButton txtOpen;
     private javax.swing.JTextField txtRegNo;
     private javax.swing.JFormattedTextField txtTtlPaid;
     private javax.swing.JFormattedTextField txtTtlVouBal;
