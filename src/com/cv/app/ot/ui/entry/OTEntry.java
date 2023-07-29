@@ -1209,11 +1209,13 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         double discount = NumberUtil.NZero(txtDiscA.getValue());
         double tax = NumberUtil.NZero(txtTaxA.getValue());
         double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
-        PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
-        if (pt.getPaymentTypeId() == 1) {
-            txtPaid.setValue((vouTotal + tax) - discount);
-        } else {
-            txtPaid.setValue(0);
+        if (Util1.getPropValue("system.app.allCash").equals("Y")) {
+            PaymentType pt = (PaymentType) cboPaymentType.getSelectedItem();
+            if (pt.getPaymentTypeId() == 1) {
+                txtPaid.setValue((vouTotal + tax) - discount);
+            } else {
+                txtPaid.setValue(0);
+            }
         }
         double paid = NumberUtil.NZero(txtPaid.getValue());
         txtVouBalance.setValue((vouTotal + tax) - (discount + paid));

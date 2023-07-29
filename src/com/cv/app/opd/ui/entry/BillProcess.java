@@ -346,7 +346,7 @@ public class BillProcess extends javax.swing.JPanel {
 
         butClearBill.setText("Clear Bill");
 
-        butPrint.setText("Pring");
+        butPrint.setText("Print");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);

@@ -646,10 +646,9 @@ public class RetInVouSearch1 extends javax.swing.JPanel implements SelectionObse
                 .addContainerGap(327, Short.MAX_VALUE))
         );
 
-        tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblVoucher.setFont(Global.textFont);
         tblVoucher.setModel(vouTableModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblVoucherMouseClicked(evt);

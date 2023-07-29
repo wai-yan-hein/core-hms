@@ -1371,7 +1371,7 @@ public class SaleVouSearch extends javax.swing.JPanel implements SelectionObserv
                 .addContainerGap())
         );
 
-        tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblVoucher.setFont(Global.textFont);
         tblVoucher.setModel(tableVouModel);
         tblVoucher.setRowHeight(23);
         tblVoucher.addFocusListener(new java.awt.event.FocusAdapter() {

@@ -241,6 +241,7 @@ public class ExpenseEntryTableModel extends AbstractTableModel {
                                     }
                                 }
                                 tmpGE.setDeleted(true);
+                                tmpGE.setIntgUpdStatus(null);
                                 tmpGE.setUpdatedBy(Global.loginUser.getUserId());
                                 tmpGE.setUpdatedDate(new Date());
                                 dao.save(tmpGE);

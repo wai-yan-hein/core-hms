@@ -323,7 +323,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="butPrint">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Pring"/>
+            <Property name="text" type="java.lang.String" value="Print"/>
           </Properties>
         </Component>
       </SubComponents>
