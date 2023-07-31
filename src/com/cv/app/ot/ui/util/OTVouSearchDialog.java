@@ -343,6 +343,8 @@ public class OTVouSearchDialog extends javax.swing.JDialog implements SelectionO
             tblVou.getColumnModel().getColumn(3).setPreferredWidth(30);
             tblVou.getColumnModel().getColumn(4).setPreferredWidth(20);
             tblVou.getTableHeader().setFont(Global.lableFont);
+            tblVou.setFont(Global.textFont);
+            tblVou.setRowHeight(Global.rowHeight);
             //Define table selection model to single row selection.
             tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adding table row selection listener.

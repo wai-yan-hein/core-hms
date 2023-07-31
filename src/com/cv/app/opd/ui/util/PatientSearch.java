@@ -87,6 +87,7 @@ public class PatientSearch extends javax.swing.JDialog {
         tblPatient.getColumnModel().getColumn(4).setPreferredWidth(30);
         tblPatient.getColumnModel().getColumn(5).setPreferredWidth(150);
         tblPatient.getTableHeader().setFont(Global.lableFont);
+        tblPatient.setRowHeight(Global.rowHeight);
         //Define table selection model to single row selection.
         tblPatient.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.

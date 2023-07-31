@@ -92,9 +92,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -1313,6 +1311,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
             tblSale.getTableHeader().setReorderingAllowed(false);
             tblSale.getTableHeader().setFont(Global.lableFont);
+            tblSale.setFont(Global.textFont);
+            tblSale.setRowHeight(Global.rowHeight);
             tblSale.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
             //Adjust column width
             tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
@@ -4200,9 +4200,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     final List<NameValuePair> params = new ArrayList();
                     params.add(new BasicNameValuePair("vouNo", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
-                    
+
                     CloseableHttpResponse response = httpClient.execute(request);
-                    
+
                     log.info(url + response.toString());
                 } catch (IOException e) {
                     log.error("uploadToAccount : " + e.getMessage());

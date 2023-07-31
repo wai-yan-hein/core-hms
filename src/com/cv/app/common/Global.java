@@ -29,8 +29,9 @@ public class Global {
     public static HashMap<String, Boolean> hashPrivilege;
     public static HashMap<String, Object> defaultValue;
     public static Properties systemProperties;
-    public static Font lableFont;
-    public static Font textFont;
+    public static Font lableFont = new java.awt.Font("Zawgyi-One", 0, 12);
+    public static Font textFont = new java.awt.Font("Zawgyi-One", 0, 12);
+    public static int rowHeight = 23;
     public static Font menuFont = new java.awt.Font("Zawgyi-One", 0, 16);
     public static Font sysFont = new java.awt.Font("Zawgyi-One", 1, 14);
     public static ServerSocket sock;

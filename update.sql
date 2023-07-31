@@ -273,3 +273,22 @@ set sql_safe_updates =0;
 update building_structure b join(
 select reg_no,building_structure_id from admission where dc_status is null) c on b.id = c.building_structure_id
 set b.reg_no = c.reg_no
+
+alter table pay_method 
+add column allow_amt double null after updated_date,
+add column factor int null after allow_amt,
+add column trader_id varchar(15) null after factor,
+add column group_code varchar(15) null after trader_id;
+
+
+alter table opd_details_his 
+add column need_doctor bit(1) null;
+
+
+alter table ot_details_his 
+add column need_doctor bit(1) null;
+
+
+alter table dc_details_his 
+add column need_doctor bit(1) null;
+

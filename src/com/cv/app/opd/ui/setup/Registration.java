@@ -113,6 +113,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         swrfGroup = new StartWithRowFilter(txtSearch);
         sorterGroup = new TableRowSorter(tblBooking.getModel());
         tblBooking.setRowSorter(sorterGroup);
+        tblBooking.setRowHeight(Global.rowHeight);
 
         initForFocus();
         timerFocus();
