@@ -439,7 +439,11 @@
                       <Component id="txtRemark" max="32767" attributes="0"/>
                       <Component id="cboAgeRange" max="32767" attributes="0"/>
                       <Group type="102" alignment="0" attributes="0">
-                          <Component id="txtBedNo" pref="405" max="32767" attributes="0"/>
+                          <Component id="txtBedNo" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="jLabel24" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="txtBillId" min="-2" pref="104" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="butAdmit" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
@@ -465,6 +469,8 @@
                       <Component id="jLabel13" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="txtBedNo" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="butAdmit" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="txtBillId" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel24" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -531,6 +537,19 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="butAdmitActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="txtBillId">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel24">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="Global.lableFont" type="code"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Bill Id"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
@@ -912,8 +931,8 @@
                       <Component id="txtVouTotal" alignment="0" max="32767" attributes="0"/>
                       <Group type="102" alignment="1" attributes="0">
                           <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                              <Component id="txtTaxP" alignment="1" max="32767" attributes="0"/>
-                              <Component id="txtDiscP" alignment="1" min="-2" pref="55" max="-2" attributes="0"/>
+                              <Component id="txtTaxP" max="32767" attributes="0"/>
+                              <Component id="txtDiscP" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
@@ -921,7 +940,7 @@
                               <Component id="txtTaxA" alignment="0" min="-2" pref="95" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <Component id="txtVouBalance" alignment="1" min="-2" pref="156" max="-2" attributes="0"/>
+                      <Component id="txtVouBalance" alignment="1" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
               </Group>

@@ -413,6 +413,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         txtVouNo.setText(null);
         txtPkgName.setText(null);
         txtPkgPrice.setValue(null);
+        txtBillId.setText(null);
         tableModel.clear();
         tableModel.setVouStatus("NEW");
         txtPatientNo.setEditable(true);
@@ -1224,6 +1225,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 txtPatientName.setText(patient.getPatientName());
                 txtPatientName.setEditable(false);
                 txtAdmissionNo.setText(patient.getAdmissionNo());
+                txtBillId.setText(patient.getOtId());
                 txtDoctorNo.requestFocus();
                 if (!Util1.isNullOrEmpty(patient.getAdmissionNo())) {
                     cboPaymentType.setSelectedItem(ptCredit);
@@ -2071,7 +2073,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             currVou.setPaid(NumberUtil.NZero(txtPaid.getValue()));
             currVou.setVouBalance(NumberUtil.NZero(txtVouBalance.getValue()));
             currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
-
+            currVou.setOtId(txtBillId.getText());
+            
             if (cboAgeRange.getSelectedItem() == null) {
                 currVou.setAgeRange(null);
             } else {
@@ -3064,6 +3067,8 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         jLabel13 = new javax.swing.JLabel();
         txtBedNo = new javax.swing.JTextField();
         butAdmit = new javax.swing.JButton();
+        txtBillId = new javax.swing.JTextField();
+        jLabel24 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblService = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
@@ -3353,6 +3358,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             }
         });
 
+        txtBillId.setEditable(false);
+
+        jLabel24.setFont(Global.lableFont);
+        jLabel24.setText("Bill Id");
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -3369,7 +3379,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     .addComponent(txtRemark)
                     .addComponent(cboAgeRange, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(txtBedNo, javax.swing.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
+                        .addComponent(txtBedNo)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel24)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtBillId, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butAdmit)
                         .addContainerGap())))
@@ -3391,7 +3405,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel13)
                     .addComponent(txtBedNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(butAdmit))
+                    .addComponent(butAdmit)
+                    .addComponent(txtBillId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel24))
                 .addContainerGap())
         );
 
@@ -3673,12 +3689,12 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(txtTaxP)
-                            .addComponent(txtDiscP, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(txtDiscP))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(txtDiscA)
                             .addComponent(txtTaxA, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(txtVouBalance, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtVouBalance))
                 .addGap(0, 0, 0))
         );
 
@@ -4251,6 +4267,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -4277,6 +4294,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
     private javax.swing.JTable tblService;
     private javax.swing.JTextField txtAdmissionNo;
     private javax.swing.JTextField txtBedNo;
+    private javax.swing.JTextField txtBillId;
     private javax.swing.JFormattedTextField txtBillTotal;
     private javax.swing.JFormattedTextField txtDate;
     private javax.swing.JFormattedTextField txtDiscA;

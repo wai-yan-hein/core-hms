@@ -263,6 +263,7 @@ public class BillTransferWHO extends javax.swing.JPanel implements SelectionObse
                     pbp.setAdmissionNo(btd.getAdmissionNo());
                     pbp.setPtType("ADMISSION");
                 }
+                pbp.setDelete(Boolean.FALSE);
                 pbp.setBillTypeDesp(billTypeDesp);
                 pbp.setBillTypeId(billType);
                 pbp.setCreatedBy(Global.loginUser.getUserId());

@@ -501,7 +501,6 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
 
         tblMedicine.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblMedicine.setRowHeight(23);
-        tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -572,10 +571,9 @@ public class TransferVouSearch extends javax.swing.JPanel implements SelectionOb
                 .addContainerGap())
         );
 
-        tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblVoucher.setFont(Global.textFont);
         tblVoucher.setModel(vouTableModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblVoucherMouseClicked(evt);

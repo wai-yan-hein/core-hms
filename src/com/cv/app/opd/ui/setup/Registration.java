@@ -11,6 +11,7 @@ import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.RegNo;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
+import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.City;
 import com.cv.app.opd.database.entity.Doctor;
@@ -84,6 +85,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     private final StartWithRowFilter swrfGroup;
     private final TableRowSorter<TableModel> sorterGroup;
     private boolean print = false;
+    private boolean billIdStatus = false;
 
     public void timerFocus() {
         Timer timer = new Timer(500, new ActionListener() {
@@ -231,7 +233,21 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         if (isValidEntry()) {
             try {
                 dao.save(currPatient);
-                log.error("Reg Check : " + currPatient.getRegNo() + ";" + currPatient.getPatientName());
+                //log.error("Reg Check : " + currPatient.getRegNo() + ";" + currPatient.getPatientName());
+
+                if (billIdStatus) {
+                    if (currPatient.getOtId() != null) {
+                        BillOpeningHis boh = new BillOpeningHis();
+                        boh.setAdmNo(currPatient.getAdmissionNo());
+                        boh.setBillId(currPatient.getOtId());
+                        boh.setBillOPDate(new Date());
+                        boh.setOpenBy(Global.loginUser.getUserId());
+                        boh.setRegNo(currPatient.getRegNo());
+                        boh.setStatus(true);
+                        dao.save(boh);
+                    }
+                }
+
                 if (lblStatus.getText().equals("NEW")) {
                     regNo.updateRegNo();
                 }
@@ -324,7 +340,9 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         txtBillID.setText(null);
         txtAdmissionNo.setText(null);
         lblAgeStr.setText(null);
+        butBillID.setEnabled(true);
         print = false;
+        billIdStatus = false;
     }
 
     @Override
@@ -493,6 +511,11 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     dao.close();
                     txtBillID.setText(currPatient.getOtId());
                     txtAdmissionNo.setText(currPatient.getAdmissionNo());
+                    if (currPatient.getOtId() != null) {
+                        butBillID.setEnabled(false);
+                    } else {
+                        butBillID.setEnabled(true);
+                    }
                 }
                 break;
             case "DoctorSearchFilter":
@@ -1117,14 +1140,42 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                 dao.commit();
             } catch (Exception ex) {
                 log.error("printForm : " + ex.getMessage());
-                if(ex.getMessage().equals("Invalid index")){
+                if (ex.getMessage().equals("Invalid index")) {
                     JOptionPane.showMessageDialog(Util1.getParent(),
-                    "Please select patient to print.", "Invalid Patient",
-                    JOptionPane.ERROR_MESSAGE);
+                            "Please select patient to print.", "Invalid Patient",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             } finally {
                 dao.close();
             }
+        }
+    }
+
+    private void openBill() {
+        try {
+            Patient pt = (Patient) dao.find(Patient.class, txtRegNo.getText().trim());
+            if (pt != null) {
+                if (pt.getOtId() == null) {
+                    RegNo regNo = new RegNo(dao, "OT-ID");
+                    txtBillID.setText(regNo.getRegNo());
+                    regNo.updateRegNo();
+                    butBillID.setEnabled(false);
+                    billIdStatus = true;
+                } else {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
+                            "Bill Id", JOptionPane.ERROR_MESSAGE);
+                    txtBillID.setText(pt.getOtId());
+                    butBillID.setEnabled(false);
+                }
+            } else {
+                log.error("openBill : Invalid registration number :" + txtRegNo.getText().trim());
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            log.error("openBill : " + txtRegNo.getText().trim() + " : " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 
@@ -1968,15 +2019,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
     }// </editor-fold>//GEN-END:initComponents
 
     private void butBillIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBillIDActionPerformed
-        try {
-            RegNo regNo = new RegNo(dao, "OT-ID");
-            txtBillID.setText(regNo.getRegNo());
-            regNo.updateRegNo();
-        } catch (Exception ex) {
-            log.error("butOTIDActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
+        openBill();
     }//GEN-LAST:event_butBillIDActionPerformed
 
     private void txtSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSearchActionPerformed

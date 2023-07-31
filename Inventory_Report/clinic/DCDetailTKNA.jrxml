@@ -50,7 +50,7 @@ and admission_no = $P{adm_no}
 and date(oh.opd_date) between date($P{adm_date}) and date($P{tran_date})
 group by og.group_name, date(oh.opd_date), os.service_name
 union all
-select 'DC' as tran_type, date(dc_date) tran_date,service_name  desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
+select 'IPD' as tran_type, date(dc_date) tran_date,service_name  desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
 from v_dc
 where deleted = false and admission_no = $P{adm_no}
@@ -61,7 +61,7 @@ and v_dc.service_id not in (select sys_prop_value from sys_prop
                                     'system.dc.refund.id'))
 group by date(dc_date), service_name
 union
- select 'DC' as tran_type,date(dc_date) tran_date,concat(service_name,' (',d.doctor_name,')') desp, sum(qty) qty, sum(amount) amount,sum(amount) amount1,
+ select 'IPD' as tran_type,date(dc_date) tran_date,concat(service_name,' (',d.doctor_name,')') desp, sum(qty) qty, sum(amount) amount,sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
 from v_dc ,dc_doctor_fee ddf,doctor d
 where deleted = false and admission_no = $P{adm_no} and v_dc.dc_detail_id = ddf.dc_detail_id
@@ -124,20 +124,20 @@ and date(opd_date) between date($P{adm_date}) and date($P{tran_date})
 and ifnull(ot_id,'') = ''
 group by date(opd_date) having amount > 0
 union all
-select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+select 'Payment' as tran_type, date(dc_date) tran_date, 'IPD Discount' desp, 1 as qty, sum(ifnull(disc_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
 FROM dc_his
 where deleted = false and admission_no = $P{adm_no}
 and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
 group by date(dc_date) having amount > 0
 union all
-select 'Payment' as tran_type, date(dc.dc_date) tran_date, 'DC Refund' desp, ddh.qty as qty, (- sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
+select 'Payment' as tran_type, date(dc.dc_date) tran_date, 'IPD Refund' desp, ddh.qty as qty, (- sum(ifnull(ddh.qty,1) * ifnull(ddh.price,0))) amount, 'Total Payment : ' as TRAN_OPTION
 FROM dc_his dc,dc_details_his ddh
 where dc.dc_inv_id = ddh.vou_no and ddh.service_id in (select sys_prop_value from sys_prop
 								    where sys_prop_desp in ('system.dc.refund.id')) and dc.deleted = false and dc.admission_no = $P{adm_no}
 and date(dc.dc_date) between date($P{adm_date}) and date($P{tran_date})
 group by date(dc.dc_date) having amount != 0
 union all
-select 'Payment' as tran_type, date(dc_date) tran_date, 'DC Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
+select 'Payment' as tran_type, date(dc_date) tran_date, 'IPD Tax' desp, 1 as qty, sum(ifnull(tax_a,0)) amount, 'Total Payment : ' as TRAN_OPTION
 FROM dc_his
 where deleted = false and admission_no = $P{adm_no}
 and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
@@ -145,7 +145,7 @@ group by date(dc_date) having amount > 0
 union all
 select tran_type,tran_date,desp,qty,amount,tran_option
 from
-(select 'Payment' as tran_type, date(dc_date) tran_date, concat('DC ',s.service_name) desp, sum(ddh.qty) qty, sum(ifnull(ddh.amount,0)) amount, 'Total Payment : ' as TRAN_OPTION
+(select 'Payment' as tran_type, date(dc_date) tran_date, concat('IPD ',s.service_name) desp, sum(ddh.qty) qty, sum(ifnull(ddh.amount,0)) amount, 'Total Payment : ' as TRAN_OPTION
 FROM dc_his dh,dc_details_his ddh, inp_service s
 where deleted = false and admission_no = $P{adm_no} and dh.dc_inv_id = ddh.vou_no and ddh.service_id = s.service_id
 and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
@@ -156,7 +156,7 @@ group by tran_type,tran_date,desp,qty,amount,tran_option ) a
 where a.tran_date is not null and a.amount <> 0
 group by tran_type, tran_date, desp
 ) a
-where a.tran_date is not null and a.amount <> 0
+where a.tran_date is not null 
 group by a.tran_date,a.desp,a.tran_type,a.TRAN_OPTION,a.TRAN_OPTION1
 order by a.TRAN_OPTION, a.tran_type, a.tran_date]]>
 	</queryString>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptTranByDoc" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="600d1c84-ce59-45f1-b325-4d577c173725">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -18,7 +18,8 @@ inner join location locf on vt.from_location = locf.location_id
 inner join location loct on vt.to_location = loct.location_id
 left join trader cus on vt.cus_id = cus.trader_id
 left join trader sup on vt.sup_id = sup.trader_id
- where vt.med_id = med.med_id and vt.transfer_id = $P{tran_id}]]>
+ where vt.med_id = med.med_id and vt.transfer_id = $P{tran_id}
+ order by vt.unique_id]]>
 	</queryString>
 	<field name="med_id" class="java.lang.String"/>
 	<field name="med_name" class="java.lang.String"/>
@@ -273,9 +274,43 @@ left join trader sup on vt.sup_id = sup.trader_id
 		</band>
 	</detail>
 	<summary>
-		<band height="2" splitType="Stretch">
+		<band height="74" splitType="Stretch">
 			<line>
 				<reportElement x="0" y="1" width="555" height="1" uuid="329d71c1-6c23-4c54-b367-3ba96209bcfe"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="59" width="100" height="15" uuid="8a8bae19-fb20-49de-b106-251917641c10">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[Store Keeper]]></text>
+			</staticText>
+			<line>
+				<reportElement x="1" y="57" width="100" height="1" uuid="98d21b78-6859-4136-b253-9684309b9022">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="450" y="59" width="100" height="15" uuid="b078cb20-9f48-4ba3-96fb-1f9871248a6b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Arial"/>
+				</textElement>
+				<text><![CDATA[Receiver]]></text>
+			</staticText>
+			<line>
+				<reportElement x="451" y="57" width="100" height="1" uuid="5040f12c-2628-4f70-8b21-400535115788">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
 			</line>
 		</band>
 	</summary>

@@ -12,6 +12,7 @@ import com.cv.app.common.RegNo;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.BillOpeningHis;
 import com.cv.app.opd.database.entity.Booking;
 import com.cv.app.opd.database.entity.Doctor;
 import com.cv.app.opd.database.entity.Patient;
@@ -3320,11 +3321,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                 } else {
                     if (Util1.getPropValue("report.file.type").equals("con")) {
+                        JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                         int count = (int) spPrint.getValue();
                         for (int i = 0; i < count; i++) {
-                            JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                             ReportUtil.printJasper(jp, printerName);
-                            params.put("user_desp", "Receive Voucher, Thanks You.");
                         }
                     } else {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, listDetail);
@@ -4181,20 +4181,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
     }
 
-    private void txtRemark1ActionPerformed(java.awt.event.ActionEvent evt) {
-
-    }
-
-    private void txtCusAddressMouseClicked(java.awt.event.MouseEvent evt) {
-
-    }
-
     private void uploadToAccount(String vouNo) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/sale";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -4299,7 +4291,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtSaleDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -4608,6 +4600,45 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         return status;
     }
 
+    private void openBill() {
+        try {
+            Patient pt = (Patient) dao.find(Patient.class, txtCusId.getText().trim());
+            if (pt != null) {
+                if (pt.getOtId() == null) {
+                    RegNo regNo = new RegNo(dao, "OT-ID");
+                    pt.setOtId(regNo.getRegNo());
+                    dao.save(pt);
+                    regNo.updateRegNo();
+                    txtBill.setText(pt.getOtId());
+                    cboPayment.setSelectedItem(ptCredit);
+                    butOTID.setEnabled(false);
+                    
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(pt.getAdmissionNo());
+                    boh.setBillId(pt.getOtId());
+                    boh.setBillOPDate(new Date());
+                    boh.setOpenBy(Global.loginUser.getUserId());
+                    boh.setRegNo(pt.getRegNo());
+                    boh.setStatus(true);
+                    dao.save(boh);
+                } else {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
+                            "Bill Id", JOptionPane.ERROR_MESSAGE);
+                    txtBill.setText(pt.getOtId());
+                    butOTID.setEnabled(false);
+                }
+            } else {
+                log.error("openBill : Invalid registration number :" + txtCusId.getText().trim());
+                JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registration number.",
+                        "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            log.error("openBill : " + txtCusId.getText().trim() + " : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -4677,6 +4708,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         lblBrandName = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         lblRemark = new javax.swing.JLabel();
+        jLabel20 = new javax.swing.JLabel();
+        spPrint = new javax.swing.JSpinner();
         jPanel12 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tblTransaction = new javax.swing.JTable();
@@ -4722,8 +4755,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jLabel8 = new javax.swing.JLabel();
         txtGrandTotal = new javax.swing.JFormattedTextField();
         txtVouPaid = new javax.swing.JFormattedTextField();
-        jLabel20 = new javax.swing.JLabel();
-        spPrint = new javax.swing.JSpinner();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblSale = new javax.swing.JTable(saleTableModel);
 
@@ -4882,14 +4913,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         .add(txtDrCode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(txtCusName)
+                    .add(txtCusName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 117, Short.MAX_VALUE)
                     .add(txtDrName))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel7Layout.createSequentialGroup()
                         .add(lblRemark1)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(txtRemark1))
+                        .add(txtRemark1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE))
                     .add(txtCusAddress))
                 .add(0, 0, 0))
         );
@@ -5002,53 +5033,60 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel8Layout.createSequentialGroup()
                 .add(14, 14, 14)
+                .add(jLabel2)
+                .add(18, 18, 18)
+                .add(txtSaleDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 137, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jLabel7)
+                .add(29, 29, 29)
+                .add(cboLocation, 0, 136, Short.MAX_VALUE))
+            .add(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
                 .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel2)
                     .add(jLabel3)
                     .add(jLabel24))
                 .add(18, 18, 18)
                 .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(cboCurrency, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(txtDueDate)
-                    .add(txtSaleDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 137, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                    .add(jPanel8Layout.createSequentialGroup()
+                        .add(cboCurrency, 0, 140, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel16)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED))
+                    .add(jPanel8Layout.createSequentialGroup()
+                        .add(txtDueDate)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel6)
+                        .add(27, 27, 27)))
                 .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jLabel6)
-                    .add(jLabel16)
-                    .add(jLabel7))
-                .add(18, 18, 18)
-                .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, cboPayment, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, cboLocation, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(cboVouStatus, 0, 121, Short.MAX_VALUE)))
+                    .add(cboPayment, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(cboVouStatus, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel8Layout.createSequentialGroup()
-                .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jPanel8Layout.createSequentialGroup()
-                        .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel3)
-                            .add(txtDueDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel24)
-                            .add(cboCurrency, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel8Layout.createSequentialGroup()
                         .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(jLabel7)
                             .add(cboLocation, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(jLabel2)
                             .add(txtSaleDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel6)
-                            .add(cboPayment, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(jLabel16)
-                            .add(cboVouStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
-                .add(0, 8, Short.MAX_VALUE))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(jLabel3)
+                                .add(txtDueDate, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(cboPayment, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jLabel6))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel24)
+                        .add(cboCurrency, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel8Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(jLabel16)
+                        .add(cboVouStatus, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(24, Short.MAX_VALUE))
         );
 
         txtFilter.setFont(Global.textFont);
@@ -5099,51 +5137,51 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .add(18, 18, 18)
-                .add(jPanel8, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                        .add(jPanel1Layout.createSequentialGroup()
-                            .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                            .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 97, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                            .add(butAdmit)
-                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                            .add(lblDueRemark)))
+                    .add(jPanel7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel6, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel8, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 97, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(butOTID)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 151, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 151, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(butAdmit)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(lblDueRemark)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel1Layout.createSequentialGroup()
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel8, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jPanel1Layout.createSequentialGroup()
-                        .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(lblDueRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 29, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(butAdmit, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(butOTID)
-                            .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap())))
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                .add(butOTID)
+                                .add(txtBill, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                    .add(txtAdmissionNo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(txtFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                    .add(lblDueRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 29, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(butAdmit))))))
+                .add(20, 20, 20))
         );
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -5233,20 +5271,17 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(lblLastBalance)
                     .add(lblDifference))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(txtCusLastBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(txtCusLastBalance)
                     .add(txtDifference))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel5Layout.createSequentialGroup()
-                        .add(0, 0, Short.MAX_VALUE)
-                        .add(lblCreditLimit, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 93, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(lblSaleLastBal, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(lblCreditLimit, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 93, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(lblSaleLastBal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 93, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(txtSaleLastBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
-                    .add(txtCreditLimit))
-                .addContainerGap())
+                .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(txtSaleLastBalance)
+                    .add(txtCreditLimit)))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5290,15 +5325,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(jScrollPane6)
+                    .add(jScrollPane6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .add(jPanel4Layout.createSequentialGroup()
                         .add(jLabel12)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(lblBrandName, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 138, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(10, 10, 10)
+                        .add(lblBrandName, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                         .add(jLabel13)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(lblRemark, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 139, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(lblRemark, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
@@ -5313,16 +5348,28 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(lblRemark)))
         );
 
+        jLabel20.setFont(Global.lableFont);
+        jLabel20.setText("Print Copies :");
+
+        spPrint.setFont(Global.textFont);
+
         org.jdesktop.layout.GroupLayout jPanel10Layout = new org.jdesktop.layout.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(panelExpense, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel10Layout.createSequentialGroup()
+            .add(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .add(jPanel10Layout.createSequentialGroup()
+                        .add(jLabel20)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(0, 0, Short.MAX_VALUE))))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5332,7 +5379,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(27, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(jLabel20)
+                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -5387,28 +5438,21 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel12.setLayout(jPanel12Layout);
         jPanel12Layout.setHorizontalGroup(
             jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel12Layout.createSequentialGroup()
-                .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel12Layout.createSequentialGroup()
-                        .addContainerGap(167, Short.MAX_VALUE)
-                        .add(jLabel4)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(txtBillTotal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 129, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(5, 5, 5))
-                    .add(jPanel12Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                            .add(jScrollPane5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, lblTranOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jScrollPane4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel12Layout.createSequentialGroup()
-                                .add(butPayment, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(butWarranty)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(butOutstanding, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 95, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(jScrollPane3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .add(lblTranOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .add(jScrollPane4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .add(jPanel12Layout.createSequentialGroup()
+                .add(butPayment, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(butWarranty, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(butOutstanding, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
                 .addContainerGap())
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jScrollPane3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel12Layout.createSequentialGroup()
+                .add(jLabel4)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(txtBillTotal))
         );
         jPanel12Layout.setVerticalGroup(
             jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5483,30 +5527,27 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel13Layout.setHorizontalGroup(
             jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel13Layout.createSequentialGroup()
-                .addContainerGap()
                 .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(chkAmount, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel13Layout.createSequentialGroup()
-                        .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, chkPrintOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, lblStatus, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, cboEntryUser, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel13Layout.createSequentialGroup()
-                                .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                                    .add(jPanel13Layout.createSequentialGroup()
-                                        .add(jLabel22)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(txtTotalItem, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE))
-                                    .add(butSaveTemp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .add(butTempList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .add(0, 0, Short.MAX_VALUE))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel13Layout.createSequentialGroup()
-                                .add(jLabel23)
+                    .add(chkPrintOption, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(lblStatus, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(cboEntryUser, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel13Layout.createSequentialGroup()
+                        .add(jPanel13Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                            .add(jPanel13Layout.createSequentialGroup()
+                                .add(jLabel22)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(txtRecNo))
-                            .add(org.jdesktop.layout.GroupLayout.LEADING, chkA5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(chkVouComp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addContainerGap())))
+                                .add(txtTotalItem))
+                            .add(butSaveTemp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(butTempList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 185, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(jPanel13Layout.createSequentialGroup()
+                        .add(jLabel23)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(txtRecNo))
+                    .add(chkA5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, chkVouComp, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(chkAmount, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jPanel13Layout.linkSize(new java.awt.Component[] {jLabel22, jLabel23}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -5606,8 +5647,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
             jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jSeparator2)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jSeparator1)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jSeparator2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 282, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jSeparator1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 282, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
             .add(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel9Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5695,11 +5736,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         jPanel9Layout.linkSize(new java.awt.Component[] {txtTaxP, txtVouBalance}, org.jdesktop.layout.GroupLayout.VERTICAL);
 
-        jLabel20.setFont(Global.lableFont);
-        jLabel20.setText("Print Copies :");
-
-        spPrint.setFont(Global.textFont);
-
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -5708,14 +5744,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addContainerGap()
                 .add(jPanel13, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel12, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jLabel20)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -5724,16 +5756,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .add(jPanel9, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .add(0, 0, Short.MAX_VALUE))
             .add(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jLabel20)
-                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel3Layout.createSequentialGroup()
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel13, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jPanel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel13, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel12, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -5756,12 +5782,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(10, 10, 10))
-                    .add(layout.createSequentialGroup()
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
                         .addContainerGap()
                         .add(jScrollPane1)))
                 .addContainerGap())
@@ -5769,213 +5793,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 303, Short.MAX_VALUE)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 20, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
-
-    private void txtSaleDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSaleDateMouseClicked
-        if (evt.getClickCount() == mouseClick) {
-            if (!canEdit) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                        "Check Point", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-            } else if (Util1.hashPrivilege("SaleDateChange")) {
-                String strDate = DateUtil.getDateDialogStr();
-
-                if (strDate != null) {
-                    txtSaleDate.setText(strDate);
-                    saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
-                    if (lblStatus.getText().equals("NEW")) {
-                        vouEngine.setPeriod(DateUtil.getPeriod(txtSaleDate.getText()));
-                        genVouNo();
-                        if (currSaleVou.getCustomerId() != null) {
-                            int creditDay = NumberUtil.NZeroInt(((Customer) currSaleVou.getCustomerId()).getCreditDays());
-                            if (creditDay != 0) {
-                                txtDueDate.setText(DateUtil.subDateTo(DateUtil.toDate(strDate), creditDay));
-                            } else {
-                                txtDueDate.setText(null);
-                            }
-                        } else {
-                            txtDueDate.setText(null);
-                        }
-                    }
-                }
-            }
-        }
-    }//GEN-LAST:event_txtSaleDateMouseClicked
-
-    private void txtDueDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDueDateMouseClicked
-        if (evt.getClickCount() == mouseClick) {
-            if (!canEdit) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                        "Check Point", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-            } else {
-                String strDate = DateUtil.getDateDialogStr();
-
-                if (strDate != null) {
-                    txtDueDate.setText(strDate);
-                }
-            }
-        }
-    }//GEN-LAST:event_txtDueDateMouseClicked
-
-    private void txtCusIdMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusIdMouseClicked
-        if (evt.getClickCount() == 2) {
-            if (!canEdit) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                        "Check Point", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-            } else {
-                getCustomerList();
-            }
-        }
-    }//GEN-LAST:event_txtCusIdMouseClicked
-
-    private void txtCusIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusIdActionPerformed
-        if (txtCusId.getText() == null || txtCusId.getText().isEmpty()) {
-            txtCusName.setText(null);
-            currSaleVou.setCustomerId(null);
-            currSaleVou.setRegNo(null);
-            currSaleVou.setStuName(null);
-            currSaleVou.setStuNo(null);
-            butOTID.setEnabled(false);
-            txtBill.setText(null);
-            codeCellEditor.setCusGroup(null);
-            //txtCusId.requestFocus();
-        } else {
-            String tmpId = txtCusId.getText().trim();
-            String[] tmpIds = tmpId.split("-");
-            if (tmpIds.length > 1) {
-                currSaleVou.setVisitId(tmpId);
-                String drId = tmpIds[0];
-                String regNo = tmpIds[1];
-                txtCusId.setText(regNo);
-                getCustomer();
-                txtDrCode.setText(drId);
-                getDoctor();
-            } else {
-                currSaleVou.setVisitId(null);
-                getCustomer();
-            }
-
-        }
-    }//GEN-LAST:event_txtCusIdActionPerformed
-
-    private void txtCusIdFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtCusIdFocusLost
-        //if(!txtCusId.getText().equals(""))
-        //getCustomer();
-    }//GEN-LAST:event_txtCusIdFocusLost
-
-    private void txtCusNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusNameMouseClicked
-        if (evt.getClickCount() == mouseClick) {
-            if (!canEdit) {
-                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                        "Check Point", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-            } else {
-                getCustomerList();
-            }
-        }
-    }//GEN-LAST:event_txtCusNameMouseClicked
-
-    private void cboPaymentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentActionPerformed
-        if (!isBind) {
-            PaymentType pt = (PaymentType) cboPayment.getSelectedItem();
-            if (pt.getPaymentTypeId() == 2) {
-                String percent = Util1.getPropValue("system.sale.cashdown.disc.percent");
-                if (percent != null) {
-                    if (!percent.isEmpty()) {
-                        txtDiscP.setText(percent);
-                        Double vouTotal = NumberUtil.NZero(txtVouTotal.getText());
-                        Double valPercent = NumberUtil.NZero(percent);
-                        Double discount = (vouTotal * valPercent) / 100;
-                        txtVouDiscount.setText(discount.toString());
-                    }
-                }
-
-                String creditWeek = Util1.getPropValue("system.sale.credit.week");
-                if (creditWeek != null) {
-                    if (creditWeek.equals("Y")) {
-                        //Show dialoug to enter week
-                        String strWeek = JOptionPane.showInputDialog("Number of Weeks.");
-                        if (strWeek != null) {
-                            int week = Integer.parseInt(strWeek);
-                            txtDueDate.setText(DateUtil.subDateTo(
-                                    DateUtil.toDate(txtSaleDate.getText()), (week * 7)));
-                        }
-                    }
-                }
-            } else {
-                txtDiscP.setText(null);
-                txtVouDiscount.setText(null);
-            }
-            calculateTotalAmount();
-        }
-    }//GEN-LAST:event_cboPaymentActionPerformed
-
-  private void txtDrNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDrNameMouseClicked
-      if (!canEdit) {
-          JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
-                  "Check Point", JOptionPane.ERROR_MESSAGE);
-          return;
-      }
-      if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-      } else {
-          DoctorSearchNameFilterDialog dialog = new DoctorSearchNameFilterDialog(dao, this);
-      }
-  }//GEN-LAST:event_txtDrNameMouseClicked
-
-  private void txtDrCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDrCodeActionPerformed
-      if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
-
-      } else {
-          getDoctor();
-      }
-  }//GEN-LAST:event_txtDrCodeActionPerformed
-
-  private void txtCusNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusNameActionPerformed
-      // TODO add your handling code here:
-  }//GEN-LAST:event_txtCusNameActionPerformed
-
-    private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
-    }//GEN-LAST:event_txtFilterKeyReleased
-
-    private void txtFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtFilterActionPerformed
-        finder(txtFilter.getText());
-    }//GEN-LAST:event_txtFilterActionPerformed
-
-    private void butTempListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTempListActionPerformed
-        if (tmpVouList.size() > 0) {
-
-        } else {
-            butTempList.setEnabled(false);
-        }
-    }//GEN-LAST:event_butTempListActionPerformed
-
-    private void butSaveTempActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveTempActionPerformed
-        tmpVouList.add(currSaleVou.getSaleInvId());
-        butTempList.setEnabled(true);
-        save();
-    }//GEN-LAST:event_butSaveTempActionPerformed
 
     private void txtVouPaidActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtVouPaidActionPerformed
         calculateTotalAmount();
@@ -5994,36 +5819,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             PaymentListDialog dialog = new PaymentListDialog(dao, this, txtCusId.getText());
         }
     }//GEN-LAST:event_butPaymentActionPerformed
-
-    private void txtSaleDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSaleDateActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_txtSaleDateActionPerformed
-
-    private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
-        Location location = (Location) cboLocation.getSelectedItem();
-        saleTableModel.setLocation(location);
-        if (!isBind) {
-            codeCellEditor.setLocationId(location.getLocationId());
-        }
-    }//GEN-LAST:event_cboLocationActionPerformed
-
-    private void txtCusIdFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtCusIdFocusGained
-        focusCtrlName = "txtCusId";
-        txtCusId.selectAll();
-    }//GEN-LAST:event_txtCusIdFocusGained
-
-    private void txtDrCodeFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtDrCodeFocusGained
-        focusCtrlName = "txtDrCode";
-        txtDrCode.selectAll();
-    }//GEN-LAST:event_txtDrCodeFocusGained
-
-    private void cboLocationFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cboLocationFocusGained
-        focusCtrlName = "cboLocation";
-    }//GEN-LAST:event_cboLocationFocusGained
-
-    private void cboPaymentFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cboPaymentFocusGained
-        focusCtrlName = "cboPayment";
-    }//GEN-LAST:event_cboPaymentFocusGained
 
     private void tblSaleFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tblSaleFocusGained
         int selRow = tblSale.getSelectedRow();
@@ -6044,23 +5839,19 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         txtCusId.requestFocus();
     }//GEN-LAST:event_formMouseClicked
 
-    private void txtRemarkFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRemarkFocusGained
-        focusCtrlName = "txtRemark";
-        txtRemark.selectAll();
-    }//GEN-LAST:event_txtRemarkFocusGained
+    private void tblSaleFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tblSaleFocusLost
+        /*try{
+         if(tblSale.getCellEditor() != null){
+         tblSale.getCellEditor().stopCellEditing();
+         }
+         }catch(Exception ex){
+            
+         }*/
+    }//GEN-LAST:event_tblSaleFocusLost
 
-    private void txtRemark1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRemark1FocusGained
-        txtRemark1.selectAll();
-    }//GEN-LAST:event_txtRemark1FocusGained
-
-    private void txtSaleDateFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtSaleDateFocusGained
-        focusCtrlName = "txtSaleDate";
-        txtSaleDate.selectAll();
-    }//GEN-LAST:event_txtSaleDateFocusGained
-
-    private void txtFilterFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtFilterFocusGained
-        txtFilter.selectAll();
-    }//GEN-LAST:event_txtFilterFocusGained
+    private void butOTIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOTIDActionPerformed
+        openBill();
+    }//GEN-LAST:event_butOTIDActionPerformed
 
     private void butAdmitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butAdmitActionPerformed
         Patient pt = currSaleVou.getPatientId();
@@ -6102,34 +5893,246 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
     }//GEN-LAST:event_butAdmitActionPerformed
 
-    private void butOTIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butOTIDActionPerformed
-        try {
-            RegNo regNo = new RegNo(dao, "OT-ID");
-            Patient pt = currSaleVou.getPatientId();
-            if (pt != null) {
-                pt.setOtId(regNo.getRegNo());
-                dao.save(pt);
-                regNo.updateRegNo();
-                txtBill.setText(pt.getOtId());
-                cboPayment.setSelectedItem(ptCredit);
-                butOTID.setEnabled(false);
-            }
-        } catch (Exception ex) {
-            log.error("butOTIDActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }//GEN-LAST:event_butOTIDActionPerformed
+    private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
 
-    private void tblSaleFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tblSaleFocusLost
-        /*try{
-         if(tblSale.getCellEditor() != null){
-         tblSale.getCellEditor().stopCellEditing();
-         }
-         }catch(Exception ex){
-            
-         }*/
-    }//GEN-LAST:event_tblSaleFocusLost
+    }//GEN-LAST:event_txtFilterKeyReleased
+
+    private void txtFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtFilterActionPerformed
+        finder(txtFilter.getText());
+    }//GEN-LAST:event_txtFilterActionPerformed
+
+    private void txtFilterFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtFilterFocusGained
+        txtFilter.selectAll();
+    }//GEN-LAST:event_txtFilterFocusGained
+
+    private void cboPaymentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboPaymentActionPerformed
+        if (!isBind) {
+            PaymentType pt = (PaymentType) cboPayment.getSelectedItem();
+            if (pt.getPaymentTypeId() == 2) {
+                String percent = Util1.getPropValue("system.sale.cashdown.disc.percent");
+                if (percent != null) {
+                    if (!percent.isEmpty()) {
+                        txtDiscP.setText(percent);
+                        Double vouTotal = NumberUtil.NZero(txtVouTotal.getText());
+                        Double valPercent = NumberUtil.NZero(percent);
+                        Double discount = (vouTotal * valPercent) / 100;
+                        txtVouDiscount.setText(discount.toString());
+                    }
+                }
+
+                String creditWeek = Util1.getPropValue("system.sale.credit.week");
+                if (creditWeek != null) {
+                    if (creditWeek.equals("Y")) {
+                        //Show dialoug to enter week
+                        String strWeek = JOptionPane.showInputDialog("Number of Weeks.");
+                        if (strWeek != null) {
+                            int week = Integer.parseInt(strWeek);
+                            txtDueDate.setText(DateUtil.subDateTo(
+                                    DateUtil.toDate(txtSaleDate.getText()), (week * 7)));
+                        }
+                    }
+                }
+            } else {
+                txtDiscP.setText(null);
+                txtVouDiscount.setText(null);
+            }
+            calculateTotalAmount();
+        }
+    }//GEN-LAST:event_cboPaymentActionPerformed
+
+    private void cboPaymentFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cboPaymentFocusGained
+        focusCtrlName = "cboPayment";
+    }//GEN-LAST:event_cboPaymentFocusGained
+
+    private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
+        Location location = (Location) cboLocation.getSelectedItem();
+        saleTableModel.setLocation(location);
+        if (!isBind) {
+            codeCellEditor.setLocationId(location.getLocationId());
+        }
+    }//GEN-LAST:event_cboLocationActionPerformed
+
+    private void cboLocationFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cboLocationFocusGained
+        focusCtrlName = "cboLocation";
+    }//GEN-LAST:event_cboLocationFocusGained
+
+    private void cboLocationItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboLocationItemStateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboLocationItemStateChanged
+
+    private void txtDueDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDueDateMouseClicked
+        if (evt.getClickCount() == mouseClick) {
+            if (!canEdit) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+            } else {
+                String strDate = DateUtil.getDateDialogStr();
+
+                if (strDate != null) {
+                    txtDueDate.setText(strDate);
+                }
+            }
+        }
+    }//GEN-LAST:event_txtDueDateMouseClicked
+
+    private void txtSaleDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtSaleDateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtSaleDateActionPerformed
+
+    private void txtSaleDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtSaleDateMouseClicked
+        if (evt.getClickCount() == mouseClick) {
+            if (!canEdit) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+            } else if (Util1.hashPrivilege("SaleDateChange")) {
+                String strDate = DateUtil.getDateDialogStr();
+
+                if (strDate != null) {
+                    txtSaleDate.setText(strDate);
+                    saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
+                    if (lblStatus.getText().equals("NEW")) {
+                        vouEngine.setPeriod(DateUtil.getPeriod(txtSaleDate.getText()));
+                        genVouNo();
+                        if (currSaleVou.getCustomerId() != null) {
+                            int creditDay = NumberUtil.NZeroInt(((Customer) currSaleVou.getCustomerId()).getCreditDays());
+                            if (creditDay != 0) {
+                                txtDueDate.setText(DateUtil.subDateTo(DateUtil.toDate(strDate), creditDay));
+                            } else {
+                                txtDueDate.setText(null);
+                            }
+                        } else {
+                            txtDueDate.setText(null);
+                        }
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_txtSaleDateMouseClicked
+
+    private void txtSaleDateFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtSaleDateFocusGained
+        focusCtrlName = "txtSaleDate";
+        txtSaleDate.selectAll();
+    }//GEN-LAST:event_txtSaleDateFocusGained
+
+    private void txtCusAddressMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusAddressMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCusAddressMouseClicked
+
+    private void txtRemark1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtRemark1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtRemark1ActionPerformed
+
+    private void txtRemark1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRemark1FocusGained
+        txtRemark1.selectAll();
+    }//GEN-LAST:event_txtRemark1FocusGained
+
+    private void txtDrNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDrNameMouseClicked
+        if (!canEdit) {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
+                    "Check Point", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+        } else {
+            DoctorSearchNameFilterDialog dialog = new DoctorSearchNameFilterDialog(dao, this);
+        }
+    }//GEN-LAST:event_txtDrNameMouseClicked
+
+    private void txtCusNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusNameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtCusNameActionPerformed
+
+    private void txtCusNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusNameMouseClicked
+        if (evt.getClickCount() == mouseClick) {
+            if (!canEdit) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+            } else {
+                getCustomerList();
+            }
+        }
+    }//GEN-LAST:event_txtCusNameMouseClicked
+
+    private void txtDrCodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDrCodeActionPerformed
+        if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+        } else {
+            getDoctor();
+        }
+    }//GEN-LAST:event_txtDrCodeActionPerformed
+
+    private void txtDrCodeFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtDrCodeFocusGained
+        focusCtrlName = "txtDrCode";
+        txtDrCode.selectAll();
+    }//GEN-LAST:event_txtDrCodeFocusGained
+
+    private void txtCusIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCusIdActionPerformed
+        if (txtCusId.getText() == null || txtCusId.getText().isEmpty()) {
+            txtCusName.setText(null);
+            currSaleVou.setCustomerId(null);
+            currSaleVou.setRegNo(null);
+            currSaleVou.setStuName(null);
+            currSaleVou.setStuNo(null);
+            butOTID.setEnabled(false);
+            txtBill.setText(null);
+            codeCellEditor.setCusGroup(null);
+            //txtCusId.requestFocus();
+        } else {
+            String tmpId = txtCusId.getText().trim();
+            String[] tmpIds = tmpId.split("-");
+            if (tmpIds.length > 1) {
+                currSaleVou.setVisitId(tmpId);
+                String drId = tmpIds[0];
+                String regNo = tmpIds[1];
+                txtCusId.setText(regNo);
+                getCustomer();
+                txtDrCode.setText(drId);
+                getDoctor();
+            } else {
+                currSaleVou.setVisitId(null);
+                getCustomer();
+            }
+
+        }
+    }//GEN-LAST:event_txtCusIdActionPerformed
+
+    private void txtCusIdMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtCusIdMouseClicked
+        if (evt.getClickCount() == 2) {
+            if (!canEdit) {
+                JOptionPane.showMessageDialog(Util1.getParent(), "Check point found. You cannot edit.",
+                        "Check Point", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (!Util1.hashPrivilege("SaleEditVoucherChange") && lblStatus.getText().equals("EDIT")) {
+
+            } else {
+                getCustomerList();
+            }
+        }
+    }//GEN-LAST:event_txtCusIdMouseClicked
+
+    private void txtCusIdFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtCusIdFocusLost
+        //if(!txtCusId.getText().equals(""))
+        //getCustomer();
+    }//GEN-LAST:event_txtCusIdFocusLost
+
+    private void txtCusIdFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtCusIdFocusGained
+        focusCtrlName = "txtCusId";
+        txtCusId.selectAll();
+    }//GEN-LAST:event_txtCusIdFocusGained
 
     private void lblPatientMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblPatientMouseClicked
         if (evt.getClickCount() == 2) {
@@ -6145,9 +6148,24 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         }
     }//GEN-LAST:event_lblPatientMouseClicked
 
-    private void cboLocationItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboLocationItemStateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cboLocationItemStateChanged
+    private void txtRemarkFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtRemarkFocusGained
+        focusCtrlName = "txtRemark";
+        txtRemark.selectAll();
+    }//GEN-LAST:event_txtRemarkFocusGained
+
+    private void butTempListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTempListActionPerformed
+        if (tmpVouList.size() > 0) {
+
+        } else {
+            butTempList.setEnabled(false);
+        }
+    }//GEN-LAST:event_butTempListActionPerformed
+
+    private void butSaveTempActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveTempActionPerformed
+        tmpVouList.add(currSaleVou.getSaleInvId());
+        butTempList.setEnabled(true);
+        save();
+    }//GEN-LAST:event_butSaveTempActionPerformed
     // </editor-fold>
 
     private void saleOutstanding() {

@@ -103,6 +103,7 @@ public class RoomManagement extends javax.swing.JPanel implements CalculateObser
         jScrollPane1 = new javax.swing.JScrollPane();
         tblRoomList = new javax.swing.JTable();
         txtFilter = new javax.swing.JTextField();
+        butRefresh = new javax.swing.JButton();
 
         tblRoomList.setFont(Global.textFont);
         tblRoomList.setModel(tableModel);
@@ -115,6 +116,13 @@ public class RoomManagement extends javax.swing.JPanel implements CalculateObser
             }
         });
 
+        butRefresh.setText("Refresh");
+        butRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butRefreshActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -122,15 +130,20 @@ public class RoomManagement extends javax.swing.JPanel implements CalculateObser
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 492, Short.MAX_VALUE)
-                    .addComponent(txtFilter))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 345, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(txtFilter)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butRefresh)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butRefresh))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
                 .addContainerGap())
@@ -149,8 +162,13 @@ public class RoomManagement extends javax.swing.JPanel implements CalculateObser
         }
     }//GEN-LAST:event_txtFilterKeyReleased
 
+    private void butRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butRefreshActionPerformed
+        getData();
+    }//GEN-LAST:event_butRefreshActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton butRefresh;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblRoomList;
     private javax.swing.JTextField txtFilter;

@@ -682,7 +682,6 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
 
         tblMedicine.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         tblMedicine.setRowHeight(23);
-        tblMedicine.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblMedicine);
 
         jLabel10.setFont(Global.lableFont);
@@ -785,10 +784,9 @@ public class PurchaseVouSearch extends javax.swing.JPanel implements SelectionOb
                 .addContainerGap())
         );
 
-        tblVoucher.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        tblVoucher.setFont(Global.textFont);
         tblVoucher.setModel(purVouTableModel);
         tblVoucher.setRowHeight(23);
-        tblVoucher.setShowVerticalLines(false);
         tblVoucher.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblVoucherMouseClicked(evt);
