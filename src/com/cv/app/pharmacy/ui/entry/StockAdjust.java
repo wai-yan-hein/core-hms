@@ -624,7 +624,7 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                     String vouNo = currAdjust.getAdjVouId();
                     String strSql = "update adj_his set deleted = true, \n"
                             + "intg_upd_status = null, \n"
-                            + "updated_date = '" + DateUtil.toDateTimeStr(new Date(), "yyyy-mm-dd hh:mm:ss") + "', \n"
+                            + "updated_date = now(), \n"
                             + "updated_by = '" + Global.loginUser.getUserId() + "' \n"
                             + "where adj_id = '" + vouNo + "'";
                     dao.execSql(strSql);
