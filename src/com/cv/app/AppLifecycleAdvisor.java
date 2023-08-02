@@ -4,7 +4,6 @@
  */
 package com.cv.app;
 
-import com.cv.app.common.ActiveMQConnection;
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.MachineProperty;
@@ -198,19 +197,30 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
                 for (MachineProperty mp : listMP) {
                     Global.systemProperties.put(mp.getKey().getPropDesp(), mp.getPropValue());
                 }
+                initFont();
             } catch (Exception ex) {
                 log.error("Machine property : " + ex.getMessage());
             } finally {
                 dao.close();
             }
-            //MQ initilization
-            /*String isIntegration = Util1.getPropValue("system.integration");
-            if (isIntegration.toUpperCase().equals("Y")) {
-                String mqUrl = Util1.getPropValue("system.mqserver.url");
-                Global.mqConnection = new ActiveMQConnection(mqUrl);
-            }*/
         } else {
             System.exit(1);
         }
+    }
+
+    private void initFont() {
+        String strFontSize = Util1.getPropValue("system.font.size");
+        int fontSize = 12;
+        if (!strFontSize.isEmpty() && !strFontSize.equals("-")) {
+            try {
+                fontSize = Integer.parseInt(strFontSize);
+            } catch (NumberFormatException ex) {
+                log.error("Font Size Error : " + ex.getMessage());
+            }
+        }
+        Global.lableFont = new java.awt.Font("Zawgyi-One", 1, fontSize);
+        Global.textFont = new java.awt.Font("Zawgyi-One", 0, fontSize);
+        Global.menuFont = new java.awt.Font("Zawgyi-One", 0, fontSize + 3);
+        Global.rowHeight = fontSize + 15;
     }
 }

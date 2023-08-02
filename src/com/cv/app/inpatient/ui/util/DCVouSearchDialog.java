@@ -333,7 +333,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
             tblService.getColumnModel().getColumn(0).setCellEditor(
                     new DCTableCellEditor(dao));
             tblService.getTableHeader().setFont(Global.lableFont);
-
+            tblVou.setFont(Global.textFont);
+            tblVou.setRowHeight(Global.rowHeight);
             tblVou.getColumnModel().getColumn(0).setPreferredWidth(30);
             tblVou.getColumnModel().getColumn(1).setPreferredWidth(70);
             tblVou.getColumnModel().getColumn(2).setPreferredWidth(190);
@@ -343,13 +344,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
             //Define table selection model to single row selection.
             tblVou.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             //Adding table row selection listener.
-            tblVou.getSelectionModel().addListSelectionListener(
-                    new ListSelectionListener() {
-
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    selectedRow = tblVou.getSelectedRow();
-                }
+            tblVou.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
+                selectedRow = tblVou.getSelectedRow();
             });
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());

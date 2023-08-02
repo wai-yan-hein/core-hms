@@ -273,3 +273,32 @@ set sql_safe_updates =0;
 update building_structure b join(
 select reg_no,building_structure_id from admission where dc_status is null) c on b.id = c.building_structure_id
 set b.reg_no = c.reg_no
+
+alter table pay_method 
+add column allow_amt double null after updated_date,
+add column factor int null after allow_amt,
+add column trader_id varchar(15) null after factor,
+add column group_code varchar(15) null after trader_id;
+
+
+alter table opd_details_his 
+add column need_doctor bit(1) null;
+
+
+alter table ot_details_his 
+add column need_doctor bit(1) null;
+
+
+alter table dc_details_his 
+add column need_doctor bit(1) null;
+
+alter table opd_service 
+add column service_cost double;
+
+alter table opd_details_his 
+add column service_cost double;
+
+drop view if exists v_opd_service;
+create  view v_opd_service as select og.group_id as group_id,og.group_name as group_name,oc.cat_name as cat_name,svc.service_id as service_id,svc.service_name as service_name,svc.srv_fees as srv_fees,svc.cat_id as cat_id,svc.price_ver_id as price_ver_id,svc.ver_upd_id as ver_upd_id,svc.srv_fees1 as srv_fees1,svc.cfs as cfs,svc.medu_ver_id as medu_ver_id,svc.medu_upd_id as medu_upd_id,svc.service_code as service_code,svc.act_status as act_status,svc.mig_id as mig_id,svc.lab_remark as lab_remark,svc.service_cost as service_cost from ((opd_group og join opd_category oc) join opd_service svc) where og.group_id = oc.group_id and oc.cat_id = svc.cat_id;
+
+

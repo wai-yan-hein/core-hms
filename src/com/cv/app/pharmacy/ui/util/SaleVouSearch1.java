@@ -498,6 +498,8 @@ public class SaleVouSearch1 extends javax.swing.JPanel implements SelectionObser
         tblVoucher.getColumnModel().getColumn(6).setPreferredWidth(25);
 
         tblVoucher.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
+        tblVoucher.setFont(Global.textFont);
+        tblVoucher.setRowHeight(Global.rowHeight);
     }
 
     private void addSelectionListenerVoucher() {

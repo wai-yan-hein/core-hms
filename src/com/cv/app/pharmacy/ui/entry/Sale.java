@@ -1320,6 +1320,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
             tblSale.getTableHeader().setReorderingAllowed(false);
             tblSale.getTableHeader().setFont(Global.lableFont);
+            tblSale.setFont(Global.textFont);
+            tblSale.setRowHeight(Global.rowHeight);
             tblSale.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
             //Adjust column width
             tblSale.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
@@ -4234,58 +4236,54 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     }
 
     public void timerFocus() {
-        Timer timer = new Timer(500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                txtCusId.requestFocus();
-                try {
-                    MachineInfo machine = (MachineInfo) dao.find(MachineInfo.class, Integer.parseInt(Global.machineId));
-                    Location loc = (Location) cboLocation.getSelectedItem();
-                    if (machine.getActionStatus() != null) {
-                        log.info("Sale timerFocus : Strart");
-                        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                        /*if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
-                            Global.listItem = dao.findAll("Medicine", "active = true and medTypeId.itemTypeCode in (select a.key.itemType.itemTypeCode from ItemTypeMapping a)");
-                        } else {
-                            if (strCodeFilter.equals("Y")) {
-                                Location loc = (Location)cboLocation.getSelectedItem();
-                                Global.listItem = dao.findAllHSQL(
-                                        "select o from Medicine o where o.medId in (select a.key.itemId from "
+        Timer timer = new Timer(500, (ActionEvent e) -> {
+            txtCusId.requestFocus();
+            try {
+                MachineInfo machine = (MachineInfo) dao.find(MachineInfo.class, Integer.parseInt(Global.machineId));
+                Location loc = (Location) cboLocation.getSelectedItem();
+                if (machine.getActionStatus() != null) {
+                    log.info("Sale timerFocus : Strart");
+                    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    
+                    /*if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
+                    Global.listItem = dao.findAll("Medicine", "active = true and medTypeId.itemTypeCode in (select a.key.itemType.itemTypeCode from ItemTypeMapping a)");
+                    } else {
+                    if (strCodeFilter.equals("Y")) {
+                    Location loc = (Location)cboLocation.getSelectedItem();
+                    Global.listItem = dao.findAllHSQL(
+                    "select o from Medicine o where o.medId in (select a.key.itemId from "
+                    + "LocationItemMapping a where a.key.locationId = "
+                    + loc.getLocationId().toString() + ") order by o.medId, o.medName");
+                    } else {
+                    Global.listItem = dao.findAll("Medicine", "active = true");
+                    }
+                    }*/
+                    if (dao.getRowCount("select count(*) from item_type_mapping where group_id ="
+                            + Global.loginUser.getUserRole().getRoleId()) > 0) {
+                        Global.listItem = dao.findAll("VMedicine1",
+                                "active = true and medTypeId in (select a.key.itemType.itemTypeCode from ItemTypeMapping a where a.key.groupId = " + Global.loginUser.getUserRole().getRoleId() + ")");
+                    } else if (strCodeFilter.equals("Y")) {
+                        Global.listItem = dao.findAllHSQL(
+                                "select o from VMedicine1 o where o.medId in (select a.key.itemId from "
                                         + "LocationItemMapping a where a.key.locationId = "
                                         + loc.getLocationId().toString() + ") order by o.medId, o.medName");
-                            } else {
-                                Global.listItem = dao.findAll("Medicine", "active = true");
-                            }
-                        }*/
-                        if (dao.getRowCount("select count(*) from item_type_mapping where group_id ="
-                                + Global.loginUser.getUserRole().getRoleId()) > 0) {
-                            Global.listItem = dao.findAll("VMedicine1",
-                                    "active = true and medTypeId in (select a.key.itemType.itemTypeCode from ItemTypeMapping a where a.key.groupId = " + Global.loginUser.getUserRole().getRoleId() + ")");
-                        } else if (strCodeFilter.equals("Y")) {
-                            Global.listItem = dao.findAllHSQL(
-                                    "select o from VMedicine1 o where o.medId in (select a.key.itemId from "
-                                    + "LocationItemMapping a where a.key.locationId = "
-                                    + loc.getLocationId().toString() + ") order by o.medId, o.medName");
-                        } else {
-                            Global.listItem = dao.findAll("VMedicine1", "active = true");
-                        }
-
-                        machine.setActionStatus(null);
-                        dao.save(machine);
-                        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        log.info("Sale timerFocus : End");
+                    } else {
+                        Global.listItem = dao.findAll("VMedicine1", "active = true");
                     }
-                } catch (Exception ex) {
-                    log.error("timerFocus : " + ex.toString());
-                } finally {
-                    dao.close();
+                    
+                    machine.setActionStatus(null);
+                    dao.save(machine);
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    log.info("Sale timerFocus : End");
                 }
-                System.gc();
-                if (Util1.getPropValue("system.sale.barcode").equals("Y")) {
-                    tblSale.requestFocus();
-                }
-
+            } catch (Exception ex) {
+                log.error("timerFocus : " + ex.toString());
+            } finally {
+                dao.close();
+            }
+            System.gc();
+            if (Util1.getPropValue("system.sale.barcode").equals("Y")) {
+                tblSale.requestFocus();
             }
         });
         timer.setRepeats(false);

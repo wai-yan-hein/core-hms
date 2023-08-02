@@ -52,9 +52,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -1285,6 +1283,8 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 tblService.setCellSelectionEnabled(true);
             }
             tblService.getTableHeader().setFont(Global.lableFont);
+            tblService.setFont(Global.textFont);
+            tblService.setRowHeight(Global.rowHeight);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
             tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
@@ -1303,55 +1303,48 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             BindingUtil.BindCombo(cboChargeType, dao.findAll("ChargeType"));
             tblService.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboChargeType));
 
-            tblService.getModel().addTableModelListener(new TableModelListener() {
-
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    /*String depositeId = Util1.getPropValue("system.ot.deposite.id");
-                    String discountId = Util1.getPropValue("system.ot.disc.id");
-                    String paidId = Util1.getPropValue("system.ot.paid.id");
-                    String refundId = Util1.getPropValue("system.ot.refund.id");
-                    List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
-                    QueryResults qr;
-                    Query q = new Query();
-                    String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis"
-                            + " WHERE service IS NOT NULL "
-                            + "EXECUTE ON ALL sum(amount) AS total";
-                    String strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                            + "service.serviceId not in (" + depositeId + ","
-                            + discountId + "," + paidId + "," + refundId + ")";
-                    try {
-                        q.parse(strSql);
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtVouTotal.setValue(vTotal);
-
-                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                                + "service.serviceId in (" + depositeId + "," + paidId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtPaid.setValue(vTotalPaid);
-                        isPaid = vTotalPaid != 0;
-
-                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                                + "service.serviceId in (" + refundId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtPaid.setValue(vTotalPaid - vTotalRefund);
-
-                        strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
-                                + "service.serviceId in (" + discountId + ")";
-                        qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
-                        double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
-                        txtDiscA.setValue(vTotalDiscount);
-                    } catch (QueryParseException qpe) {
-                        log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
-                    } catch (QueryExecutionException | NumberFormatException ex) {
-                        log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
-                    }
-                    txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
-                    calcBalance();*/
+            tblService.getModel().addTableModelListener((TableModelEvent e) -> {
+                /*String depositeId = Util1.getPropValue("system.ot.deposite.id");
+                String discountId = Util1.getPropValue("system.ot.disc.id");
+                String paidId = Util1.getPropValue("system.ot.paid.id");
+                String refundId = Util1.getPropValue("system.ot.refund.id");
+                List<OTDetailHis> listDCDH = tableModel.getListOPDDetailHis();
+                QueryResults qr;
+                Query q = new Query();
+                String strSql = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis"
+                + " WHERE service IS NOT NULL "
+                + "EXECUTE ON ALL sum(amount) AS total";
+                String strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                + "service.serviceId not in (" + depositeId + ","
+                + discountId + "," + paidId + "," + refundId + ")";
+                try {
+                q.parse(strSql);
+                qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                double vTotal = Double.parseDouble(qr.getSaveValue("total").toString());
+                txtVouTotal.setValue(vTotal);
+                strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                + "service.serviceId in (" + depositeId + "," + paidId + ")";
+                qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                double vTotalPaid = Double.parseDouble(qr.getSaveValue("total").toString());
+                txtPaid.setValue(vTotalPaid);
+                isPaid = vTotalPaid != 0;
+                strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                + "service.serviceId in (" + refundId + ")";
+                qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                double vTotalRefund = Double.parseDouble(qr.getSaveValue("total").toString());
+                txtPaid.setValue(vTotalPaid - vTotalRefund);
+                strFilter = "SELECT * FROM com.cv.app.ot.database.entity.OTDetailHis WHERE "
+                + "service.serviceId in (" + discountId + ")";
+                qr = q.execute(JoSQLUtil.getResult(strFilter, listDCDH));
+                double vTotalDiscount = Double.parseDouble(qr.getSaveValue("total").toString());
+                txtDiscA.setValue(vTotalDiscount);
+                } catch (QueryParseException qpe) {
+                log.info("JoSQLUtil.isAlreadyHave qpe: " + qpe.toString());
+                } catch (QueryExecutionException | NumberFormatException ex) {
+                log.info("JoSQLUtil.isAlreadyHave : " + ex.toString());
                 }
+                txtTotalItem.setText(Integer.toString((tableModel.getTotalRecord() - 1)));
+                calcBalance();*/
             });
 
             tblService.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

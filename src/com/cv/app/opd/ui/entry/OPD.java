@@ -1075,6 +1075,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 tblService.setCellSelectionEnabled(true);
             }
             tblService.getTableHeader().setFont(Global.lableFont);
+            tblService.setFont(Global.textFont);
+            tblService.setRowHeight(Global.rowHeight);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
             tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
@@ -1106,6 +1108,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             tblPatientBill.getColumnModel().getColumn(0).setPreferredWidth(180);//Bill Name
             tblPatientBill.getColumnModel().getColumn(1).setPreferredWidth(70);//Amount
             tblPatientBill.getTableHeader().setFont(Global.lableFont);
+            tblPatientBill.setFont(Global.textFont);
+            tblPatientBill.setRowHeight(Global.rowHeight);
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {
@@ -2183,7 +2187,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/opd";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -2874,6 +2878,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
         spPrint.setFont(Global.textFont);
 
+        butRefresh.setFont(Global.lableFont);
         butRefresh.setText("Refresh");
         butRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

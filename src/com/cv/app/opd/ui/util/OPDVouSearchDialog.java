@@ -32,7 +32,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
@@ -351,6 +350,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                 selectedRow = tblVou.getSelectedRow();
             });
             tblVou.getTableHeader().setFont(Global.lableFont);
+            tblVou.setFont(Global.textFont);
+            tblVou.setRowHeight(Global.rowHeight);
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {

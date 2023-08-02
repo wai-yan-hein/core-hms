@@ -1662,8 +1662,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
                 tblService.setCellSelectionEnabled(true);
             }
-            tblService.setCellSelectionEnabled(true);
             tblService.getTableHeader().setFont(Global.lableFont);
+            tblService.setFont(Global.textFont);
+            tblService.setRowHeight(Global.rowHeight);
             //Adjust column width
             tblService.getColumnModel().getColumn(0).setPreferredWidth(40);//Code
             tblService.getColumnModel().getColumn(1).setPreferredWidth(300);//Description
