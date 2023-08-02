@@ -20,9 +20,7 @@ import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,12 +28,14 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.log4j.Logger;
 
 /**
@@ -44,7 +44,7 @@ import org.apache.log4j.Logger;
  */
 public class SPaymentEntryTableModel extends AbstractTableModel {
 
-    static Logger LOGGER = Logger.getLogger(OPDTableModel.class.getName());
+    static Logger log = Logger.getLogger(OPDTableModel.class.getName());
     private List<VoucherPayment> listVP = new ArrayList();
     private final String[] columnNames = {"Vou Date", "Vou No.", "Sup-No", "Sup-Name",
         "Due Date", "Ttl Overdue", "Currency", "Vou Total", "Ttl Prv Paid", "Pay Date", "Paid",
@@ -172,7 +172,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                     return null;
             }
         } catch (Exception ex) {
-            LOGGER.error("getValueAt : " + ex.getMessage());
+            log.error("getValueAt : " + ex.getMessage());
         }
 
         return null;
@@ -238,7 +238,6 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
     }
 
     private void Save(VoucherPayment vp) {
-
         if (vp.isIsFullPaid() || NumberUtil.NZero(vp.getCurrentPaid()) != 0
                 || NumberUtil.NZero(vp.getCurrentDiscount()) != 0) {
             if (vp.getPayDate() == null) {
@@ -297,62 +296,53 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 List<PaymentVou> listPV = new ArrayList();
                 listPV.add(pv);
                 tph.setListDetail(listPV);
-
                 dao.save(tph);
                 uploadToAccount(tph.getPaymentId());
             } catch (Exception e) {
-                LOGGER.error("saveTraderpayHis : " + e.getMessage());
+                log.error("saveTraderpayHis : " + e.getMessage());
             }
         }
     }
 
-    private void uploadToAccount(Integer vouNo) {
+    private void uploadToAccount(Integer payId) {
         String isIntegration = Util1.getPropValue("system.integration");
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
-
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try ( CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/payment";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("payId", vouNo.toString()));
+                    params.add(new BasicNameValuePair("payId", payId.toString()));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
-                    try {
-                        dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
-                    } catch (Exception ex) {
-                        LOGGER.error("uploadToAccount error 1: " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                    // Handle the response
-                    try ( BufferedReader br = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
-                        String output;
-                        while ((output = br.readLine()) != null) {
-                            if (!output.equals("Sent")) {
-                                LOGGER.error("Error in server : " + vouNo + " : " + output);
-                            }
-                        }
-                    }
+                    log.info(url + response.toString());
                 } catch (IOException e) {
-                    try {
-                        dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
-                    } catch (Exception ex) {
-                        LOGGER.error("uploadToAccount error : " + ex.getMessage());
-                    } finally {
-                        dao.close();
-                    }
-                }
-            } else {
-                try {
-                    dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + vouNo);
-                } catch (Exception ex) {
-                    LOGGER.error("uploadToAccount error : " + ex.getMessage());
-                } finally {
-                    dao.close();
+                    log.error("uploadToAccount : " + e.getMessage());
+                    updateNull(payId);
                 }
             }
+        } else {
+            updateNull(payId);
+        }
+    }
+
+    private CloseableHttpClient createHttpClientWithTimeouts() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(Timeout.ONE_MILLISECOND)
+                .build();
+        return HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+    }
+
+    private void updateNull(Integer payId) {
+        try {
+            dao.execSql("update payment_his set intg_upd_status = null where payment_id = " + payId);
+        } catch (Exception ex) {
+            log.error("sale updateNull: " + ex.getMessage());
+        } finally {
+            dao.close();
         }
     }
 

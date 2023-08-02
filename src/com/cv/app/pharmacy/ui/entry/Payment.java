@@ -26,9 +26,7 @@ import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -952,7 +950,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     String url = rootUrl + "/payment";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    params.add(new BasicNameValuePair("payId", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
                     log.info(url + response.toString());
