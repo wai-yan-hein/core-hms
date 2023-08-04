@@ -344,8 +344,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
                     String vouNo = currVou.getOpdInvId();
                     List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
-                    dao.open();
-                    dao.beginTran();
+                    //dao.open();
+                    //dao.beginTran();
                     if (currVou.getPkgId() != null) {
                         //delete detail for package
                         String sql = "delete from opd_details_his where vou_no='" + vouNo + "'";
@@ -356,10 +356,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         if (odh.getOpdDetailId() == null) {
                             odh.setOpdDetailId(vouNo + "-" + odh.getUniqueId());
                         }
-                        dao.save1(odh);
+                        dao.save(odh);
                     }
-                    dao.save1(currVou);
-                    dao.commit();
+                    dao.save(currVou);
+                    //dao.commit();
 
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
@@ -737,17 +737,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             String vouNo = currVou.getOpdInvId();
                             List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
 
-                            dao.open();
-                            dao.beginTran();
+                            //dao.open();
+                            //dao.beginTran();
                             for (OPDDetailHis odh : listDetail) {
                                 odh.setVouNo(vouNo);
                                 if (odh.getOpdDetailId() == null) {
                                     odh.setOpdDetailId(vouNo + "-" + odh.getUniqueId());
                                 }
-                                dao.save1(odh);
+                                dao.save(odh);
                             }
-                            dao.save1(currVou);
-                            dao.commit();
+                            dao.save(currVou);
+                            //dao.commit();
 
                             if (lblStatus.getText().equals("NEW")) {
                                 vouEngine.updateVouNo();

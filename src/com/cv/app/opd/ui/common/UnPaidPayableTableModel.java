@@ -986,7 +986,7 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                     String url = rootUrl + "/expense";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
-                    params.add(new BasicNameValuePair("vouNo", vouNo));
+                    params.add(new BasicNameValuePair("expId", vouNo));
                     request.setEntity(new UrlEncodedFormEntity(params));
                     CloseableHttpResponse response = httpClient.execute(request);
                     log.info(url + response.toString());
