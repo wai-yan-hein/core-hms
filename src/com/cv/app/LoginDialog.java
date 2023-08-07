@@ -103,6 +103,7 @@ public class LoginDialog extends javax.swing.JDialog {
         }
         ComBoBoxAutoComplete comBoBoxAutoComplete = new ComBoBoxAutoComplete(cboSession);
     }
+   
 
     private void applyFocusPolicy() {
         @SuppressWarnings("UseOfObsoleteCollectionType")
@@ -263,17 +264,17 @@ public class LoginDialog extends javax.swing.JDialog {
         txtLoginDate = new javax.swing.JFormattedTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Login to SIMS");
+        setTitle("Login to Core HMS");
 
-        jLabel1.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        jLabel1.setFont(Global.lableFont);
         jLabel1.setText("Login Name ");
 
-        txtLoginName.setFont(new java.awt.Font("Zawgyi-One", 0, 14)); // NOI18N
+        txtLoginName.setFont(Global.textFont);
 
-        jLabel2.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        jLabel2.setFont(Global.lableFont);
         jLabel2.setText("Password");
 
-        butClear.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        butClear.setFont(Global.lableFont);
         butClear.setText("Clear");
         butClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -281,7 +282,7 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
-        butLogin.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        butLogin.setFont(Global.lableFont);
         butLogin.setText("Login");
         butLogin.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -289,17 +290,17 @@ public class LoginDialog extends javax.swing.JDialog {
             }
         });
 
-        jLabel3.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Session");
 
-        cboSession.setFont(new java.awt.Font("Zawgyi-One", 0, 14)); // NOI18N
+        cboSession.setFont(Global.textFont);
 
-        txtPassword.setFont(new java.awt.Font("Zawgyi-One", 0, 14)); // NOI18N
+        txtPassword.setFont(Global.textFont);
 
-        jLabel5.setFont(new java.awt.Font("Lucida Grande", 0, 16)); // NOI18N
+        jLabel5.setFont(Global.lableFont);
         jLabel5.setText("Login Date");
 
-        txtLoginDate.setFont(new java.awt.Font("Zawgyi-One", 0, 16)); // NOI18N
+        txtLoginDate.setFont(Global.textFont);
         txtLoginDate.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 txtLoginDateMouseClicked(evt);

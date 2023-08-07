@@ -9,8 +9,10 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.MachineProperty;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.util.List;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.apache.log4j.Logger;
@@ -146,6 +148,7 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
     @Override
     public void onPreStartup() {
         LoginDialog login = new LoginDialog(new JFrame(), true);
+        login.setIconImage(new ImageIcon(this.getClass().getResource("/ui/name_24px.png")).getImage());
         //WesleyLoginDialog login = new WesleyLoginDialog(new JFrame(), true);
         //Calculate dialog position to centre.
         Toolkit toolkit = Toolkit.getDefaultToolkit();

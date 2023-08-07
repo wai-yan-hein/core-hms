@@ -302,6 +302,9 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                 if (vouFilter.getRemark() != null) {
                     txtRemark.setText(vouFilter.getRemark());
                 }
+                if (vouFilter.getVouNo() != null) {
+                    txtVouNo.setText(vouFilter.getVouNo());
+                }
 
                 if (vouFilter.getMachine() != null) {
                     cboMachine.setSelectedItem(vouFilter.getMachine());
@@ -381,6 +384,12 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
             vouFilter.setRemark(txtRemark.getText());
         } else {
             vouFilter.setRemark(null);
+        }
+        if (!txtVouNo.getText().isEmpty()) {
+            strSql = strSql + " and sh.opd_inv_id = '" + txtVouNo.getText() + "'";
+            vouFilter.setVouNo(txtVouNo.getText());
+        } else {
+            vouFilter.setVouNo(null);
         }
 
         if (!txtPtNo.getText().trim().isEmpty()) {
@@ -623,6 +632,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         cboMachine = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
         cboUser = new javax.swing.JComboBox<>();
+        jLabel11 = new javax.swing.JLabel();
+        txtVouNo = new javax.swing.JTextField();
         txtTotalAmount = new javax.swing.JFormattedTextField();
         lblTotalAmount = new javax.swing.JLabel();
 
@@ -800,6 +811,16 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
 
         cboUser.setFont(Global.textFont);
 
+        jLabel11.setFont(Global.lableFont);
+        jLabel11.setText("Vou No");
+
+        txtVouNo.setFont(Global.textFont);
+        txtVouNo.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtVouNoFocusGained(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -815,7 +836,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                     .addComponent(jLabel7)
                     .addComponent(jLabel8)
                     .addComponent(jLabel9)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel11))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cboSession, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -837,7 +859,8 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                                 .addComponent(txtPtName))
                             .addComponent(cboPayment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(cboCurrency, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtRemark))
+                            .addComponent(txtRemark)
+                            .addComponent(txtVouNo))
                         .addGap(2, 2, 2))
                     .addComponent(cboMachine, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cboUser, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -867,6 +890,10 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtVouNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
@@ -1096,6 +1123,10 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
         }
     }//GEN-LAST:event_txtDocNoActionPerformed
 
+    private void txtVouNoFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtVouNoFocusGained
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtVouNoFocusGained
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butSearch;
     private javax.swing.JButton butSelect;
@@ -1106,6 +1137,7 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     private javax.swing.JComboBox<String> cboUser;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1129,5 +1161,6 @@ public class OPDVouSearchDialog extends javax.swing.JDialog implements Selection
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtTo;
     private javax.swing.JFormattedTextField txtTotalAmount;
+    private javax.swing.JTextField txtVouNo;
     // End of variables declaration//GEN-END:variables
 }

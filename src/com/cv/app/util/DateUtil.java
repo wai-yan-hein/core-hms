@@ -389,18 +389,42 @@ public class DateUtil {
     public static String toDateTimeStr(Date date, String format) {
         DateFormat dateFormat = new SimpleDateFormat(format);
         String strDate = null;
-        try{
+        try {
             strDate = dateFormat.format(date);
-        }catch(Exception ex){
-            
+        } catch (Exception ex) {
+
         }
         return strDate;
     }
 
+    public static int convertTo24HourFormat(String timeString) {
+        if (timeString.contains(":")) {
+            String[] parts = timeString.split(":");
+            String hourPart = parts[0];
+            String amPmPart = parts[1].trim();
+
+            if (amPmPart.equalsIgnoreCase("pm")) {
+                int hour = Integer.parseInt(hourPart);
+                if (hour != 12) {
+                    hour += 12;
+                }
+                hourPart = String.valueOf(hour);
+            } else {
+                if (hourPart.equals("12")) {
+                    hourPart = "00";
+                }
+            }
+
+            return Integer.parseInt(hourPart);
+        }
+        return Integer.parseInt(timeString);
+    }
+
     public static boolean isValidSession(String stTime,
             String endTime) {
-        int stHr = Integer.parseInt(stTime);
-        int enHr = Integer.parseInt(endTime);
+
+        int stHr = convertTo24HourFormat(stTime);
+        int enHr = convertTo24HourFormat(endTime);
         int curHr = getHour();
         return curHr >= stHr && curHr <= enHr;
     }
