@@ -272,8 +272,8 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     currVou.setUpdatedDate(new Date());
                 }
 
-                dao.open();
-                dao.beginTran();
+                //dao.open();
+                //dao.beginTran();
                 String vouNo = currVou.getOpdInvId();
                 List<OTDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
                 for (OTDetailHis odh : listDetail) {
@@ -293,15 +293,15 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                                 if (odf.getDrFeeId() == null) {
                                     odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
                                 }
-                                dao.save1(odf);
+                                dao.save(odf);
                             }
                         }
                     }
 
-                    dao.save1(odh);
+                    dao.save(odh);
                 }
-                dao.save1(currVou);
-                dao.commit();
+                dao.save(currVou);
+                //dao.commit();
 
                 if (lblStatus.getText().equals("NEW")) {
                     vouEngine.updateVouNo();

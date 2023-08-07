@@ -407,7 +407,7 @@ public class SaleTableModel extends AbstractTableModel {
                                     }
                                 }
                             }
-
+                            
                             if (getCusType().equals("N")) {
                                 String key = medId + "-" + medUp.getUnitList(medId).get(0).getItemUnitCode();
                                 float iSmallQty = record.getQuantity() * medUp.getQtyInSmallest(key);
@@ -432,7 +432,7 @@ public class SaleTableModel extends AbstractTableModel {
                         }
 
                     }
-
+                    
                     if (Util1.getPropValue("system.app.sale.musthavestock").equals("Y")) {
                         String medId = record.getMedId().getMedId();
                         Integer locationId = location.getLocationId();
@@ -1369,5 +1369,24 @@ public class SaleTableModel extends AbstractTableModel {
 
     public void setBookType(String bookType) {
         this.bookType = bookType;
+    }
+    
+    public void addEMGPercent(float percent){
+        for(SaleDetailHis record : listDetail){
+            if(record.getMedId() != null){
+                if(record.getMedId().getMedId() != null){
+                    ChargeType ct = record.getChargeId();
+                    if(ct.getChargeTypeId() != 2){
+                        double price = NumberUtil.NZero(record.getPrice());
+                        double incValue = price * (percent/100);
+                        record.setPrice(price + incValue);
+                        record.setAmount(NumberUtil.FloatZero(record.getQuantity())*
+                                NumberUtil.NZero(record.getPrice()));
+                    }
+                }
+            }
+        }
+        
+        fireTableDataChanged();
     }
 }

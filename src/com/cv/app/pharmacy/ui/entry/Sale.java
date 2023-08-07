@@ -366,6 +366,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
             }
         }
+        
+        if (Util1.getPropValue("system.opd.emg").equals("Y")) {
+            jLabel15.setVisible(true);
+            txtEmgPercent.setVisible(true);
+        }else{
+            jLabel15.setVisible(false);
+            txtEmgPercent.setVisible(false);
+        }
     }
 
     private void initButtonGroup() {
@@ -2115,6 +2123,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         chkVouComp.setSelected(false);
         butOTID.setEnabled(false);
         txtBill.setText(null);
+        txtEmgPercent.setText(null);
     }
 
     private void initTextBoxAlign() {
@@ -3501,7 +3510,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             currSaleVou.setTaxP(NumberUtil.getDouble(txtTaxP.getText()));
             currSaleVou.setTaxAmt(NumberUtil.getDouble(txtTax.getText()));
             currSaleVou.setDeleted(Util1.getNullTo(currSaleVou.getDeleted()));
-
+            currSaleVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
+            
             if (lblStatus.getText().equals("NEW")) {
                 currSaleVou.setDeleted(false);
                 currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
@@ -4706,6 +4716,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         lblRemark = new javax.swing.JLabel();
         jLabel20 = new javax.swing.JLabel();
         spPrint = new javax.swing.JSpinner();
+        jLabel15 = new javax.swing.JLabel();
+        txtEmgPercent = new javax.swing.JFormattedTextField();
         jPanel12 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tblTransaction = new javax.swing.JTable();
@@ -5268,7 +5280,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(lblDifference))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(txtCusLastBalance)
+                    .add(txtCusLastBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
                     .add(txtDifference))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -5276,7 +5288,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     .add(lblSaleLastBal, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 93, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(txtSaleLastBalance)
+                    .add(txtSaleLastBalance, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
                     .add(txtCreditLimit)))
         );
         jPanel5Layout.setVerticalGroup(
@@ -5349,6 +5361,20 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         spPrint.setFont(Global.textFont);
 
+        jLabel15.setText("EMG %");
+
+        txtEmgPercent.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtEmgPercent.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtEmgPercentFocusLost(evt);
+            }
+        });
+        txtEmgPercent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtEmgPercentActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel10Layout = new org.jdesktop.layout.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
@@ -5365,6 +5391,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         .add(jLabel20)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel15)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(txtEmgPercent, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .add(0, 0, Short.MAX_VALUE))))
         );
         jPanel10Layout.setVerticalGroup(
@@ -5378,7 +5408,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(jLabel20)
-                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(spPrint, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel15)
+                    .add(txtEmgPercent, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -6162,6 +6194,18 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         butTempList.setEnabled(true);
         save();
     }//GEN-LAST:event_butSaveTempActionPerformed
+
+    private void txtEmgPercentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtEmgPercentActionPerformed
+        float percent = NumberUtil.FloatZero(txtEmgPercent.getText());
+        saleTableModel.addEMGPercent(percent);
+        calculateTotalAmount();
+    }//GEN-LAST:event_txtEmgPercentActionPerformed
+
+    private void txtEmgPercentFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtEmgPercentFocusLost
+        float percent = NumberUtil.FloatZero(txtEmgPercent.getText());
+        saleTableModel.addEMGPercent(percent);
+        calculateTotalAmount();
+    }//GEN-LAST:event_txtEmgPercentFocusLost
     // </editor-fold>
 
     private void saleOutstanding() {
@@ -6298,6 +6342,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel18;
@@ -6368,6 +6413,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private javax.swing.JTextField txtDrCode;
     private javax.swing.JTextField txtDrName;
     private javax.swing.JFormattedTextField txtDueDate;
+    private javax.swing.JFormattedTextField txtEmgPercent;
     private javax.swing.JTextField txtFilter;
     private javax.swing.JFormattedTextField txtGrandTotal;
     private javax.swing.JTextField txtRecNo;

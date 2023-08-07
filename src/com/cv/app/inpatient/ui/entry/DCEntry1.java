@@ -1560,9 +1560,11 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             double tax = NumberUtil.NZero(txtTaxA.getValue());
             double vouTotal = NumberUtil.NZero(txtVouTotal.getValue());
 
-            if (pt.getPaymentTypeId() == 1) {
-                if (vouTotal != 0) {
-                    txtPaid.setValue((vouTotal + tax) - discount);
+            if (Util1.getPropValue("system.app.allCash").equals("Y")) {
+                if (pt.getPaymentTypeId() == 1) {
+                    if (vouTotal != 0) {
+                        txtPaid.setValue((vouTotal + tax) - discount);
+                    }
                 }
             }
             double paid = NumberUtil.NZero(txtPaid.getValue());
@@ -2074,7 +2076,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             currVou.setVouBalance(NumberUtil.NZero(txtVouBalance.getValue()));
             currVou.setListOPDDetailHis(tableModel.getListOPDDetailHis());
             currVou.setOtId(txtBillId.getText());
-            
+
             if (cboAgeRange.getSelectedItem() == null) {
                 currVou.setAgeRange(null);
             } else {
@@ -2115,7 +2117,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
             String date = DateUtil.toDateStrMYSQL(txtDate.getText());
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {
@@ -2696,7 +2698,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/dc";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -2792,7 +2794,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             String currency = ((Currency) cboCurrency.getSelectedItem()).getCurrencyCode();
 
             try ( //dao.open();
-                    ResultSet resultSet = dao.getPro("patient_bill_payment",
+                     ResultSet resultSet = dao.getPro("patient_bill_payment",
                             regNo, DateUtil.toDateStrMYSQL(txtDate.getText()),
                             currency, Global.machineId)) {
                 while (resultSet.next()) {

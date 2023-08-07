@@ -253,6 +253,14 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         butAdmit.setEnabled(false);
         butAdmit.setVisible(false);
         butRemove.setEnabled(false);
+        
+        if (Util1.getPropValue("system.opd.emg").equals("Y")) {
+            jLabel26.setVisible(true);
+            txtEmgPercent.setVisible(true);
+        }else{
+            jLabel26.setVisible(false);
+            txtEmgPercent.setVisible(false);
+        }
     }
 
     private void initSpinner() {
@@ -336,8 +344,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
                     String vouNo = currVou.getOpdInvId();
                     List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
-                    dao.open();
-                    dao.beginTran();
+                    //dao.open();
+                    //dao.beginTran();
                     if (currVou.getPkgId() != null) {
                         //delete detail for package
                         String sql = "delete from opd_details_his where vou_no='" + vouNo + "'";
@@ -348,10 +356,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         if (odh.getOpdDetailId() == null) {
                             odh.setOpdDetailId(vouNo + "-" + odh.getUniqueId());
                         }
-                        dao.save1(odh);
+                        dao.save(odh);
                     }
-                    dao.save1(currVou);
-                    dao.commit();
+                    dao.save(currVou);
+                    //dao.commit();
 
                     if (lblStatus.getText().equals("NEW")) {
                         vouEngine.updateVouNo();
@@ -729,17 +737,17 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             String vouNo = currVou.getOpdInvId();
                             List<OPDDetailHis> listDetail = getVerifiedUniqueId(vouNo, currVou.getListOPDDetailHis());
 
-                            dao.open();
-                            dao.beginTran();
+                            //dao.open();
+                            //dao.beginTran();
                             for (OPDDetailHis odh : listDetail) {
                                 odh.setVouNo(vouNo);
                                 if (odh.getOpdDetailId() == null) {
                                     odh.setOpdDetailId(vouNo + "-" + odh.getUniqueId());
                                 }
-                                dao.save1(odh);
+                                dao.save(odh);
                             }
-                            dao.save1(currVou);
-                            dao.commit();
+                            dao.save(currVou);
+                            //dao.commit();
 
                             if (lblStatus.getText().equals("NEW")) {
                                 vouEngine.updateVouNo();
@@ -1510,6 +1518,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setPatientName(txtPatientName.getText());
             currVou.setAdmissionNo(txtAdmissionNo.getText());
             currVou.setAge(NumberUtil.NZeroInt(txtAge.getText()));
+            currVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
 
             if (payType == 1) {
                 if ((NumberUtil.NZero(currVou.getVouTotal()) + NumberUtil.NZero(currVou.getTaxA()))
@@ -2381,6 +2390,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         butRemove = new javax.swing.JButton();
         txtPrice = new javax.swing.JFormattedTextField();
         chkCloseBill = new javax.swing.JCheckBox();
+        jLabel26 = new javax.swing.JLabel();
+        txtEmgPercent = new javax.swing.JFormattedTextField();
         txtBill = new javax.swing.JTextField();
         butOTID = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
@@ -2702,6 +2713,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         chkCloseBill.setFont(Global.lableFont);
         chkCloseBill.setText("Close Bill");
 
+        jLabel26.setText("EMG %");
+
+        txtEmgPercent.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -2720,7 +2735,12 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                                 .addComponent(txtPrice)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(butRemove)))))
+                                .addComponent(butRemove))))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel26)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtEmgPercent, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -2737,6 +2757,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkCloseBill)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel26)
+                    .addComponent(txtEmgPercent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -3323,6 +3347,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
+    private javax.swing.JLabel jLabel26;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -3351,6 +3376,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JTextField txtDoctorName;
     private javax.swing.JTextField txtDoctorNo;
     private javax.swing.JTextField txtDonorName;
+    private javax.swing.JFormattedTextField txtEmgPercent;
     private javax.swing.JTextField txtMonth;
     private javax.swing.JTextField txtPackageName;
     private javax.swing.JFormattedTextField txtPaid;
