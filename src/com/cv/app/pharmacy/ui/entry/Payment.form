@@ -65,15 +65,15 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
-                              <Component id="cboUser" max="32767" attributes="0"/>
+                              <Component id="cboUser" pref="70" max="32767" attributes="0"/>
                               <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
                               <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="-2" max="-2" attributes="0"/>
-                              <Component id="cboCurrencySearch" max="32767" attributes="0"/>
+                              <Component id="cboCurrencySearch" pref="70" max="32767" attributes="0"/>
                               <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
-                              <Component id="cboPayOpt" max="32767" attributes="0"/>
+                              <Component id="cboPayOpt" pref="70" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
@@ -438,9 +438,11 @@
                               <Component id="butClear" linkSize="9" min="-2" pref="72" max="-2" attributes="0"/>
                               <EmptySpace min="-2" max="-2" attributes="0"/>
                               <Component id="butDelete" linkSize="9" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" max="-2" attributes="0"/>
+                              <Component id="butPrint" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" max="-2" attributes="0"/>
                               <Component id="chkVouUpdate" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
                               <Component id="txtLastBalance" pref="118" max="32767" attributes="0"/>
@@ -512,7 +514,7 @@
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel11" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace type="separate" min="-2" max="-2" attributes="0"/>
-                                      <Component id="cboLocation1" pref="171" max="32767" attributes="0"/>
+                                      <Component id="cboLocation1" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="txtCusName1" max="32767" attributes="0"/>
                               </Group>
@@ -526,7 +528,7 @@
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                                      <Component id="cboAccount" pref="63" max="32767" attributes="0"/>
+                                      <Component id="cboAccount" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -614,6 +616,7 @@
                           <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="butDelete" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="chkVouUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="butPrint" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -1008,6 +1011,11 @@
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
+            </Component>
+            <Component class="javax.swing.JButton" name="butPrint">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Print"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>

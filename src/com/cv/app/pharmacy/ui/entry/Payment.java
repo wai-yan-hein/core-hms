@@ -276,6 +276,10 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                 txtPaidP.setValue(traderPayHis.getPaidAmtP());
                 cboAccount.setSelectedItem(traderPayHis.getPayAccount());
                 tblPaidVouListModel.setListVou(listVou);
+                txtPrvBalance.setValue(traderPayHis.getPrvBalance());
+                txtRePurchase.setValue(traderPayHis.getRePurchase());
+                txtReturnIn.setValue(traderPayHis.getRetIn());
+                txtLastBalance.setValue(traderPayHis.getLastBalance());
                 dao.close();
                 lock();
             } catch (Exception ex) {
@@ -345,7 +349,11 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         txtPaidP.setValue(null);
         txtTtlPaid.setValue(null);
         txtLastBalance.setValue(null);
-
+        txtPrvBalance.setValue(null);
+        txtRePurchase.setValue(null);
+        txtReturnIn.setValue(null);
+        txtLastBalance.setValue(null);
+                
         traderPayHis = new TraderPayHis();
         tblPaidVouListModel.removeList();
         paymentTrader = null;
@@ -450,6 +458,10 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             traderPayHis.setPayOption((String) cboPayOpt1.getSelectedItem());
             traderPayHis.setParentCurr((Currency) cboPCurrency.getSelectedItem());
             traderPayHis.setPayDt(traderPayHis.getPayDate());
+            traderPayHis.setLastBalance(NumberUtil.NZero(txtLastBalance.getText()));
+            traderPayHis.setPrvBalance(NumberUtil.NZero(txtPrvBalance.getText()));
+            traderPayHis.setRePurchase(NumberUtil.NZero(txtRePurchase.getText()));
+            traderPayHis.setRetIn(NumberUtil.NZero(txtReturnIn.getText()));
             if (cboAccount.getSelectedItem() instanceof TraderPayAccount) {
                 traderPayHis.setPayAccount((TraderPayAccount) cboAccount.getSelectedItem());
             } else {
@@ -1106,6 +1118,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         jLabel22 = new javax.swing.JLabel();
         jLabel17 = new javax.swing.JLabel();
         cboAccount = new javax.swing.JComboBox<>();
+        butPrint = new javax.swing.JButton();
 
         jSplitPane1.setDividerLocation(500);
 
@@ -1241,15 +1254,15 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     .addGroup(searchPaneLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addGap(10, 10, 10)
-                        .addComponent(cboUser, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cboUser, 0, 70, Short.MAX_VALUE)
                         .addGap(23, 23, 23)
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboCurrencySearch, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cboCurrencySearch, 0, 70, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cboPayOpt, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(cboPayOpt, 0, 70, Short.MAX_VALUE))
                     .addGroup(searchPaneLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addGap(18, 18, 18)
@@ -1534,6 +1547,8 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
         cboAccount.setFont(Global.textFont);
 
+        butPrint.setText("Print");
+
         javax.swing.GroupLayout entryPaneLayout = new javax.swing.GroupLayout(entryPane);
         entryPane.setLayout(entryPaneLayout);
         entryPaneLayout.setHorizontalGroup(
@@ -1559,9 +1574,11 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                         .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butDelete)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butPrint)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkVouUpdate)
-                        .addGap(44, 44, 44)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(txtLastBalance, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE))
@@ -1617,7 +1634,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                             .addGroup(entryPaneLayout.createSequentialGroup()
                                 .addComponent(jLabel11)
                                 .addGap(18, 18, 18)
-                                .addComponent(cboLocation1, 0, 171, Short.MAX_VALUE))
+                                .addComponent(cboLocation1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addComponent(txtCusName1))
                         .addGap(18, 18, 18)
                         .addGroup(entryPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1628,7 +1645,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                             .addGroup(entryPaneLayout.createSequentialGroup()
                                 .addComponent(jLabel17)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cboAccount, 0, 63, Short.MAX_VALUE)))))
+                                .addComponent(cboAccount, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                 .addContainerGap())
         );
 
@@ -1701,7 +1718,8 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
                     .addComponent(txtLastBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel21)
                     .addComponent(butDelete)
-                    .addComponent(chkVouUpdate))
+                    .addComponent(chkVouUpdate)
+                    .addComponent(butPrint))
                 .addContainerGap())
         );
 
@@ -1897,6 +1915,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
     private javax.swing.JButton butClear;
     private javax.swing.JButton butClearSearch;
     private javax.swing.JButton butDelete;
+    private javax.swing.JButton butPrint;
     private javax.swing.JButton butSave;
     private javax.swing.JButton butSearch;
     private javax.swing.JComboBox<String> cboAccount;

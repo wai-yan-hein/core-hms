@@ -52,6 +52,10 @@ public class TraderPayHis implements java.io.Serializable {
     private Date payDt;
     private Double discount;
     private TraderPayAccount payAccount;
+    private Double lastBalance;
+    private Double prvBalance;
+    private Double rePurchase;
+    private Double retIn;
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -278,6 +282,42 @@ public class TraderPayHis implements java.io.Serializable {
 
     public void setPayAccount(TraderPayAccount payAccount) {
         this.payAccount = payAccount;
+    }
+
+    @Column(name="last_balance")
+    public Double getLastBalance() {
+        return lastBalance;
+    }
+
+    public void setLastBalance(Double lastBalance) {
+        this.lastBalance = lastBalance;
+    }
+
+    @Column(name="prv_balance")
+    public Double getPrvBalance() {
+        return prvBalance;
+    }
+
+    public void setPrvBalance(Double prvBalance) {
+        this.prvBalance = prvBalance;
+    }
+
+    @Column(name="re_purchase")
+    public Double getRePurchase() {
+        return rePurchase;
+    }
+
+    public void setRePurchase(Double rePurchase) {
+        this.rePurchase = rePurchase;
+    }
+
+    @Column(name="return_in")
+    public Double getRetIn() {
+        return retIn;
+    }
+
+    public void setRetIn(Double retIn) {
+        this.retIn = retIn;
     }
 
 }
