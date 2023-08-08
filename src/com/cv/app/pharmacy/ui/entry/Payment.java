@@ -25,13 +25,16 @@ import com.cv.app.ui.common.TableDateFieldRenderer;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
+import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
@@ -198,6 +201,65 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         }
     }
 
+    private void print() {
+        if (lblStatus.getText().equals("NEW")) {
+            if (isValidEntry()) {
+                try {
+                    if (traderPayHis.getPaymentId() != null) {
+                        dao.getPro("bkpayment", traderPayHis.getPaymentId().toString(), Global.loginUser.getUserId());
+                    }
+
+                    dao.save(traderPayHis);
+
+                    //For upload to account
+                    uploadToAccount(traderPayHis.getPaymentId().toString());
+
+                    /*if(chkVouUpdate.isSelected()){
+                 updateSaveVouTime(txtPayDate.getText(), traderPayHis.getTrader().getTraderId());
+                 }*/
+                } catch (Exception ex) {
+                    log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
+            }
+        }
+
+        if (traderPayHis.getPaymentId() != null) {
+            String reportName = Util1.getPropValue("system.payment.reportname");
+            Map<String, Object> params = new HashMap();
+            params.put("comp_address", Util1.getPropValue("report.address"));
+            params.put("phone", Util1.getPropValue("report.phone"));
+            String compName = Util1.getPropValue("report.company.name");
+            params.put("comp_name}", compName);
+            params.put("pay_date", traderPayHis.getPayDate());
+            params.put("bal_date", traderPayHis.getPayDt());
+            params.put("remark", traderPayHis.getRemark());
+            params.put("pay_amt", traderPayHis.getPaidAmtC());
+            params.put("balance", traderPayHis.getLastBalance());
+            params.put("cus_id", traderPayHis.getTrader().getTraderId());
+            params.put("cus_name", traderPayHis.getTrader().getTraderId()
+                    + " - " + traderPayHis.getTrader().getTraderName());
+            params.put("SUBREPORT_DIR", Util1.getAppWorkFolder()
+                    + Util1.getPropValue("report.folder.path"));
+
+            try {
+                String reportPath = Util1.getAppWorkFolder()
+                        + Util1.getPropValue("report.folder.path")
+                        + reportName;
+                ReportUtil.viewReport(reportPath, params, dao.getConnection());
+                clearPayment();
+            } catch (Exception ex) {
+                log.error("print : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+        } else {
+            JOptionPane.showMessageDialog(Util1.getParent(), "Please payment you want to print.",
+                    "No Payment Select", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private List getLocationFilter() {
         try {
             if (Util1.getPropValue("system.user.location.filter").equals("Y")) {
@@ -353,7 +415,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         txtRePurchase.setValue(null);
         txtReturnIn.setValue(null);
         txtLastBalance.setValue(null);
-                
+
         traderPayHis = new TraderPayHis();
         tblPaidVouListModel.removeList();
         paymentTrader = null;
@@ -958,7 +1020,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/payment";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -1548,6 +1610,11 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         cboAccount.setFont(Global.textFont);
 
         butPrint.setText("Print");
+        butPrint.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butPrintActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout entryPaneLayout = new javax.swing.GroupLayout(entryPane);
         entryPane.setLayout(entryPaneLayout);
@@ -1910,6 +1977,10 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
         // TODO add your handling code here:
         calculateAmount();
     }//GEN-LAST:event_txtDiscountActionPerformed
+
+    private void butPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPrintActionPerformed
+        print();
+    }//GEN-LAST:event_butPrintActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;
