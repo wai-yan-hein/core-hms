@@ -298,6 +298,31 @@ add column service_cost double;
 alter table opd_details_his 
 add column service_cost double;
 
+alter table dc_his 
+add column ot_id varchar(15);
+
+create table bill_opening_his (
+  bill_id varchar(15) not null,
+  reg_no varchar(15) not null,
+  adm_no varchar(15) default null,
+  op_cl_status bit(1) default null,
+  bill_op_date datetime default null,
+  open_by varchar(15) default null,
+  bill_cl_date datetime default null,
+  close_by varchar(15) default null,
+  primary key (bill_id),
+  unique key bill_id_UNIQUE (bill_id)
+) engine=innodb default charset=utf8mb3 collate=utf8mb3_general_ci;
+
+alter table opd_his
+add column emg_percent decimal(10,2);
+
+alter table pay_method
+change column method_desc method_desc varchar(150);
+
+alter table sale_his
+add column emg_percent decimal(10,2);
+
 drop view if exists v_opd_service;
 create  view v_opd_service as select og.group_id as group_id,og.group_name as group_name,oc.cat_name as cat_name,svc.service_id as service_id,svc.service_name as service_name,svc.srv_fees as srv_fees,svc.cat_id as cat_id,svc.price_ver_id as price_ver_id,svc.ver_upd_id as ver_upd_id,svc.srv_fees1 as srv_fees1,svc.cfs as cfs,svc.medu_ver_id as medu_ver_id,svc.medu_upd_id as medu_upd_id,svc.service_code as service_code,svc.act_status as act_status,svc.mig_id as mig_id,svc.lab_remark as lab_remark,svc.service_cost as service_cost from ((opd_group og join opd_category oc) join opd_service svc) where og.group_id = oc.group_id and oc.cat_id = svc.cat_id;
 

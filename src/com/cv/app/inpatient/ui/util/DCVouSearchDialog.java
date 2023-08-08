@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import org.apache.log4j.Logger;
@@ -299,6 +298,10 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                     txtRemark.setText(vouFilter.getRemark());
                 }
 
+                if (vouFilter.getVouNo() != null) {
+                    txtVouNo.setText(vouFilter.getVouNo());
+                }
+
                 if (vouFilter.getMachine() != null) {
                     cboMachine.setSelectedItem(vouFilter.getMachine());
                 }
@@ -377,7 +380,12 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         } else {
             vouFilter.setRemark(null);
         }
-
+        if (!txtVouNo.getText().isEmpty()) {
+            strSql = strSql + " and sh.dc_inv_id = '" + txtVouNo.getText() + "'";
+            vouFilter.setVouNo(txtVouNo.getText());
+        } else {
+            vouFilter.setVouNo(null);
+        }
         if (!txtPtNo.getText().isEmpty()) {
             strSql = strSql + " and sh.patient_id = '" + txtPtNo.getText() + "'";
         } else if (!txtPtName.getText().trim().isEmpty()) {
@@ -609,6 +617,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         cboMachine = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
         cboUser = new javax.swing.JComboBox<>();
+        jLabel11 = new javax.swing.JLabel();
+        txtVouNo = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("DC Vou Search");
@@ -787,6 +797,16 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
 
         cboUser.setFont(Global.textFont);
 
+        jLabel11.setFont(Global.lableFont);
+        jLabel11.setText("Vou No");
+
+        txtVouNo.setFont(Global.textFont);
+        txtVouNo.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtVouNoFocusGained(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -803,7 +823,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.LEADING)))
+                        .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.LEADING))
+                    .addComponent(jLabel11))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cboSession, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -825,7 +846,8 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                                 .addComponent(txtPtName))
                             .addComponent(cboPayment, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(cboCurrency, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtRemark))
+                            .addComponent(txtRemark)
+                            .addComponent(txtVouNo))
                         .addGap(2, 2, 2))
                     .addComponent(cboMachine, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cboUser, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -857,6 +879,10 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                     .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtVouNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(cboCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -876,7 +902,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
                     .addComponent(jLabel10)
                     .addComponent(cboUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -1075,6 +1101,10 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
         }
     }//GEN-LAST:event_txtDocNoActionPerformed
 
+    private void txtVouNoFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtVouNoFocusGained
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtVouNoFocusGained
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butSearch;
     private javax.swing.JButton butSelect;
@@ -1085,6 +1115,7 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
     private javax.swing.JComboBox<String> cboUser;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1106,5 +1137,6 @@ public class DCVouSearchDialog extends javax.swing.JDialog implements SelectionO
     private javax.swing.JTextField txtPtNo;
     private javax.swing.JTextField txtRemark;
     private javax.swing.JFormattedTextField txtTo;
+    private javax.swing.JTextField txtVouNo;
     // End of variables declaration//GEN-END:variables
 }
