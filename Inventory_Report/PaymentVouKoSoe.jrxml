@@ -26,15 +26,15 @@
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="139" splitType="Stretch">
+		<band height="178" splitType="Stretch">
 			<staticText>
-				<reportElement x="238" y="101" width="71" height="19" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2">
+				<reportElement x="54" y="140" width="144" height="19" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="9" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Pay Amount : ]]></text>
+				<text><![CDATA[ကိုစိုး ေဆးဆိုင္ မွလက္ခံရရွိပါသည္၊ : ]]></text>
 			</staticText>
 			<textField>
 				<reportElement x="90" y="24" width="200" height="20" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
@@ -44,17 +44,17 @@
 				<textFieldExpression><![CDATA[$P{comp_address}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="108" y="45" width="204" height="15" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<reportElement x="74" y="45" width="306" height="15" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phone}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###;#,-##0.###">
-				<reportElement x="311" y="101" width="80" height="19" uuid="a5e95390-4741-4554-a822-28d428866afd">
+				<reportElement x="202" y="140" width="80" height="19" uuid="a5e95390-4741-4554-a822-28d428866afd">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{pay_amt}]]></textFieldExpression>
@@ -125,7 +125,7 @@
 				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/KSE.jpg"]]></imageExpression>
 			</image>
 			<image>
-				<reportElement x="90" y="45" width="17" height="14" uuid="6c600f3a-326b-4814-918e-be15c787a543"/>
+				<reportElement x="56" y="45" width="61" height="14" uuid="6c600f3a-326b-4814-918e-be15c787a543"/>
 				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/phone2.jpeg"]]></imageExpression>
 			</image>
 			<staticText>
@@ -182,24 +182,6 @@
 				</textElement>
 				<text><![CDATA[Printed Date : ]]></text>
 			</staticText>
-			<staticText>
-				<reportElement x="249" y="120" width="59" height="19" uuid="faf9f245-fe8f-42e2-8406-5c3e32dc1ca4">
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Balance : ]]></text>
-			</staticText>
-			<textField pattern="#,##0.###;#,##0.###-" isBlankWhenNull="true">
-				<reportElement x="310" y="120" width="80" height="19" uuid="34bc240c-37f3-4a0f-a1ce-3913fb389dc7">
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$P{balance}]]></textFieldExpression>
-			</textField>
 		</band>
 	</title>
 </jasperReport>

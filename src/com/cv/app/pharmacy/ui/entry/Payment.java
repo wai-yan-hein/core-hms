@@ -231,7 +231,7 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
             params.put("comp_address", Util1.getPropValue("report.address"));
             params.put("phone", Util1.getPropValue("report.phone"));
             String compName = Util1.getPropValue("report.company.name");
-            params.put("comp_name}", compName);
+            params.put("comp_name", compName);
             params.put("pay_date", traderPayHis.getPayDate());
             params.put("bal_date", traderPayHis.getPayDt());
             params.put("remark", traderPayHis.getRemark());

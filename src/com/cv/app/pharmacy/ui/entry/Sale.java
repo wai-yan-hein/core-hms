@@ -3330,17 +3330,18 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                 } else {
                     if (Util1.getPropValue("report.file.type").equals("con")) {
-                        JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                         int count = (int) spPrint.getValue();
                         for (int i = 0; i < count; i++) {
+                            JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                             ReportUtil.printJasper(jp, printerName);
+                            params.put("user_desp", "Receive Voucher, Thanks You.");
                         }
                     } else {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, listDetail);
                         ReportUtil.printJasper(jp, printerName);
                         if (Util1.getPropValue("system.pharmacy.sale.print.double").equals("Y")) {
-                            params.put("user_desp", "Receive Voucher, Thanks You.");
                             JasperPrint jp1 = ReportUtil.getReport(reportPath, params, dao.getConnection());
+                            params.put("user_desp", "Receive Voucher, Thanks You.");
                             ReportUtil.printJasper(jp1, printerName);
                         }
                     }
