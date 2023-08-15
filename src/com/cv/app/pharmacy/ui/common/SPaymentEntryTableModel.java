@@ -255,6 +255,10 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 return;
             }
 
+            if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getDiscount()) == 0) {
+                return;
+            }
+
             try {
                 TraderPayHis tph = new TraderPayHis();
                 vp.setRemark("FullPaid");
@@ -309,7 +313,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/payment";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();

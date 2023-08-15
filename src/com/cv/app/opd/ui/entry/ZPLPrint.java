@@ -30,6 +30,28 @@ public class ZPLPrint extends javax.swing.JPanel {
     public ZPLPrint() {
         initComponents();
         initPrinter();
+        initCommandText();
+    }
+
+    private void initCommandText() {
+        txtRegZPLCode.setText("^XA\n"
+                + "\n"
+                + "^FX Info Section\n"
+                + "^CF0,20\n"
+                + "^FO10,10^FD       Name : ^FS\n"
+                + "^FO115,10^FDPatient#1^FS\n"
+                + "^FO10,40^FD         DOB : ^FS\n"
+                + "^FO115,40^FD10/07/1999^FS\n"
+                + "^FO10,70^FD    Address : ^FS\n"
+                + "^FO115,70^FDYangon^FS\n"
+                + "^FO9,100^FD Phone No. : ^FS\n"
+                + "^FO115,100^FD09979658665^FS\n"
+                + "\n"
+                + "^FX Bar Code Section\n"
+                + "^BY4,2,100\n"
+                + "^FO10,140^BC^FD12345678^FS\n"
+                + "\n"
+                + "^XZ");
     }
 
     private void initPrinter() {
@@ -88,20 +110,26 @@ public class ZPLPrint extends javax.swing.JPanel {
     }
 
     private void regPrint() {
-        if(txtRegZPLCode.getText().trim().isEmpty()){
+        if (txtRegZPLCode.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "You need to configure command text.",
-                                "Command Text Blank", JOptionPane.ERROR_MESSAGE);
+                    "Command Text Blank", JOptionPane.ERROR_MESSAGE);
             return;
         } else if (txtRegNo.getText().trim().isEmpty() || txtPtName.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(Util1.getParent(), "Invalid patient info.",
-                                "Invalid Patient", JOptionPane.ERROR_MESSAGE);
+                    "Invalid Patient", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         String selPrinter = cboPrinter.getSelectedItem().toString();
-        
+        try {
+            String width = "80 mm";
+            String height = "40 mm";
+            ZPLUtil.printZpl(txtRegZPLCode.getText().trim(), selPrinter, width, height);
+        } catch (Exception ex) {
+            log.error("regPrint : selPrinter : " + selPrinter + " " + ex.getMessage());
+        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -186,9 +214,11 @@ public class ZPLPrint extends javax.swing.JPanel {
             }
         });
 
+        jScrollPane1.setBorder(javax.swing.BorderFactory.createTitledBorder("Command Text"));
+
         txtRegZPLCode.setColumns(20);
         txtRegZPLCode.setRows(5);
-        txtRegZPLCode.setBorder(javax.swing.BorderFactory.createTitledBorder("Command Text"));
+        txtRegZPLCode.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         jScrollPane1.setViewportView(txtRegZPLCode);
 
         butRegClear.setText("Clear");
@@ -244,7 +274,7 @@ public class ZPLPrint extends javax.swing.JPanel {
                         .addComponent(butRegPrint)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butRegClear)))
-                .addContainerGap(222, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         panelRegLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {txtPtName, txtRegNo});
@@ -286,7 +316,7 @@ public class ZPLPrint extends javax.swing.JPanel {
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addGap(3, 3, 3))
                     .addGroup(panelOPDLayout.createSequentialGroup()
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 221, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelOPDLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(butOPDPrint, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -343,7 +373,7 @@ public class ZPLPrint extends javax.swing.JPanel {
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addGap(3, 3, 3))
                     .addGroup(panelOTLayout.createSequentialGroup()
-                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 384, Short.MAX_VALUE)
+                        .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelOTLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(butOTPrint, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -354,7 +384,7 @@ public class ZPLPrint extends javax.swing.JPanel {
             panelOTLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelOTLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 69, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelOTLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -396,9 +426,9 @@ public class ZPLPrint extends javax.swing.JPanel {
             .addGroup(panelPharmacyLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelPharmacyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 474, Short.MAX_VALUE)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
                     .addGroup(panelPharmacyLayout.createSequentialGroup()
-                        .addComponent(jScrollPane7)
+                        .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 221, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelPharmacyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(butPharPrint, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -409,7 +439,7 @@ public class ZPLPrint extends javax.swing.JPanel {
             panelPharmacyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelPharmacyLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 174, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelPharmacyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -451,9 +481,9 @@ public class ZPLPrint extends javax.swing.JPanel {
             .addGroup(panelDCLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelDCLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+                    .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 288, Short.MAX_VALUE)
                     .addGroup(panelDCLayout.createSequentialGroup()
-                        .addComponent(jScrollPane9)
+                        .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(panelDCLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(butIPDPrint, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -512,8 +542,7 @@ public class ZPLPrint extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(panelDC, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(panelPharmacy, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
+                            .addComponent(panelPharmacy, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
         );
     }// </editor-fold>//GEN-END:initComponents
 

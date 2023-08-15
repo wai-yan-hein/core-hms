@@ -272,6 +272,10 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
             return;
         }
 
+        if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getDiscount()) == 0) {
+            return;
+        }
+
         try {
             TraderPayHis tph = new TraderPayHis();
             vp.setRemark("FullPaid");

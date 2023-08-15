@@ -437,6 +437,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtAge.setText(null);
         txtDay.setText(null);
         txtMonth.setText(null);
+        txtEmgPercent.setText(null);
         tableModel.clear();
         tableModel.setVouStatus("NEW");
         txtPatientNo.setEditable(true);
@@ -1755,7 +1756,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 cboPaymentType.setSelectedItem(currVou.getPaymentType());
                 txtRemark.setText(currVou.getRemark());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
-
+                txtEmgPercent.setValue(currVou.getEmgPercent());
+                
                 if (currVou.getAge() != null) {
                     txtAge.setText(currVou.getAge().toString());
                 }
@@ -2716,6 +2718,16 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         jLabel26.setText("EMG %");
 
         txtEmgPercent.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtEmgPercent.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                txtEmgPercentFocusLost(evt);
+            }
+        });
+        txtEmgPercent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtEmgPercentActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -3318,6 +3330,18 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             newForm();
         }
     }//GEN-LAST:event_butRefreshActionPerformed
+
+    private void txtEmgPercentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtEmgPercentActionPerformed
+        float percent = NumberUtil.FloatZero(txtEmgPercent.getText());
+        tableModel.addEMGPercent(percent);
+        calculate();
+    }//GEN-LAST:event_txtEmgPercentActionPerformed
+
+    private void txtEmgPercentFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtEmgPercentFocusLost
+        float percent = NumberUtil.FloatZero(txtEmgPercent.getText());
+        tableModel.addEMGPercent(percent);
+        calculate();
+    }//GEN-LAST:event_txtEmgPercentFocusLost
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butAdmit;

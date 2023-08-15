@@ -883,7 +883,6 @@ public class Payment extends javax.swing.JPanel implements SelectionObserver {
 
                 traderPayHis.setDeleted(true);
                 try {
-                    dao.open();
                     dao.save(traderPayHis);
                     String strSql = "update sale_his set payment_id = null, payment_amt = null "
                             + "where payment_id = " + traderPayHis.getPaymentId().toString();

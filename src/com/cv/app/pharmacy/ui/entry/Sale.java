@@ -980,8 +980,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     currSaleVou = (SaleHis) dao.find(SaleHis.class,
                             ((SaleHis) selectObj).getSaleInvId());
                 } else {
-                    currSaleVou = (SaleHis) dao.find(SaleHis.class,
-                            selectObj.toString());
+                    currSaleVou = (SaleHis) dao.find(SaleHis.class, selectObj.toString());
                 }
 
                 isBind = true;
@@ -1003,6 +1002,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
                 saleTableModel.setVouStatus("EDIT");
                 txtDueDate.setText(DateUtil.toDateStr(currSaleVou.getDueDate()));
+                txtEmgPercent.setValue(currSaleVou.getEmgPercent());
+                
                 if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                     if (currSaleVou.getPatientId() != null) {
                         txtCusId.setText(currSaleVou.getPatientId().getRegNo());

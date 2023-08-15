@@ -1377,7 +1377,9 @@ public class SaleTableModel extends AbstractTableModel {
                 if(record.getMedId().getMedId() != null){
                     ChargeType ct = record.getChargeId();
                     if(ct.getChargeTypeId() != 2){
-                        double price = NumberUtil.NZero(record.getPrice());
+                        //double price = NumberUtil.NZero(record.getPrice());
+                        String key = record.getMedId().getMedId() + "-" + record.getUnitId().getItemUnitCode();
+                        double price = medUp.getPrice(key, getCusType(), record.getQuantity());
                         double incValue = price * (percent/100);
                         record.setPrice(price + incValue);
                         record.setAmount(NumberUtil.FloatZero(record.getQuantity())*
