@@ -1455,11 +1455,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         double paid = NumberUtil.NZero(txtPaid.getText());
         double disc = NumberUtil.NZero(txtDiscA.getText());
         double tax = NumberUtil.NZero(txtTaxA.getText());
-
+        
         int payType = ((PaymentType) cboPaymentType.getSelectedItem()).getPaymentTypeId();
         if (payType == 1) {
 
-            if ((vouTtl + tax) != (paid + disc)) {
+            if (NumberUtil.roundDouble((vouTtl + tax),0) != NumberUtil.roundDouble((paid + disc),0)) {
                 log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error : vouTtl : "
                         + vouTtl + " Paid : " + paid);
                 JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher paid.",
@@ -1522,8 +1522,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
 
             if (payType == 1) {
-                if ((NumberUtil.NZero(currVou.getVouTotal()) + NumberUtil.NZero(currVou.getTaxA()))
-                        != (NumberUtil.NZero(currVou.getPaid()) + NumberUtil.NZero(currVou.getDiscountA()))) {
+                if ((NumberUtil.roundDouble(currVou.getVouTotal(),0) + NumberUtil.roundDouble(currVou.getTaxA(),0))
+                        != (NumberUtil.roundDouble(currVou.getPaid(),0) + NumberUtil.roundDouble(currVou.getDiscountA(),0))) {
                     log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error 2: vouTtl : "
                             + vouTtl + " Paid : " + paid);
                     JOptionPane.showMessageDialog(Util1.getParent(), "2 Please check voucher paid.",
@@ -1756,7 +1756,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 cboPaymentType.setSelectedItem(currVou.getPaymentType());
                 txtRemark.setText(currVou.getRemark());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
-                txtEmgPercent.setValue(currVou.getEmgPercent());
+                //txtEmgPercent.setValue(currVou.getEmgPercent());
+                txtEmgPercent.setText(currVou.getEmgPercent().toString());
                 
                 if (currVou.getAge() != null) {
                     txtAge.setText(currVou.getAge().toString());
