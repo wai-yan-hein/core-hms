@@ -34,9 +34,7 @@
                       <Component id="txtPtName" pref="68" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="cboComplete" min="-2" pref="116" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="jCheckBox1" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="163" max="-2" attributes="0"/>
                       <Component id="butSearch" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="butPrint" min="-2" max="-2" attributes="0"/>
@@ -61,7 +59,6 @@
                       <Component id="cboComplete" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <Group type="103" alignment="0" groupAlignment="3" attributes="0">
-                      <Component id="jCheckBox1" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="butSearch" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="butPrint" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -209,10 +206,11 @@
           <Connection code="Global.textFont" type="code"/>
         </Property>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="3">
+          <StringArray count="4">
             <StringItem index="0" value="ALL"/>
             <StringItem index="1" value="Complete"/>
             <StringItem index="2" value="In-Complete"/>
+            <StringItem index="3" value="Reader Missing"/>
           </StringArray>
         </Property>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
@@ -232,11 +230,6 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="butPrintActionPerformed"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JCheckBox" name="jCheckBox1">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Check Miss Reader"/>
-      </Properties>
     </Component>
   </SubComponents>
 </Form>

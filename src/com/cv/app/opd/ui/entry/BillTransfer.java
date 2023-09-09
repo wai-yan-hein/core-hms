@@ -421,6 +421,11 @@ public class BillTransfer extends javax.swing.JPanel implements SelectionObserve
                 pbp.setPayDate(DateUtil.toDate(txtTranDate.getText()));
                 pbp.setRegNo(btd.getRegNo());
                 pbp.setRemark(vouNo + "@" + selType);
+                if(selType.equals("Fixed Balance")){
+                    pbp.setIntgUpdStatus("ACK");
+                }else{
+                    pbp.setIntgUpdStatus(null);
+                }
                 pbp.setDiscount(btd.getDiscount());
                 pbp.setDelete(Boolean.FALSE);
                 dao.save(pbp);

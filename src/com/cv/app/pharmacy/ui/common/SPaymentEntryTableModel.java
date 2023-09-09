@@ -212,7 +212,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                         if (fullPaid) {
                             record.setCurrentPaid(NumberUtil.NZero(record.getVouBalance())
                                     - NumberUtil.NZero(record.getCurrentDiscount()));
-                            record.setVouBalance(0.0);
+                            //record.setVouBalance(0.0);
                             record.setCurrentDiscount(0.0);
 
                         } else {
@@ -351,10 +351,18 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
     }
 
     private void calculateBalance(VoucherPayment record) {
-        Double balance = NumberUtil.NZero(record.getVouTotal())
-                - (NumberUtil.NZero(record.getCurrentDiscount())
-                + NumberUtil.NZero(record.getCurrentPaid()) + NumberUtil.NZero(record.getTtlPaid()));
-        record.setVouBalance(balance);
+        log.info("Vou Type : " + record.getVouType());
+        if (record.getVouType().equals("Opening")) {
+            Double balance = NumberUtil.NZero(record.getVouBalance())
+                    - (NumberUtil.NZero(record.getCurrentDiscount())
+                    + NumberUtil.NZero(record.getCurrentPaid()) + NumberUtil.NZero(record.getTtlPaid()));
+            record.setVouBalance(balance);
+        } else {
+            Double balance = NumberUtil.NZero(record.getVouTotal())
+                    - (NumberUtil.NZero(record.getCurrentDiscount())
+                    + NumberUtil.NZero(record.getCurrentPaid()) + NumberUtil.NZero(record.getTtlPaid()));
+            record.setVouBalance(balance);
+        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PharmacySessionCheck" pageWidth="216" pageHeight="802" columnWidth="216" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cb86150d-edd8-40d1-95e8-465e48f16790">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
@@ -13,11 +13,11 @@
 	<parameter name="session_name" class="java.lang.String"/>
 	<parameter name="session_user" class="java.lang.String"/>
 	<parameter name="session_date" class="java.lang.String"/>
-	<parameter name="session_fdate" class="java.lang.String"/>
-	<parameter name="session_tdate" class="java.lang.String"/>
-	<parameter name="session_id" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String"/>
+	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="sess_id" class="java.lang.String"/>
 	<parameter name="session_currency" class="java.lang.String"/>
-	<parameter name="user_id" class="java.lang.String"/>
+	<parameter name="p_user_id" class="java.lang.String"/>
 	<parameter name="p_machine_id" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
@@ -31,21 +31,21 @@ from (
 select 'Normal' as sess_group, 'Cash' as desp, sum(ifnull(paid,0)) as cash, sum(ifnull(balance,0)) as credit
 from v_session
 where deleted = false and source = 'Sale'
-and date(tran_date) between $P{session_fdate} and $P{session_tdate}
-and (session_id = $P{session_id} or $P{session_id} = 'All')
-and (user_id = $P{user_id} or $P{user_id} = 'All')
+and date(tran_date) between $P{prm_from} and $P{prm_to}
+and (session_id = $P{sess_id} or $P{sess_id} = '-')
+and (user_id = $P{p_user_id} or $P{p_user_id} = '-')
 and (machine = $P{p_machine_id} or $P{p_machine_id} = 'All')
-and (location_id = $P{p_location_id} or $P{p_location_id} = 'All')
+and (location_id = $P{p_location_id} or $P{p_location_id} = '-')
 and (currency = $P{session_currency} or $P{session_currency} = 'All')
 union all
 select 'Deleted' as sess_group, 'Cash' as desp, sum(ifnull(paid,0)) as cash, sum(ifnull(balance,0)) as credit
 from v_session
 where deleted = true and source = 'Sale'
-and date(tran_date) between $P{session_fdate} and $P{session_tdate}
-and (session_id = $P{session_id} or $P{session_id} = 'All')
-and (user_id = $P{user_id} or $P{user_id} = 'All')
+and date(tran_date) between $P{prm_from} and $P{prm_to}
+and (session_id = $P{sess_id} or $P{sess_id} = '-')
+and (user_id = $P{p_user_id} or $P{p_user_id} = '-')
 and (machine = $P{p_machine_id} or $P{p_machine_id} = 'All')
-and (location_id = $P{p_location_id} or $P{p_location_id} = 'All')
+and (location_id = $P{p_location_id} or $P{p_location_id} = '-')
 and (currency = $P{session_currency} or $P{session_currency} = 'All')) a
 where ifnull(a.cash,0) <> 0 or ifnull(a.credit,0) <> 0]]>
 	</queryString>
@@ -207,14 +207,14 @@ where ifnull(a.cash,0) <> 0 or ifnull(a.credit,0) <> 0]]>
 	</pageFooter>
 	<summary>
 		<band height="119" splitType="Stretch">
-			<textField isStretchWithOverflow="true" pattern="h.mm a" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="h.mm a" isBlankWhenNull="true">
 				<reportElement x="143" y="94" width="47" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="dd/MM/yyyy" isBlankWhenNull="true">
 				<reportElement x="91" y="94" width="52" height="12" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>

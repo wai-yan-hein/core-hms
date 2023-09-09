@@ -1110,7 +1110,7 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
         HashMap<String, String> hmLatestPur = new HashMap();
         try {
             ResultSet rsLatestPur = dao.execSQL(strLatestPur);
-            
+
             while (rsLatestPur.next()) {
                 String strMedId = rsLatestPur.getString("med_id");
                 String strPurUnit = Util1.getString(rsLatestPur.getString("pur_unit"), "-");
@@ -1134,7 +1134,7 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
                 + "market_price, market_unit, remark_med "
                 + "from v_price_change_med where med_id in (" + selectedMedId
                 + ") group by med_id";
-        
+
         HashMap<String, String> hmLatestMarket = new HashMap();
 
         try {
@@ -1278,24 +1278,28 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
             strSql = strSql + " where " + filter;
 
             String selectedMedId = null;
-            
+
             try {
                 ResultSet rs = dao.execSQL(strSql);
                 while (rs.next()) {
                     selectedMedId = rs.getString("med_id");
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (!selectedMed.getRelationGroupId().isEmpty()) {
-                        selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                    }
-                    medUp.add(selectedMed);
-                    int selectRow = medTableModel.getLastIndex();
-                    medTableModel.setMed(selectedMed, selectRow);
-                    //unitTableModel.setCurrMed(selectedMed);
-                    /*if (selectedMedId == null) {
+                    if (selectedMed.getRelationGroupId() == null) {
+                        log.error("Error Med : " + selectedMedId);
+                    } else {
+                        if (!selectedMed.getRelationGroupId().isEmpty()) {
+                            selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
+                        }
+                        medUp.add(selectedMed);
+                        int selectRow = medTableModel.getLastIndex();
+                        medTableModel.setMed(selectedMed, selectRow);
+                        //unitTableModel.setCurrMed(selectedMed);
+                        /*if (selectedMedId == null) {
                         selectedMedId = "'" + rs.getString("med_id") + "'";
                     } else {
                         selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
                     }*/
+                    }
                 }
             } catch (SQLException ex) {
                 log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());

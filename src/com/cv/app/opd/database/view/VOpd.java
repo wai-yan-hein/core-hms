@@ -78,6 +78,7 @@ public class VOpd implements Serializable{
     private Integer labMachineId;
     private String labMachineName;
     private Integer resultOrder;
+    private Double fees6; 
     
     @EmbeddedId
     public VOpdKey getKey() {
@@ -584,5 +585,14 @@ public class VOpd implements Serializable{
 
     public void setResultOrder(Integer resultOrder) {
         this.resultOrder = resultOrder;
+    }
+
+    @Column(name="srv_fees6")
+    public Double getFees6() {
+        return fees6;
+    }
+
+    public void setFees6(Double fees6) {
+        this.fees6 = fees6;
     }
 }

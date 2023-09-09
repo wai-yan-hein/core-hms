@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptSaleItemSummary" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b09d6a1a-0c64-4541-8bc9-e407e0c34e79">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="261"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="733"/>
 	<parameter name="compName" class="java.lang.String"/>
 	<parameter name="data_date" class="java.lang.String"/>
 	<parameter name="prm_from" class="java.lang.String"/>
@@ -17,12 +19,12 @@ where deleted = false and date(sale_date) between $P{prm_from} and $P{prm_to}
 group by date(sale_date)
 union all
 select date(ret_in_date) tran_date, 'Return In' as desp, sum(ifnull(paid,0))*-1 as cash,
-0 as credit
+sum(ifnull(balance,0)*-1) as credit
 from ret_in_his
 where deleted = false and date(ret_in_date) between $P{prm_from} and $P{prm_to}
 group by date(ret_in_date)) a
 where not (a.cash = -0 and a.credit = 0)
-order by a.tran_date]]>
+order by a.tran_date, a.desp]]>
 	</queryString>
 	<field name="tran_date" class="java.sql.Date">
 		<fieldDescription><![CDATA[]]></fieldDescription>
