@@ -1757,7 +1757,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 txtRemark.setText(currVou.getRemark());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
                 //txtEmgPercent.setValue(currVou.getEmgPercent());
-                txtEmgPercent.setText(currVou.getEmgPercent().toString());
+                if(currVou.getEmgPercent() != null){
+                    txtEmgPercent.setText(currVou.getEmgPercent().toString());
+                }
+                
                 
                 if (currVou.getAge() != null) {
                     txtAge.setText(currVou.getAge().toString());

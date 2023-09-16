@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -49,14 +50,14 @@ order by date(pd.reg_date),pd.patient_name]]>
 		<groupHeader>
 			<band height="25">
 				<staticText>
-					<reportElement x="1" y="5" width="89" height="20" uuid="63b5a351-cd95-4594-b219-db0535041c11"/>
+					<reportElement x="1" y="2" width="45" height="20" uuid="63b5a351-cd95-4594-b219-db0535041c11"/>
 					<textElement verticalAlignment="Middle">
 						<font fontName="Zawgyi-One" size="11" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Date :]]></text>
 				</staticText>
 				<textField pattern="dd/MM/yyyy">
-					<reportElement x="90" y="5" width="106" height="20" uuid="7eb85ba3-9023-4d14-a79a-06958d916b46"/>
+					<reportElement x="50" y="2" width="106" height="20" uuid="7eb85ba3-9023-4d14-a79a-06958d916b46"/>
 					<textElement verticalAlignment="Middle">
 						<font fontName="Zawgyi-One"/>
 					</textElement>
@@ -188,14 +189,14 @@ order by date(pd.reg_date),pd.patient_name]]>
 			<textField>
 				<reportElement x="1" y="0" width="45" height="17" uuid="dfee10b7-19f2-41a9-8a5b-8e7c28a9d5a3"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{date_group_COUNT}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="48" y="0" width="72" height="17" uuid="965c7e77-6a5e-4d82-a09b-b86a2ef300a5"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{reg_no}]]></textFieldExpression>
 			</textField>
@@ -209,31 +210,47 @@ order by date(pd.reg_date),pd.patient_name]]>
 			<textField>
 				<reportElement x="285" y="0" width="45" height="17" uuid="51e37895-843f-4532-848e-c020ce571d4c"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sex}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="453" y="0" width="100" height="17" uuid="135ba9d2-5efb-4336-afe7-dd7499782055"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One"/>
+					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{city_name}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="330" y="0" width="125" height="17" uuid="28721110-ee7a-4dac-a096-2df3a07f0be8"/>
 				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="10" isBold="false"/>
+					<font fontName="Arial" size="10" isBold="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{doctor_name}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
 	<summary>
-		<band height="4" splitType="Stretch">
+		<band height="21" splitType="Stretch">
 			<line>
 				<reportElement x="0" y="1" width="555" height="1" uuid="f555d79a-341f-4bf8-94fd-1dd527dc8fa2"/>
 			</line>
+			<staticText>
+				<reportElement x="1" y="1" width="80" height="20" uuid="bafbdc5a-976e-4d89-9d09-5cf3e96baeac">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Patient : ]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="87" y="3" width="100" height="17" uuid="4320873c-1637-4051-9c6a-306ba72e3147"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
 		</band>
 	</summary>
 </jasperReport>

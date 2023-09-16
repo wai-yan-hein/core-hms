@@ -459,7 +459,7 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
         tblMedicine.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         //Adding table row selection listener.
         tblMedicine.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
-            int selectedRow = tblMedicine.getSelectedRow();
+            int selectedRow = tblMedicine.convertRowIndexToModel(tblMedicine.getSelectedRow());
             List<PriceChangeUnitHis1> listPcuh;
             Medicine selectedMed;
 
@@ -468,6 +468,7 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
                 unitTableModel.dataChange();
                 lblInfo.setText("");
                 if (selectedRow >= 0) {
+                    listDetail = medTableModel.getListDetail();
                     listPcuh = listDetail.get(selectedRow).getListUnit();
                     PriceChangeMedHis1 pcmh = listDetail.get(selectedRow);
                     selectedMed = pcmh.getMed();
@@ -1322,7 +1323,8 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
         double incValue;
         boolean isFillWithCostPrice = chkFillWithCostPrice.isSelected();
         boolean isFillWithPurPrice = chkFillWithSalePrice.isSelected();
-
+        listDetail = medTableModel.getListDetail();
+        
         for (PriceChangeMedHis1 pcmh : listDetail) {
             if (count < listDetail.size() - 1) {
                 List<PriceChangeUnitHis1> listUnit = pcmh.getListUnit();

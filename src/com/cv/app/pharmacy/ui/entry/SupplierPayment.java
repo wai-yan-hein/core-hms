@@ -89,7 +89,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     + "		   vob.bal, if(date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)='-',0,\n"
                     + "		   if(DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day))<0,0,\n"
                     + "		   DATEDIFF(sysdate(),date_add(vob.tran_date, interval ifnull(t.credit_days,0) day)))) ttl_overdue,\n"
-                    + "       t.stu_no \n"
+                    + "       t.stu_no, null as refno \n"
                     + "	  from v_opening_balance vob\n"
                     + "	  join trader t on vob.trader_id = t.trader_id\n"
                     + "	  left join customer_group cg on t.group_id = cg.group_id\n"
@@ -100,7 +100,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     + "sh.discount, sh.balance,\n"
                     + "	   sum(ifnull(balance,0))-(ifnull(pah.pay_amt,0)) bal, \n"
                     + "	   if(ifnull(sh.due_date,'-')='-',0,if(DATEDIFF(sysdate(),sh.due_date)<0,0,DATEDIFF(sysdate(),sh.due_date))) as ttl_overdue, \n"
-                    + "    t.stu_no \n"
+                    + "    t.stu_no, sh.ref_no \n"
                     + "from pur_his sh\n"
                     + "left join trader t on sh.cus_id = t.trader_id\n"
                     + "left join (select pv.vou_no, sum(ifnull(pv.vou_paid,0)+ifnull(pv.discount,0)) pay_amt, pv.vou_type\n"
@@ -124,8 +124,7 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                     //ttlBalance += rs.getDouble("bal");
                     //ttlDiscount += rs.getDouble("discount");
                     //ttlPaid += rs.getDouble("ttl_paid");
-
-                    listVP.add(new VoucherPayment(
+                    VoucherPayment vp = new VoucherPayment(
                             rs.getDate("pur_date"),
                             rs.getString("vou_no"),
                             rs.getString("cus_id"),
@@ -140,7 +139,9 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
                             rs.getString("currency"),
                             DateUtil.toDate(DateUtil.getTodayDateStr()),
                             rs.getString("stu_no")
-                    ));
+                    );
+                    vp.setRefNo(rs.getString("ref_no"));
+                    listVP.add(vp);
                 }
                 //txtTotalBalance.setValue(ttlBalance);
                 //txtTotalDiscount.setValue(ttlDiscount);
@@ -157,21 +158,22 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
 
         tblVouList.getColumnModel().getColumn(0).setPreferredWidth(30);//Vou Date
         tblVouList.getColumnModel().getColumn(1).setPreferredWidth(70);//Vou No.
-        tblVouList.getColumnModel().getColumn(2).setPreferredWidth(50);//Cus-No
-        tblVouList.getColumnModel().getColumn(3).setPreferredWidth(250);//Cus-Name
-        tblVouList.getColumnModel().getColumn(4).setPreferredWidth(30);//Due Date
-        tblVouList.getColumnModel().getColumn(5).setPreferredWidth(15);//Ttl Overdue
-        tblVouList.getColumnModel().getColumn(6).setPreferredWidth(30);//Currency
-        tblVouList.getColumnModel().getColumn(7).setPreferredWidth(60);//Vou Total
-        tblVouList.getColumnModel().getColumn(8).setPreferredWidth(40);//Ttl Paid
-        tblVouList.getColumnModel().getColumn(9).setPreferredWidth(30);//Pay Date
-        tblVouList.getColumnModel().getColumn(10).setPreferredWidth(40);//Paid
-        tblVouList.getColumnModel().getColumn(11).setPreferredWidth(30);//Discount
-        tblVouList.getColumnModel().getColumn(12).setPreferredWidth(80);//Vou Balance
-        tblVouList.getColumnModel().getColumn(13).setPreferredWidth(15);//Full Paid
+        tblVouList.getColumnModel().getColumn(2).setPreferredWidth(50);//Ref No.
+        tblVouList.getColumnModel().getColumn(3).setPreferredWidth(50);//Cus-No
+        tblVouList.getColumnModel().getColumn(4).setPreferredWidth(250);//Cus-Name
+        tblVouList.getColumnModel().getColumn(5).setPreferredWidth(30);//Due Date
+        tblVouList.getColumnModel().getColumn(6).setPreferredWidth(15);//Ttl Overdue
+        tblVouList.getColumnModel().getColumn(7).setPreferredWidth(30);//Currency
+        tblVouList.getColumnModel().getColumn(8).setPreferredWidth(60);//Vou Total
+        tblVouList.getColumnModel().getColumn(9).setPreferredWidth(40);//Ttl Paid
+        tblVouList.getColumnModel().getColumn(10).setPreferredWidth(30);//Pay Date
+        tblVouList.getColumnModel().getColumn(11).setPreferredWidth(40);//Paid
+        tblVouList.getColumnModel().getColumn(12).setPreferredWidth(30);//Discount
+        tblVouList.getColumnModel().getColumn(13).setPreferredWidth(80);//Vou Balance
+        tblVouList.getColumnModel().getColumn(14).setPreferredWidth(15);//Full Paid
 
         tblVouList.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
-        tblVouList.getColumnModel().getColumn(4).setCellRenderer(new TableDateFieldRenderer());
+        tblVouList.getColumnModel().getColumn(5).setCellRenderer(new TableDateFieldRenderer());
         calculateTotal();
     }
 
@@ -181,9 +183,9 @@ public class SupplierPayment extends javax.swing.JPanel implements SelectionObse
         Double totalPayment = 0.0;
 
         for (int i = 0; i < tblVouList.getRowCount(); i++) {
-            totalBalance += NumberUtil.NZero(tblVouList.getValueAt(i, 12));
-            totalDiscount += NumberUtil.NZero(tblVouList.getValueAt(i, 11));
-            totalPayment += NumberUtil.NZero(tblVouList.getValueAt(i, 10));
+            totalBalance += NumberUtil.NZero(tblVouList.getValueAt(i, 13));
+            totalDiscount += NumberUtil.NZero(tblVouList.getValueAt(i, 12));
+            totalPayment += NumberUtil.NZero(tblVouList.getValueAt(i, 11));
         }
 
         txtTotalBalance.setValue(totalBalance);

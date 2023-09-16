@@ -33,7 +33,7 @@ public class OtherSetup extends javax.swing.JPanel {
         dialog.setLocation(x, y);
         dialog.show();*/
         dialog.setLocationRelativeTo(null);
-        dialog.setPreferredSize(new Dimension(1800, 600));
+        dialog.setPreferredSize(new Dimension(2000, 1000));
         dialog.setVisible(true);
     }
     

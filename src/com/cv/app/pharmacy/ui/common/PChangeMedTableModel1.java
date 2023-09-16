@@ -564,6 +564,10 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
         }
     }
 
+    public List<PriceChangeMedHis1> getListDetail(){
+        return listDetail;
+    }
+    
     public int getLastIndex() {
         return listDetail.size() - 1;
     }

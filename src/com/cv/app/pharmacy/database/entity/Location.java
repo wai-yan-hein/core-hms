@@ -5,6 +5,7 @@
 package com.cv.app.pharmacy.database.entity;
 
 
+import java.util.Date;
 import javax.persistence.*;
 import static javax.persistence.GenerationType.IDENTITY;
 /**
@@ -49,6 +50,11 @@ public class Location implements java.io.Serializable{
     private String purBalAcc;
     private String retoutPaidAcc;
     private String retoutBalAcc;
+    private String createdBy;
+    private Date createdDate;
+    private String updatedBy;
+    private Date updatedDate;
+    private String machineId;
     
     public Location(){}
     
@@ -390,5 +396,52 @@ public class Location implements java.io.Serializable{
 
     public void setRetoutBalAcc(String retoutBalAcc) {
         this.retoutBalAcc = retoutBalAcc;
+    }
+
+    @Column(name="created_by", length=15)
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="created_date")
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    @Column(name="updated_by", length=15)
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="updated_date")
+    public Date getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = updatedDate;
+    }
+
+    @Column(name="machine_id", length=15)
+    public String getMachineId() {
+        return machineId;
+    }
+
+    public void setMachineId(String machineId) {
+        this.machineId = machineId;
     }
 }
