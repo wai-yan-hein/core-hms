@@ -257,7 +257,7 @@ public class SPaymentEntryTableModel extends AbstractTableModel {
                 return;
             }
 
-            if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getDiscount()) == 0) {
+            if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getCurrentDiscount()) == 0) {
                 return;
             }
 

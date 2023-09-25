@@ -2112,7 +2112,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         try {
                             Ams admPt = (Ams) dao.find(Ams.class, key);
                             if (admPt != null) {
-                                canEdit = admPt.getDcStatus() == null;
+                                if(!Util1.hashPrivilege("CanEditOnDC")){
+                                    canEdit = admPt.getDcStatus() == null;
+                                }
                             }
                         } catch (Exception ex) {
                             log.error("setEditStatus Get Admission : " + invId + " : " + ex.toString());
@@ -2155,7 +2157,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         try {
                             Ams admPt = (Ams) dao.find(Ams.class, key);
                             if (admPt != null) {
-                                canEdit = admPt.getDcStatus() == null;
+                                if(!Util1.hashPrivilege("CanEditOnDC")){
+                                    canEdit = admPt.getDcStatus() == null;
+                                }
                             }
                         } catch (Exception ex) {
                             log.error("setEditStatus Get Admission : " + invId + " : " + ex.toString());

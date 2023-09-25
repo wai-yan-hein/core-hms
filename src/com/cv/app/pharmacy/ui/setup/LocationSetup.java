@@ -1043,14 +1043,15 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
                         + "  adj_account_code, issu_dept_code, issu_account_code, sale_disc_acc, sale_paid_acc, sale_tax_acc,\n"
                         + "  sale_bal_acc, sale_ipd_acc, sale_ipd_dept, retin_paid_acc, retin_bal_acc, retin_ipd_acc, \n"
                         + "  retin_ipd_dept, pur_disc_acc, pur_paid_acc, pur_tax_acc, pur_bal_acc, retout_paid_acc, retout_bal_acc,\n"
-                        + "  trader_code, created_date, created_by, updated_by, machine_id)\n"
+                        + "  trader_code, created_date, created_by, updated_by, machine_id, bk_date, bk_user, bk_machine)\n"
                         + "select location_id, location_name, parent, calc_stock, updated_date, location_type,\n"
                         + "  acc_dept_code, account_code, pur_dept_code, pur_account_code, retin_dept_code, retin_account_code,\n"
                         + "  retout_dept_code, retout_account_code, damage_dept_code, damage_account_code, adj_dept_code,\n"
                         + "  adj_account_code, issu_dept_code, issu_account_code, sale_disc_acc, sale_paid_acc, sale_tax_acc,\n"
                         + "  sale_bal_acc, sale_ipd_acc, sale_ipd_dept, retin_paid_acc, retin_bal_acc, retin_ipd_acc, \n"
                         + "  retin_ipd_dept, pur_disc_acc, pur_paid_acc, pur_tax_acc, pur_bal_acc, retout_paid_acc, retout_bal_acc,\n"
-                        + "  trader_code, created_date, created_by, updated_by, machine_id\n"
+                        + "  trader_code, created_date, created_by, updated_by, machine_id, now(), '" + Global.loginUser.getUserId() + "',\n"
+                        + "  '" + Global.machineId + "' \n"
                         + "from location where location_id = " + currLocation.getLocationId());
                 dao.save(currLocation);
                 clear();
