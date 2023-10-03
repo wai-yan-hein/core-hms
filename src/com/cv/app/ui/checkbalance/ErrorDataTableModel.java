@@ -17,7 +17,7 @@ public class ErrorDataTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(ErrorDataTableModel.class.getName());
     private final List<PatientBalance> listDetail = new ArrayList();
-    private final String[] columnNames = {"Reg No.", "Name", "Rpt Balance", "Check Balance"};
+    private final String[] columnNames = {"Reg No.", "Name", "Rpt Balance", "Check Balance", "Adjust Amount"};
 
     @Override
     public String getColumnName(int column) {
@@ -38,6 +38,8 @@ public class ErrorDataTableModel extends AbstractTableModel {
             case 2: //Rpt Balance
                 return Double.class;
             case 3: //Check Balance
+                return Double.class;
+            case 4: //Adjust Amount
                 return Double.class;
             default:
                 return Object.class;
@@ -67,6 +69,8 @@ public class ErrorDataTableModel extends AbstractTableModel {
                     return record.getRptBalance();
                 case 3: //Check Balance
                     return record.getChkBalance();
+                case 4: //Adjust Amount
+                    return record.getAdjAmount();
                 default:
                     return null;
             }
@@ -97,5 +101,9 @@ public class ErrorDataTableModel extends AbstractTableModel {
     public void addData(PatientBalance data){
         listDetail.add(data);
         fireTableDataChanged();
+    }
+
+    public List<PatientBalance> getListDetail() {
+        return listDetail;
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="saleVouA4" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="b198a994-9fac-484e-9023-fe4befe62525">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
@@ -80,79 +80,80 @@ where vs.med_id = med.med_id and vs.sale_inv_id = $P{inv_id};]]>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="111" splitType="Stretch">
+		<band height="139" splitType="Stretch">
 			<staticText>
-				<reportElement x="0" y="94" width="55" height="15" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2"/>
+				<reportElement x="0" y="121" width="55" height="15" uuid="7711a8a1-e8a1-41f1-8a86-013aeb021fe2"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<text><![CDATA[Vou. No.    :]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="100" y="30" width="430" height="21" forecolor="#000000" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<reportElement x="1" y="57" width="552" height="21" forecolor="#000000" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="10" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comp_address}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="100" y="51" width="430" height="17" forecolor="#000000" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
+				<reportElement x="1" y="78" width="552" height="17" forecolor="#000000" uuid="5d42e856-0257-4bde-a4ab-84cbbd976ffc"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="9" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phone}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="485" y="79" width="69" height="15" uuid="0062cd9c-9cc9-4262-ac8a-85fcb7ce6628"/>
+				<reportElement x="485" y="106" width="69" height="15" uuid="0062cd9c-9cc9-4262-ac8a-85fcb7ce6628"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sale_date}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="58" y="94" width="184" height="15" uuid="a5e95390-4741-4554-a822-28d428866afd"/>
+				<reportElement x="58" y="121" width="184" height="15" uuid="a5e95390-4741-4554-a822-28d428866afd"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sale_inv_id}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="416" y="79" width="67" height="15" uuid="d3827418-43c8-4e46-b9e5-d800029613c6"/>
+				<reportElement x="416" y="106" width="67" height="15" uuid="d3827418-43c8-4e46-b9e5-d800029613c6"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<text><![CDATA[Sale Date :]]></text>
 			</staticText>
 			<textField pattern="dd/MM/yyyy h:mm a">
-				<reportElement x="58" y="79" width="138" height="15" uuid="79f2477c-6938-4468-94a1-d22c2d2c626c"/>
+				<reportElement x="58" y="106" width="138" height="15" uuid="79f2477c-6938-4468-94a1-d22c2d2c626c"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="0" y="79" width="55" height="15" uuid="85df31b4-7cf2-4e79-959d-318d665bec4d"/>
+				<reportElement x="0" y="106" width="55" height="15" uuid="85df31b4-7cf2-4e79-959d-318d665bec4d"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="9"/>
 				</textElement>
 				<text><![CDATA[Printed Date   : ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="416" y="94" width="67" height="15" uuid="d4f26b64-cd9a-4738-b421-2aaef659dd15"/>
+				<reportElement x="416" y="121" width="67" height="15" uuid="d4f26b64-cd9a-4738-b421-2aaef659dd15"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<text><![CDATA[Due Date :]]></text>
 			</staticText>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="485" y="94" width="69" height="15" uuid="a8995196-d426-40df-80dd-e6397b42fdb0"/>
+				<reportElement x="485" y="121" width="69" height="15" uuid="a8995196-d426-40df-80dd-e6397b42fdb0"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Arial" size="9" isBold="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{due_date} == null ? " " : $F{due_date}]]></textFieldExpression>
 			</textField>
-			<image>
-				<reportElement x="0" y="0" width="100" height="70" uuid="59f1c692-ba2a-455a-84c0-bc8d36df9b69"/>
+			<image scaleImage="FillFrame">
+				<reportElement x="100" y="0" width="358" height="57" uuid="59f1c692-ba2a-455a-84c0-bc8d36df9b69"/>
+				<graphicElement fill="Solid"/>
 				<imageExpression><![CDATA[$P{SUBREPORT_DIR} + "/img/cm.jpg"]]></imageExpression>
 			</image>
 		</band>
