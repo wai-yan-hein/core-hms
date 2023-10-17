@@ -48,7 +48,7 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
 
     static Logger LOGGER = Logger.getLogger(OPDTableModel.class.getName());
     private List<VoucherPayment> listVP = new ArrayList();
-    private final String[] columnNames = {"Vou Date", "Vou No.", "Cus-No", "Cus-Name",
+    private final String[] columnNames = {"Vou Date", "Vou No.", "Remark", "Cus-No", "Cus-Name",
         "Due Date", "Overdue", "Vou Total", "Ttl Paid", "Pay Date", "AC", "Paid", "Discount", "Vou Balance", "FP"};
     // private AbstractDataAccess dao;
     private SelectionObserver observer;
@@ -78,16 +78,16 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
 
         VoucherPayment record = listVP.get(row);
         switch (column) {
-            case 8://Pay Date
+            case 9://Pay Date
                 //return record.getPayDate() == null;
                 return true;
-            case 9://AC
+            case 10://AC
                 return true;
-            case 10://Paid
+            case 11://Paid
                 return record.getCurrentPaid() == null;
-            case 11://Discount
+            case 12://Discount
                 return record.getCurrentDiscount() == null;
-            case 13:
+            case 14:
                 return !record.isIsFullPaid();
             default:
                 return false;
@@ -101,29 +101,31 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
                 return Date.class;
             case 1://Vou No
                 return String.class;
-            case 2://Cus-No
+            case 2://Remark
                 return String.class;
-            case 3://Cus-Name
+            case 3://Cus-No
                 return String.class;
-            case 4://Due Date
+            case 4://Cus-Name
+                return String.class;
+            case 5://Due Date
                 return Date.class;
-            case 5://Ttl Overdue
+            case 6://Ttl Overdue
                 return Integer.class;
-            case 6://Vou Total
+            case 7://Vou Total
                 return Double.class;
-            case 7://Ttl Paid
+            case 8://Ttl Paid
                 return Double.class;
-            case 8://Pay Date
+            case 9://Pay Date
                 return String.class;
-            case 9://AC
+            case 10://AC
                 return String.class;
-            case 10://Paid
+            case 11://Paid
                 return Double.class;
-            case 11://Discount
+            case 12://Discount
                 return Double.class;
-            case 12://Vou Balance
+            case 13://Vou Balance
                 return Double.class;
-            case 13://Full Paid
+            case 14://Full Paid
                 return Boolean.class;
             default:
                 return String.class;
@@ -152,33 +154,35 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
                     } else {
                         return record.getVouNo();
                     }
-                case 2: //Cus-No
+                case 2: //Remark
+                    return record.getRemark();
+                case 3: //Cus-No
                     return record.getTraderId();
-                case 3: //Cus-Name
+                case 4: //Cus-Name
                     return record.getTraderName();
-                case 4: //Due Date
+                case 5: //Due Date
                     return record.getDueDate();
-                case 5: //Ttl Overdue
+                case 6: //Ttl Overdue
                     return record.getTtlOverdue();
-                case 6: //Vou Total
+                case 7: //Vou Total
                     return record.getVouTotal();
-                case 7: //Ttl Paid
+                case 8: //Ttl Paid
                     return record.getTtlPaid();
-                case 8: //Pay Date
+                case 9: //Pay Date
                     if (record.getPayDate() == null) {
                         return null;
                     } else {
                         return DateUtil.toDateStr(record.getPayDate());
                     }
-                case 9: //AC
+                case 10: //AC
                     return null;
-                case 10: //Paid
+                case 11: //Paid
                     return record.getCurrentPaid();
-                case 11: //Discount
+                case 12: //Discount
                     return record.getCurrentDiscount();
-                case 12: //Vou Balance
+                case 13: //Vou Balance
                     return record.getVouBalance();
-                case 13: //Full Paid
+                case 14: //Full Paid
                     return record.isIsFullPaid();
                 default:
                     return null;
@@ -198,28 +202,28 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
 
         VoucherPayment record = listVP.get(row);
         switch (column) {
-            case 8://Pay Date
+            case 9://Pay Date
                 if (value == null) {
                     record.setPayDate(null);
                 } else {
                     record.setPayDate(DateUtil.toDate(value.toString(), "dd/MM/yyyy"));
                 }
                 break;
-            case 9: //Account
+            case 10: //Account
                 break;
-            case 10://Paid
+            case 11://Paid
                 record.setCurrentPaid(NumberUtil.NZero(value));
                 record.setListIndex(row);
                 record.setTranId(-1);
                 //observer.selected("Paid", record);
                 break;
-            case 11://Discount
+            case 12://Discount
                 record.setCurrentDiscount(NumberUtil.NZero(value));
                 record.setListIndex(row);
                 record.setTranId(-1);
                 // observer.selected("Discount", record);
                 break;
-            case 13://Full Paid
+            case 14://Full Paid
                 if (value != null) {
                     Boolean fullPaid = (Boolean) value;
                     record.setIsFullPaid(fullPaid);
@@ -245,8 +249,8 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
 
         }
 
-        Save(record);
         calculateBalance(record);
+        Save(record);
         //  assignData(record);
         //   observer.selected("FullPaid", record);
         /*  if (observer != null) {
@@ -254,6 +258,7 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
          }*/
 
         fireTableCellUpdated(row, 10);
+        fireTableCellUpdated(row, 12);
     }
 
     private void Save(VoucherPayment vp) {
@@ -272,7 +277,7 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
             return;
         }
 
-        if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getDiscount()) == 0) {
+        if (NumberUtil.NZero(vp.getCurrentPaid()) == 0 && NumberUtil.NZero(vp.getCurrentDiscount()) == 0) {
             return;
         }
 
@@ -307,7 +312,7 @@ public class CPaymentEntryTableModel extends AbstractTableModel {
             pv.setVouPaid(vp.getCurrentPaid());
             pv.setBalance(vp.getVouBalance());
             pv.setVouDate(vp.getTranDate());
-            pv.setDiscount(vp.getDiscount());
+            pv.setDiscount(vp.getCurrentDiscount());
             pv.setVouType(vp.getVouType());
             List<PaymentVou> listPV = new ArrayList();
             listPV.add(pv);

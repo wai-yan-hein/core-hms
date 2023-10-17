@@ -41,6 +41,7 @@ public class CheckPatientBalance extends javax.swing.JPanel {
     public CheckPatientBalance() {
         initComponents();
         txtDate.setText(DateUtil.getTodayDateStr());
+        txtFixedDate.setText(DateUtil.getTodayDateStr());
     }
 
     private void processCSV(File file) {
@@ -158,7 +159,7 @@ public class CheckPatientBalance extends javax.swing.JPanel {
                                         pbp.setPayAmt(fixBalance);
                                         fixBalance = 0;
                                     }
-                                    pbp.setPayDate(new Date());
+                                    pbp.setPayDate(DateUtil.toDate(txtFixedDate.getText()));
                                     pbp.setRegNo(pb.getRegNo());
                                     pbp.setRemark("Fixed balance with check patient balance");
                                     pbp.setIntgUpdStatus("ACK");
@@ -192,7 +193,6 @@ public class CheckPatientBalance extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         txtFileName = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
-        lblInfo = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -208,6 +208,8 @@ public class CheckPatientBalance extends javax.swing.JPanel {
         txtAdjAmount = new javax.swing.JFormattedTextField();
         jLabel6 = new javax.swing.JLabel();
         butFixAmt = new javax.swing.JButton();
+        jLabel7 = new javax.swing.JLabel();
+        txtFixedDate = new javax.swing.JFormattedTextField();
 
         jLabel1.setText("CSV File : ");
 
@@ -219,8 +221,6 @@ public class CheckPatientBalance extends javax.swing.JPanel {
                 jButton1ActionPerformed(evt);
             }
         });
-
-        lblInfo.setText(" ");
 
         jTable1.setFont(Global.textFont);
         jTable1.setModel(csvModel);
@@ -258,6 +258,14 @@ public class CheckPatientBalance extends javax.swing.JPanel {
         butFixAmt.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butFixAmtActionPerformed(evt);
+            }
+        });
+
+        jLabel7.setText("Date");
+
+        txtFixedDate.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtFixedDateMouseClicked(evt);
             }
         });
 
@@ -299,8 +307,10 @@ public class CheckPatientBalance extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtAdjAmount))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtFixedDate, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(butFixAmt)))
                 .addContainerGap())
         );
@@ -312,8 +322,9 @@ public class CheckPatientBalance extends javax.swing.JPanel {
                     .addComponent(jLabel1)
                     .addComponent(txtFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton1)
-                    .addComponent(lblInfo)
-                    .addComponent(butFixAmt))
+                    .addComponent(butFixAmt)
+                    .addComponent(jLabel7)
+                    .addComponent(txtFixedDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
@@ -355,6 +366,17 @@ public class CheckPatientBalance extends javax.swing.JPanel {
         fixBalance();
     }//GEN-LAST:event_butFixAmtActionPerformed
 
+    private void txtFixedDateMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFixedDateMouseClicked
+        if (evt.getClickCount() == 2) {
+            String strDate = DateUtil.getDateDialogStr();
+
+            if (strDate != null) {
+                txtFixedDate.setText(strDate);
+            }
+
+        }
+    }//GEN-LAST:event_txtFixedDateMouseClicked
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butFixAmt;
@@ -365,15 +387,16 @@ public class CheckPatientBalance extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
-    private javax.swing.JLabel lblInfo;
     private javax.swing.JFormattedTextField txtAdjAmount;
     private javax.swing.JFormattedTextField txtCSVTtlRec;
     private javax.swing.JFormattedTextField txtDate;
     private javax.swing.JTextField txtFileName;
+    private javax.swing.JFormattedTextField txtFixedDate;
     private javax.swing.JFormattedTextField txtTtlAdjRec;
     private javax.swing.JFormattedTextField txtTtlAmt;
     // End of variables declaration//GEN-END:variables

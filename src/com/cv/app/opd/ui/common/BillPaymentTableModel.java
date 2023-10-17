@@ -17,7 +17,7 @@ import javax.swing.table.AbstractTableModel;
  */
 public class BillPaymentTableModel extends AbstractTableModel{
     private List<PatientBillPayment> listPBP = new ArrayList();
-    private String[] columnNames = {"Bill Type", "Amount", "Payment", "Balance", "Remark"};
+    private String[] columnNames = {"Bill Type", "Amount", "Payment", "Discount", "Balance", "Remark"};
     
     @Override
     public String getColumnName(int column) {
@@ -26,22 +26,19 @@ public class BillPaymentTableModel extends AbstractTableModel{
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        if(column == 2 || column == 4){
-            return true;
-        }else{
-            return false;
-        }
+        return column == 2 || column == 3 || column == 5;
     }
 
     @Override
     public Class getColumnClass(int column) {
         switch(column){
             case 0: //Bill Type
-            case 4: //Remark
+            case 5: //Remark
                 return String.class;
             case 1: //Amount
             case 2: //Payment
-            case 3: //Balance
+            case 3: //Discount
+            case 4: //Balance
                 return Double.class;
             default:
                 return Object.class;
@@ -59,9 +56,11 @@ public class BillPaymentTableModel extends AbstractTableModel{
                 return record.getAmount();
             case 2: //Payment
                 return record.getPayAmt();
-            case 3: //Balance
+            case 3: //Discount
+                return record.getDiscount();
+            case 4: //Balance
                 return record.getBalance();
-            case 4: //Remark;
+            case 5: //Remark;
                 return record.getRemark();
             default:
                 return null;
@@ -80,9 +79,17 @@ public class BillPaymentTableModel extends AbstractTableModel{
                     record.setPayAmt(null);
                 }
                 
-                record.setBalance(NumberUtil.NZero(record.getAmount())-NumberUtil.NZero(record.getPayAmt()));
+                record.setBalance(NumberUtil.NZero(record.getAmount())-(NumberUtil.NZero(record.getPayAmt()+NumberUtil.NZero(record.getDiscount()))));
                 break;
-            case 4: //Remark
+            case 3: //Discount
+                if(value != null){
+                    record.setDiscount(NumberUtil.NZero(value));
+                }else{
+                    record.setDiscount(null);
+                }
+                record.setBalance(NumberUtil.NZero(record.getAmount())-(NumberUtil.NZero(record.getPayAmt())+NumberUtil.NZero(record.getDiscount())));
+                break;
+            case 5: //Remark
                 if(value != null){
                     record.setRemark(value.toString());
                 }else{
@@ -92,6 +99,8 @@ public class BillPaymentTableModel extends AbstractTableModel{
         }
         
         fireTableCellUpdated(row, column);
+        fireTableCellUpdated(row, 3);
+        fireTableCellUpdated(row, 4);
     }
 
     @Override
@@ -117,7 +126,7 @@ public class BillPaymentTableModel extends AbstractTableModel{
         List<PatientBillPayment> listSavePBP = new ArrayList();
         
         for(PatientBillPayment pbp : listPBP){
-            if(NumberUtil.NZero(pbp.getPayAmt()) != 0){
+            if(NumberUtil.NZero(pbp.getPayAmt()) != 0 || NumberUtil.NZero(pbp.getDiscount()) != 0){
                 pbp.setCreatedDate(DateUtil.getTodayDateTime());
                 listSavePBP.add(pbp);
             }
