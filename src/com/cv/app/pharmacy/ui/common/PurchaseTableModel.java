@@ -316,7 +316,7 @@ public class PurchaseTableModel extends AbstractTableModel {
                             record.setFocQty(null);
                             record.setFocSmallestQty(0f);
                         } else {
-                            record.setFocQty(Float.valueOf(tmpFocStr));
+                            record.setFocQty(NumberUtil.FloatZero(tmpFocStr));
                         }
                     }
                     if (NumberUtil.NZeroFloat(record.getFocQty()) > 0) {
@@ -328,7 +328,7 @@ public class PurchaseTableModel extends AbstractTableModel {
                                 record.setFocUnitId(unitPopup.getSelUnit());
                                 float qtySmall = medUp.getQtyInSmallest(medId + "-"
                                         + unitPopup.getSelUnit().getItemUnitCode());
-                                record.setFocSmallestQty(record.getFocQty() * qtySmall);
+                                record.setFocSmallestQty(NumberUtil.FloatZero(record.getFocQty()) * qtySmall);
                                 //parent.setRowSelectionInterval(row + 1, row + 1);
                                 //parent.setColumnSelectionInterval(0, 0);
                             }
@@ -336,7 +336,7 @@ public class PurchaseTableModel extends AbstractTableModel {
                             record.setFocUnitId(medUp.getUnitList(medId).get(0));
                             float qtySmall = medUp.getQtyInSmallest(medId + "-"
                                     + medUp.getUnitList(medId).get(0).getItemUnitCode());
-                            record.setFocSmallestQty(record.getFocQty() * qtySmall);
+                            record.setFocSmallestQty(NumberUtil.FloatZero(record.getFocQty()) * qtySmall);
                         }
                     } else {
                         record.setFocUnitId(null);

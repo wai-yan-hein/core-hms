@@ -366,11 +366,11 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
             }
         }
-        
+
         if (Util1.getPropValue("system.opd.emg").equals("Y")) {
             jLabel15.setVisible(true);
             txtEmgPercent.setVisible(true);
-        }else{
+        } else {
             jLabel15.setVisible(false);
             txtEmgPercent.setVisible(false);
         }
@@ -716,10 +716,18 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                     calculateTotalAmount();
 
-                    if (cus.getTraderId().equals(Util1.getPropValue("system.default.customer"))) {
-                        cboPayment.setSelectedItem(ptCash);
+                    if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
+                        if(txtCusId.getText().equals(Util1.getPropValue("system.sale.default.patient"))){
+                            cboPayment.setSelectedItem(ptCash);
+                        } else {
+                            cboPayment.setSelectedItem(ptCredit);
+                        }
                     } else {
-                        cboPayment.setSelectedItem(ptCredit);
+                        if (cus.getTraderId().equals(Util1.getPropValue("system.default.customer"))) {
+                            cboPayment.setSelectedItem(ptCash);
+                        } else {
+                            cboPayment.setSelectedItem(ptCredit);
+                        }
                     }
                 } else {
                     txtCusId.setText(null);
@@ -980,8 +988,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     currSaleVou = (SaleHis) dao.find(SaleHis.class,
                             ((SaleHis) selectObj).getSaleInvId());
                 } else {
-                    currSaleVou = (SaleHis) dao.find(SaleHis.class,
-                            selectObj.toString());
+                    currSaleVou = (SaleHis) dao.find(SaleHis.class, selectObj.toString());
                 }
 
                 isBind = true;
@@ -1003,6 +1010,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 saleTableModel.setSaleDate(DateUtil.toDate(txtSaleDate.getText()));
                 saleTableModel.setVouStatus("EDIT");
                 txtDueDate.setText(DateUtil.toDateStr(currSaleVou.getDueDate()));
+                txtEmgPercent.setValue(currSaleVou.getEmgPercent());
+
                 if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
                     if (currSaleVou.getPatientId() != null) {
                         txtCusId.setText(currSaleVou.getPatientId().getRegNo());
@@ -3330,17 +3339,18 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     }
                 } else {
                     if (Util1.getPropValue("report.file.type").equals("con")) {
-                        JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                         int count = (int) spPrint.getValue();
                         for (int i = 0; i < count; i++) {
+                            JasperPrint jp = ReportUtil.getReport(reportPath, params, dao.getConnection());
                             ReportUtil.printJasper(jp, printerName);
+                            params.put("user_desp", "Receive Voucher, Thanks You.");
                         }
                     } else {
                         JasperPrint jp = ReportUtil.getReport(reportPath, params, listDetail);
                         ReportUtil.printJasper(jp, printerName);
                         if (Util1.getPropValue("system.pharmacy.sale.print.double").equals("Y")) {
-                            params.put("user_desp", "Receive Voucher, Thanks You.");
                             JasperPrint jp1 = ReportUtil.getReport(reportPath, params, dao.getConnection());
+                            params.put("user_desp", "Receive Voucher, Thanks You.");
                             ReportUtil.printJasper(jp1, printerName);
                         }
                     }
@@ -3438,6 +3448,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
         }
 
+        if (!Util1.getPropValue("system.sale.default.patient").equals("-")) {
+            if (txtCusId.getText().equals(Util1.getPropValue("system.sale.default.patient"))) {
+                if (vouBal != 0) {
+                    JOptionPane.showMessageDialog(Util1.getParent(), "This patient must not have balance.",
+                            "OPD Default Patient.", JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            }
+        }
+
         /*if(haveTransaction){
          JOptionPane.showMessageDialog(Util1.getParent(), "This voucher have related transaction. Changes will not be effected.",
          "Related transaction.", JOptionPane.ERROR_MESSAGE);
@@ -3511,7 +3531,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             currSaleVou.setTaxAmt(NumberUtil.getDouble(txtTax.getText()));
             currSaleVou.setDeleted(Util1.getNullTo(currSaleVou.getDeleted()));
             currSaleVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
-            
+
             if (lblStatus.getText().equals("NEW")) {
                 currSaleVou.setDeleted(false);
                 currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
@@ -4244,7 +4264,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 if (machine.getActionStatus() != null) {
                     log.info("Sale timerFocus : Strart");
                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    
+
                     /*if (dao.getRowCount("select count(*) from item_type_mapping where group_id =" + Global.loginUser.getUserRole().getRoleId()) > 0) {
                     Global.listItem = dao.findAll("Medicine", "active = true and medTypeId.itemTypeCode in (select a.key.itemType.itemTypeCode from ItemTypeMapping a)");
                     } else {
@@ -4265,12 +4285,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     } else if (strCodeFilter.equals("Y")) {
                         Global.listItem = dao.findAllHSQL(
                                 "select o from VMedicine1 o where o.medId in (select a.key.itemId from "
-                                        + "LocationItemMapping a where a.key.locationId = "
-                                        + loc.getLocationId().toString() + ") order by o.medId, o.medName");
+                                + "LocationItemMapping a where a.key.locationId = "
+                                + loc.getLocationId().toString() + ") order by o.medId, o.medName");
                     } else {
                         Global.listItem = dao.findAll("VMedicine1", "active = true");
                     }
-                    
+
                     machine.setActionStatus(null);
                     dao.save(machine);
                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -4618,7 +4638,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     txtBill.setText(pt.getOtId());
                     cboPayment.setSelectedItem(ptCredit);
                     butOTID.setEnabled(false);
-                    
+
                     BillOpeningHis boh = new BillOpeningHis();
                     boh.setAdmNo(pt.getAdmissionNo());
                     boh.setBillId(pt.getOtId());
@@ -5490,7 +5510,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(lblTranOption, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 22, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jScrollPane4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 50, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jScrollPane4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel12Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(butPayment)

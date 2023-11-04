@@ -32,7 +32,7 @@ order by oc.cat_name, os.service_name]]>
 				<textField>
 					<reportElement x="0" y="0" width="263" height="20" uuid="af5f6a89-44a4-42b0-bce8-5c9759c5486a"/>
 					<textElement verticalAlignment="Middle">
-						<font fontName="Zawgyi-One" isBold="true" isItalic="false" isUnderline="true"/>
+						<font fontName="Zawgyi-One" isBold="true" isItalic="false" isUnderline="false"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{cat_name}]]></textFieldExpression>
 				</textField>

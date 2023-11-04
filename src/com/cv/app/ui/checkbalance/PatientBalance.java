@@ -5,6 +5,8 @@
  */
 package com.cv.app.ui.checkbalance;
 
+import java.util.List;
+
 /**
  *
  * @author winswe
@@ -14,7 +16,9 @@ public class PatientBalance {
     private String ptName;
     private Double rptBalance;
     private Double chkBalance;
-
+    private Double adjAmount;
+    private List<SubBalance> listSB;
+    
     public String getRegNo() {
         return regNo;
     }
@@ -45,5 +49,21 @@ public class PatientBalance {
 
     public void setChkBalance(Double chkBalance) {
         this.chkBalance = chkBalance;
+    }
+
+    public Double getAdjAmount() {
+        return adjAmount;
+    }
+
+    public void setAdjAmount(Double adjAmount) {
+        this.adjAmount = adjAmount;
+    }
+
+    public List<SubBalance> getListSB() {
+        return listSB;
+    }
+
+    public void setListSB(List<SubBalance> listSB) {
+        this.listSB = listSB;
     }
 }

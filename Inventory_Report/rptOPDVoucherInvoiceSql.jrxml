@@ -36,6 +36,7 @@
 	<parameter name="phoneNo" class="java.lang.String"/>
 	<parameter name="age" class="java.lang.Integer"/>
 	<parameter name="user_desp" class="java.lang.String"/>
+	<parameter name="comp_address" class="java.lang.String"/>
 	<queryString language="SQL">
 		<![CDATA[select service_name, qty, price, amount 
 from v_opd 
@@ -49,7 +50,7 @@ where opd_inv_id =  $P{invoiceNo}]]>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="64" splitType="Stretch">
+		<band height="66" splitType="Stretch">
 			<textField>
 				<reportElement x="9" y="0" width="194" height="21" uuid="3fcef65c-4dfb-49c7-92da-26b67b00588f"/>
 				<textElement textAlignment="Center">
@@ -58,19 +59,31 @@ where opd_inv_id =  $P{invoiceNo}]]>
 				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="9" y="49" width="194" height="15" uuid="8a7b07fe-56aa-4faf-b869-3c4227fdf0e4"/>
+				<reportElement x="9" y="51" width="194" height="15" uuid="8a7b07fe-56aa-4faf-b869-3c4227fdf0e4"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="8"/>
+					<font fontName="Arial" size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[OPD Voucher]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight">
-				<reportElement mode="Transparent" x="9" y="21" width="194" height="28" uuid="49385831-ec63-475f-b31d-ccae477fff8a"/>
-				<textElement textAlignment="Center" verticalAlignment="Top">
-					<font fontName="Zawgyi-One" size="7" isStrikeThrough="false"/>
+				<reportElement mode="Transparent" x="9" y="36" width="194" height="15" uuid="49385831-ec63-475f-b31d-ccae477fff8a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isStrikeThrough="false"/>
 					<paragraph tabStopWidth="40"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement mode="Transparent" x="9" y="21" width="194" height="15" uuid="0b9a30cd-7097-4fb2-b3ce-df3f656255d1">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8" isStrikeThrough="false"/>
+					<paragraph tabStopWidth="40"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_address}]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
@@ -228,7 +241,7 @@ where opd_inv_id =  $P{invoiceNo}]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="184" splitType="Stretch">
+		<band height="177" splitType="Stretch">
 			<staticText>
 				<reportElement x="85" y="0" width="57" height="15" uuid="8c0156a5-8123-417b-a15c-93c7c66868a2"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -376,7 +389,7 @@ where opd_inv_id =  $P{invoiceNo}]]>
 				<text><![CDATA[ဓာတ္ခြဲခန္း/ဓာတ္မွန္ အေျဖလာယူလွ်င္ ဤေဘာက္ခ်ာျပန္ယူလာပါရန္]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="9" y="150" width="194" height="15" uuid="3a8cb92a-18ca-4493-a907-8a23928b89ee">
+				<reportElement x="9" y="150" width="194" height="15" uuid="57d00c50-d6d7-4d41-a048-9bab8890470e">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">

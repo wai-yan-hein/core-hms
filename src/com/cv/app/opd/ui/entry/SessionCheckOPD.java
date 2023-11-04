@@ -635,6 +635,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                 + "from opd_patient_bill_payment\n"
                 + "where date(pay_date) between '" + fromDate + "' and '" + toDate + "'\n"
                 + " and deleted = false \n"
+                + " and ifnull(instr(remark,'Fixed Balance'),0) = 0 "
                 + "group by currency_id";
         try {
             ResultSet rs = dao.execSQL(sql);

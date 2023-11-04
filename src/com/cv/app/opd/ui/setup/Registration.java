@@ -1295,7 +1295,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         jLabel2.setFont(Global.lableFont);
         jLabel2.setText("Name");
 
-        txtName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtName.setFont(Global.textFont);
         txtName.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 txtNameFocusGained(evt);

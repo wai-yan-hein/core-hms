@@ -35,6 +35,7 @@ public class VoucherPayment {
     private Integer tranId;
     private String currency;
     private String traderCode;
+    private String refNo;
     
     public VoucherPayment() {
     }
@@ -233,5 +234,13 @@ public class VoucherPayment {
 
     public void setTraderCode(String traderCode) {
         this.traderCode = traderCode;
+    }
+
+    public String getRefNo() {
+        return refNo;
+    }
+
+    public void setRefNo(String refNo) {
+        this.refNo = refNo;
     }
 }

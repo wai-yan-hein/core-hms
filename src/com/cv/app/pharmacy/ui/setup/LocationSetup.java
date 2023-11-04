@@ -15,6 +15,7 @@ import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,7 @@ import org.hibernate.exception.ConstraintViolationException;
  * @author WSwe
  */
 public class LocationSetup extends javax.swing.JPanel implements TreeSelectionListener {
-
+    
     static Logger log = Logger.getLogger(LocationSetup.class.getName());
     private Location currLocation = new Location();
     private final AbstractDataAccess dao = Global.dao;
@@ -46,7 +47,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
      */
     public LocationSetup() {
         initComponents();
-
+        
         try {
             dao.open();
             initCombo();
@@ -55,13 +56,13 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         } catch (Exception ex) {
             log.error("LocationSetup : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-
+        
         treLocation.addTreeSelectionListener(this);
         applyFocusPolicy();
         AddFocusMoveKey();
         this.setFocusTraversalPolicy(focusPolicy);
     }
-
+    
     public void setCurrLocation(Location currLocation) {
         try {
             this.currLocation = currLocation;
@@ -81,27 +82,27 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             txtAdjDeptCode.setText(currLocation.getAdjAccDeptCode());
             txtIssueAccCode.setText(currLocation.getIssuAccountCode());
             txtIssueDeptCode.setText(currLocation.getIssuAccDeptCode());
-
+            
             txtSaleDiscAcc.setText(currLocation.getSaleDiscAcc());
             txtSalePaidAcc.setText(currLocation.getSalePaidAcc());
             txtSaleTaxAcc.setText(currLocation.getSaleTaxAcc());
             txtSaleBalAcc.setText(currLocation.getSaleBalAcc());
             txtSaleIPDAcc.setText(currLocation.getSaleIPDAcc());
             txtSaleIPDDept.setText(currLocation.getSaleIPDDept());
-
+            
             txtRetInPaidAcc.setText(currLocation.getRetinPaidAcc());
             txtRetInBalAcc.setText(currLocation.getRetinBalAcc());
             txtRetInIPDAcc.setText(currLocation.getRetinIPDAcc());
             txtRetInIPDDept.setText(currLocation.getRetinIPDDept());
-
+            
             txtPurDiscAcc.setText(currLocation.getPurDiscAcc());
             txtPurPaidAcc.setText(currLocation.getPurPaidAcc());
             txtPurTaxAcc.setText(currLocation.getPurTaxAcc());
             txtPurBalAcc.setText(currLocation.getPurBalAcc());
-
+            
             txtRetOutPaidAcc.setText(currLocation.getRetoutPaidAcc());
             txtRetOutBalAcc.setText(currLocation.getRetoutBalAcc());
-
+            
             lblStatus.setText("EDIT");
             if (currLocation.getParent() > 0) {
                 dao.open();
@@ -117,7 +118,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             log.error("setCurrLocation : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
     }
-
+    
     private void clear() {
         lblStatus.setText("NEW");
         currLocation = new Location();
@@ -136,44 +137,44 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         txtAdjDeptCode.setText(null);
         txtIssueAccCode.setText(null);
         txtIssueDeptCode.setText(null);
-
+        
         txtSaleDiscAcc.setText(null);
         txtSalePaidAcc.setText(null);
         txtSaleTaxAcc.setText(null);
         txtSaleBalAcc.setText(null);
         txtSaleIPDAcc.setText(null);
         txtSaleIPDDept.setText(null);
-
+        
         txtRetInPaidAcc.setText(null);
         txtRetInBalAcc.setText(null);
         txtRetInIPDAcc.setText(null);
         txtRetInIPDDept.setText(null);
-
+        
         txtPurDiscAcc.setText(null);
         txtPurPaidAcc.setText(null);
         txtPurTaxAcc.setText(null);
         txtPurBalAcc.setText(null);
-
+        
         txtRetOutPaidAcc.setText(null);
         txtRetOutBalAcc.setText(null);
-
+        
         cboParent.setSelectedItem(null);
         cboLocationType.setSelectedItem(null);
         setFocus();
     }
-
+    
     private void initCombo() {
         int currLocationId = 0;
-
+        
         try {
             if (currLocation.getLocationId() != null) {
                 currLocationId = currLocation.getLocationId();
             }
-
+            
             BindingUtil.BindCombo(cboParent, dao.findAllHSQL("from Location as loc where loc.locationId <> "
                     + currLocationId));
             BindingUtil.BindCombo(cboLocationType, dao.findAllHSQL("from LocationType o order by o.description"));
-
+            
             new ComBoBoxAutoComplete(cboParent);
             new ComBoBoxAutoComplete(cboLocationType);
             cboParent.setSelectedItem(null);
@@ -183,7 +184,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             dao.close();
         }
     }
-
+    
     private void initTree() {
         DefaultTreeModel treeModel = (DefaultTreeModel) treLocation.getModel();
         try {
@@ -191,17 +192,17 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         } catch (Exception ex) {
             log.error("initTree : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-
+        
         treeRoot = null;
         treeRoot = new DefaultMutableTreeNode("CoreValue");
         createTreeNode(0, treeRoot);
         treeModel.setRoot(treeRoot);
     }
-
+    
     private void createTreeNode(int parentLocID, DefaultMutableTreeNode treeRoot) {
         try {
             List<Location> listLocation = dao.findAllHSQL("from Location as loc where loc.parent =" + parentLocID);
-
+            
             for (Location location : listLocation) {
                 DefaultMutableTreeNode child = new DefaultMutableTreeNode(location);
                 treeRoot.add(child);
@@ -213,12 +214,12 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             dao.close();
         }
     }
-
+    
     @Override
     public void valueChanged(TreeSelectionEvent se) {
         JTree tree = (JTree) se.getSource();
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-
+        
         if ((selectedNode.isLeaf() && !selectedNode.isRoot())) {
             Location selLocation = (Location) selectedNode.getUserObject();
             try {
@@ -230,10 +231,10 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             }
         }
     }
-
+    
     private int getParentLocationId(Location location) {
         int id = 0;
-
+        
         try {
             if (location != null) {
                 id = location.getLocationId();
@@ -241,18 +242,18 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         } catch (Exception ex) {
             log.error("getParentLocationId : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         }
-
+        
         return id;
     }
-
+    
     public void setFocus() {
         txtLocationName.requestFocusInWindow();
     }
-
+    
     private void applyFocusPolicy() {
         @SuppressWarnings("UseOfObsoleteCollectionType")
         Vector<Component> focusOrder = new Vector(7);
-
+        
         focusOrder.add(txtLocationName);
         focusPolicy = new BestAppFocusTraversalPolicy(focusOrder);
     }
@@ -261,22 +262,22 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
     private void AddFocusMoveKey() {
         Set backwardKeys = getFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS);
         Set newBackwardKeys = new HashSet(backwardKeys);
-
+        
         Set forwardKeys = getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS);
         Set newForwardKeys = new HashSet(forwardKeys);
-
+        
         newForwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0));
         newForwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0));
-
+        
         newBackwardKeys.add(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0));
-
+        
         setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, newForwardKeys);
         setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, newBackwardKeys);
     }//</editor-fold>
 
     private boolean isValidEntry() {
         boolean status = true;
-
+        
         if (Util1.nullToBlankStr(txtLocationName.getText()).equals("")) {
             status = false;
         } else {
@@ -296,43 +297,52 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             currLocation.setAdjAccDeptCode(txtAdjDeptCode.getText().trim());
             currLocation.setIssuAccountCode(txtIssueAccCode.getText().trim());
             currLocation.setIssuAccDeptCode(txtIssueDeptCode.getText().trim());
-
+            
             currLocation.setSaleDiscAcc(txtSaleDiscAcc.getText());
             currLocation.setSalePaidAcc(txtSalePaidAcc.getText());
             currLocation.setSaleTaxAcc(txtSaleTaxAcc.getText());
             currLocation.setSaleBalAcc(txtSaleBalAcc.getText());
             currLocation.setSaleIPDAcc(txtSaleIPDAcc.getText());
             currLocation.setSaleIPDDept(txtSaleIPDDept.getText());
-
+            
             currLocation.setRetinPaidAcc(txtRetInPaidAcc.getText());
             currLocation.setRetinBalAcc(txtRetInBalAcc.getText());
             currLocation.setRetinIPDAcc(txtRetInIPDAcc.getText());
             currLocation.setRetinIPDDept(txtRetInIPDDept.getText());
-
+            
             currLocation.setPurDiscAcc(txtPurDiscAcc.getText());
             currLocation.setPurPaidAcc(txtPurPaidAcc.getText());
             currLocation.setPurTaxAcc(txtPurTaxAcc.getText());
             currLocation.setPurBalAcc(txtPurBalAcc.getText());
-
+            
             currLocation.setRetoutPaidAcc(txtRetOutPaidAcc.getText());
             currLocation.setRetoutBalAcc(txtRetOutBalAcc.getText());
-
+            
             if (cboLocationType.getSelectedItem() != null) {
                 currLocation.setLocationType(((LocationType) cboLocationType.getSelectedItem()).getTypeId());
             } else {
                 currLocation.setLocationType(null);
             }
+            
+            if (currLocation.getLocationId() == null) {
+                currLocation.setCreatedBy(Global.loginUser.getUserId());
+                currLocation.setCreatedDate(new Date());
+            } else {
+                currLocation.setUpdatedBy(Global.loginUser.getUserId());
+                currLocation.setUpdatedDate(new Date());
+            }
+            currLocation.setMachineId(Global.machineId);
         }
-
+        
         return status;
     }
-
+    
     private void delete() {
         if (lblStatus.getText().equals("EDIT")) {
             try {
                 int yes_no = JOptionPane.showConfirmDialog(Util1.getParent(), "Are you sure to delete?",
                         "Location Delete", JOptionPane.YES_NO_OPTION);
-
+                
                 if (yes_no == 0) {
                     dao.delete(currLocation);
                     initCombo();
@@ -348,7 +358,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
                 dao.close();
             }
         }
-
+        
         clear();
     }
 
@@ -492,28 +502,28 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Sale"));
 
-        jLabel5.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel5.setFont(Global.lableFont);
         jLabel5.setText("Dept Code");
 
-        jLabel6.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel6.setFont(Global.lableFont);
         jLabel6.setText("Acc Code");
 
-        jLabel19.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel19.setFont(Global.lableFont);
         jLabel19.setText("Disc Acc");
 
-        jLabel20.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel20.setFont(Global.lableFont);
         jLabel20.setText("Paid Acc");
 
-        jLabel21.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel21.setFont(Global.lableFont);
         jLabel21.setText("Tax Acc");
 
-        jLabel22.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel22.setFont(Global.lableFont);
         jLabel22.setText("Bal Acc");
 
-        jLabel23.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel23.setFont(Global.lableFont);
         jLabel23.setText("IPD Acc");
 
-        jLabel24.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel24.setFont(Global.lableFont);
         jLabel24.setText("IPD Dept");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -521,20 +531,20 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtAccCode))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel19)
-                    .addComponent(jLabel20)
-                    .addComponent(jLabel21)
-                    .addComponent(jLabel22)
-                    .addComponent(jLabel23)
-                    .addComponent(jLabel24)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(17, 17, 17)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel19)
+                        .addComponent(jLabel20)
+                        .addComponent(jLabel21)
+                        .addComponent(jLabel22)
+                        .addComponent(jLabel23)
+                        .addComponent(jLabel24)
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(txtAccCode)
                     .addComponent(txtDeptCode, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
                     .addComponent(txtSaleDiscAcc)
                     .addComponent(txtSalePaidAcc)
@@ -584,22 +594,22 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Return In"));
 
-        jLabel9.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel9.setFont(Global.lableFont);
         jLabel9.setText("Dept Code");
 
-        jLabel10.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel10.setFont(Global.lableFont);
         jLabel10.setText("Acc Code");
 
-        jLabel25.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel25.setFont(Global.lableFont);
         jLabel25.setText("Paid Acc");
 
-        jLabel26.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel26.setFont(Global.lableFont);
         jLabel26.setText("Bal Acc");
 
-        jLabel27.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel27.setFont(Global.lableFont);
         jLabel27.setText("IPD Acc");
 
-        jLabel28.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel28.setFont(Global.lableFont);
         jLabel28.setText("IPD Dept");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
@@ -661,22 +671,22 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Purchase"));
 
-        jLabel7.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel7.setFont(Global.lableFont);
         jLabel7.setText("Dept Code");
 
-        jLabel8.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel8.setFont(Global.lableFont);
         jLabel8.setText("Acc Code");
 
-        jLabel29.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel29.setFont(Global.lableFont);
         jLabel29.setText("Disc Acc");
 
-        jLabel30.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel30.setFont(Global.lableFont);
         jLabel30.setText("Paid Acc");
 
-        jLabel31.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel31.setFont(Global.lableFont);
         jLabel31.setText("Tax Acc");
 
-        jLabel32.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel32.setFont(Global.lableFont);
         jLabel32.setText("Bal Acc");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -706,10 +716,10 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtPurPaidAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtPurTaxAcc, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 17, Short.MAX_VALUE))))
         );
 
-        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel7, jLabel8});
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel29, jLabel30, jLabel31, jLabel32, jLabel7, jLabel8});
 
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -742,16 +752,16 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Return Out"));
 
-        jLabel11.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Dept Code ");
 
-        jLabel12.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel12.setFont(Global.lableFont);
         jLabel12.setText("Acc Code");
 
-        jLabel33.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel33.setFont(Global.lableFont);
         jLabel33.setText("Paid Acc");
 
-        jLabel34.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel34.setFont(Global.lableFont);
         jLabel34.setText("Bal Acc");
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -770,7 +780,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
                         .addComponent(txtRetOutAccCode, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel33, javax.swing.GroupLayout.DEFAULT_SIZE, 55, Short.MAX_VALUE)
+                            .addComponent(jLabel33, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel34, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -801,10 +811,10 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Stock Adjust"));
 
-        jLabel15.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel15.setFont(Global.lableFont);
         jLabel15.setText("Dept Code");
 
-        jLabel16.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel16.setFont(Global.lableFont);
         jLabel16.setText("Acc Code");
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -837,10 +847,10 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Damage"));
 
-        jLabel13.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel13.setFont(Global.lableFont);
         jLabel13.setText("Dept Code");
 
-        jLabel14.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel14.setFont(Global.lableFont);
         jLabel14.setText("Acc Code");
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
@@ -871,10 +881,10 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder("Stock Issue"));
 
-        jLabel17.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel17.setFont(Global.lableFont);
         jLabel17.setText("Dept Code");
 
-        jLabel18.setFont(new java.awt.Font("Arial", 0, 10)); // NOI18N
+        jLabel18.setFont(Global.lableFont);
         jLabel18.setText("Acc Code");
 
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
@@ -884,7 +894,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addComponent(jLabel18)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(txtIssueAccCode, javax.swing.GroupLayout.DEFAULT_SIZE, 125, Short.MAX_VALUE))
+                .addComponent(txtIssueAccCode, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE))
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -975,7 +985,7 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
                         .addComponent(cboLocationType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 12, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -1024,9 +1034,25 @@ public class LocationSetup extends javax.swing.JPanel implements TreeSelectionLi
 
     private void butSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butSaveActionPerformed
         currLocation.setParent(getParentLocationId((Location) cboParent.getSelectedItem()));
-
+        
         try {
             if (isValidEntry()) {
+                dao.execSql("insert into bk_location(location_id, location_name, parent, calc_stock, updated_date, location_type,\n"
+                        + "  acc_dept_code, account_code, pur_dept_code, pur_account_code, retin_dept_code, retin_account_code,\n"
+                        + "  retout_dept_code, retout_account_code, damage_dept_code, damage_account_code, adj_dept_code,\n"
+                        + "  adj_account_code, issu_dept_code, issu_account_code, sale_disc_acc, sale_paid_acc, sale_tax_acc,\n"
+                        + "  sale_bal_acc, sale_ipd_acc, sale_ipd_dept, retin_paid_acc, retin_bal_acc, retin_ipd_acc, \n"
+                        + "  retin_ipd_dept, pur_disc_acc, pur_paid_acc, pur_tax_acc, pur_bal_acc, retout_paid_acc, retout_bal_acc,\n"
+                        + "  trader_code, created_date, created_by, updated_by, machine_id, bk_date, bk_user, bk_machine)\n"
+                        + "select location_id, location_name, parent, calc_stock, updated_date, location_type,\n"
+                        + "  acc_dept_code, account_code, pur_dept_code, pur_account_code, retin_dept_code, retin_account_code,\n"
+                        + "  retout_dept_code, retout_account_code, damage_dept_code, damage_account_code, adj_dept_code,\n"
+                        + "  adj_account_code, issu_dept_code, issu_account_code, sale_disc_acc, sale_paid_acc, sale_tax_acc,\n"
+                        + "  sale_bal_acc, sale_ipd_acc, sale_ipd_dept, retin_paid_acc, retin_bal_acc, retin_ipd_acc, \n"
+                        + "  retin_ipd_dept, pur_disc_acc, pur_paid_acc, pur_tax_acc, pur_bal_acc, retout_paid_acc, retout_bal_acc,\n"
+                        + "  trader_code, created_date, created_by, updated_by, machine_id, now(), '" + Global.loginUser.getUserId() + "',\n"
+                        + "  '" + Global.machineId + "' \n"
+                        + "from location where location_id = " + currLocation.getLocationId());
                 dao.save(currLocation);
                 clear();
                 dao.open();

@@ -40,6 +40,7 @@ public class PatientBillPayment implements java.io.Serializable{
     private String ptType;
     private Boolean delete;
     private Double discount;
+    private String intgUpdStatus;
     
     @Id @GeneratedValue(strategy=IDENTITY)
     @Column(name="id", unique=true, nullable=false)
@@ -186,5 +187,14 @@ public class PatientBillPayment implements java.io.Serializable{
 
     public void setDiscount(Double discount) {
         this.discount = discount;
+    }
+
+    @Column(name="intg_upd_status")
+    public String getIntgUpdStatus() {
+        return intgUpdStatus;
+    }
+
+    public void setIntgUpdStatus(String intgUpdStatus) {
+        this.intgUpdStatus = intgUpdStatus;
     }
 }

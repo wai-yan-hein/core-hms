@@ -296,10 +296,18 @@ public class ReaderEntryTableModel extends AbstractTableModel {
         }
 
         if (!complete.equals("-")) {
-            if (complete.equals("Complete")) {
-                strSql = strSql + " and o.completeStatus = true";
-            } else if (complete.equals("In-Complete")) {
-                strSql = strSql + " and o.completeStatus = false";
+            switch (complete) {
+                case "Complete":
+                    strSql = strSql + " and o.completeStatus = true";
+                    break;
+                case "In-Complete":
+                    strSql = strSql + " and o.completeStatus = false";
+                    break;
+                case "Reader Missing":
+                    strSql = strSql + " and o.readerDrId is null and ifnull(o.fees6,0)<>0";
+                    break;
+                default:
+                    break;
             }
         }
 

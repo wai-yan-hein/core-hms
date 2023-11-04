@@ -24,6 +24,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
+import org.jdesktop.observablecollections.ObservableCollections;
 
 /**
  *
@@ -32,7 +33,7 @@ import org.apache.log4j.Logger;
 public class OPDTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(OPDTableModel.class.getName());
-    private List<OPDDetailHis> listOPDDetailHis = new ArrayList();
+    private List<OPDDetailHis> listOPDDetailHis = ObservableCollections.observableList(new ArrayList());
     private final String[] columnNames = {"Code", "Description", "Qty", "Price",
         "Charge Type", "Refer Dr", "Read Dr", "Technician", "Amount"};
     private final AbstractDataAccess dao;
@@ -976,5 +977,23 @@ public class OPDTableModel extends AbstractTableModel {
 
     public void setBookType(String bookType) {
         this.bookType = bookType;
+    }
+
+    public void addEMGPercent(float percent) {
+        for (OPDDetailHis odh : listOPDDetailHis) {
+            if (odh.getService() != null) {
+                if (odh.getService().getServiceId() != null) {
+                    ChargeType ct = odh.getChargeType();
+                    if (ct.getChargeTypeId() != 2) {
+                        double price = odh.getService().getFees();
+                        double incValue = price * (percent / 100);
+                        odh.setPrice(price + incValue);
+                        odh.setAmount(NumberUtil.FloatZero(odh.getQuantity())*
+                                NumberUtil.NZero(odh.getPrice()));
+                    }
+                }
+            }
+        }
+        fireTableDataChanged();
     }
 }

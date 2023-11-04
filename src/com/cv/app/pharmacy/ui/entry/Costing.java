@@ -18,7 +18,9 @@ import com.cv.app.pharmacy.database.entity.ItemGroupDetail;
 import com.cv.app.pharmacy.database.entity.ItemType;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.LocationGroup;
+import com.cv.app.pharmacy.database.helper.ChartOfAccount;
 import com.cv.app.pharmacy.database.tempentity.ItemCodeFilter;
+import com.cv.app.pharmacy.database.tempentity.StockCosting;
 import com.cv.app.pharmacy.database.tempentity.StockCostingDetail;
 import com.cv.app.pharmacy.database.view.VStockCosting;
 import com.cv.app.pharmacy.excel.CostingExcel;
@@ -27,6 +29,7 @@ import com.cv.app.pharmacy.ui.common.ItemCodeFilterTableModel;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.StockCostingDetailTableModel;
 import com.cv.app.pharmacy.ui.common.StockCostingTableModel;
+import com.cv.app.pharmacy.util.MedicineUtil;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
@@ -194,8 +197,10 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
             dao.close();
             insertStockFilterCode();
 
-            dao.execProc("gen_cost_balance",
+            /*dao.execProc("gen_cost_balance",
                     DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
+                    Global.machineId);*/
+            genCostBalance(DateUtil.toDateStrMYSQL(txtCostDate.getText()), "Opening",
                     Global.machineId);
 
             String strLocation;
@@ -223,6 +228,159 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
             log.error("calculate : " + ex.getMessage());
         } finally {
             dao.close();
+        }
+    }
+
+    private void genCostBalance(String stockDate, String option, String userId) throws Exception {
+        String sql1 = "delete from tmp_stock_costing where user_id = prm_user_id\n"
+                + "	and tran_option = prm_tran_option";
+        sql1 = sql1.replace("prm_user_id", "'" + userId + "'")
+                .replace("prm_tran_option", "'" + option + "'");
+        log.info("sql1 : " + sql1);
+        String sql2 = "insert into tmp_stock_costing(med_id, user_id, bal_qty, tran_option)\n"
+                + "    select A.med_id, prm_user_id, sum(A.ttl_qty),\n"
+                + "		   prm_tran_option\n"
+                + "      from (\n"
+                + "            select vso.med_id, sum(ifnull(vso.op_smallest_qty,0)) ttl_qty\n"
+                + "              from v_stock_op vso, tmp_stock_filter tsf\n"
+                + "             where vso.location = tsf.location_id and vso.med_id = tsf.med_id\n"
+                + "               and vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "             group by vso.med_id\n"
+                + "             union all\n"
+                + "            select sdh.med_id, (sum(sdh.sale_smallest_qty+ifnull(sdh.foc_smallest_qty,0))*-1) ttl_qty\n"
+                + "			  from sale_his sh, sale_detail_his sdh, tmp_stock_filter tsf\n"
+                + "			 where sh.sale_inv_id = sdh.vou_no and sh.deleted = false\n"
+                + "			   and date(sh.sale_date) >= tsf.op_date and date(sh.sale_date) <= prm_stock_date\n"
+                + "               and sdh.med_id = tsf.med_id \n"
+                + "               and ifnull(sdh.location_id,sh.location_id) = tsf.location_id\n"
+                + "			   and sh.vou_status = 1 and tsf.user_id = prm_user_id\n"
+                + "			 group by sdh.med_id\n"
+                + "             union all\n"
+                + "            select vp.med_id, sum(ifnull(vp.pur_smallest_qty,0)+ifnull(vp.pur_foc_smallest_qty,0)) ttl_qty\n"
+                + "              from v_purchase vp, tmp_stock_filter tsf\n"
+                + "             where vp.location = tsf.location_id and vp.med_id = tsf.med_id\n"
+                + "               and date(vp.pur_date) >= tsf.op_date and date(vp.pur_date) <= prm_stock_date\n"
+                + "               and vp.deleted = false and vp.vou_status = 1 and tsf.user_id = prm_user_id\n"
+                + "             group by vp.med_id\n"
+                + "             union all\n"
+                + "            select vri.med_id, sum(ifnull(vri.ret_in_smallest_qty,0)) ttl_qty\n"
+                + "              from v_return_in vri, tmp_stock_filter tsf\n"
+                + "             where vri.location = tsf.location_id and vri.med_id = tsf.med_id\n"
+                + "               and date(vri.ret_in_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vri.ret_in_date) <= prm_stock_date and vri.deleted = false\n"
+                + "             group by vri.med_id\n"
+                + "             union all\n"
+                + "            select vro.med_id, sum(ifnull(ret_out_smallest_qty,0)*-1) ttl_qty\n"
+                + "              from v_return_out vro, tmp_stock_filter tsf\n"
+                + "             where vro.location = tsf.location_id and vro.med_id = tsf.med_id\n"
+                + "               and date(vro.ret_out_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vro.ret_out_date) <= prm_stock_date and vro.deleted = false\n"
+                + "             group by vro.med_id\n"
+                + "             union all\n"
+                + "            select va.med_id, sum(if(va.adj_type = '-',(ifnull(va.adj_smallest_qty,0)*-1),\n"
+                + "                        ifnull(va.adj_smallest_qty,0))) ttl_qty\n"
+                + "              from v_adj va, tmp_stock_filter tsf\n"
+                + "             where va.location = tsf.location_id and va.med_id = tsf.med_id\n"
+                + "               and date(va.adj_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(va.adj_date) <= prm_stock_date and va.deleted = false\n"
+                + "             group by va.med_id\n"
+                + "             union all\n"
+                + "            select vt.med_id, sum(ifnull(tran_smallest_qty,0)*-1) ttl_qty\n"
+                + "              from v_transfer vt, tmp_stock_filter tsf\n"
+                + "             where vt.from_location = tsf.location_id and vt.med_id = tsf.med_id\n"
+                + "               and date(vt.tran_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vt.tran_date) <= prm_stock_date and vt.deleted = false\n"
+                + "             group by vt.med_id\n"
+                + "             union all\n"
+                + "            select vt.med_id, sum(ifnull(tran_smallest_qty,0)) ttl_qty\n"
+                + "              from v_transfer vt, tmp_stock_filter tsf\n"
+                + "             where vt.to_location = tsf.location_id and vt.med_id = tsf.med_id\n"
+                + "               and date(vt.tran_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vt.tran_date) <= prm_stock_date and vt.deleted = false\n"
+                + "             group by vt.med_id\n"
+                + "             union all\n"
+                + "            select vsi.med_id, sum(ifnull(smallest_qty,0)*-1) ttl_qty\n"
+                + "              from v_stock_issue vsi, tmp_stock_filter tsf\n"
+                + "             where vsi.location_id = tsf.location_id and vsi.med_id = tsf.med_id\n"
+                + "               and date(vsi.issue_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vsi.issue_date) <= prm_stock_date and vsi.deleted = false\n"
+                + "             group by vsi.med_id\n"
+                + "             union all\n"
+                + "            select vsr.rec_med_id med_id, sum(ifnull(smallest_qty,0)) ttl_qty\n"
+                + "              from v_stock_receive vsr, tmp_stock_filter tsf\n"
+                + "             where vsr.location_id = tsf.location_id and vsr.rec_med_id = tsf.med_id\n"
+                + "               and date(vsr.receive_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vsr.receive_date) <= prm_stock_date and vsr.deleted = false\n"
+                + "             group by vsr.rec_med_id\n"
+                + "             union all\n"
+                + "            select vd.med_id, sum(ifnull(dmg_smallest_qty,0)*-1) ttl_qty\n"
+                + "              from v_damage vd, tmp_stock_filter tsf\n"
+                + "             where vd.location = tsf.location_id and vd.med_id = tsf.med_id\n"
+                + "               and date(vd.dmg_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vd.dmg_date) <= prm_stock_date and vd.deleted = false\n"
+                + "             group by vd.med_id\n"
+                + "             union all \n"
+                + "            select vlmu.med_id, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
+                + "              from v_lab_med_usage vlmu, tmp_stock_filter tsf\n"
+                + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
+                + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vlmu.opd_date) <= prm_stock_date \n"
+                + "             group by vlmu.med_id \n"
+                + "             union all \n"
+                + "            select vlmu.med_id, sum(ifnull(vlmu.ttl_med_usage_qty,0)*-1) ttl_qty\n"
+                + "              from v_investigation_med_usage vlmu, tmp_stock_filter tsf\n"
+                + "             where vlmu.location_id = tsf.location_id and vlmu.med_id = tsf.med_id\n"
+                + "               and date(vlmu.opd_date) >= tsf.op_date and tsf.user_id = prm_user_id\n"
+                + "               and date(vlmu.opd_date) <= prm_stock_date \n"
+                + "             group by vlmu.med_id\n"
+                + "             union all\n"
+                + "			select a.med_id, (sum(a.ttl)*-1) as ttl_qty\n"
+                + "			  from (select vsi.med_id, sum(ifnull(vsi.smallest_qty,0))*-1 as ttl\n"
+                + "				      from v_stock_issue vsi, tmp_stock_filter tsf\n"
+                + "					 where vsi.issue_opt = 'Borrow' and vsi.deleted = false\n"
+                + "				       and vsi.med_id = tsf.med_id and vsi.location_id = tsf.location_id\n"
+                + "					   and tsf.user_id = prm_user_id and vsi.issue_date <= prm_stock_date\n"
+                + "					 group by med_id\n"
+                + "					 union all\n"
+                + "					select vsr.rec_med_id as med_id, sum(ifnull(vsr.smallest_qty,0)) as ttl\n"
+                + "					  from v_stock_receive vsr, tmp_stock_filter tsf\n"
+                + "					 where vsr.rec_option = 'Borrow' and vsr.deleted = false\n"
+                + "					   and vsr.rec_med_id = tsf.med_id and vsr.location_id = tsf.location_id\n"
+                + "			           and tsf.user_id = prm_user_id and vsr.receive_date <= prm_stock_date\n"
+                + "					 group by vsr.rec_med_id) a\n"
+                + "			 group by a.med_id\n"
+                + "             ) A,\n"
+                + "            v_med_unit_smallest_rel B\n"
+                + "     where A.med_id = B.med_id\n"
+                + "     group by A.med_id";
+        sql2 = sql2.replace("prm_stock_date", "'" + stockDate + "'")
+                .replace("prm_user_id", "'" + userId + "'")
+                .replace("prm_tran_option", "'" + option + "'");
+        log.info("sql2 : " + sql2);
+        dao.execSql(sql1);
+        dao.execSql(sql2);
+
+        ResultSet rs = dao.execSQL("select med_id, unit_smallest, unit_str from v_med_unit_smallest_rel");
+        if (rs != null) {
+            HashMap<String, ChartOfAccount> hmMedRel = new HashMap();
+            while (rs.next()) {
+                ChartOfAccount coa = new ChartOfAccount();
+                coa.setAccountId(rs.getString("unit_smallest"));
+                coa.setDesp(rs.getString("unit_str"));
+                String medId = rs.getString("med_id");
+                
+                hmMedRel.put(medId, coa);
+            }
+            rs.close();
+            
+            List<StockCosting> listSC = dao.findAllHSQL("select o from StockCosting o where o.key.userId = '" + userId + "'");
+            for (StockCosting sc : listSC) {
+                String medId = sc.getKey().getMedicine().getMedId();
+                ChartOfAccount coa = hmMedRel.get(medId);
+                sc.setBalQtyStr(MedicineUtil.getQtyInStr(coa.getAccountId(), coa.getDesp(), sc.getBlaQty()));
+                dao.save(sc);
+                log.info("medId : " + medId);
+            }
         }
     }
 
@@ -463,7 +621,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                 + "                   vs.location_id, vs.med_id, vs.expire_date exp_date,\n"
                 + "                   sum((ifnull(vs.sale_smallest_qty, 0)+ifnull(vs.foc_smallest_qty,0))*-1) ttl_qty\n"
-                + "              from v_sale vs, tmp_stock_filter tsf\n"
+                + "              from v_sale1 vs, tmp_stock_filter tsf\n"
                 + "             where vs.location_id = tsf.location_id and vs.med_id = tsf.med_id\n"
                 + "               and date(vs.sale_date) >= tsf.op_date and date(vs.sale_date) <= prm_stock_date\n"
                 + "               and vs.deleted = false and vs.vou_status = 1 and tsf.user_id = prm_user_id\n"
@@ -820,7 +978,8 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
 
         try {
             dao.open();
-            dao.execSql(strSQLDelete, strSQL);
+            dao.execSql(strSQLDelete);
+            dao.execSql(strSQL);
         } catch (Exception ex) {
             log.error("insertStockFilterCode : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {

@@ -1100,7 +1100,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 + "		where vp.med_id = mpd.med_id and vp.pur_date = mpd.pur_date\n"
                 + "		and vp.deleted = false and vp.med_id in (" + selectedMedId + ")) vpid\n"
                 + "where vlp.med_id = vpid.med_id and vlp.pur_detail_id = vpid.pur_detail_id";
-        
+
         HashMap<String, String> hmLatestPur = new HashMap();
 
         try {
@@ -1128,7 +1128,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 + "market_price, market_unit, remark_med "
                 + "from v_price_change_med where med_id in (" + selectedMedId
                 + ") group by med_id";
-        
+
         HashMap<String, String> hmLatestMarket = new HashMap();
 
         try {
@@ -1269,18 +1269,22 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 while (rs.next()) {
                     selectedMedId = rs.getString("med_id");
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (selectedMed.getRelationGroupId().size() > 0) {
-                        selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                    }
-                    medUp.add(selectedMed);
-                    int selectRow = medTableModel.getLastIndex();
-                    medTableModel.setMed(selectedMed, selectRow);
-                    //unitTableModel.setCurrMed(selectedMed);
-                    /*if (selectedMedId == null) {
+                    if (selectedMed.getRelationGroupId() == null) {
+                        log.error("Error Med : " + selectedMedId);
+                    } else {
+                        if (!selectedMed.getRelationGroupId().isEmpty()) {
+                            selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
+                        }
+                        medUp.add(selectedMed);
+                        int selectRow = medTableModel.getLastIndex();
+                        medTableModel.setMed(selectedMed, selectRow);
+                        //unitTableModel.setCurrMed(selectedMed);
+                        /*if (selectedMedId == null) {
                         selectedMedId = "'" + rs.getString("med_id") + "'";
                     } else {
                         selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
                     }*/
+                    }
                 }
             } catch (Exception ex) {
                 log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -1505,7 +1509,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
 
                         try {
                             log.info("Sale Med Id : " + medId);
-                            try (ResultSet rsSale = dao.execSQL(strSale)) {
+                            try ( ResultSet rsSale = dao.execSQL(strSale)) {
                                 if (rsSale != null) {
                                     if (rsSale.next()) {
                                         Double ttlSale = rsSale.getDouble("ttl_sale");
@@ -1534,7 +1538,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                                 + "' and med_id = '" + medId + "'";
                         try {
                             log.info("Purchase Med Id : " + medId);
-                            try (ResultSet rsPur = dao.execSQL(strPurchase)) {
+                            try ( ResultSet rsPur = dao.execSQL(strPurchase)) {
                                 if (rsPur != null) {
                                     if (rsPur.next()) {
                                         Double ttlPur = rsPur.getDouble("ttl_pur");

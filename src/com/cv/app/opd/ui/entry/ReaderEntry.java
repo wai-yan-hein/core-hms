@@ -202,7 +202,6 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         cboOPDCG = new javax.swing.JComboBox<>();
         cboComplete = new javax.swing.JComboBox<>();
         butPrint = new javax.swing.JButton();
-        jCheckBox1 = new javax.swing.JCheckBox();
 
         txtFrom.setBorder(javax.swing.BorderFactory.createTitledBorder("From"));
         txtFrom.setFont(Global.textFont);
@@ -280,7 +279,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
         cboOPDCG.setBorder(javax.swing.BorderFactory.createTitledBorder("OPD CG"));
 
         cboComplete.setFont(Global.textFont);
-        cboComplete.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "Complete", "In-Complete" }));
+        cboComplete.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ALL", "Complete", "In-Complete", "Reader Missing" }));
         cboComplete.setBorder(javax.swing.BorderFactory.createTitledBorder("Status"));
 
         butPrint.setText("Print");
@@ -289,8 +288,6 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                 butPrintActionPerformed(evt);
             }
         });
-
-        jCheckBox1.setText("Check Miss Reader");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -314,9 +311,7 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                         .addComponent(txtPtName, javax.swing.GroupLayout.DEFAULT_SIZE, 68, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBox1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(163, 163, 163)
                         .addComponent(butSearch)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butPrint)))
@@ -336,7 +331,6 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
                         .addComponent(cboOPDCG, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(cboComplete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jCheckBox1)
                         .addComponent(butSearch)
                         .addComponent(butPrint)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -428,7 +422,6 @@ public class ReaderEntry extends javax.swing.JPanel implements KeyPropagate, Sel
     private javax.swing.JComboBox<String> cboComplete;
     private javax.swing.JComboBox<String> cboOPDCG;
     private javax.swing.JComboBox<String> cboService;
-    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblReaderEntry;
     private javax.swing.JFormattedTextField txtFrom;

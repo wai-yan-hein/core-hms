@@ -1396,6 +1396,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                     butPkgEdit.setEnabled(false);
                     butCheckBill.setEnabled(false);
                 }
+                calculate();
                 break;
         }
 
