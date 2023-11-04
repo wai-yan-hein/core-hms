@@ -8,6 +8,7 @@ import com.cv.app.pharmacy.database.entity.BusinessType;
 import com.cv.app.pharmacy.ui.common.BusinessTypeAutoCompleteTableModel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.List;
@@ -70,7 +71,7 @@ public class BusinessTypeAutoCompleter implements KeyListener {
             textComp.getDocument().addDocumentListener(documentListener);
         } else {
             textComp.registerKeyboardAction(showAction, KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,
-                    KeyEvent.CTRL_MASK), JComponent.WHEN_FOCUSED);
+                    InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
         }
 
         textComp.registerKeyboardAction(upAction, KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
