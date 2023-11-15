@@ -12,6 +12,7 @@ import javax.print.attribute.standard.MediaSize;
 import javax.print.attribute.standard.MediaSizeName;
 import java.awt.*;
 import java.awt.print.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -31,35 +32,124 @@ public class ZPLUtil {
                                 String paperHeight) throws PrintException {
         // ZPL command to print a sample label with a barcode
 
-        // Find the printer by its name
+//        ZPLPrinter();
+//         Find the printer by its name
+//        PrintService printer = findPrinterByName(printerName);
+//        if (printer != null) {
+//            DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+//            // Create a SimpleDoc with the ZPL data and flavor
+//            SimpleDoc doc = new SimpleDoc(zpl.getBytes(), flavor, null);
+//            // Create a PrintRequestAttributeSet for print job attributes (e.g., number of copies)
+//            PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
+//            //attributes.add(new Copies(printCount)); // Example: 1 copy
+//            String[] widthPart = paperWidth.split(" ");
+//            String[] heightPart = paperHeight.split(" ");
+//            float pageWidthInInches = convertInch(Float.parseFloat(widthPart[0]), widthPart[1]);
+//            float pageHeightInInches = convertInch(Float.parseFloat(heightPart[0]), heightPart[1]);
+//            log.info("width : " + pageWidthInInches + "height : " + pageHeightInInches);
+//            int dpi = 203; // 203 dots per inch
+//            int pageWidthInDots = (int) (pageWidthInInches * dpi);
+//            int pageHeightInDots = (int) (pageHeightInInches * dpi);
+//            MediaSizeName mediaSizeName = MediaSize.findMedia(pageWidthInDots, pageHeightInDots, MediaPrintableArea.INCH);
+//            if (mediaSizeName != null) {
+//                attributes.add(mediaSizeName);
+//            } else {
+//                // If the custom size is not supported, you can set a default media size or throw an exception
+//                log.error("Custom media size not supported. Using default size.");
+//                attributes.add(MediaSizeName.NA_LETTER); // Default to Letter size (8.5x11 inches)
+//            }
+//            // Send the print job to the target printer
+//             log.error(doc);
+//            printer.createPrintJob().print(doc, attributes);
+//        } else {
+//            log.error("printer not found.");
+//        }
+
+        //pann
+        
         PrintService printer = findPrinterByName(printerName);
         if (printer != null) {
+    // Define the document flavor as BYTE_ARRAY.AUTOSENSE
+    DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+
+    // Create a SimpleDoc with the ZPL data and flavor
+    SimpleDoc doc = new SimpleDoc(zpl.getBytes(), flavor, null);
+
+    // Create a PrintRequestAttributeSet for print job attributes (e.g., number of copies)
+    PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
+
+    // Uncomment the following line if you want to specify the number of copies
+    // attributes.add(new Copies(printCount)); // Example: 1 copy
+
+    // Split paper dimensions into width and height
+    String[] widthPart = paperWidth.split(" ");
+    String[] heightPart = paperHeight.split(" ");
+
+    // Convert the width and height to inches
+    float pageWidthInInches = convertInch(Float.parseFloat(widthPart[0]), widthPart[1]);
+    float pageHeightInInches = convertInch(Float.parseFloat(heightPart[0]), heightPart[1]);
+
+    log.info("width : " + pageWidthInInches + " height : " + pageHeightInInches);
+
+    int dpi = 203; // 203 dots per inch
+
+    // Calculate page dimensions in dots
+    int pageWidthInDots = Math.round(pageWidthInInches * dpi);
+    int pageHeightInDots = Math.round(pageHeightInInches * dpi);
+
+    // Find a suitable media size based on the calculated dimensions
+    MediaSizeName mediaSizeName = MediaSize.findMedia(pageWidthInDots, pageHeightInDots, MediaPrintableArea.INCH);
+    if (mediaSizeName != null) {
+        // Add the selected media size to the print job attributes
+        attributes.add(mediaSizeName);
+    } else {
+        // If the custom size is not supported, you can set a default media size or handle it differently
+        log.error("Custom media size not supported. Using default size.");
+        attributes.add(MediaSizeName.NA_LETTER); // Default to Letter size (8.5x11 inches)
+    }
+
+    // Send the print job to the target printer
+    log.info("Printing ZPL label...");
+    printer.createPrintJob().print(doc, attributes);
+} else {
+    log.error("Printer not found.");
+}
+        
+    }
+    
+    public static void ZPLPrinter() {
+        // ZPL code for your label
+        String zplCode = "^XA\n" +
+                "^FO50,50^A0N,50,50^FDHello, ZPL!^FS\n" +
+                "^XZ";
+
+        try {
+            // Convert the ZPL code to a byte array
+            byte[] zplBytes = zplCode.getBytes("UTF-8");
+
+            // Create a DocFlavor for ZPL
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
-            // Create a SimpleDoc with the ZPL data and flavor
-            SimpleDoc doc = new SimpleDoc(zpl.getBytes(), flavor, null);
-            // Create a PrintRequestAttributeSet for print job attributes (e.g., number of copies)
-            PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-            //attributes.add(new Copies(printCount)); // Example: 1 copy
-            String[] widthPart = paperWidth.split(" ");
-            String[] heightPart = paperHeight.split(" ");
-            float pageWidthInInches = convertInch(Float.parseFloat(widthPart[0]), widthPart[1]);
-            float pageHeightInInches = convertInch(Float.parseFloat(heightPart[0]), heightPart[1]);
-            log.info("width : " + pageWidthInInches + "height : " + pageHeightInInches);
-            int dpi = 152; // 203 dots per inch
-            int pageWidthInDots = (int) (pageWidthInInches * dpi);
-            int pageHeightInDots = (int) (pageHeightInInches * dpi);
-            MediaSizeName mediaSizeName = MediaSize.findMedia(pageWidthInDots, pageHeightInDots, MediaPrintableArea.INCH);
-            if (mediaSizeName != null) {
-                attributes.add(mediaSizeName);
-            } else {
-                // If the custom size is not supported, you can set a default media size or throw an exception
-                log.error("Custom media size not supported. Using default size.");
-                attributes.add(MediaSizeName.NA_LETTER); // Default to Letter size (8.5x11 inches)
-            }
-            // Send the print job to the target printer
-            printer.createPrintJob().print(doc, attributes);
-        } else {
-            log.error("printer not found.");
+
+            // Create a Doc with the ZPL data
+            Doc doc = new SimpleDoc(zplBytes, flavor, null);
+
+            // Get a printer job
+            PrinterJob printerJob = PrinterJob.getPrinterJob();
+
+            // Get the default print service (assumes your Zebra printer is set as the default printer)
+            // You can also specify a specific printer by name
+             PrintService[] printServices = PrinterJob.lookupPrintServices();
+             PrintService myPrinter = printServices[1];
+//            PrintService myPrinter = printerJob.getPrintService();
+
+            // Create a print job
+            DocPrintJob printJob = myPrinter.createPrintJob();
+
+            // Print the ZPL code
+            printJob.print(doc, null);
+
+        } catch (PrintException | IOException e) {
+            e.printStackTrace();
         }
     }
 

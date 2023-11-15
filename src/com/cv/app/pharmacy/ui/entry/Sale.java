@@ -1794,10 +1794,10 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private Action actionMedList = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            /*try {
-            //if (tblSale.getCellEditor() != null) {
-            //tblSale.getCellEditor().stopCellEditing();
-            //}
+            try {
+            if (tblSale.getCellEditor() != null) {
+            tblSale.getCellEditor().stopCellEditing();
+            }
             
             //No entering medCode, only press F3
             try {
@@ -1810,7 +1810,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             }
             } catch (Exception ex) {
             
-            }*/
+            }
         }
     };
 
