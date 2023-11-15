@@ -7,6 +7,7 @@ package com.cv.app.pharmacy.ui.util;
 import com.cv.app.pharmacy.ui.common.AutoCompleterTableModel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import javax.swing.*;
@@ -53,7 +54,7 @@ public class AutoCompleter {
       textComp.getDocument().addDocumentListener(documentListener);
     } else {
       textComp.registerKeyboardAction(showAction, KeyStroke.getKeyStroke(KeyEvent.VK_SPACE,
-              KeyEvent.CTRL_MASK), JComponent.WHEN_FOCUSED);
+              InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
     }
 
     textComp.registerKeyboardAction(upAction, KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),

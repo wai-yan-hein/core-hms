@@ -323,6 +323,10 @@ change column method_desc method_desc varchar(150);
 alter table sale_his
 add column emg_percent decimal(10,2);
 
+alter table customer_group 
+add column trader_code varchar(15) null after use_for;
+
+
 drop view if exists v_opd_service;
 create  view v_opd_service as select og.group_id as group_id,og.group_name as group_name,oc.cat_name as cat_name,svc.service_id as service_id,svc.service_name as service_name,svc.srv_fees as srv_fees,svc.cat_id as cat_id,svc.price_ver_id as price_ver_id,svc.ver_upd_id as ver_upd_id,svc.srv_fees1 as srv_fees1,svc.cfs as cfs,svc.medu_ver_id as medu_ver_id,svc.medu_upd_id as medu_upd_id,svc.service_code as service_code,svc.act_status as act_status,svc.mig_id as mig_id,svc.lab_remark as lab_remark,svc.service_cost as service_cost from ((opd_group og join opd_category oc) join opd_service svc) where og.group_id = oc.group_id and oc.cat_id = svc.cat_id;
 
