@@ -621,7 +621,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "            select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
                 + "                   vs.location_id, vs.med_id, vs.expire_date exp_date,\n"
                 + "                   sum((ifnull(vs.sale_smallest_qty, 0)+ifnull(vs.foc_smallest_qty,0))*-1) ttl_qty\n"
-                + "              from v_sale vs, tmp_stock_filter tsf\n"
+                + "              from v_sale1 vs, tmp_stock_filter tsf\n"
                 + "             where vs.location_id = tsf.location_id and vs.med_id = tsf.med_id\n"
                 + "               and date(vs.sale_date) >= tsf.op_date and date(vs.sale_date) <= prm_stock_date\n"
                 + "               and vs.deleted = false and vs.vou_status = 1 and tsf.user_id = prm_user_id\n"
