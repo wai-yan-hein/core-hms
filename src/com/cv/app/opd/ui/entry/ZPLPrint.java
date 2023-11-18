@@ -210,7 +210,7 @@ public class ZPLPrint extends javax.swing.JPanel implements SelectionObserver, F
 //            String c = code.replace("\'", "");
 //            String printZplData = txtPharZPLCode.getText().replace("coreBarCode", c);
 //            ZPLUtil.printZpl(printZplData, selPrinter, width, height);
-//              ZPLUtil.ZPLPrinter();
+//            ZPLUtil.ZPLPrinter();
 
             String zplData = "^XA^FO50,50^BCN,100,Y,N,N^FD123456^FS^XZ"; // Example ZPL data
             String printerName = selPrinter; // Replace with your printer's name
