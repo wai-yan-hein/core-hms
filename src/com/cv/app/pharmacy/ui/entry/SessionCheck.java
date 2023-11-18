@@ -19,6 +19,7 @@ import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.LocationGroup;
 import com.cv.app.pharmacy.database.entity.LocationGroupMapping;
 import com.cv.app.pharmacy.database.entity.MachineInfo;
+import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.SessionFilter;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -1728,6 +1729,139 @@ public class SessionCheck extends javax.swing.JPanel implements SelectionObserve
 
     }
 
+    private void checkPointInsert() {
+        String strLFilter = "";
+        /*String tranType = cboTranType.getSelectedItem().toString();
+        switch (tranType) {
+            case "OPD":
+            case "OT":
+            case "DC":
+            case "PHARMACY-Sale":
+            case "PHARMACY-Return In":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option = '" + tranType + "'";
+                } else {
+                    strLFilter = strLFilter + " and tran_option = '" + tranType + "'";
+                }
+                break;
+            case "OPD-Group":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In')";
+                } else {
+                    strLFilter = strLFilter + " and tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In') ";
+                }
+                break;
+        }*/
+
+        int session = getSessionFilter1();
+        String strSql = "insert into session_check_checkpoint (tran_option, tran_date, tran_inv_id,\n"
+                + "  patient_id, currency_id, deleted, vou_total, disc_a, tax_a, paid, vou_balance,\n"
+                + "  session_id, user_id, doctor_id, payment_type_id, admission_no, check_point_session,\n"
+                + "  check_point_date, check_point_user)\n"
+                + "select CONCAT('PHARMACY-', source) as tran_option, tran_date, inv_id, cus_id, currency, if(deleted, true, false), vou_total,\n"
+                + "discount, tax_amt, paid, balance, session_id, user_id, doctor_id, payment_type,\n"
+                + "admission_no," + session + ",sysdate(),'" + Global.machineId
+                + "' from v_session "
+                + "where date(tran_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "' and (session_id = "
+                + session + " or 0 = " + session + ") ";
+
+        if (!strLFilter.isEmpty()) {
+            strSql = strSql + " and " + strLFilter;
+        }
+        try {
+            dao.execSql(strSql);
+            butCheckPoint.setEnabled(false);
+        } catch (Exception ex) {
+            log.error("checkPointInsert : " + ex.getMessage());
+            JOptionPane.showMessageDialog(Util1.getParent(), ex.getMessage(),
+                    "Check Point Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            dao.close();
+        }
+    }
+
+    private boolean isCheckPointHave() {
+        boolean status = false;
+        String strLFilter = "";
+        String tranType = cboTranType.getSelectedItem().toString();
+        switch (tranType) {
+            case "OPD":
+            case "OT":
+            case "DC":
+            case "PHARMACY-Sale":
+            case "PHARMACY-Return In":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option = '" + tranType + "'";
+                } else {
+                    strLFilter = strLFilter + " and tran_option = '" + tranType + "'";
+                }
+                break;
+            case "OPD-Group":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In')";
+                } else {
+                    strLFilter = strLFilter + " and tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In') ";
+                }
+                break;
+        }
+        int session = getSessionFilter1();
+        String strSql = "select count(*) from session_check_checkpoint "
+                + "where date(tran_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "' and (session_id = "
+                + session + " or 0 = " + session + ") ";
+        if (!strLFilter.isEmpty()) {
+            strSql = strSql + " and " + strLFilter;
+        }
+        long cnt = dao.getRowCount(strSql);
+        if (cnt > 0) {
+            status = true;
+        }
+        return status;
+    }
+
+    private int getSessionFilter1() {
+        int tmpSession = 0;
+
+        if (cboSession.getSelectedItem() instanceof Session) {
+            Session se = (Session) cboSession.getSelectedItem();
+            tmpSession = se.getSessionId();
+        }
+        return tmpSession;
+    }
+
+    private String getUserFilter() {
+        String userId = "All";
+
+        if (cboUser.getSelectedItem() instanceof Appuser) {
+            Appuser user = (Appuser) cboUser.getSelectedItem();
+            userId = user.getUserId();
+        }
+
+        return userId;
+    }
+
+    private boolean getDeletedFilter() {
+        boolean deleted = false;
+
+        if (cboDelete.getSelectedItem().toString().equals("Deleted")) {
+            deleted = true;
+        }
+
+        return deleted;
+    }
+
+    private String getCurrencyFilter() {
+        String tmpCurrency = "All";
+
+        if (cboCurrency.getSelectedItem() instanceof Currency) {
+            Currency curr = (Currency) cboCurrency.getSelectedItem();
+            tmpCurrency = curr.getCurrencyCode();
+        }
+
+        return tmpCurrency;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -2061,6 +2195,11 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
     cboPatientType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "OPD", "Inpatient" }));
 
     butCheckPoint.setText("Check Point");
+    butCheckPoint.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            butCheckPointActionPerformed(evt);
+        }
+    });
 
     javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
     jPanel2.setLayout(jPanel2Layout);
@@ -2195,7 +2334,6 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(butPrintD)))
-            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -2262,6 +2400,9 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
       search();
       log.info("search duration : " + DateUtil.getDuration());
       setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      if (!isCheckPointHave()) {
+          butCheckPoint.setEnabled(true);
+      }
   }//GEN-LAST:event_butSearchActionPerformed
 
   private void txtFromMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtFromMouseClicked
@@ -2473,6 +2614,12 @@ cboSend.addActionListener(new java.awt.event.ActionListener() {
             viewReport();
         }
     }//GEN-LAST:event_tblSessionMouseClicked
+
+    private void butCheckPointActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCheckPointActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        checkPointInsert();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+    }//GEN-LAST:event_butCheckPointActionPerformed
 
     public String getExpStr(String str, int i) {
         if (i == 0) {

@@ -32,6 +32,7 @@ import com.cv.app.ot.ui.util.OTVouSearchDialog;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.SessionCheckCheckpoint;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.PatientBillTableModel;
@@ -1786,6 +1787,18 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
 
         if (!Util1.hashPrivilege("CanEditOTCheckPoint")) {
+            try {
+                List<SessionCheckCheckpoint> list = dao.findAllHSQL(
+                "select o from SessionCheckCheckpoint o where o.tranOption = 'OT' "
+                + " and o.tranInvId = '" + invId + "'");
+                if (list != null) {
+                    if (!list.isEmpty()) {
+                        canEdit = false;
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus : " + ex.getMessage());
+            }
             if (currVou != null) {
                 if (currVou.getAdmissionNo() != null) {
                     if (!currVou.getAdmissionNo().trim().isEmpty()) {

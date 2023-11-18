@@ -22,6 +22,7 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.RetInDetailHis;
 import com.cv.app.pharmacy.database.entity.RetInHis;
+import com.cv.app.pharmacy.database.entity.SessionCheckCheckpoint;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.view.ReturnInItemList;
@@ -1554,6 +1555,18 @@ public class ReturnIn extends javax.swing.JPanel implements SelectionObserver, F
         double vouPaid = NumberUtil.NZero(currRetIn.getPaid());
 
         if (!Util1.hashPrivilege("CanEditReturnCheckPoint")) {
+            try {
+                List<SessionCheckCheckpoint> list = dao.findAllHSQL(
+                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Return In' "
+                + " and o.tranInvId = '" + invId + "'");
+                if (list != null) {
+                    if (!list.isEmpty()) {
+                        canEdit = false;
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus : " + ex.getMessage());
+            }
             if (currRetIn != null) {
                 if (currRetIn.getAdmissionNo() != null) {
                     if (!currRetIn.getAdmissionNo().trim().isEmpty()) {

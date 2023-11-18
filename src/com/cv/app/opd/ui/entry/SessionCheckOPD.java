@@ -183,7 +183,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         tblSession.getColumnModel().getColumn(12).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(13).setPreferredWidth(15);
         tblSession.getColumnModel().getColumn(0).setCellRenderer(new TableDateFieldRenderer());
-        
+
         tblTotal.getTableHeader().setFont(Global.lableFont);
         tblTotal.getColumnModel().getColumn(0).setPreferredWidth(100);//Desp
         tblTotal.getColumnModel().getColumn(1).setPreferredWidth(7);//Currency
@@ -848,6 +848,163 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         }
     }
 
+    private void checkPointInsert() {
+        String strLFilter = "";
+        /*String tranType = cboTranType.getSelectedItem().toString();
+        switch (tranType) {
+            case "OPD":
+            case "OT":
+            case "DC":
+            case "PHARMACY-Sale":
+            case "PHARMACY-Return In":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option = '" + tranType + "'";
+                } else {
+                    strLFilter = strLFilter + " and tran_option = '" + tranType + "'";
+                }
+                break;
+            case "OPD-Group":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In')";
+                } else {
+                    strLFilter = strLFilter + " and tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In') ";
+                }
+                break;
+        }
+
+        String ptType = cboPtType.getSelectedItem().toString();
+        switch (ptType) {
+            case "OPD":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = " and if(admission_no='',null,admission_no) is null";
+                } else {
+                    strLFilter = strLFilter + " and if(admission_no='',null,admission_no) is null";
+                }
+                break;
+            case "Inpatient":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = " and if(admission_no='',null,admission_no) is not null";
+                } else {
+                    strLFilter = strLFilter + " and if(admission_no='',null,admission_no) is not null";
+                }
+                break;
+        }
+
+        int tmpIntValue = getPaymentFilter();
+        if (tmpIntValue != 0) {
+            if (strLFilter.isEmpty()) {
+                if (tmpIntValue == 1) {//For cash
+                    strLFilter = "paid <> 0";
+                } else {
+                    strLFilter = "payment_type_id = " + tmpIntValue;
+                }
+            } else if (tmpIntValue == 1) {//For cash
+                strLFilter = strLFilter + " and paid <> 0";
+            } else {
+                strLFilter = strLFilter + " and payment_type_id = " + tmpIntValue;
+            }
+        }*/
+
+        int session = getSessionFilter();
+        String strSql = "insert into session_check_checkpoint (tran_option, tran_date, tran_inv_id,\n"
+                + "  patient_id, currency_id, deleted, vou_total, disc_a, tax_a, paid, vou_balance,\n"
+                + "  session_id, user_id, doctor_id, payment_type_id, admission_no, check_point_session,\n"
+                + "  check_point_date, check_point_user)\n"
+                + "select tran_option, tran_date, opd_inv_id, patient_id, currency_id, if(deleted, true, false), vou_total,\n"
+                + "disc_a, tax_a, paid, vou_balance, session_id, user_id, doctor_id, payment_type_id,\n"
+                + "admission_no," + session + ",sysdate(),'" + Global.machineId
+                + "' from v_session_clinic "
+                + "where date(tran_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "' and (session_id = "
+                + session + " or 0 = " + session + ") ";
+
+        if (!strLFilter.isEmpty()) {
+            strSql = strSql + " and " + strLFilter;
+        }
+        try {
+            dao.execSql(strSql);
+            butCheckPoint.setEnabled(false);
+        } catch (Exception ex) {
+            log.error("checkPointInsert : " + ex.getMessage());
+            JOptionPane.showMessageDialog(Util1.getParent(), ex.getMessage(),
+                    "Check Point Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            dao.close();
+        }
+    }
+
+    private boolean isCheckPointHave() {
+        boolean status = false;
+        String strLFilter = "";
+        /*String tranType = cboTranType.getSelectedItem().toString();
+        switch (tranType) {
+            case "OPD":
+            case "OT":
+            case "DC":
+            case "PHARMACY-Sale":
+            case "PHARMACY-Return In":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option = '" + tranType + "'";
+                } else {
+                    strLFilter = strLFilter + " and tran_option = '" + tranType + "'";
+                }
+                break;
+            case "OPD-Group":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = "tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In')";
+                } else {
+                    strLFilter = strLFilter + " and tran_option in ('OPD','PHARMACY-Sale','PHARMACY-Return In') ";
+                }
+                break;
+        }
+
+        String ptType = cboPtType.getSelectedItem().toString();
+        switch (ptType) {
+            case "OPD":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = " if(admission_no='',null,admission_no) is null";
+                } else {
+                    strLFilter = strLFilter + " and if(admission_no='',null,admission_no) is null";
+                }
+                break;
+            case "Inpatient":
+                if (strLFilter.isEmpty()) {
+                    strLFilter = " if(admission_no='',null,admission_no) is not null";
+                } else {
+                    strLFilter = strLFilter + " and if(admission_no='',null,admission_no) is not null";
+                }
+                break;
+        }
+
+        int tmpIntValue = getPaymentFilter();
+        if (tmpIntValue != 0) {
+            if (strLFilter.isEmpty()) {
+                if (tmpIntValue == 1) {//For cash
+                    strLFilter = "paid <> 0";
+                } else {
+                    strLFilter = "payment_type_id = " + tmpIntValue;
+                }
+            } else if (tmpIntValue == 1) {//For cash
+                strLFilter = strLFilter + " and paid <> 0";
+            } else {
+                strLFilter = strLFilter + " and payment_type_id = " + tmpIntValue;
+            }
+        }*/
+        int session = getSessionFilter();
+        String strSql = "select count(*) from session_check_checkpoint "
+                + "where date(tran_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
+                + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "' and (session_id = "
+                + session + " or 0 = " + session + ") ";
+        if (!strLFilter.isEmpty()) {
+            strSql = strSql + " and " + strLFilter;
+        }
+        long cnt = dao.getRowCount(strSql);
+        if (cnt > 0) {
+            status = true;
+        }
+        return status;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -885,6 +1042,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         cboTranType = new javax.swing.JComboBox();
         jLabel8 = new javax.swing.JLabel();
         butPrintD = new javax.swing.JButton();
+        butCheckPoint = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblTotal = new javax.swing.JTable();
@@ -1067,6 +1225,13 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         }
     });
 
+    butCheckPoint.setText("Check Point");
+    butCheckPoint.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            butCheckPointActionPerformed(evt);
+        }
+    });
+
     javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
     jPanel2.setLayout(jPanel2Layout);
     jPanel2Layout.setHorizontalGroup(
@@ -1105,12 +1270,15 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                                 .addComponent(txtDrNo, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(txtDrName)
+                                .addComponent(txtDrName, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
                                 .addComponent(txtPtName)))))
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addComponent(butPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addComponent(butPrintD)))
+                    .addComponent(butPrintD)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(butCheckPoint)
+                    .addGap(0, 0, Short.MAX_VALUE)))
             .addContainerGap())
     );
 
@@ -1137,7 +1305,8 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(butPrint)
-                        .addComponent(butPrintD))
+                        .addComponent(butPrintD)
+                        .addComponent(butCheckPoint))
                     .addGap(1, 1, 1))
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1161,7 +1330,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel10)
                         .addComponent(cboDelete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-            .addContainerGap(19, Short.MAX_VALUE))
+            .addContainerGap(17, Short.MAX_VALUE))
     );
 
     jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Total"));
@@ -1244,6 +1413,9 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         search();
         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        if (!isCheckPointHave()) {
+            butCheckPoint.setEnabled(true);
+        }
     }//GEN-LAST:event_butSearchActionPerformed
 
     private void cboTranTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTranTypeActionPerformed
@@ -1276,6 +1448,12 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     private void butClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butClearActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_butClearActionPerformed
+
+    private void butCheckPointActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCheckPointActionPerformed
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        checkPointInsert();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+    }//GEN-LAST:event_butCheckPointActionPerformed
 
     private void print() {
         //Properties prop = ReportUtil.loadReportPathProperties();
@@ -1455,6 +1633,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton butCheckPoint;
     private javax.swing.JButton butClear;
     private javax.swing.JButton butPrint;
     private javax.swing.JButton butPrintD;
