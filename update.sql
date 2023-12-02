@@ -331,3 +331,8 @@ drop view if exists v_opd_service;
 create  view v_opd_service as select og.group_id as group_id,og.group_name as group_name,oc.cat_name as cat_name,svc.service_id as service_id,svc.service_name as service_name,svc.srv_fees as srv_fees,svc.cat_id as cat_id,svc.price_ver_id as price_ver_id,svc.ver_upd_id as ver_upd_id,svc.srv_fees1 as srv_fees1,svc.cfs as cfs,svc.medu_ver_id as medu_ver_id,svc.medu_upd_id as medu_upd_id,svc.service_code as service_code,svc.act_status as act_status,svc.mig_id as mig_id,svc.lab_remark as lab_remark,svc.service_cost as service_cost from ((opd_group og join opd_category oc) join opd_service svc) where og.group_id = oc.group_id and oc.cat_id = svc.cat_id;
 
 
+alter table opd_patient_bill_payment 
+add column adjust bit(1) not null default 0 after discount;
+
+drop view if exists v_opd_patient_bill_payment;
+create  view v_opd_patient_bill_payment as select opbp.id as id,opbp.reg_no as reg_no,opbp.bill_type_id as bill_type_id,opbp.currency_id as currency_id,opbp.pay_amt as pay_amt,opbp.pay_date as pay_date,opbp.remark as remark,opbp.created_by as created_by,opbp.created_date as created_date,opbp.deleted as deleted,opbp.adjust as adjust,pd.patient_name as patient_name,pd.father_name as father_name,pt.payment_type_name as payment_type_name,usr.user_name as user_name,usr.user_short_name as user_short_name,ifnull(opbp.discount,0) as discount,opbp.admission_no as admission_no from (((opd_patient_bill_payment opbp left join patient_detail pd on(opbp.reg_no = pd.reg_no)) join payment_type pt on(opbp.bill_type_id = pt.payment_type_id)) join appuser usr on(opbp.created_by = usr.user_id));

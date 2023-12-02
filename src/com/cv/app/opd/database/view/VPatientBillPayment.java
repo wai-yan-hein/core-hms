@@ -39,6 +39,7 @@ public class VPatientBillPayment implements Serializable {
     private boolean deleted;
     private Double discount;
     private String admissionNo;
+    private Boolean adjust;
 
     @Id
     @Column(name = "id", unique = true, nullable = false)
@@ -195,5 +196,14 @@ public class VPatientBillPayment implements Serializable {
     public void setAdmissionNo(String admissionNo) {
         this.admissionNo = admissionNo;
     }
+    @Column(name="adjust")
+    public Boolean getAdjust() {
+        return adjust;
+    }
+
+    public void setAdjust(Boolean adjust) {
+        this.adjust = adjust;
+    }
+    
 
 }
