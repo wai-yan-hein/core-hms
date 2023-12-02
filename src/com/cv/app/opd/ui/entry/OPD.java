@@ -37,6 +37,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.ChargeType;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.SessionCheckCheckpoint;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.PatientBillTableModel;
@@ -253,11 +254,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         butAdmit.setEnabled(false);
         butAdmit.setVisible(false);
         butRemove.setEnabled(false);
-        
+
         if (Util1.getPropValue("system.opd.emg").equals("Y")) {
             jLabel26.setVisible(true);
             txtEmgPercent.setVisible(true);
-        }else{
+        } else {
             jLabel26.setVisible(false);
             txtEmgPercent.setVisible(false);
         }
@@ -287,10 +288,18 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     "Check Point", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        boolean status;
+        if (chkAmount.isSelected()) {
+            OPDConfirDialog dialog = new OPDConfirDialog(currVou);
+            status = dialog.isStatus();
+        } else {
+            status = true;
+        }
+
         log.info("Validation start. : " + new Date());
         if (isValidEntry()) {
             log.info("Validation end. : " + new Date());
-            boolean status;
 
             Date vouSaleDate = DateUtil.toDate(txtDate.getText());
             Date lockDate = PharmacyUtil.getLockDate(dao);
@@ -299,13 +308,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         + DateUtil.toDateStr(lockDate) + ".",
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
-            }
-
-            if (chkAmount.isSelected()) {
-                OPDConfirDialog dialog = new OPDConfirDialog(currVou);
-                status = dialog.isStatus();
-            } else {
-                status = true;
             }
 
             if (status) {
@@ -381,14 +383,14 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                     log.error("Bill Close Save ==> OT Vou No : " + currVou.getOpdInvId()
                                             + " Reg No : " + pt.getRegNo() + " User Id : " + Global.loginUser.getUserId()
                                             + " Bill Id : " + pt.getOtId());
-                                    boh = (BillOpeningHis)dao.find(BillOpeningHis.class, pt.getOtId());
+                                    boh = (BillOpeningHis) dao.find(BillOpeningHis.class, pt.getOtId());
                                     boh.setStatus(false);
                                     boh.setBillCLDate(new Date());
                                     boh.setCloseBy(Global.loginUser.getUserId());
                                 }
                                 pt.setOtId(null);
                                 dao.save(pt);
-                                if(boh != null){
+                                if (boh != null) {
                                     dao.save(boh);
                                 }
                             }
@@ -1455,11 +1457,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         double paid = NumberUtil.NZero(txtPaid.getText());
         double disc = NumberUtil.NZero(txtDiscA.getText());
         double tax = NumberUtil.NZero(txtTaxA.getText());
-        
+
         int payType = ((PaymentType) cboPaymentType.getSelectedItem()).getPaymentTypeId();
         if (payType == 1) {
 
-            if (NumberUtil.roundDouble((vouTtl + tax),0) != NumberUtil.roundDouble((paid + disc),0)) {
+            if (NumberUtil.roundDouble((vouTtl + tax), 0) != NumberUtil.roundDouble((paid + disc), 0)) {
                 log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error : vouTtl : "
                         + vouTtl + " Paid : " + paid);
                 JOptionPane.showMessageDialog(Util1.getParent(), "Please check voucher paid.",
@@ -1469,7 +1471,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
 
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y")) {
+        if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
             if (vouBalance != 0) {
                 log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + vouBalance);
                 JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
@@ -1522,8 +1524,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
 
             if (payType == 1) {
-                if ((NumberUtil.roundDouble(currVou.getVouTotal(),0) + NumberUtil.roundDouble(currVou.getTaxA(),0))
-                        != (NumberUtil.roundDouble(currVou.getPaid(),0) + NumberUtil.roundDouble(currVou.getDiscountA(),0))) {
+                if ((NumberUtil.roundDouble(currVou.getVouTotal(), 0) + NumberUtil.roundDouble(currVou.getTaxA(), 0))
+                        != (NumberUtil.roundDouble(currVou.getPaid(), 0) + NumberUtil.roundDouble(currVou.getDiscountA(), 0))) {
                     log.error(txtVouNo.getText().trim() + " OPD Voucher Paid Error 2: vouTtl : "
                             + vouTtl + " Paid : " + paid);
                     JOptionPane.showMessageDialog(Util1.getParent(), "2 Please check voucher paid.",
@@ -1757,11 +1759,10 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 txtRemark.setText(currVou.getRemark());
                 txtAdmissionNo.setText(currVou.getAdmissionNo());
                 //txtEmgPercent.setValue(currVou.getEmgPercent());
-                if(currVou.getEmgPercent() != null){
+                if (currVou.getEmgPercent() != null) {
                     txtEmgPercent.setText(currVou.getEmgPercent().toString());
                 }
-                
-                
+
                 if (currVou.getAge() != null) {
                     txtAge.setText(currVou.getAge().toString());
                 }
@@ -2089,10 +2090,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void setEditStatus(String invId) {
         //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'OPD' "
-                + " and o.tranInvId = '" + invId + "'");*/
-
         canEdit = Util1.hashPrivilege("OPDVoucherEditChange");
         boolean isAllowEdit = Util1.hashPrivilege("OPDCreditVoucherEdit");
         double vouPaid = NumberUtil.NZero(currVou.getPaid());
@@ -2103,6 +2100,18 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
 
         if (!Util1.hashPrivilege("CanEditOPDCheckPoint")) {
+            try {
+                List<SessionCheckCheckpoint> list = dao.findAllHSQL(
+                        "select o from SessionCheckCheckpoint o where o.tranOption = 'OPD' "
+                        + " and o.tranInvId = '" + invId + "'");
+                if (list != null) {
+                    if (!list.isEmpty()) {
+                        canEdit = false;
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus : " + ex.getMessage());
+            }
             if (currVou != null) {
                 if (currVou.getAdmissionNo() != null) {
                     if (!currVou.getAdmissionNo().trim().isEmpty()) {
@@ -2112,7 +2121,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         try {
                             Ams admPt = (Ams) dao.find(Ams.class, key);
                             if (admPt != null) {
-                                if(!Util1.hashPrivilege("CanEditOnDC")){
+                                if (!Util1.hashPrivilege("CanEditOnDC")) {
                                     canEdit = admPt.getDcStatus() == null;
                                 }
                             }
@@ -2157,7 +2166,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         try {
                             Ams admPt = (Ams) dao.find(Ams.class, key);
                             if (admPt != null) {
-                                if(!Util1.hashPrivilege("CanEditOnDC")){
+                                if (!Util1.hashPrivilege("CanEditOnDC")) {
                                     canEdit = admPt.getDcStatus() == null;
                                 }
                             }
@@ -2197,7 +2206,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         if (isIntegration.toUpperCase().equals("Y")) {
             String rootUrl = Util1.getPropValue("system.intg.api.url");
             if (!rootUrl.isEmpty() && !rootUrl.equals("-")) {
-                try (CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
+                try ( CloseableHttpClient httpClient = createHttpClientWithTimeouts()) {
                     String url = rootUrl + "/opd";
                     final HttpPost request = new HttpPost(url);
                     final List<NameValuePair> params = new ArrayList();
@@ -2313,7 +2322,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     txtBill.setText(pt.getOtId());
                     cboPaymentType.setSelectedItem(ptCredit);
                     butOTID.setEnabled(false);
-                    
+
                     BillOpeningHis boh = new BillOpeningHis();
                     boh.setAdmNo(pt.getAdmissionNo());
                     boh.setBillId(pt.getOtId());
@@ -2339,7 +2348,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             dao.close();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

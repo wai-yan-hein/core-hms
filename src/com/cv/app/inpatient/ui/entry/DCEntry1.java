@@ -38,6 +38,7 @@ import com.cv.app.ot.database.entity.DrDetailId;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.SessionCheckCheckpoint;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.PatientBillTableModel;
@@ -2514,6 +2515,18 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
         }
 
         if (!Util1.hashPrivilege("CanEditDCCheckPoint")) {
+            try {
+                List<SessionCheckCheckpoint> list = dao.findAllHSQL(
+                "select o from SessionCheckCheckpoint o where o.tranOption = 'DC' "
+                + " and o.tranInvId = '" + invId + "'");
+                if (list != null) {
+                    if (!list.isEmpty()) {
+                        canEdit = false;
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus : " + ex.getMessage());
+            }
             if (currVou != null) {
                 if (currVou.getAdmissionNo() != null) {
                     if (!currVou.getAdmissionNo().trim().isEmpty()) {

@@ -576,7 +576,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
 
             String userId = Global.machineId;
             dao.execSql("delete from tmp_stock_balance_exp where user_id = '"
-                    + userId + "'");
+                    + userId + "' and location_id = " + strLocation);
             dao.execSql("update tmp_stock_costing set location_id = null, "
                     + "loc_ttl_small_qty = null, loc_ttl_cost = null where user_id = '" + userId + "'");
 
@@ -591,7 +591,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                         + "where user_id = '" + userId + "' and location_id = " + strLocation + " and tran_option = 'Opening'\n"
                         + "group by med_id) a\n"
                         + "set tsc.location_id = " + strLocation + ", tsc.loc_ttl_small_qty = a.ttl_bal_qty, \n"
-                        + "tsc.loc_ttl_cost = if(tsc.bal_qty=0,0,(tsc.total_cost/tsc.bal_qty)*a.ttl_bal_qty)\n"
+                        + "tsc.loc_ttl_cost = if(round(tsc.bal_qty,0)=0,0,(tsc.total_cost/round(tsc.bal_qty,0))*round(ifnull(a.ttl_bal_qty,0),0))\n"
                         + "where tsc.med_id = a.med_id and tsc.user_id = '" + userId + "' and tran_option = 'Opening'");
             }
         } catch (Exception ex) {
@@ -602,7 +602,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
     }
 
     private void stockBalanceExp(String option, String costDate, String location, String userId) {
-        String strSqlDelete = "delete from tmp_stock_balance_exp where user_id = '" + userId + "'";
+        String strSqlDelete = "delete from tmp_stock_balance_exp where user_id = '" + userId + "' and location_id = " + location;
         String strSql = "insert into tmp_stock_balance_exp(user_id, tran_option, location_id, med_id, exp_date,\n"
                 + "                bal_qty, qty_str)\n"
                 + "    select prm_user_id, A.tran_option, A.location_id, A.med_id,\n"

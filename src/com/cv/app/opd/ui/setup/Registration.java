@@ -132,6 +132,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         //AddFocusMoveKey();
         //this.setFocusTraversalPolicy(focusPolicy);
         txtAdmissionNo.setEnabled(false);
+        butBillID.setEnabled(false);
     }
 
     //For focus movement key

@@ -37,6 +37,7 @@ import com.cv.app.pharmacy.database.entity.SaleExpense;
 import com.cv.app.pharmacy.database.entity.SaleHis;
 import com.cv.app.pharmacy.database.entity.SaleOutstand;
 import com.cv.app.pharmacy.database.entity.SaleWarranty;
+import com.cv.app.pharmacy.database.entity.SessionCheckCheckpoint;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.entity.Trader1;
 import com.cv.app.pharmacy.database.entity.TraderPayHis;
@@ -87,7 +88,6 @@ import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -717,7 +717,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     calculateTotalAmount();
 
                     if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
-                        if(txtCusId.getText().equals(Util1.getPropValue("system.sale.default.patient"))){
+                        if (txtCusId.getText().equals(Util1.getPropValue("system.sale.default.patient"))) {
                             cboPayment.setSelectedItem(ptCash);
                         } else {
                             cboPayment.setSelectedItem(ptCredit);
@@ -1802,23 +1802,23 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
     private Action actionMedList = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            /*try {
-            //if (tblSale.getCellEditor() != null) {
-            //tblSale.getCellEditor().stopCellEditing();
-            //}
-            
-            //No entering medCode, only press F3
             try {
-            dao.open();
-            //getMedInfo("");
-            getMedList("");
-            dao.close();
-            } catch (Exception ex1) {
-            log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
-            }
+                if (tblSale.getCellEditor() != null) {
+                    tblSale.getCellEditor().stopCellEditing();
+                }
+
+                //No entering medCode, only press F3
+                try {
+                    dao.open();
+                    //getMedInfo("");
+                    getMedList("");
+                    dao.close();
+                } catch (Exception ex1) {
+                    log.error("actionMedList : " + ex1.getStackTrace()[0].getLineNumber() + " - " + ex1.toString());
+                }
             } catch (Exception ex) {
-            
-            }*/
+
+            }
         }
     };
 
@@ -2416,6 +2416,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     "Check Point", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        boolean status = false;
+
+        if (chkAmount.isSelected()) {
+            SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
+                    NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
+                    "Confirm");
+            status = dialog.getConfStatus();
+        }
+
         if (isValidEntry() && saleTableModel.isValidEntry() && expTableModel.isValidEntry()) {
             log.info("Sale Date" + currSaleVou.getSaleDate().toString());
             Date vouSaleDate = DateUtil.toDate(txtSaleDate.getText());
@@ -2425,14 +2435,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         + DateUtil.toDateStr(lockDate) + ".",
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
-            }
-            boolean status = false;
-
-            if (chkAmount.isSelected()) {
-                SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
-                        NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
-                        "Confirm");
-                status = dialog.getConfStatus();
             }
 
             if (status || !chkAmount.isSelected()) {
@@ -3368,6 +3370,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         double vouTtl = NumberUtil.NZero(txtVouTotal.getValue());
         double totalAmount = saleTableModel.getTotalAmount();
         Patient pt = currSaleVou.getPatientId();
+        calculateTotalAmount();
+        double vouBal = NumberUtil.NZero(txtVouBalance.getText());
 
         if (Util1.getPropValue("system.app.usage.type").equals("Hospital")) {
 
@@ -3381,6 +3385,15 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                 "Invalid Patient", JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
+                }
+            }
+
+            if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
+                if (vouBal != 0) {
+                    log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + vouBal);
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                            "Paid Error", JOptionPane.ERROR_MESSAGE);
+                    return false;
                 }
             }
 
@@ -3429,8 +3442,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     "Voucher Total Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        calculateTotalAmount();
-        double vouBal = NumberUtil.NZero(txtVouBalance.getText());
 
         if (!Util1.hashPrivilege("CanEditSaleCheckPoint")) {
             if (lblStatus.getText().equals("NEW")) {
@@ -4443,13 +4454,23 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     private void setEditStatus(String invId) {
         //canEdit
-        /*List<SessionCheckCheckpoint> list = dao.findAllHSQL(
-                "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Sale' "
-                + " and o.tranInvId = '" + invId + "'");*/
         boolean isAllowEdit = Util1.hashPrivilege("SaleCreditVoucherEdit");
         double vouPaid = NumberUtil.NZero(currSaleVou.getPaid());
 
         if (!Util1.hashPrivilege("CanEditSaleCheckPoint")) {
+            try {
+                List<SessionCheckCheckpoint> list = dao.findAllHSQL(
+                        "select o from SessionCheckCheckpoint o where o.tranOption = 'PHARMACY-Sale' "
+                        + " and o.tranInvId = '" + invId + "'");
+                if (list != null) {
+                    if (!list.isEmpty()) {
+                        canEdit = false;
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("setEditStatus : " + ex.getMessage());
+            }
+
             if (currSaleVou != null) {
                 if (currSaleVou.getAdmissionNo() != null) {
                     if (!currSaleVou.getAdmissionNo().trim().isEmpty()) {
