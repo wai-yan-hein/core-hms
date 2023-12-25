@@ -4,6 +4,8 @@
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="user_id" class="java.lang.String"/>
 	<parameter name="invoiceNo" class="java.lang.String"/>
 	<parameter name="patientName" class="java.lang.String"/>
@@ -18,9 +20,11 @@
 	<parameter name="phoneNo" class="java.lang.String"/>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String"/>
 	<parameter name="IMAGE_PATH" class="java.lang.String"/>
+	<parameter name="category" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select vo.patient_id, vo.patient_name, vo.refer_doctor_name as doctor_name, vo.service_name, vo.pathology_name,
-if(lrh.result_type = -1,lrh.result_text,concat('', lrh.result_text)) as result_text, ifnull(lrh.result,'') result, ifnull(lrh.ref_range,'') ref_range, lrh.result_unit, lrh.remark, vo.service_name,vo.rank,ifnull(vo.bed_no, vo.bed_desp) as bed_no, vo.admission_no, olr.result_type, vo.remark
+if(lrh.result_type = -1,lrh.result_text,concat('', lrh.result_text)) as result_text, ifnull(lrh.result,'') result, ifnull(lrh.ref_range,'') ref_range, lrh.result_unit, lrh.remark, 
+vo.service_name,vo.rank,ifnull(vo.bed_no, vo.bed_desp) as bed_no, vo.admission_no, olr.result_type, vo.remark, if(ifnull(donor_name,'')='', '''',concat('This result for ',donor_name)) as donor
 from v_opd vo, lab_result_his lrh, opd_lab_result olr
 where vo.opd_inv_id = lrh.opd_inv_id and vo.service_id = lrh.lab_test_id and lrh.lab_result_id = olr.result_id
 and lrh.opd_inv_id = $P{invoiceNo}
@@ -56,13 +60,14 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 	<field name="result_type" class="java.lang.Integer">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
+	<field name="donor" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<pageHeader>
 		<band height="173" splitType="Stretch">
 			<textField>
-				<reportElement x="87" y="107" width="194" height="22" uuid="ef0650d6-b30f-43ab-83e1-2e88858fed75"/>
+				<reportElement x="81" y="107" width="194" height="22" uuid="ef0650d6-b30f-43ab-83e1-2e88858fed75"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
@@ -76,7 +81,7 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$P{resultDate}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="11" y="107" width="77" height="22" uuid="b6101a8d-9e3b-49ec-a02c-0ea303f154b3"/>
+				<reportElement x="11" y="107" width="72" height="22" uuid="b6101a8d-9e3b-49ec-a02c-0ea303f154b3"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -145,15 +150,15 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 				</textElement>
 				<text><![CDATA[Issued Date :]]></text>
 			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="87" y="128" width="194" height="22" uuid="13e3e0a6-6270-48ca-b0c2-3bf61d1231e7"/>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="81" y="128" width="194" height="22" uuid="13e3e0a6-6270-48ca-b0c2-3bf61d1231e7"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{doctor_name}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="11" y="128" width="77" height="22" uuid="590e3b88-4aeb-4afb-a37b-f82026069be2"/>
+				<reportElement x="11" y="128" width="72" height="22" uuid="590e3b88-4aeb-4afb-a37b-f82026069be2"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -174,11 +179,11 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 				<text><![CDATA[Laboratory Report Form]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="11" y="149" width="77" height="22" uuid="8e76c4d5-7599-44c7-ab8d-2f7fb3103cd0"/>
+				<reportElement x="11" y="149" width="72" height="22" uuid="8e76c4d5-7599-44c7-ab8d-2f7fb3103cd0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
-				<text><![CDATA[Remark :]]></text>
+				<text><![CDATA[Remark          :]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="281" y="128" width="44" height="22" uuid="16462d98-526d-4ca1-975b-5709a1d905c6"/>
@@ -201,42 +206,41 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
 			</textField>
-			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
-				<reportElement x="87" y="149" width="143" height="22" uuid="32b378fc-34f2-4a86-b2f7-464609e48524"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{remark}]]></textFieldExpression>
-			</textField>
-			<image>
-				<reportElement x="61" y="0" width="75" height="75" uuid="ec18a3df-0468-4d30-895f-5c34792d0de4"/>
-				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_logo.png"]]></imageExpression>
-			</image>
-			<image>
-				<reportElement x="141" y="0" width="385" height="45" uuid="1900e5cb-a167-4e01-8e7b-d7436b0a1374"/>
-				<imageExpression><![CDATA[$P{IMAGE_PATH} + "/img/sdm_text.png"]]></imageExpression>
-			</image>
 			<textField>
-				<reportElement x="148" y="46" width="303" height="15" uuid="b6ac7cc5-15fe-471f-9380-69086412ef70"/>
+				<reportElement x="126" y="37" width="322" height="15" uuid="01228772-3b66-4062-99b1-453ca215aaad"/>
 				<textElement textAlignment="Center">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{comAddress}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="140" y="66" width="152" height="15" uuid="e893ec6b-45b9-4171-a449-631be34a055a"/>
-				<textElement textAlignment="Left">
+				<reportElement x="126" y="53" width="322" height="15" uuid="7792e9de-8dab-400f-b190-0d3afad1e5ed"/>
+				<textElement textAlignment="Center">
 					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{phoneNo}]]></textFieldExpression>
 			</textField>
-			<staticText>
-				<reportElement x="295" y="66" width="225" height="15" uuid="58d8862e-f156-414d-87c1-eda678f7184d"/>
+			<textField isBlankWhenNull="true">
+				<reportElement x="81" y="150" width="185" height="22" uuid="22fe77ec-f0d3-4a65-ae1b-e86f34f70011"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
-				<text><![CDATA[E-mail- sandamonhospital@gmail.com]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$F{donor}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="126" y="1" width="147" height="35" forecolor="#336E1A" uuid="4733d241-7a27-4959-9537-1d83dccd4f52"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="20" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="274" y="1" width="263" height="35" forecolor="#336E1A" uuid="e05f0da7-2069-4509-94e5-ad5c8d40e853"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{category}]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
@@ -352,41 +356,6 @@ order by vo.service_name,vo.result_order, lrh.sort_order]]>
 	<columnFooter>
 		<band splitType="Stretch"/>
 	</columnFooter>
-	<pageFooter>
-		<band height="63">
-			<line>
-				<reportElement x="11" y="0" width="542" height="1" uuid="fab0d2b4-bda4-47ee-84b7-15be95811ef8"/>
-			</line>
-			<staticText>
-				<reportElement x="11" y="1" width="541" height="15" uuid="cb4afecf-bacd-45d4-8238-dde5369cca11"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Urisys 1100 semiautomated Urine Analyzer (ROCHE Diagnostic, SWITZERLAND)]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="11" y="16" width="541" height="15" uuid="97949966-b428-42d0-856f-bef6af457911"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Cobas C111 Fully Automated Biochemistry Analyzer (ROCHE Diagnostic, SWITZERLAND)]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="11" y="31" width="541" height="15" uuid="04a530ce-fcaa-45f8-b531-bc2e5a1ec3bc"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Sysmex XN-350 Fully Automated Heamatology Analyzer. (JAPAN)]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="11" y="48" width="541" height="15" uuid="2b671145-f75b-464b-a3d7-ce94e627ed77"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Arial" size="9" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Sysmex CA-101 Semi-Automated Blood Coagulation Analyzer. (JAPAN)]]></text>
-			</staticText>
-		</band>
-	</pageFooter>
 	<summary>
 		<band height="3">
 			<line>

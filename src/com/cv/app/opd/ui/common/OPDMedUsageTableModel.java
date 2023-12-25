@@ -4,6 +4,7 @@
  */
 package com.cv.app.opd.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.MedUsageKey;
 import com.cv.app.opd.database.entity.OPDMedUsage;
@@ -14,6 +15,7 @@ import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
@@ -135,6 +137,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                         record.setUnit(null);
                         record.setQtySmall(null);
                         record.setUnitQty(null);
+                        record.setCreatedDate(new Date());
                     }
                     break;
                 case 2:
@@ -163,6 +166,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                             }
                         }
                     }
+                    record.setUpdatedDate(new Date());
                     break;
             }
         } catch (Exception ex) {
@@ -235,6 +239,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
 
     private void saveRecord(OPDMedUsage record) {
         try {
+            bakRecord(record, "EDIT");
             dao.save(record);
             addNewRow();
             if (!versionUpdate) {
@@ -249,11 +254,30 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
         }
     }
 
+    private void bakRecord(OPDMedUsage record, String option) {
+        try {
+            String strSql = "insert into bk_opd_med_usage(service_id, med_id, unit_qty, unit_id, \n"
+                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option)\n"
+                    + "select service_id, med_id, unit_qty, unit_id, \n"
+                    + "       qty_smallest, created_date, updated_date, now(), '" + Global.loginUser.getUserId() + "',\n"
+                    + " '" + option + "' \n"
+                    + "  from opd_med_usage\n"
+                    + " where service_id = " + record.getKey().getService()
+                    + " and med_id = '" + record.getKey().getMed().getMedId() + "'";
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("bakRecord : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
     public void delete(int row) {
         OPDMedUsage record = listOPDMedUsage.get(row);
         String sql;
         if (NumberUtil.NZeroL(record.getKey().getService()) > 0) {
             try {
+                bakRecord(record, "DELETE");
                 dao.open();
                 dao.beginTran();
                 sql = "delete from opd_med_usage where service_id = '" + record.getKey().getService() + "' and med_id='" + record.getKey().getMed().getMedId() + "'";

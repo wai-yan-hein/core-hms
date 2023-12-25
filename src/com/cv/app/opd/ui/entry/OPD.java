@@ -290,12 +290,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
 
         boolean status;
-        if (chkAmount.isSelected()) {
-            OPDConfirDialog dialog = new OPDConfirDialog(currVou);
-            status = dialog.isStatus();
-        } else {
-            status = true;
-        }
 
         log.info("Validation start. : " + new Date());
         if (isValidEntry()) {
@@ -308,6 +302,23 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         + DateUtil.toDateStr(lockDate) + ".",
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
+            }
+
+            if (chkAmount.isSelected()) {
+                OPDConfirDialog dialog = new OPDConfirDialog(currVou);
+                status = dialog.isStatus();
+            } else {
+                status = true;
+            }
+
+            String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
+            if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
+                if (currVou.getVouBalance() != 0) {
+                    log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + currVou.getVouBalance());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                            "Paid Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
 
             if (status) {
@@ -408,7 +419,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             currVou.getPaid(), currVou.getTaxA(), desp);*/
                     uploadToAccount(currVou.getOpdInvId());
                     log.info("After uploadToAccount." + new Date());
-
+                    
+                    insertMedUsage(currVou);
+                    
                     newForm();
                 } catch (Exception ex) {
                     dao.rollBack();
@@ -424,6 +437,37 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
     }
 
+    private void insertMedUsage(OPDHis odh) {
+        if (!odh.isDeleted()) {
+            deleteMedUsage(odh.getOpdInvId());
+            try {
+                String strSql = "insert into med_usaged(vou_type, vou_no, service_id, med_id, unit_qty,\n"
+                        + "       unit_id, qty_smallest, created_date, updated_date)\n"
+                        + "select 'OPD', vou_no, odh.service_id, omu.med_id, omu.unit_qty,\n"
+                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date\n"
+                        + "  from opd_details_his odh\n"
+                        + "  join opd_med_usage omu on odh.service_id = omu.service_id\n"
+                        + " where odh.vou_no = '" + odh.getOpdInvId() + "'";
+                dao.execSql(strSql);
+            } catch (Exception ex) {
+                log.error("insertMedUsage : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+        }
+    }
+
+    private void deleteMedUsage(String vouNo){
+        String strDelete = "delete from med_usaged where vou_type = 'OPD' and vou_no = '" + vouNo + "'";
+        try{
+            dao.execSql(strDelete);
+        }catch(Exception ex){
+            log.error("deleteMedUsage : vouNo:" + vouNo + " : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+    }
+    
     @Override
     public void newForm() {
         isDeleteCopy = false;
@@ -534,6 +578,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         vouEngine.updateVouNo();
                     }
                     uploadToAccount(currVou.getOpdInvId());
+                    deleteMedUsage(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("save : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -608,6 +653,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     vouEngine.updateVouNo();
                 }
                 uploadToAccount(currVou.getOpdInvId());
+                deleteMedUsage(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -727,6 +773,16 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                     status = true;
                 }
 
+                String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
+                if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
+                    if (currVou.getVouBalance() != 0) {
+                        log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + currVou.getVouBalance());
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                                "Paid Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+
                 if (status) {
                     try {
                         if (lblStatus.getText().equals("NEW")) {
@@ -783,6 +839,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                                 desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                             }
                             uploadToAccount(currVou.getOpdInvId());
+                            insertMedUsage(currVou);
                         }
                     } catch (Exception ex) {
                         dao.rollBack();
@@ -1383,7 +1440,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         String admissionNo = "-";
 
         if (pt != null) {
-            admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+            //admissionNo = Util1.isNull(pt.getAdmissionNo(), "-");
+            admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
         }
 
         if (!admissionNo.equals("-")) {
@@ -1471,14 +1529,6 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         }
 
         double vouBalance = NumberUtil.NZero(txtVouBalance.getText());
-        if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
-            if (vouBalance != 0) {
-                log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + vouBalance);
-                JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
-                        "Paid Error", JOptionPane.ERROR_MESSAGE);
-                return false;
-            }
-        }
 
         if (!DateUtil.isValidDate(txtDate.getText())) {
             log.error("OPD date error : " + txtVouNo.getText());

@@ -6,12 +6,15 @@
 package com.cv.app.ot.database.entity;
 
 import com.cv.app.pharmacy.database.entity.ItemUnit;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  *
@@ -24,7 +27,9 @@ public class OTMedUsage implements java.io.Serializable{
     private Float unitQty;
     private ItemUnit unit;
     private Float qtySmallest;
-
+    private Date createdDate;
+    private Date updatedDate;
+    
     public OTMedUsage(){
         key = new OTMedUsageKey();
     }
@@ -64,5 +69,25 @@ public class OTMedUsage implements java.io.Serializable{
 
     public void setQtySmallest(Float qtySmallest) {
         this.qtySmallest = qtySmallest;
+    }
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="created_date")
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="updated_date")
+    public Date getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = updatedDate;
     }
 }

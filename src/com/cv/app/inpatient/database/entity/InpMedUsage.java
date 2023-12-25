@@ -5,12 +5,15 @@
 package com.cv.app.inpatient.database.entity;
 
 import com.cv.app.pharmacy.database.entity.ItemUnit;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  *
@@ -23,6 +26,8 @@ public class InpMedUsage implements java.io.Serializable{
     private Float unitQty;
     private ItemUnit unit;
     private Float qtySmall;
+    private Date createdDate;
+    private Date updatedDate;
     
     public InpMedUsage(){}
     
@@ -65,5 +70,25 @@ public class InpMedUsage implements java.io.Serializable{
 
     public void setKey(MedUsageKey key) {
         this.key = key;
+    }
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="created_date")
+    public Date getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="updated_date")
+    public Date getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = updatedDate;
     }
 }

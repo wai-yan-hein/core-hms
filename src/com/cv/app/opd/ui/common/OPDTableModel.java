@@ -328,16 +328,18 @@ public class OPDTableModel extends AbstractTableModel {
                 break;
         }
 
-        if (bookType.equals("Emergency")) {
-            if (NumberUtil.isNumber(Util1.getPropValue("system.emergency.percent"))) {
-                float percent = Float.parseFloat(Util1.getPropValue("system.emergency.percent"));
-                double price = record.getPrice();
-                double percentPrice = price * (percent / 100);
-                log.info("Emergency Price : % " + percent + " New Price : " + percentPrice);
-                record.setPrice(NumberUtil.roundTo(price + percentPrice, 0));
+        if (bookType != null) {
+            if (bookType.equals("Emergency")) {
+                if (NumberUtil.isNumber(Util1.getPropValue("system.emergency.percent"))) {
+                    float percent = Float.parseFloat(Util1.getPropValue("system.emergency.percent"));
+                    double price = record.getPrice();
+                    double percentPrice = price * (percent / 100);
+                    log.info("Emergency Price : % " + percent + " New Price : " + percentPrice);
+                    record.setPrice(NumberUtil.roundTo(price + percentPrice, 0));
+                }
             }
         }
-
+        
         observer.selected("CAL-TOTAL", "CAL-TOTAL");
         calculateAmount(row);
         fireTableRowsUpdated(row, row);
@@ -988,8 +990,8 @@ public class OPDTableModel extends AbstractTableModel {
                         double price = odh.getService().getFees();
                         double incValue = price * (percent / 100);
                         odh.setPrice(price + incValue);
-                        odh.setAmount(NumberUtil.FloatZero(odh.getQuantity())*
-                                NumberUtil.NZero(odh.getPrice()));
+                        odh.setAmount(NumberUtil.FloatZero(odh.getQuantity())
+                                * NumberUtil.NZero(odh.getPrice()));
                     }
                 }
             }

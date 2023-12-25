@@ -73,8 +73,17 @@ public class SaleHis implements java.io.Serializable {
     private Long exrId;
     private String btId; //Bill transfer id
     private Float emgPercent;
-    
+
     public SaleHis() {
+        vouTotal = 0d;
+        paid = 0d;
+        discount = 0d;
+        balance = 0d;
+        expenseTotal = 0d;
+        discP = 0d;
+        taxAmt = 0d;
+        taxP = 0d;
+        paidCurrencyAmt = 0d;
     }
 
     @Column(name = "balance")
@@ -600,8 +609,8 @@ public class SaleHis implements java.io.Serializable {
     public void setBtId(String btId) {
         this.btId = btId;
     }
-    
-    @Column(name="emg_percent")
+
+    @Column(name = "emg_percent")
     public Float getEmgPercent() {
         return emgPercent;
     }
