@@ -81,8 +81,13 @@ public class OPDTableModel extends AbstractTableModel {
         }
 
         OPDDetailHis record = listOPDDetailHis.get(row);
-        boolean isAlreadyP = isAlreadyPay(record);
-
+        if(isAlreadyPay(record)){
+            return false;
+        }
+        if(isAlreadyResult(record)){
+            return false;
+        }
+        
         if (column == 1 || column == 3 || column == 8) {
             if (column == 3) {
                 if (record.getService() == null) {
@@ -90,9 +95,6 @@ public class OPDTableModel extends AbstractTableModel {
                 } else if (vouStatus.equals("EDIT")) {
                     if (Util1.hashPrivilege("OPDVoucherEditChange")) {
                         if (!record.getPkgItem()) {
-                            if (isAlreadyP) {
-                                return !isAlreadyP;
-                            }
                             return record.getService().isCfs();
                         } else {
                             return false;
@@ -101,9 +103,6 @@ public class OPDTableModel extends AbstractTableModel {
                         return false;
                     }
                 } else if (!record.getPkgItem()) {
-                    if (isAlreadyP) {
-                        return !isAlreadyP;
-                    }
                     return record.getService().isCfs();
                 } else {
                     return false;
@@ -115,9 +114,6 @@ public class OPDTableModel extends AbstractTableModel {
              return true;
              } else {*/ if (vouStatus.equals("EDIT")) {
             if (!record.getPkgItem()) {
-                if (isAlreadyP) {
-                    return !isAlreadyP;
-                }
                 if (canEdit) {
                     return canEdit;
                 } else {
@@ -127,9 +123,6 @@ public class OPDTableModel extends AbstractTableModel {
                 return false;
             }
         } else if (!record.getPkgItem()) {
-            if (isAlreadyP) {
-                return !isAlreadyP;
-            }
             return true;
         } else {
             return false;
@@ -402,6 +395,12 @@ public class OPDTableModel extends AbstractTableModel {
             JOptionPane.showMessageDialog(Util1.getParent(),
                     "Doctor payment already made. You cannot delete this service.",
                     "Doctor payment", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if(isAlreadyResult(opdh)){
+            JOptionPane.showMessageDialog(Util1.getParent(),
+                    "Lab result already finished. You cannot delete this service.",
+                    "Lab Result", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (!opdh.getPkgItem()) {
@@ -969,6 +968,21 @@ public class OPDTableModel extends AbstractTableModel {
         return status;
     }
 
+    public boolean isResultAlready() {
+        boolean status = false;
+        for (OPDDetailHis record : listOPDDetailHis) {
+            if (record.isCompleteStatus()) {
+                status = true;
+                break;
+            }
+        }
+        return status;
+    }
+    
+    private boolean isAlreadyResult(OPDDetailHis record) {
+        return record.isCompleteStatus();
+    }
+    
     public void setCalObserver(CalculateObserver calObserver) {
         this.calObserver = calObserver;
     }

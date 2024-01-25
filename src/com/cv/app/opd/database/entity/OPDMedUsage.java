@@ -5,6 +5,7 @@
 package com.cv.app.opd.database.entity;
 
 import com.cv.app.pharmacy.database.entity.ItemUnit;
+import com.cv.app.pharmacy.database.entity.Location;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -28,6 +29,8 @@ public class OPDMedUsage implements java.io.Serializable{
     private Float qtySmall;
     private Date createdDate;
     private Date updatedDate;
+    private Location location;
+    private String calcStatus;
     
     public OPDMedUsage(){}
     
@@ -90,5 +93,24 @@ public class OPDMedUsage implements java.io.Serializable{
 
     public void setUpdatedDate(Date updatedDate) {
         this.updatedDate = updatedDate;
+    }
+
+    @ManyToOne
+    @JoinColumn(name="location_id")
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    @Column(name="calc_status")
+    public String getCalcStatus() {
+        return calcStatus;
+    }
+
+    public void setCalcStatus(String calcStatus) {
+        this.calcStatus = calcStatus;
     }
 }

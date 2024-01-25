@@ -9,6 +9,7 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.ot.database.entity.OTMedUsage;
 import com.cv.app.ot.database.entity.OTMedUsageKey;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
@@ -29,7 +30,7 @@ public class OTMedUsageTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(OTMedUsageTableModel.class.getName());
     private AbstractDataAccess dao;
     private List<OTMedUsage> listOTMedUsage = new ArrayList();
-    private final String[] columnNames = {"Code", "Description", "Qty", "Unit"};
+    private final String[] columnNames = {"Code", "Description", "Qty", "Unit", "Location"};
     private int srvId = -1;
     private MedicineUP medUp;
     private SelectionObserver observer;
@@ -49,7 +50,7 @@ public class OTMedUsageTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        if (column == 0 || column == 2) {
+        if (column == 0 || column == 2 || column == 4) {
             return true;
         } else {
             return false;
@@ -67,6 +68,8 @@ public class OTMedUsageTableModel extends AbstractTableModel {
                 return Integer.class;
             case 3: //Unit
                 return String.class;
+            case 4:
+                return Location.class;
             default:
                 return Object.class;
         }
@@ -105,6 +108,8 @@ public class OTMedUsageTableModel extends AbstractTableModel {
                 } else {
                     return null;
                 }
+            case 4: //Location
+                return record.getLocation();
             default:
                 return null;
         }
@@ -167,6 +172,13 @@ public class OTMedUsageTableModel extends AbstractTableModel {
                         }
                     }
                     record.setUpdatedDate(new Date());
+                    break;
+                case 4: //Location
+                    if(value == null){
+                        record.setLocation(null);
+                    }else{
+                        record.setLocation((Location)value);
+                    }
                     break;
             }
         } catch (Exception ex) {
@@ -248,10 +260,10 @@ public class OTMedUsageTableModel extends AbstractTableModel {
     private void bkRecord(OTMedUsage record, String option) {
         try {
             String strSql = "insert into bk_ot_med_usage(service_id, med_id, unit_qty, unit_id, \n"
-                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option)\n"
+                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option, location_id)\n"
                     + "select service_id, med_id, unit_qty, unit_id, \n"
                     + "       qty_smallest, created_date, updated_date, now(), '" + Global.loginUser.getUserId() + "',\n"
-                    + " '" + option + "' \n"
+                    + " '" + option + "', location_id \n"
                     + "  from ot_med_usage\n"
                     + " where service_id = " + record.getKey().getServiceId()
                     + " and med_id = '" + record.getKey().getMed().getMedId() + "'";

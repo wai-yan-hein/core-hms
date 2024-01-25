@@ -9,6 +9,7 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.opd.database.entity.MedUsageKey;
 import com.cv.app.opd.database.entity.OPDMedUsage;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
@@ -29,12 +30,13 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(OPDMedUsageTableModel.class.getName());
     private AbstractDataAccess dao;
     private List<OPDMedUsage> listOPDMedUsage = new ArrayList();
-    private String[] columnNames = {"Code", "Description", "Qty", "Unit"};
+    private String[] columnNames = {"Code", "Description", "Qty", "Unit", "Location", "Calc Status"};
     private int srvId = -1;
     private MedicineUP medUp;
     private SelectionObserver observer;
     private boolean versionUpdate = false;
     private String deletedList;
+    private int machineId = 0;
 
     public OPDMedUsageTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
@@ -49,7 +51,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        if (column == 0 || column == 2) {
+        if (column == 0 || column == 2 || column == 4 || column == 5) {
             return true;
         } else {
             return false;
@@ -64,8 +66,12 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
             case 1: //Description
                 return String.class;
             case 2: //Qty
-                return Integer.class;
+                return Float.class;
             case 3: //Unit
+                return String.class;
+            case 4: //Location
+                return Location.class;
+            case 5: //Calc Status
                 return String.class;
             default:
                 return Object.class;
@@ -105,6 +111,10 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                 } else {
                     return null;
                 }
+            case 4: //Location
+                return record.getLocation();
+            case 5: //Calc Status
+                return record.getCalcStatus();
             default:
                 return null;
         }
@@ -138,6 +148,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                         record.setQtySmall(null);
                         record.setUnitQty(null);
                         record.setCreatedDate(new Date());
+                        record.setCalcStatus("AUTO");
                     }
                     break;
                 case 2:
@@ -167,6 +178,20 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                         }
                     }
                     record.setUpdatedDate(new Date());
+                    break;
+                case 4: //Location
+                    if(value == null){
+                        record.setLocation(null);
+                    }else{
+                        record.setLocation((Location)value);
+                    }
+                    break;
+                case 5: //Calc Status
+                    if(value == null){
+                        record.setCalcStatus("AUTO");
+                    }else{
+                        record.setCalcStatus(value.toString());
+                    }
                     break;
             }
         } catch (Exception ex) {
@@ -207,15 +232,21 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
         fireTableRowsDeleted(0, listOPDMedUsage.size() - 1);
     }
 
-    public void setSrvId(int srvId) {
+    public void setSrvId(int srvId, int machineId) {
         versionUpdate = false;
         this.srvId = srvId;
+        this.machineId = machineId;
         getMedUsage();
     }
 
+    public void setMachineId(int machineId){
+        this.machineId = machineId;
+        getMedUsage();
+    }
+    
     private void getMedUsage() {
         try {
-            listOPDMedUsage = dao.findAll("OPDMedUsage", "key.service = " + srvId);
+            listOPDMedUsage = dao.findAll("OPDMedUsage", "key.service = " + srvId + " and key.labMachine = " + machineId);
             addNewRow();
         } catch (Exception ex) {
             log.error("getMedUsage : " + ex.getMessage());
@@ -240,6 +271,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
     private void saveRecord(OPDMedUsage record) {
         try {
             bakRecord(record, "EDIT");
+            record.getKey().setLabMachine(machineId);
             dao.save(record);
             addNewRow();
             if (!versionUpdate) {
@@ -257,10 +289,10 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
     private void bakRecord(OPDMedUsage record, String option) {
         try {
             String strSql = "insert into bk_opd_med_usage(service_id, med_id, unit_qty, unit_id, \n"
-                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option)\n"
+                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option, location_id, machine_id)\n"
                     + "select service_id, med_id, unit_qty, unit_id, \n"
                     + "       qty_smallest, created_date, updated_date, now(), '" + Global.loginUser.getUserId() + "',\n"
-                    + " '" + option + "' \n"
+                    + " '" + option + "', location_id, machine_id \n"
                     + "  from opd_med_usage\n"
                     + " where service_id = " + record.getKey().getService()
                     + " and med_id = '" + record.getKey().getMed().getMedId() + "'";

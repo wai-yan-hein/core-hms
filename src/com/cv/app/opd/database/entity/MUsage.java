@@ -1,18 +1,13 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.cv.app.ot.database.entity;
+package com.cv.app.opd.database.entity;
 
-import com.cv.app.pharmacy.database.entity.ItemUnit;
-import com.cv.app.pharmacy.database.entity.Location;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -22,26 +17,24 @@ import javax.persistence.TemporalType;
  * @author winswe
  */
 @Entity
-@Table(name="ot_med_usage")
-public class OTMedUsage implements java.io.Serializable{
-    private OTMedUsageKey key;
+@Table(name="med_usaged")
+public class MUsage implements java.io.Serializable {
+    private MUKey key;
     private Float unitQty;
-    private ItemUnit unit;
+    private String unitId;
     private Float qtySmallest;
     private Date createdDate;
     private Date updatedDate;
-    private Location location;
-    
-    public OTMedUsage(){
-        key = new OTMedUsageKey();
-    }
-    
+    private Integer location;
+    private Double smallestCost;
+    private Double ttlCost;
+
     @EmbeddedId
-    public OTMedUsageKey getKey() {
+    public MUKey getKey() {
         return key;
     }
 
-    public void setKey(OTMedUsageKey key) {
+    public void setKey(MUKey key) {
         this.key = key;
     }
 
@@ -54,14 +47,13 @@ public class OTMedUsage implements java.io.Serializable{
         this.unitQty = unitQty;
     }
 
-    @ManyToOne
-    @JoinColumn(name="unit_id")
-    public ItemUnit getUnit() {
-        return unit;
+    @Column(name="unit_id")
+    public String getUnitId() {
+        return unitId;
     }
 
-    public void setUnit(ItemUnit unit) {
-        this.unit = unit;
+    public void setUnitId(String unitId) {
+        this.unitId = unitId;
     }
 
     @Column(name="qty_smallest")
@@ -72,7 +64,7 @@ public class OTMedUsage implements java.io.Serializable{
     public void setQtySmallest(Float qtySmallest) {
         this.qtySmallest = qtySmallest;
     }
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="created_date")
     public Date getCreatedDate() {
@@ -93,13 +85,30 @@ public class OTMedUsage implements java.io.Serializable{
         this.updatedDate = updatedDate;
     }
 
-    @ManyToOne
-    @JoinColumn(name="location_id")
-    public Location getLocation() {
+    @Column(name="location_id")
+    public Integer getLocation() {
         return location;
     }
 
-    public void setLocation(Location location) {
+    public void setLocation(Integer location) {
         this.location = location;
+    }
+
+    @Column(name="smallest_cost")
+    public Double getSmallestCost() {
+        return smallestCost;
+    }
+
+    public void setSmallestCost(Double smallestCost) {
+        this.smallestCost = smallestCost;
+    }
+
+    @Column(name="total_cost")
+    public Double getTtlCost() {
+        return ttlCost;
+    }
+
+    public void setTtlCost(Double ttlCost) {
+        this.ttlCost = ttlCost;
     }
 }

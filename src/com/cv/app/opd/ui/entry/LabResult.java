@@ -12,28 +12,40 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.emr.database.entity.AgeRange;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.LabMachine;
 import com.cv.app.opd.database.entity.LabResultHis;
 import com.cv.app.opd.database.entity.LabResultHisKey;
+import com.cv.app.opd.database.entity.MUKey;
+import com.cv.app.opd.database.entity.MUsage;
 import com.cv.app.opd.database.entity.OPDHis;
 import com.cv.app.opd.database.entity.OPDLabResult;
+import com.cv.app.opd.database.entity.OPDMedUsage;
 import com.cv.app.opd.database.entity.temp.TempLabResultFilter;
+import com.cv.app.opd.database.tempentity.LabUsage;
 import com.cv.app.opd.database.view.VOpd;
 import com.cv.app.opd.ui.common.ButtonColumn;
 import com.cv.app.opd.ui.common.LRLabTestResultTableModel;
 import com.cv.app.opd.ui.common.LRLabTestTableModel;
 import com.cv.app.opd.ui.common.LabResultTableCellEditor;
 import com.cv.app.opd.ui.common.PathoCellEditor;
+import com.cv.app.opd.ui.util.LabMachineAutoCompleter;
+import com.cv.app.opd.ui.util.LabUsageChoiceDialog;
 import com.cv.app.opd.ui.util.OPDVouSearchDialog;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
+import com.cv.app.pharmacy.database.tempentity.StockCosting;
 import com.cv.app.pharmacy.ui.common.FormAction;
+import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,6 +59,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.apache.log4j.Logger;
@@ -126,6 +139,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
         txtPtName.setText(null);
         txtNatureOfSpecimen.setText(null);
         txtExaminationRequired.setText(null);
+        txtBedNo.setText(null);
         assignDefaultValue();
         tblLabResultTableModel.setListLRH(new ArrayList());
         tblLabTestTableModel.setListVOPD(new ArrayList());
@@ -207,14 +221,27 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
             Map<String, Object> params = new HashMap();
             params.put("user_id", Global.machineId);
             params.put("invoiceNo", txtVouNo.getText());
-            params.put("patientName", txtPtName.getText());
+            if (!txtRemark.getText().trim().isEmpty()) {
+                params.put("patientName", txtRemark.getText().trim());
+            } else {
+                params.put("patientName", txtPtName.getText());
+            }
             params.put("regNo", txtRegNo.getText());
             params.put("resultDate", txtResultDate.getText());
             params.put("compName", Util1.getPropValue("report.company.name"));
             params.put("comAddress", Util1.getPropValue("report.address"));
             params.put("phoneNo", Util1.getPropValue("report.phone"));
+            log.info("Age : " + strAge);
             params.put("age", strAge);
             params.put("sex", strSex);
+            params.put("user", Global.loginUser.getUserShortName());
+            params.put("room_no", txtBedNo.getText());
+
+            if (!txtDonor.getText().trim().isEmpty()) {
+                params.put("premark", txtDonor.getText().trim());
+            } else {
+                params.put("premark", "");
+            }
             String strTmpDr = strDrName;
 
             if (testRefDrName != null) {
@@ -283,91 +310,96 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
         switch (source.toString()) {
             case "OPDVouList":
                 try {
-                if (selectObj != null) {
-                    VoucherSearch vs = (VoucherSearch) selectObj;
-                    OPDHis opdHis = (OPDHis) dao.find(OPDHis.class, vs.getInvNo());
-                    if (opdHis.isDeleted()) {
-                        JOptionPane.showMessageDialog(Util1.getParent(), "This voucher is deleted.",
-                                "Deleted", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        newForm();
-                        if (opdHis.getPatient() != null) {
-                            if (opdHis.getDoctor() != null) {
-                                strDrName = opdHis.getDoctor().getDoctorName();
-                            } else if (opdHis.getPatient().getDoctor() != null) {
-                                strDrName = opdHis.getPatient().getDoctor().toString();
-                            } else {
-                                strDrName = "";
-                            }
+                    if (selectObj != null) {
+                        VoucherSearch vs = (VoucherSearch) selectObj;
+                        OPDHis opdHis = (OPDHis) dao.find(OPDHis.class, vs.getInvNo());
+                        if (opdHis.isDeleted()) {
+                            JOptionPane.showMessageDialog(Util1.getParent(), "This voucher is deleted.",
+                                    "Deleted", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            newForm();
+                            if (opdHis.getPatient() != null) {
+                                if (opdHis.getDoctor() != null) {
+                                    strDrName = opdHis.getDoctor().getDoctorName();
+                                } else if (opdHis.getPatient().getDoctor() != null) {
+                                    strDrName = opdHis.getPatient().getDoctor().toString();
+                                } else {
+                                    strDrName = "";
+                                }
 
-                            if (opdHis.getPatient().getAge() != null) {
-                                strAge = opdHis.getPatient().getAge().toString();
-                            } else {
-                                strAge = "";
-                            }
-                            if (opdHis.getPatient().getSex() != null) {
-                                strSex = opdHis.getPatient().getSex().toString();
-                            } else {
-                                strSex = "";
-                            }
-                            txtRegNo.setText(opdHis.getPatient().getRegNo());
+                                if (opdHis.getPatient().getAge() != null) {
+                                    strAge = opdHis.getPatient().getAge().toString();
+                                } else {
+                                    strAge = "";
+                                }
+                                if (strAge.equals("0") || strAge.isEmpty()) {
+                                    if (opdHis.getAge() != null) {
+                                        strAge = opdHis.getAge().toString();
+                                    }
+                                }
+                                if (opdHis.getPatient().getSex() != null) {
+                                    strSex = opdHis.getPatient().getSex().toString();
+                                } else {
+                                    strSex = "";
+                                }
+                                txtRegNo.setText(opdHis.getPatient().getRegNo());
 
-                            if (opdHis.getAdmissionNo() != null) {
-                                AdmissionKey key = new AdmissionKey();
-                                key.setAmsNo(opdHis.getAdmissionNo());
-                                key.setRegister(opdHis.getPatient());
-                                Ams ams = (Ams) dao.find(Ams.class, key);
-                                if (ams != null) {
-                                    if (ams.getBuildingStructure() != null) {
-                                        if (ams.getBuildingStructure().getCode() != null) {
-                                            if (!ams.getBuildingStructure().getCode().isEmpty()) {
-                                                txtBedNo.setText(ams.getBuildingStructure().getCode());
+                                if (opdHis.getAdmissionNo() != null) {
+                                    AdmissionKey key = new AdmissionKey();
+                                    key.setAmsNo(opdHis.getAdmissionNo());
+                                    key.setRegister(opdHis.getPatient());
+                                    Ams ams = (Ams) dao.find(Ams.class, key);
+                                    if (ams != null) {
+                                        if (ams.getBuildingStructure() != null) {
+                                            if (ams.getBuildingStructure().getCode() != null) {
+                                                if (!ams.getBuildingStructure().getCode().isEmpty()) {
+                                                    txtBedNo.setText(ams.getBuildingStructure().getCode());
+                                                } else {
+                                                    txtBedNo.setText(ams.getBuildingStructure().getDescription());
+                                                }
                                             } else {
                                                 txtBedNo.setText(ams.getBuildingStructure().getDescription());
                                             }
-                                        } else {
-                                            txtBedNo.setText(ams.getBuildingStructure().getDescription());
                                         }
                                     }
                                 }
-                            }
-                        } else {
-                            if (opdHis.getDoctor() != null) {
-                                strDrName = opdHis.getDoctor().getDoctorName();
                             } else {
-                                strDrName = "";
-                            }
+                                if (opdHis.getDoctor() != null) {
+                                    strDrName = opdHis.getDoctor().getDoctorName();
+                                } else {
+                                    strDrName = "";
+                                }
 
-                            if (opdHis.getAge() != null) {
-                                strAge = opdHis.getAge().toString();
+                                if (opdHis.getAge() != null) {
+                                    strAge = opdHis.getAge().toString();
+                                }
+                                strSex = "";
+                                txtRegNo.setText("");
                             }
-                            strSex = "";
-                            txtRegNo.setText("");
+                            strDate = opdHis.getInvDate();
+                            if (opdHis.getPatient() != null) {
+                                txtPtName.setText(opdHis.getPatient().getPatientName());
+                            } else {
+                                txtPtName.setText(opdHis.getPatientName());
+                            }
+                            txtVouNo.setText(opdHis.getOpdInvId());
+                            txtDonor.setText(opdHis.getDonorName());
+                            txtRemark.setText(opdHis.getRemark());
+                            txtNatureOfSpecimen.setText(opdHis.getNos());
+                            txtExaminationRequired.setText(opdHis.getExamRequired());
+                            List<VOpd> listOPD = dao.findAllHSQL("select o from VOpd o where o.key.vouNo = '"
+                                    + opdHis.getOpdInvId() + "' and o.groupId = 1");
+                            tblLabTestTableModel.setListVOPD(listOPD);
+                            cboAgeRange.setEnabled(true);
+                            cboAgeRange.setSelectedItem(opdHis.getAgeRange());
                         }
-                        strDate = opdHis.getInvDate();
-                        if (opdHis.getPatient() != null) {
-                            txtPtName.setText(opdHis.getPatient().getPatientName());
-                        } else {
-                            txtPtName.setText(opdHis.getPatientName());
-                        }
-                        txtVouNo.setText(opdHis.getOpdInvId());
-                        txtDonor.setText(opdHis.getDonorName());
-                        txtRemark.setText(opdHis.getRemark());
-                        txtNatureOfSpecimen.setText(opdHis.getNos());
-                        txtExaminationRequired.setText(opdHis.getExamRequired());
-                        List<VOpd> listOPD = dao.findAllHSQL("select o from VOpd o where o.key.vouNo = '"
-                                + opdHis.getOpdInvId() + "' and o.groupId = 1");
-                        tblLabTestTableModel.setListVOPD(listOPD);
-                        cboAgeRange.setEnabled(true);
-                        cboAgeRange.setSelectedItem(opdHis.getAgeRange());
                     }
+                } catch (Exception ex) {
+                    log.error("selected OPDVouLIst : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                } finally {
+                    dao.close();
                 }
-            } catch (Exception ex) {
-                log.error("selected OPDVouLIst : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-            } finally {
-                dao.close();
-            }
-            break;
+                break;
         }
     }
 
@@ -429,6 +461,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
             tblLabTest.getColumnModel().getColumn(3).setCellEditor(new PathoCellEditor());
             tblLabTest.getColumnModel().getColumn(4).setPreferredWidth(5);
             tblLabTest.getColumnModel().getColumn(5).setPreferredWidth(5);
+            tblLabTest.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
             JComboBox cboLabMachine = new JComboBox();
             BindingUtil.BindCombo(cboLabMachine, dao.findAllHSQL("select o from LabMachine o order by o.lMachineName"));
@@ -451,6 +484,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
 
             tblLabResult.getColumnModel().getColumn(1).setCellEditor(
                     new LabResultTableCellEditor(dao));//Result
+            tblLabResult.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
             tblLabResult.getColumnModel().getColumn(4).setCellEditor(
                     new LabResultTableCellEditor(dao));//Remark
 
@@ -468,6 +502,7 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
                         selectRow = tblLabTest.convertRowIndexToModel(tblLabTest.getSelectedRow());
                     }
 
+                    log.info("Select Status : " + e.getValueIsAdjusting());
                     if (selectRow >= 0) {
                         selectedTest(selectRow);
                     }
@@ -568,6 +603,12 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
                     }
                 }
                 hm.put(test.getKey().getServiceId(), listLRH);
+
+                if (Util1.getPropValue("system.opd.labstock").equals("Y")) {
+                    if (!test.isCompleteStatus()) {
+                        assignLabStockInfo(test, selectRow);
+                    }
+                }
             } catch (Exception ex) {
                 log.error("selectedTest : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
             } finally {
@@ -576,6 +617,267 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
         }
 
         tblLabResultTableModel.setListLRH(hm.get(test.getKey().getServiceId()));
+    }
+
+    private void assignLabStockInfo(VOpd test, int row) {
+        try {
+            int serviceId = test.getKey().getServiceId();
+            ResultSet rs = dao.execSQL("SELECT service_id, count(machine_id) as mcnt\n"
+                    + "from opd_med_usage omu \n"
+                    + "where service_id = " + serviceId + " and ifnull(unit_qty,0) != 0 and machine_id !=0 \n"
+                    + "GROUP by service_id ");
+            int machineId = 0;
+            LabMachine selMacine = null;
+
+            if (rs != null) {
+                if (rs.next()) {
+                    if (rs.getInt("mcnt") > 1) { //More then one machine
+                        String strSql = "select * from lab_machine where lab_machine_id in (select distinct "
+                                + "machine_id from opd_med_usage where service_id = " + serviceId + ")";
+                        ResultSet rs1 = dao.execSQL(strSql);
+                        if (rs1 != null) {
+                            List<LabMachine> listLM = new ArrayList();
+                            while (rs1.next()) {
+                                LabMachine lm = new LabMachine();
+                                lm.setlMachineId(rs1.getInt("lab_machine_id"));
+                                lm.setlMachineName(rs1.getString("lab_machine_name"));
+                                listLM.add(lm);
+                            }
+                            rs1.close();
+
+                            LabMachineAutoCompleter lmac = new LabMachineAutoCompleter(listLM, Util1.getParent());
+                            lmac.setLocationRelativeTo(null);
+                            lmac.setVisible(true);
+                            if (lmac.isSelected()) {
+                                machineId = lmac.getSelectMachine().getlMachineId();
+                                selMacine = lmac.getSelectMachine();
+                            }
+                        }
+                    } else {
+                        ResultSet rs1 = dao.execSQL("select distinct machine_id from opd_med_usage where service_id = " + serviceId);
+                        if (rs1 != null) {
+                            if (rs1.next()) {
+                                machineId = rs1.getInt("machine_id");
+                                rs1.close();
+                                selMacine = (LabMachine) dao.find(LabMachine.class, machineId);
+                            }
+                        }
+                    }
+                }
+
+                rs.close();
+            }
+
+            tblLabTestTableModel.setMachine(row, selMacine);
+
+            String strSql = "select o from OPDMedUsage o where o.key.service = "
+                    + serviceId + " and o.key.labMachine = " + machineId;
+            List<OPDMedUsage> listOMU = dao.findAllHSQL(strSql);
+            /*String medIds = getMedId(listOMU);
+            
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            log.info("Start cost calculation.");
+            insertStockFilterCodeMed(medIds);
+            DateUtil.setStartTime();
+            calculateMed();
+            log.info("Cost calculate duration : " + DateUtil.getDuration());
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));*/
+
+            dao.execSql("delete from med_usaged where vou_type = 'OPD' and vou_no = '"
+                    + txtVouNo.getText() + "' and service_id = " + serviceId);
+
+            boolean needToAsk = false;
+            for (OPDMedUsage omu : listOMU) {
+                if (omu.getCalcStatus().equals("ASK")) {
+                    needToAsk = true;
+                } else {
+                    MUKey mkey = new MUKey();
+                    String medId = omu.getKey().getMed().getMedId();
+                    mkey.setMedId(medId);
+                    mkey.setVouType("OPD");
+                    mkey.setVouNo(txtVouNo.getText());
+                    mkey.setServiceId(omu.getKey().getService());
+
+                    MUsage mu = new MUsage();
+                    mu.setKey(mkey);
+                    mu.setCreatedDate(new Date());
+                    mu.setLocation(omu.getLocation().getLocationId());
+                    mu.setQtySmallest(omu.getQtySmall());
+                    //double sCost = getSmallestCost(medId);
+                    double sCost = 0;
+                    mu.setSmallestCost(sCost);
+                    mu.setTtlCost((sCost * mu.getQtySmallest()) * test.getQty());
+                    mu.setUnitId(omu.getUnit().getItemUnitCode());
+                    mu.setUnitQty(omu.getUnitQty());
+                    log.info("Insert to med_usaged");
+                    dao.save(mu);
+                }
+            }
+
+            if (needToAsk) { //Need to edit
+                ResultSet rs1 = dao.execSQL("SELECT omu.med_id, m.med_name, omu.unit_qty, "
+                        + "omu.unit_id, omu.qty_smallest, omu.location_id, omu.machine_id \n"
+                        + "FROM opd_med_usage omu \n"
+                        + "join medicine m on omu.med_id = m.med_id \n"
+                        + "WHERE service_id = " + test.getKey().getServiceId() + " and calc_status = 'ASK'");
+                if (rs1 != null) {
+                    List<LabUsage> list = new ArrayList();
+                    log.info("Show ask list");
+                    while (rs1.next()) {
+                        LabUsage lu = new LabUsage();
+                        lu.setDesc(rs1.getString("med_name"));
+                        lu.setLocationId(rs1.getInt("location_id"));
+                        lu.setMedId(rs1.getString("med_id"));
+                        lu.setQty(rs1.getString("unit_qty") + " " + rs1.getString("unit_id"));
+                        lu.setQtySmallest(rs1.getFloat("qty_smallest"));
+                        lu.setUnitId(rs1.getString("unit_id"));
+                        lu.setUnitQty(rs1.getFloat("unit_qty"));
+
+                        list.add(lu);
+                    }
+
+                    LabUsageChoiceDialog dailog = new LabUsageChoiceDialog(test.getKey().getVouNo(),
+                            test.getKey().getServiceId(), list, test.getQty());
+                    dailog.setLocationRelativeTo(null);
+                    dailog.setVisible(true);
+                }
+            }
+
+            insertNoMachine(test);
+            test.setCompleteStatus(Boolean.TRUE);
+            dao.execSql("update opd_details_his set complete_status = true where opd_detail_id = '" + test.getKey().getOpdDetailId() + "'");
+        } catch (Exception ex) {
+            log.error("assignLabStockInfo : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void insertNoMachine(VOpd test) {
+        int serviceId = test.getKey().getServiceId();
+        String strSql = "select o from OPDMedUsage o where o.key.service = "
+                + serviceId + " and o.key.labMachine = 0 and calc_status != 'ASK'";
+        try {
+            List<OPDMedUsage> listOMU = dao.findAllHSQL(strSql);
+            for (OPDMedUsage omu : listOMU) {
+                MUKey mkey = new MUKey();
+                String medId = omu.getKey().getMed().getMedId();
+                mkey.setMedId(medId);
+                mkey.setVouType("OPD");
+                mkey.setVouNo(txtVouNo.getText());
+                mkey.setServiceId(omu.getKey().getService());
+
+                MUsage mu = new MUsage();
+                mu.setKey(mkey);
+                mu.setCreatedDate(new Date());
+                mu.setLocation(omu.getLocation().getLocationId());
+                mu.setQtySmallest(omu.getQtySmall());
+                //double sCost = getSmallestCost(medId);
+                double sCost = 0;
+                mu.setSmallestCost(sCost);
+                mu.setTtlCost((sCost * mu.getQtySmallest()) * test.getQty());
+                mu.setUnitId(omu.getUnit().getItemUnitCode());
+                mu.setUnitQty(omu.getUnitQty());
+                log.info("Insert to med_usaged");
+                dao.save(mu);
+            }
+        } catch (Exception ex) {
+            log.error("insertNoMachine : " + ex.getMessage());
+        }
+    }
+
+    private double getSmallestCost(String medId) {
+        double cost = 0.0;
+        List<StockCosting> listStockCosting = null;
+
+        try {
+            listStockCosting = dao.findAllHSQL(
+                    "select o from StockCosting o where o.key.medicine.medId = '" + medId
+                    + "' and o.key.userId = '" + Global.machineId + "' "
+                    + "and o.key.tranOption = 'Opening'"
+            );
+        } catch (Exception ex) {
+            log.error("getSmallestCost : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+
+        if (listStockCosting != null) {
+            if (!listStockCosting.isEmpty()) {
+                StockCosting sc = listStockCosting.get(0);
+                double tmpCost = NumberUtil.NZero(sc.getTtlCost());
+                float tmpBalQty = NumberUtil.NZeroFloat(sc.getBlaQty());
+                if (tmpBalQty != 0) {
+                    cost = tmpCost / tmpBalQty;
+                }
+            }
+        }
+        return cost;
+    }
+
+    private String getMedId(List<OPDMedUsage> listOMU) {
+        String medIds = "";
+        for (OPDMedUsage omu : listOMU) {
+            if (medIds.isEmpty()) {
+                medIds = "'" + omu.getKey().getMed().getMedId() + "'";
+            } else {
+                medIds = medIds + ",'" + omu.getKey().getMed().getMedId() + "'";
+            }
+        }
+
+        return medIds;
+    }
+
+    private void insertStockFilterCodeMed(String medId) {
+        String strSQLDelete = "delete from tmp_stock_filter where user_id = '"
+                + Global.machineId + "'";
+        String strSQL = "insert into tmp_stock_filter select m.location_id, m.med_id, "
+                + " ifnull(meod.op_date, '1900-01-01'),'" + Global.machineId
+                + "' from v_med_loc m left join "
+                + "(select location_id, med_id, max(op_date) op_date from med_op_date "
+                + " where op_date < '" + DateUtil.toDateStrMYSQL(DateUtil.getTodayDateStr()) + "'";
+
+        strSQL = strSQL + " group by location_id, med_id) meod on m.med_id = meod.med_id "
+                + " and m.location_id = meod.location_id where (m.active = true or m.active = false) "
+                + "and m.calc_stock = true and m.med_id in (" + medId + ")";
+
+        try {
+            dao.open();
+            dao.execSql(strSQLDelete, strSQL);
+        } catch (Exception ex) {
+            log.error("insertStockFilterCode : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } finally {
+            dao.close();
+        }
+    }
+
+    private void calculateMed() {
+        try {
+            String deleteTmpData1 = "delete from tmp_costing_detail where user_id = '"
+                    + Global.machineId + "'";
+            String deleteTmpData2 = "delete from tmp_stock_costing where user_id = '"
+                    + Global.machineId + "'";
+            String strMethod = "AVG";
+
+            dao.execSql(deleteTmpData1, deleteTmpData2);
+            dao.commit();
+            dao.close();
+
+            String tmpDate = DateUtil.getTodayDateStr();
+            dao.execProc("gen_cost_balance",
+                    DateUtil.toDateStrMYSQL(tmpDate), "Opening",
+                    Global.machineId);
+
+            dao.execProc("insert_cost_detail",
+                    "Opening", DateUtil.toDateStrMYSQL(tmpDate),
+                    Global.machineId, strMethod);
+            dao.commit();
+
+        } catch (Exception ex) {
+            log.error("calculate : " + ex.toString());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {

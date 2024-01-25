@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 public class MedUsageKey implements Serializable{
     private Integer service;
     private Medicine med;
+    private Integer labMachine;
     
     public MedUsageKey(){}
     
@@ -44,5 +45,14 @@ public class MedUsageKey implements Serializable{
 
     public void setMed(Medicine med) {
         this.med = med;
+    }
+
+    @Column(name="machine_id")
+    public Integer getLabMachine() {
+        return labMachine;
+    }
+
+    public void setLabMachine(Integer labMachine) {
+        this.labMachine = labMachine;
     }
 }

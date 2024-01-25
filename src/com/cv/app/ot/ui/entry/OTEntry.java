@@ -319,7 +319,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), desp);*/
                 uploadToAccount(currVou.getOpdInvId());
-                insertMedUsage(currVou);
+                //insertMedUsage(currVou);
                 
                 //Paid check
                 try {
@@ -462,7 +462,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                             currVou.getVouBalance(), currVou.getDiscountA(),
                             currVou.getPaid(), currVou.getTaxA(), "");*/
                     uploadToAccount(currVou.getOpdInvId());
-                    deleteMedUsage(currVou.getOpdInvId());
+                    //deleteMedUsage(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("delete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
@@ -536,7 +536,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), "");*/
                 uploadToAccount(currVou.getOpdInvId());
-                deleteMedUsage(currVou.getOpdInvId());
+                //deleteMedUsage(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -692,7 +692,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
                         uploadToAccount(currVou.getOpdInvId());
-                        insertMedUsage(currVou);
+                        //insertMedUsage(currVou);
                     }
 
                     //Paid check
@@ -2032,9 +2032,9 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             deleteMedUsage(odh.getOpdInvId());
             try {
                 String strSql = "insert into med_usaged(vou_type, vou_no, service_id, med_id, unit_qty,\n"
-                        + "       unit_id, qty_smallest, created_date, updated_date)\n"
+                        + "       unit_id, qty_smallest, created_date, updated_date, location_id)\n"
                         + "select 'OT', vou_no, odh.service_id, omu.med_id, omu.unit_qty,\n"
-                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date\n"
+                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date, omu.location_id\n"
                         + "  from ot_details_his odh\n"
                         + "  join ot_med_usage omu on odh.service_id = omu.service_id\n"
                         + " where odh.vou_no = '" + odh.getOpdInvId() + "'";

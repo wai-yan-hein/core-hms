@@ -52,44 +52,44 @@ public class SysPropTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int column) {
-        if(listSysProperty == null){
+        if (listSysProperty == null) {
             return null;
         }
-        
-        if(listSysProperty.isEmpty()){
-            return null;
-        }
-        
-        try{
-        SysProperty prop = listSysProperty.get(row);
 
-        switch (column) {
-            case 0: //Description
-                return prop.getPropDesp();
-            case 1: //Value
-                return prop.getPropValue();
-            case 2: //Remark
-                return prop.getPropRemark();
-            default:
-                return null;
+        if (listSysProperty.isEmpty()) {
+            return null;
         }
-        }catch(Exception ex){
+
+        try {
+            SysProperty prop = listSysProperty.get(row);
+
+            switch (column) {
+                case 0: //Description
+                    return prop.getPropDesp();
+                case 1: //Value
+                    return prop.getPropValue();
+                case 2: //Remark
+                    return prop.getPropRemark();
+                default:
+                    return null;
+            }
+        } catch (Exception ex) {
             log.error("getValueAt : " + ex.getMessage());
         }
-        
+
         return null;
     }
 
     @Override
     public void setValueAt(Object value, int row, int column) {
-        if(listSysProperty == null){
+        if (listSysProperty == null) {
             return;
         }
-        
-        if(listSysProperty.isEmpty()){
+
+        if (listSysProperty.isEmpty()) {
             return;
         }
-        
+
         boolean status = false;
         try {
             SysProperty prop = listSysProperty.get(row);
@@ -129,8 +129,10 @@ public class SysPropTableModel extends AbstractTableModel {
 
             if (status) {
                 dao.save(prop);
-                Global.systemProperties.put(prop.getPropDesp(), prop.getPropValue());
                 addNewRow();
+                if (Global.systemProperties.contains(prop.getPropDesp())) {
+                    Global.systemProperties.put(prop.getPropDesp(), prop.getPropValue());
+                }
             }
         } catch (Exception ex) {
             log.error("setValueAt : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -141,7 +143,7 @@ public class SysPropTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        if(listSysProperty == null){
+        if (listSysProperty == null) {
             return 0;
         }
         return listSysProperty.size();
@@ -162,8 +164,8 @@ public class SysPropTableModel extends AbstractTableModel {
     }
 
     public SysProperty getSysProperty(int row) {
-        if(listSysProperty != null){
-            if(!listSysProperty.isEmpty()){
+        if (listSysProperty != null) {
+            if (!listSysProperty.isEmpty()) {
                 return listSysProperty.get(row);
             }
         }
@@ -171,18 +173,18 @@ public class SysPropTableModel extends AbstractTableModel {
     }
 
     public void setSysProperty(int row, SysProperty prop) {
-        if(listSysProperty != null){
-            if(!listSysProperty.isEmpty()){
+        if (listSysProperty != null) {
+            if (!listSysProperty.isEmpty()) {
                 listSysProperty.set(row, prop);
-        fireTableRowsUpdated(row, row);
+                fireTableRowsUpdated(row, row);
             }
         }
     }
 
     public void addSysProperty(SysProperty prop) {
-        if(listSysProperty != null){
-        listSysProperty.add(prop);
-        fireTableRowsInserted(listSysProperty.size() - 1, listSysProperty.size() - 1);
+        if (listSysProperty != null) {
+            listSysProperty.add(prop);
+            fireTableRowsInserted(listSysProperty.size() - 1, listSysProperty.size() - 1);
         }
     }
 
@@ -201,10 +203,10 @@ public class SysPropTableModel extends AbstractTableModel {
 
     public void addNewRow() {
         if (!hasNewRow()) {
-            if(listSysProperty != null){
-            listSysProperty.add(new SysProperty());
-            int index = listSysProperty.size();
-            fireTableRowsInserted(index - 1, index - 1);
+            if (listSysProperty != null) {
+                listSysProperty.add(new SysProperty());
+                int index = listSysProperty.size();
+                fireTableRowsInserted(index - 1, index - 1);
             }
         }
     }
@@ -212,10 +214,10 @@ public class SysPropTableModel extends AbstractTableModel {
     private boolean hasNewRow() {
         boolean status = true;
 
-        if(listSysProperty == null){
+        if (listSysProperty == null) {
             return false;
         }
-        
+
         if (listSysProperty.isEmpty()) {
             status = false;
         } else {

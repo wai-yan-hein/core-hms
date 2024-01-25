@@ -343,7 +343,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                 //        currVou.getVouBalance(), currVou.getDiscountA(),
                 //        currVou.getPaid(), currVou.getTaxA(), desp);
                 uploadToAccount(currVou.getOpdInvId());
-                insertMedUsage(currVou);
+                //insertMedUsage(currVou);
                 
                 if (currVou.getDcStatus() != null) {
                     log.error("dc voucher save status change : " + currVou.getOpdInvId() + " : " + currVou.getDcStatus());
@@ -408,9 +408,9 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
             deleteMedUsage(odh.getOpdInvId());
             try {
                 String strSql = "insert into med_usaged(vou_type, vou_no, service_id, med_id, unit_qty,\n"
-                        + "       unit_id, qty_smallest, created_date, updated_date)\n"
+                        + "       unit_id, qty_smallest, created_date, updated_date, location_id)\n"
                         + "select 'DC', vou_no, odh.service_id, omu.med_id, omu.unit_qty,\n"
-                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date\n"
+                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date, omu.location_id\n"
                         + "  from ot_details_his odh\n"
                         + "  join ot_med_usage omu on odh.service_id = omu.service_id\n"
                         + " where odh.vou_no = '" + odh.getOpdInvId() + "'";
@@ -554,7 +554,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             currVou.getVouBalance(), currVou.getDiscountA(),
                             currVou.getPaid(), currVou.getTaxA(), "");*/
                     uploadToAccount(currVou.getOpdInvId());
-                    deleteMedUsage(currVou.getOpdInvId());
+                    //deleteMedUsage(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("delete : " + ex.getStackTrace()[0].getLineNumber()
@@ -636,7 +636,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), "");*/
                 uploadToAccount(currVou.getOpdInvId());
-                deleteMedUsage(currVou.getOpdInvId());
+                //deleteMedUsage(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -804,7 +804,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
                         uploadToAccount(currVou.getOpdInvId());
-                        insertMedUsage(currVou);
+                        //insertMedUsage(currVou);
                     }
 
                 }

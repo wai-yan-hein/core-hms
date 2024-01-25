@@ -13,6 +13,7 @@ import com.cv.app.opd.ui.common.LabResultTableModel;
 import com.cv.app.opd.ui.common.LabResultTableModelInd;
 import com.cv.app.opd.ui.common.LabTestTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.ui.common.BestTableCellEditor;
 import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
@@ -119,13 +120,36 @@ public class LabResultSetup extends javax.swing.JPanel implements KeyPropagate {
             tblLabResult.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(cboResultType));
 
             tblLabResultInd.getTableHeader().setFont(Global.lableFont);
-            tblLabResultInd.getColumnModel().getColumn(0).setPreferredWidth(50);//High Value
-            tblLabResultInd.getColumnModel().getColumn(1).setPreferredWidth(150);//Low Value
-            tblLabResultInd.getColumnModel().getColumn(2).setPreferredWidth(30);//Sex
+            tblLabResultInd.getColumnModel().getColumn(0).setPreferredWidth(30);//Low Oper
+            tblLabResultInd.getColumnModel().getColumn(1).setPreferredWidth(30);//Low Value
+            tblLabResultInd.getColumnModel().getColumn(2).setPreferredWidth(30);//High Oper
+            tblLabResultInd.getColumnModel().getColumn(3).setPreferredWidth(30);//High Value
+            tblLabResultInd.getColumnModel().getColumn(4).setPreferredWidth(30);//Sex
+            tblLabResultInd.getColumnModel().getColumn(5).setPreferredWidth(30);//Age FOper
+            tblLabResultInd.getColumnModel().getColumn(6).setPreferredWidth(30);//Age From
+            tblLabResultInd.getColumnModel().getColumn(7).setPreferredWidth(30);//Age TOper
+            tblLabResultInd.getColumnModel().getColumn(8).setPreferredWidth(30);//Age To
+            tblLabResultInd.getColumnModel().getColumn(9).setPreferredWidth(150);//Machine
+            
+            tblLabResultInd.getColumnModel().getColumn(0).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(3).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(7).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(8).setCellEditor(new BestTableCellEditor());
+            tblLabResultInd.getColumnModel().getColumn(10).setCellEditor(new BestTableCellEditor());
+            
             JComboBox cboSex = new JComboBox();
             BindingUtil.BindCombo(cboSex, dao.findAll("Gender"));
-            tblLabResultInd.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(cboSex));
+            tblLabResultInd.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboSex));
             tblLabResultInd.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            
+            List listMachine = dao.findAllHSQL("select o from LabMachine o order by o.lMachineName");
+            JComboBox cboMachine = new JComboBox();
+            BindingUtil.BindCombo(cboMachine, listMachine);
+            tblLabResultInd.getColumnModel().getColumn(9).setCellEditor(new DefaultCellEditor(cboMachine));
         } catch (Exception ex) {
             log.error("initTable : " + ex.getMessage());
         } finally {

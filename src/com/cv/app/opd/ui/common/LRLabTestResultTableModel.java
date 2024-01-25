@@ -34,7 +34,7 @@ public class LRLabTestResultTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 1 || column == 4 || column == 5 || column == 6 || column == 7;
+        return column == 1 || column == 2 || column == 4 || column == 5 || column == 6 || column == 7;
     }
 
     @Override
@@ -102,6 +102,13 @@ public class LRLabTestResultTableModel extends AbstractTableModel {
                 } else {
                     record.setResult(null);
                     record.setPrint(Boolean.FALSE);
+                }
+                break;
+            case 2: //Ref Range
+                if(value == null){
+                    record.setRefRange(null);
+                }else{
+                    record.setRefRange(value.toString());
                 }
                 break;
             case 4: //Remark

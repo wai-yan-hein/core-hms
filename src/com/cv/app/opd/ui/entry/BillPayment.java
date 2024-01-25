@@ -374,7 +374,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             if (listVPBP != null) {
                 Double ttlPaid = 0.0;
                 for (VPatientBillPayment vpbp : listVPBP) {
-                    ttlPaid += vpbp.getPayAmt();
+                    ttlPaid += NumberUtil.NZero(vpbp.getPayAmt());
                 }
 
                 txtSTotalPaid.setValue(ttlPaid);

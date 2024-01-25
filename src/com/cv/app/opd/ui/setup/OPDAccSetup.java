@@ -47,7 +47,7 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
     private int selectServiceRow = -1;
     private ServiceTableModel srvTableModel = new ServiceTableModel(dao);
     //private FeesTableModel feesTableModel = new FeesTableModel(dao, this);
-    private OPDMedUsageTableModel opdMedUsageTableModel = new OPDMedUsageTableModel(dao, this);
+    //private OPDMedUsageTableModel opdMedUsageTableModel = new OPDMedUsageTableModel(dao, this);
     private final StartWithRowFilter swrfGroup;
     private final TableRowSorter<TableModel> sorterGroup;
 
@@ -60,7 +60,7 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
         initTable();
         actionMapping();
         //feesTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
-        opdMedUsageTableModel.addNewRow();
+        //opdMedUsageTableModel.addNewRow();
 
         swrfGroup = new StartWithRowFilter(txtFilterGroup);
         sorterGroup = new TableRowSorter(tblCategory.getModel());
@@ -122,7 +122,7 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
             }
 
             //feesTableModel.setSrvId(-1);
-            opdMedUsageTableModel.setSrvId(-1);
+            //opdMedUsageTableModel.setSrvId(-1);
         }
     }
 
@@ -132,10 +132,10 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
 
             if (srv.getServiceId() != null) {
                 //feesTableModel.setSrvId(srv.getServiceId());
-                opdMedUsageTableModel.setSrvId(srv.getServiceId());
+                //opdMedUsageTableModel.setSrvId(srv.getServiceId());
             } else {
                 //feesTableModel.setSrvId(-1);
-                opdMedUsageTableModel.setSrvId(-1);
+                //opdMedUsageTableModel.setSrvId(-1);
             }
         }
     }
@@ -312,7 +312,7 @@ public class OPDAccSetup extends javax.swing.JPanel implements KeyPropagate,
             catTableModel.setGroupId(groupId);
             //feesTableModel.setGroupId(groupId);
             //feesTableModel.setSrvId(-1);
-            opdMedUsageTableModel.setSrvId(-1);
+            //opdMedUsageTableModel.setSrvId(-1);
             srvTableModel.setCatId(-1);
         }
     }//GEN-LAST:event_cboGroupActionPerformed

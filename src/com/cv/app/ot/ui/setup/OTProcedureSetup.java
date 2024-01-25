@@ -9,6 +9,7 @@ import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
+import com.cv.app.inpatient.ui.setup.InpSetup;
 import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.ot.database.entity.OTProcedureGroup;
 import com.cv.app.ot.ui.common.OTGroupTableModel;
@@ -18,6 +19,7 @@ import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.ui.common.BestTableCellEditor;
+import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
@@ -25,6 +27,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -34,6 +38,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -42,6 +47,7 @@ import javax.swing.table.TableRowSorter;
 public class OTProcedureSetup extends javax.swing.JPanel implements FormAction, KeyPropagate,
         SelectionObserver, KeyListener {
 
+    static Logger log = Logger.getLogger(InpSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private final OTGroupTableModel tblOTGroupTableModel = new OTGroupTableModel(dao);
     private final OTServiceTableModel tblOTServiceTableModel = new OTServiceTableModel(dao);
@@ -333,6 +339,15 @@ public class OTProcedureSetup extends javax.swing.JPanel implements FormAction, 
         tblOTServiceMedUsage.getColumnModel().getColumn(3).setPreferredWidth(50);//Unit
         tblOTServiceMedUsage.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        
+        try {
+            JComboBox cboLocationCell = new JComboBox();
+            cboLocationCell.setFont(Global.textFont); // NOI18N
+            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+            tblOTServiceMedUsage.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboLocationCell));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        }
     }
 
     /**

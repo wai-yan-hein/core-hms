@@ -29,7 +29,6 @@ import com.cv.app.pharmacy.ui.common.MedInfo;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.pharmacy.ui.common.TmpEXRateTableModel;
 import com.cv.app.pharmacy.ui.common.TraderCodeCellEditor;
-import static com.cv.app.pharmacy.ui.entry.Sale.log;
 import com.cv.app.pharmacy.ui.util.MedListDialog1;
 import com.cv.app.pharmacy.ui.util.OutstandingStockList;
 import com.cv.app.pharmacy.ui.util.StockIssueListDialog;
