@@ -910,6 +910,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         if (!chkA5.isSelected()) {
                             dialog.setVisible(true);
                         }
+                        if (!chkA4.isSelected()) {
+                            dialog.setVisible(true);
+                        }
                         double ttlLinkAmt = dialog.getTtlAmt();
                         double ttlDiscount = dialog.getTtlDisount();
                         params.put("p_ttl_discount", ttlDiscount + NumberUtil.NZero(currVou.getDiscountA()));
@@ -938,11 +941,22 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         params.put("comp_address", Util1.getPropValue("report.address"));
 
         if (chkA5.isSelected()) {
+            chkA4.setSelected(false);
             String tmpRptName = Util1.getPropValue("report.file.opd.a5");
             if (!tmpRptName.isEmpty() && !tmpRptName.equals("-")) {
                 reportName = tmpRptName;
             } else {
                 reportName = "W/OPDVoucherInvoiceA5";
+            }
+            printMode = "View";
+        }
+         else if (chkA4.isSelected()) {
+             
+            String tmpRptName = Util1.getPropValue("report.file.opd.a4");
+            if (!tmpRptName.isEmpty() && !tmpRptName.equals("-")) {
+                reportName = tmpRptName;
+            } else {
+                reportName = "W/OPDVoucherInvoiceA4";
             }
             printMode = "View";
         }
@@ -2435,6 +2449,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         txtTotalItem = new javax.swing.JTextField();
         chkAmount = new javax.swing.JCheckBox();
         chkA5 = new javax.swing.JCheckBox();
+        chkA4 = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblPatientBill = new javax.swing.JTable();
@@ -2626,6 +2641,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
         chkA5.setFont(Global.lableFont);
         chkA5.setText("A5");
 
+        chkA4.setFont(Global.lableFont);
+        chkA4.setText("A4");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -2643,6 +2661,9 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             .addComponent(txtTotalItem)))
                     .addComponent(lblStatus, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(chkAmount, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(chkA4)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(chkA5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2653,9 +2674,11 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkAmount)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkA5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(chkA5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkA4)
+                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel23)
                     .addComponent(txtRecNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -2663,7 +2686,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel22)
                     .addComponent(txtTotalItem, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(26, 26, 26))
+                .addContainerGap())
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
@@ -3122,7 +3145,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                             .addComponent(butOTID)
                             .addComponent(txtBill, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -3417,6 +3440,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
     private javax.swing.JButton butRemove;
     private javax.swing.JComboBox cboCurrency;
     private javax.swing.JComboBox cboPaymentType;
+    private javax.swing.JCheckBox chkA4;
     private javax.swing.JCheckBox chkA5;
     private javax.swing.JCheckBox chkAmount;
     private javax.swing.JCheckBox chkCloseBill;
