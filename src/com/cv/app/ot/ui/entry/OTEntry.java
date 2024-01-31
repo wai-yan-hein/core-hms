@@ -319,6 +319,8 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), desp);*/
                 uploadToAccount(currVou.getOpdInvId());
+                //insertMedUsage(currVou);
+                
                 //Paid check
                 try {
                     //double vouBalance = NumberUtil.NZero(currVou.getVouBalance());
@@ -460,6 +462,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                             currVou.getVouBalance(), currVou.getDiscountA(),
                             currVou.getPaid(), currVou.getTaxA(), "");*/
                     uploadToAccount(currVou.getOpdInvId());
+                    //deleteMedUsage(currVou.getOpdInvId());
                     newForm();
                 } catch (Exception ex) {
                     log.error("delete : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
@@ -533,6 +536,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                         currVou.getVouBalance(), currVou.getDiscountA(),
                         currVou.getPaid(), currVou.getTaxA(), "");*/
                 uploadToAccount(currVou.getOpdInvId());
+                //deleteMedUsage(currVou.getOpdInvId());
                 copyVoucher(currVou.getOpdInvId());
                 genVouNo();
                 applySecurityPolicy();
@@ -688,7 +692,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                             desp = currVou.getPatient().getRegNo() + "-" + currVou.getPatient().getPatientName();
                         }
                         uploadToAccount(currVou.getOpdInvId());
-
+                        //insertMedUsage(currVou);
                     }
 
                     //Paid check
@@ -2023,6 +2027,37 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         }
     }
 
+    private void insertMedUsage(OTHis odh) {
+        if (!odh.isDeleted()) {
+            deleteMedUsage(odh.getOpdInvId());
+            try {
+                String strSql = "insert into med_usaged(vou_type, vou_no, service_id, med_id, unit_qty,\n"
+                        + "       unit_id, qty_smallest, created_date, updated_date, location_id)\n"
+                        + "select 'OT', vou_no, odh.service_id, omu.med_id, omu.unit_qty,\n"
+                        + "       omu.unit_id, omu.qty_smallest, omu.created_date, omu.updated_date, omu.location_id\n"
+                        + "  from ot_details_his odh\n"
+                        + "  join ot_med_usage omu on odh.service_id = omu.service_id\n"
+                        + " where odh.vou_no = '" + odh.getOpdInvId() + "'";
+                dao.execSql(strSql);
+            } catch (Exception ex) {
+                log.error("insertMedUsage : " + ex.getMessage());
+            } finally {
+                dao.close();
+            }
+        }
+    }
+
+    private void deleteMedUsage(String vouNo){
+        String strDelete = "delete from med_usaged where vou_type = 'OT' and vou_no = '" + vouNo + "'";
+        try{
+            dao.execSql(strDelete);
+        }catch(Exception ex){
+            log.error("deleteMedUsage : vouNo:" + vouNo + " : " + ex.getMessage());
+        }finally{
+            dao.close();
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

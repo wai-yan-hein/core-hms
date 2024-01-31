@@ -8,6 +8,7 @@ import com.cv.app.common.Global;
 import com.cv.app.common.KeyPropagate;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.common.StartWithRowFilter;
+import com.cv.app.opd.database.entity.LabMachine;
 import com.cv.app.opd.database.entity.OPDCategory;
 import com.cv.app.opd.database.entity.OPDGroup;
 import com.cv.app.opd.database.entity.OPDLabGroup;
@@ -23,6 +24,8 @@ import com.cv.app.util.Util1;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.DefaultCellEditor;
@@ -84,6 +87,9 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         try {
             BindingUtil.BindCombo(cboGroup, dao.findAll("OPDGroup"));
             BindingUtil.BindComboFilter(cboLabGroupFilter, dao.findAllHSQL("select o from OPDLabGroup o order by o.description"));
+            List listMachine = dao.findAllHSQL("select o from LabMachine o order by o.lMachineName");
+            listMachine.add(0, "No Machine");
+            BindingUtil.BindCombo(cboLabMachine, listMachine);
             bindStatus = true;
             catTableModel.setGroupId(((OPDGroup) cboGroup.getSelectedItem()).getGroupId());
         } catch (Exception ex) {
@@ -160,13 +166,34 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
             dao.close();
         }
 
+        tblMedUsage.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblMedUsage.getTableHeader().setFont(Global.lableFont);
         tblMedUsage.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
         tblMedUsage.getColumnModel().getColumn(1).setPreferredWidth(150);//Description
         tblMedUsage.getColumnModel().getColumn(2).setPreferredWidth(30);//Qty
         tblMedUsage.getColumnModel().getColumn(3).setPreferredWidth(50);//Unit
+        tblMedUsage.getColumnModel().getColumn(4).setPreferredWidth(50);//Location
+        tblMedUsage.getColumnModel().getColumn(5).setPreferredWidth(50);//Calc Status
+        
         tblMedUsage.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        tblMedUsage.getColumnModel().getColumn(2).setCellEditor(new BestTableCellEditor());
+        
+        try {
+            JComboBox cboLocationCell = new JComboBox();
+            cboLocationCell.setFont(Global.textFont); // NOI18N
+            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+            tblMedUsage.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboLocationCell));
+            
+            JComboBox cboCalcStatus = new JComboBox();
+            List<String> listStatus = new ArrayList();
+            listStatus.add("AUTO");
+            listStatus.add("ASK");
+            BindingUtil.BindCombo(cboCalcStatus, listStatus);
+            tblMedUsage.getColumnModel().getColumn(5).setCellEditor(new DefaultCellEditor(cboCalcStatus));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        }
     }
 
     private void setCategory() {
@@ -182,7 +209,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
             }
 
             //feesTableModel.setSrvId(-1);
-            opdMedUsageTableModel.setSrvId(-1);
+            opdMedUsageTableModel.setSrvId(-1, getMachineId());
         }
     }
 
@@ -193,15 +220,24 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
             if (srv.getServiceId() != null) {
                 lblService1.setText(srv.getServiceName());
                 //feesTableModel.setSrvId(srv.getServiceId());
-                opdMedUsageTableModel.setSrvId(srv.getServiceId());
+                opdMedUsageTableModel.setSrvId(srv.getServiceId(), getMachineId());
             } else {
                 lblService1.setText("...");
                 //feesTableModel.setSrvId(-1);
-                opdMedUsageTableModel.setSrvId(-1);
+                opdMedUsageTableModel.setSrvId(-1, getMachineId());
             }
         }
     }
 
+    private int getMachineId(){
+        if(cboLabMachine.getSelectedItem() instanceof LabMachine){
+            int id = ((LabMachine)cboLabMachine.getSelectedItem()).getlMachineId();
+            return id;
+        }else{
+            return 0;
+        }
+    }
+    
     @Override
     public void keyEvent(KeyEvent e) {
         if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
@@ -362,6 +398,8 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         txtFilterGroup = new javax.swing.JTextField();
         cboLabGroupFilter = new javax.swing.JComboBox<>();
         butLabGroupSetup = new javax.swing.JButton();
+        cboLabMachine = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
 
         cboGroup.setFont(Global.textFont);
         cboGroup.addActionListener(new java.awt.event.ActionListener() {
@@ -425,6 +463,15 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
             }
         });
 
+        cboLabMachine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLabMachineActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel1.setText("Lab Machine : ");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -441,16 +488,21 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblCategory, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
+                        .addComponent(lblCategory, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtFilterService, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                        .addComponent(txtFilterService, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cboLabGroupFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butLabGroupSetup))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(lblService1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblService1, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboLabMachine, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -467,15 +519,18 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 197, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblService1, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(lblService1, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cboLabMachine, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel1))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(txtFilterGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1)))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE)))
                 .addGap(14, 14, 14))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -493,7 +548,7 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
             //feesTableModel.setGroupId(groupId);
             lblCategory.setText("...");
             //feesTableModel.setSrvId(-1);
-            opdMedUsageTableModel.setSrvId(-1);
+            opdMedUsageTableModel.setSrvId(-1, getMachineId());
             srvTableModel.setCatId(-1);
         }
     }//GEN-LAST:event_cboGroupActionPerformed
@@ -528,11 +583,17 @@ public class OPDSetup1 extends javax.swing.JPanel implements KeyPropagate,
         initCombo();
     }//GEN-LAST:event_butLabGroupSetupActionPerformed
 
+    private void cboLabMachineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLabMachineActionPerformed
+        opdMedUsageTableModel.setMachineId(getMachineId());
+    }//GEN-LAST:event_cboLabMachineActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butGroupSetup;
     private javax.swing.JButton butLabGroupSetup;
     private javax.swing.JComboBox cboGroup;
     private javax.swing.JComboBox<String> cboLabGroupFilter;
+    private javax.swing.JComboBox<String> cboLabMachine;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane4;

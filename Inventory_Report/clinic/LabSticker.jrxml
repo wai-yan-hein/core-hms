@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptBarCode" printOrder="Horizontal" pageWidth="113" pageHeight="85" columnWidth="91" leftMargin="2" rightMargin="20" topMargin="5" bottomMargin="5" uuid="c5bcf4e5-4b80-4ba7-a007-ce6da58c7665">
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="9"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="mm"/>
+	<parameter name="age" class="java.lang.String"/>
+	<parameter name="room_no" class="java.lang.String"/>
+	<parameter name="pt_name" class="java.lang.String"/>
+	<parameter name="reg_no" class="java.lang.String"/>
+	<parameter name="tran_date" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select 1 as cnt]]>
+	</queryString>
+	<field name="cnt" class="java.lang.Integer"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="57" splitType="Stretch">
+			<textField pattern="#,##0;-#,##0">
+				<reportElement x="3" y="39" width="50" height="13" uuid="0dc1ed9f-0f80-4413-8768-48701b87834a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isItalic="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{room_no}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="3" y="26" width="107" height="13" forecolor="#000000" uuid="15ab5df1-4ad2-4847-91f2-5259094a3d0a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pt_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="5" y="0" width="86" height="13" uuid="7741a5ab-14ed-49b0-ae1d-ab85ae5c1e47"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{tran_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="5" y="13" width="86" height="13" uuid="8f564822-17d1-4dce-a88a-8f6cafdcaf4d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{reg_no}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;-#,##0">
+				<reportElement x="54" y="39" width="50" height="13" uuid="3d1159fe-5e71-4da6-9c7a-6857ba496aab">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isItalic="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{age}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

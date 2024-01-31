@@ -286,7 +286,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
 
                 //Update to patient
                 //Patient pt = currPatient.getKey().getRegister();
-                Patient pt = (Patient)dao.find(Patient.class, currPatient.getKey().getRegister().getRegNo());
+                Patient pt = (Patient) dao.find(Patient.class, currPatient.getKey().getRegister().getRegNo());
                 if (currPatient.getDcStatus() == null) {
                     pt.setAdmissionNo(currPatient.getKey().getAmsNo());
                 }
@@ -357,6 +357,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         txtReligion.setText(null);
         txtContactNo.setText(null);
         lblBooking.setVisible(false);
+        txtAmsNo.setEnabled(true);
+        txtRegNo.setEnabled(true);
         getValidRoom();
         assignDefaultValue();
         cboRoom.setEnabled(false);
@@ -553,6 +555,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
             cboType.setSelectedItem(currPatient.getPtType());
             cboRoom.setSelectedItem(currPatient.getBuildingStructure());
             cboRoom.setEnabled(currPatient.getBuildingStructure() == null);
+            txtAmsNo.setEnabled(false);
+            txtRegNo.setEnabled(false);
             dao.close();
         }
     }
@@ -683,7 +687,7 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private boolean isValidRoom(BuildingStructure b) {
         if (lblStatus.getText().equals("NEW")) {
             String sql = "select reg_no from building_structure where id = " + b.getId() + "";
-            
+
             try {
                 ResultSet rs = dao.execSQL(sql);
                 if (rs.next()) {
@@ -840,6 +844,10 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     }
 
     private void getPatient() {
+        if (!Util1.isNullOrEmpty(txtAmsNo.getText())) {
+            return;
+        }
+
         if (txtRegNo.getText() != null && !txtRegNo.getText().isEmpty()) {
             try {
                 Patient pt;
@@ -894,6 +902,8 @@ public class Admission extends javax.swing.JPanel implements FormAction,
         cboRTToRoom.setEnabled(false);
         cboRTFromRoom.setSelectedItem(null);
         cboRTToRoom.setSelectedItem(null);
+        txtAmsNo.setEnabled(true);
+        txtRegNo.setEnabled(true);
     }
 
     private void transferSave() {
@@ -1746,6 +1756,9 @@ public class Admission extends javax.swing.JPanel implements FormAction,
     private void txtRegNoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtRegNoMouseClicked
         // TODO add your handling code here:
         if (evt.getClickCount() == 2) {
+            if (!Util1.isNullOrEmpty(txtAmsNo.getText())) {
+                return;
+            }
             getPatientList();
         }
     }//GEN-LAST:event_txtRegNoMouseClicked

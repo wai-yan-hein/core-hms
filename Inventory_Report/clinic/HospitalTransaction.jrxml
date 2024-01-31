@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="StockBalanceSummary" pageWidth="595" pageHeight="850" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
+	<property name="ireport.zoom" value="1.0514816984441842"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="cv_inv_sdm"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="user_id" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="data_date" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="from_date" class="java.lang.String"/>
+	<parameter name="to_date" class="java.lang.String"/>
+	<parameter name="clinic_type" class="java.lang.String"/>
+	<parameter name="currency" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT 'Sale' as tran_option, ROUND(sum(IFNULL(sh.vou_total,0)),0) as ttl_amt,
+       ROUND(SUM(ifnull(sh.discount,0)),0) as ttl_disc, ROUND(sum(ifnull(sh.paid_amount,0)),0) as ttl_paid, 
+       ROUND(sum(ifnull(sh.balance,0)),0) as ttl_bal,1 as sort_order
+  from sale_his sh 
+ where sh.deleted = false and date(sale_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL 
+SELECT 'Return In' as tran_option, ROUND(sum(ifnull(rih.vou_total,0)),0) as ttl_amt,
+       0 as ttl_disc, ROUND(sum(ifnull(rih.paid,0)*-1),0) as ttl_paid, ROUND(sum(ifnull(rih.balance,0)),0) as ttl_bal,
+       2 as sort_order
+  from ret_in_his rih
+ where rih.deleted = FALSE and date(rih.ret_in_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT 'Purchase' as tran_option, ROUND(SUM(IFNULL(ph.vou_total,0)),0) as ttl_amt,
+       ROUND(sum(IFNULL(ph.discount,0)),0) as ttl_disc, ROUND(sum(IFNULL(ph.paid,0)),0) as ttl_paid, 
+       ROUND(SUM(IFNULL(ph.balance,0)),0) as ttl_bal, 3 as sort_order
+  from pur_his ph
+ where ph.deleted = FALSE and date(pur_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT 'Return Out' as tran_option, ROUND(sum(IFNULL(roh.vou_total,0)),0) as ttl_amt,
+       0 as ttl_disc, ROUND(SUM(IFNULL(roh.paid,0)),0) as ttl_paid, ROUND(SUM(IFNULL(roh.balance,0)),0) as ttl_bal,
+       4 as sort_order
+  from ret_out_his roh 
+ where roh.deleted = FALSE and date(roh.ret_out_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT if(t.discriminator='S', 'Supplier Payment', 'Customer Payment') as tran_option, 0 as ttl_amt,
+       ROUND(SUM(IFNULL(ph.discount,0)),0) as ttl_disc, ROUND(SUM(IFNULL(ph.paid_amtc,0)),0) as ttl_paid, 0 as ttl_bal,
+       5 as sort_order
+  FROM payment_his ph join trader t on ph.trader_id = t.trader_id 
+ WHERE ph.deleted = false and date(ph.pay_date) BETWEEN $P{from_date} and $P{to_date}
+ GROUP BY if(t.discriminator='S', 'Supplier Payment', 'Customer Payment')
+ UNION ALL
+SELECT 'Bill Payment' as tran_option, 0 as ttl_amt,
+       ROUND(SUM(IFNULL(opbp.discount,0)),0) as ttl_disc, ROUND(SUM(IFNULL(opbp.pay_amt,0)),0) as ttl_paid, 0 as ttl_bal, 
+       6 as sort_order
+  FROM opd_patient_bill_payment opbp 
+ WHERE opbp.deleted = FALSE and date(opbp.pay_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT 'OPD' as tran_option, ROUND(SUM(IFNULL(oh.vou_total,0)),0) as ttl_amt,
+       ROUND(SUM(IFNULL(oh.disc_a,0)),0) as ttl_disc, ROUND(SUM(IFNULL(oh.paid,0)),0) as ttl_paid, 
+       ROUND(SUM(IFNULL(oh.vou_balance,0)),0) as ttl_bal, 7 as sort_order
+  FROM opd_his oh 
+ WHERE oh.deleted = FALSE and date(oh.opd_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT 'OT' as tran_option, ROUND(SUM(IFNULL(oh.vou_total,0)),0) as ttl_amt,
+	   ROUND(SUM(IFNULL(oh.disc_a,0)),0) as ttl_disc, ROUND(SUM(IFNULL(oh.paid,0)),0) as ttl_paid, 
+	   ROUND(SUM(IFNULL(oh.vou_balance,0)),0) as ttl_bal, 8 as sort_order
+  FROM ot_his oh 
+ WHERE oh.deleted = FALSE and date(oh.ot_date) BETWEEN $P{from_date} and $P{to_date}
+ UNION ALL
+SELECT 'DC' as tran_option, ROUND(SUM(IFNULL(dh.vou_total,0)),0) as ttl_amt,
+       ROUND(SUM(IFNULL(dh.disc_a,0)),0) as ttl_disc, ROUND(SUM(IFNULL(dh.paid,0)),0) as ttl_paid, 
+       ROUND(SUM(IFNULL(dh.vou_balance,0)),0) as ttl_bal, 9 as sort_order
+  FROM dc_his dh 
+ WHERE dh.deleted = FALSE and date(dh.dc_date) BETWEEN $P{from_date} and $P{to_date};]]>
+	</queryString>
+	<field name="tran_option" class="java.lang.String"/>
+	<field name="ttl_amt" class="java.lang.Double"/>
+	<field name="ttl_disc" class="java.lang.Double"/>
+	<field name="ttl_paid" class="java.lang.Double"/>
+	<field name="ttl_bal" class="java.lang.Double"/>
+	<field name="sort_order" class="java.lang.Integer"/>
+	<variable name="ttl_r_paid" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{ttl_paid}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="66" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="21" width="362" height="30" uuid="1cea8bb8-8cc4-42bd-a843-59f47537f67e"/>
+				<box>
+					<pen lineStyle="Solid" lineColor="#004ECA"/>
+					<topPen lineStyle="Solid" lineColor="#004ECA"/>
+					<leftPen lineStyle="Solid" lineColor="#004ECA"/>
+					<bottomPen lineStyle="Solid" lineColor="#004ECA"/>
+					<rightPen lineStyle="Solid" lineColor="#004ECA"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Hospital Transaction]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="388" y="51" width="78" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h:mm:ss a">
+				<reportElement x="468" y="51" width="87" height="15" uuid="9db83743-f7c8-4121-bdf8-46e02d9d6a2f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="362" height="20" uuid="2f5029b5-fd7c-448f-b703-2e37007fa1fc"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="51" width="362" height="15" uuid="d9725a21-a26c-42a5-b300-d0c3e7b36599"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch">
+			<textField>
+				<reportElement x="441" y="0" width="80" height="15" uuid="c1e378a6-01b4-4837-acdc-c15ba807527c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="523" y="0" width="31" height="15" uuid="f9dd744a-33cb-4a31-9c0c-c9636d7ef480"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="249" y="18" width="70" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Amount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="328" y="18" width="70" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Tobal Discount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="407" y="18" width="70" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Paid]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="34" width="555" height="1" uuid="071a845d-6e16-4820-beb1-baf58a8d48bb"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="16" width="555" height="1" uuid="071a845d-6e16-4820-beb1-baf58a8d48bb"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="0" y="18" width="106" height="15" uuid="dd6333ee-cfb9-4604-a2d2-21f149ed3271"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Transaction Type]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="484" y="18" width="70" height="15" uuid="f980766d-aa16-4eff-ab04-83a71aaec83e"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Balance]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="17" splitType="Stretch">
+			<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+				<reportElement x="249" y="0" width="70" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_amt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+				<reportElement x="328" y="0" width="70" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_disc}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+				<reportElement x="407" y="0" width="70" height="15" uuid="0dd8bc0e-f7a2-4e01-90ae-b4d1794859d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_paid}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="16" width="555" height="1" uuid="62a9938a-e120-4402-9484-14f40251298e"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted" lineColor="#827878"/>
+				</graphicElement>
+			</line>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="106" height="15" uuid="0b18f328-4e03-4550-96bc-69aeebcb7a0d"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tran_option}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+				<reportElement x="484" y="0" width="70" height="15" uuid="6662a594-b447-4a99-8739-e87c5d55bac4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_bal}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="22">
+			<staticText>
+				<reportElement x="215" y="2" width="31" height="15" uuid="3b0985e2-d043-4cf7-a8b3-5e4fc2214001"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total : ]]></text>
+			</staticText>
+			<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+				<reportElement x="407" y="2" width="70" height="15" uuid="326ac8a6-9cdf-4c3d-a0de-fc5a763d9372"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_r_paid}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

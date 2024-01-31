@@ -39,6 +39,7 @@ public class Booking implements Serializable {
     private String createdBy;
     private Doctor doctor;
     private String bkType;
+    private Integer session;
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -149,6 +150,15 @@ public class Booking implements Serializable {
 
     public void setBkType(String bkType) {
         this.bkType = bkType;
+    }
+
+    @Column(name="session_id")
+    public Integer getSession() {
+        return session;
+    }
+
+    public void setSession(Integer session) {
+        this.session = session;
     }
 
 }

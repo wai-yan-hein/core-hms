@@ -216,7 +216,7 @@ public class UnPaidPayableTableModel extends AbstractTableModel {
                                 + "JOIN opd_details_his odh on oh.opd_inv_id = odh.vou_no "
                                 + "JOIN opd_service os on odh.service_id = os.service_id "
                                 + "set fee1_id = '?' "
-                                + "where oh.deleted = 0 and oh.doctor_id = '" + selectedDrId + "'\n"
+                                + "where oh.deleted = 0 and IFNULL(odh.refer_doctor_id,oh.doctor_id) = '" + selectedDrId + "'\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(strTmpDate)
                                 + "' and '" + DateUtil.toDateStrMYSQL(strTmpDate) + "'\n"
                                 + " and ifnull(fee1_id,'')='' ";

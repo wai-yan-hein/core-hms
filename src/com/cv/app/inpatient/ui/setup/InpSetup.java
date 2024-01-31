@@ -16,12 +16,15 @@ import com.cv.app.inpatient.ui.common.InpServiceTableModel;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.ui.common.SaleTableCodeCellEditor;
 import com.cv.app.ui.common.BestTableCellEditor;
+import com.cv.app.util.BindingUtil;
 import com.cv.app.util.Util1;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -39,7 +42,7 @@ import org.apache.log4j.Logger;
  */
 public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         SelectionObserver {
-
+    
     static Logger log = Logger.getLogger(InpSetup.class.getName());
     private final AbstractDataAccess dao = Global.dao;
     private boolean bindStatus = false;
@@ -65,33 +68,33 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         catTableModel.getCategory();
         //feesTableModel.setGroupId(((InpGroup) cboGroup.getSelectedItem()).getGroupId());
         inpMedUsageTableModel.addNewRow();
-
+        
         swrfGroup = new StartWithRowFilter(txtFilterGroup);
         sorterGroup = new TableRowSorter(tblCategory.getModel());
         tblCategory.setRowSorter(sorterGroup);
-
+        
         swrfSrv = new StartWithRowFilter(txtFilter);
         sorterService = new TableRowSorter(tblService.getModel());
         tblService.setRowSorter(sorterService);
     }
-
+    
     private void formActionKeyMapping(JComponent jc) {
         KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_F8, InputEvent.CTRL_DOWN_MASK);
         jc.getInputMap().put(keyStroke, "Ctrl-F8-Action");
         jc.getActionMap().put("Ctrl-F8-Action", actionDelete);
     }
-
+    
     private final Action actionDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             delete();
         }
     };
-
+    
     public void delete() {
-
+        
     }
-
+    
     private void actionMapping() {
         //F8 event on tblItem
         tblMedUsage.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
@@ -105,94 +108,94 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         tblCategory.getInputMap().put(KeyStroke.getKeyStroke("F8"), "F8-Action");
         tblCategory.getActionMap().put("F8-Action", actionCatDelete);
     }
-
+    
     private final Action actionItemDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             int yes_no = -1;
-
+            
             if (tblMedUsage.getSelectedRow() >= 0) {
-
+                
                 try {
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                             "Are you sure to delete?",
                             "Inpatient Medicine delete", JOptionPane.YES_NO_OPTION);
-
+                    
                     if (tblMedUsage.getCellEditor() != null) {
                         tblMedUsage.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
                 }
-
+                
                 if (yes_no == 0) {
                     inpMedUsageTableModel.delete(tblMedUsage.getSelectedRow());
-
+                    
                 }
-
+                
             }
         }
     };
-
+    
     private final Action actionSerDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             int yes_no = -1;
-
+            
             if (tblService.getSelectedRow() >= 0) {
-
+                
                 try {
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                             "Are you sure to delete?",
                             "Inpatient Service delete", JOptionPane.YES_NO_OPTION);
-
+                    
                     if (tblService.getCellEditor() != null) {
                         tblService.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
                 }
-
+                
                 if (yes_no == 0) {
                     srvTableModel.delete(tblService.getSelectedRow());
-
+                    
                 }
-
+                
             }
         }
     };
-
+    
     private final Action actionCatDelete = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
             int yes_no = -1;
-
+            
             if (tblCategory.getSelectedRow() >= 0) {
-
+                
                 try {
                     yes_no = JOptionPane.showConfirmDialog(Util1.getParent(),
                             "Are you sure to delete?",
                             "Inpatient Category delete", JOptionPane.YES_NO_OPTION);
-
+                    
                     if (tblCategory.getCellEditor() != null) {
                         tblCategory.getCellEditor().stopCellEditing();
                     }
                 } catch (Exception ex) {
                 }
-
+                
                 if (yes_no == 0) {
                     catTableModel.delete(tblCategory.getSelectedRow());
-
+                    
                 }
-
+                
             }
         }
     };
-
+    
     private void initCombo() {
         //BindingUtil.BindCombo(cboGroup, dao.findAll("InpGroup"));
         bindStatus = true;
         //catTableModel.setGroupId(((InpGroup) cboGroup.getSelectedItem()).getGroupId());
     }
-
+    
     private void initTable() {
         tblCategory.getTableHeader().setFont(Global.lableFont);
         tblCategory.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -211,7 +214,7 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         tblCategory.getColumnModel().getColumn(1).setPreferredWidth(120);
         tblCategory.getColumnModel().getColumn(0).setCellEditor(new BestTableCellEditor());
         tblCategory.getColumnModel().getColumn(1).setCellEditor(new BestTableCellEditor());
-
+        
         tblService.getTableHeader().setFont(Global.lableFont);
         tblService.getColumnModel().getColumn(0).setPreferredWidth(20);
         tblService.getColumnModel().getColumn(1).setPreferredWidth(150);
@@ -240,7 +243,7 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         tblService.getColumnModel().getColumn(4).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(5).setCellEditor(new BestTableCellEditor());
         tblService.getColumnModel().getColumn(6).setCellEditor(new BestTableCellEditor());
-
+        
         tblMedUsage.getTableHeader().setFont(Global.lableFont);
         tblMedUsage.getColumnModel().getColumn(0).setPreferredWidth(50);//Code
         tblMedUsage.getColumnModel().getColumn(1).setPreferredWidth(150);//Description
@@ -248,12 +251,21 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
         tblMedUsage.getColumnModel().getColumn(3).setPreferredWidth(50);//Unit
         tblMedUsage.getColumnModel().getColumn(0).setCellEditor(
                 new SaleTableCodeCellEditor(dao));
+        
+        try {
+            JComboBox cboLocationCell = new JComboBox();
+            cboLocationCell.setFont(Global.textFont); // NOI18N
+            BindingUtil.BindCombo(cboLocationCell, dao.findAll("Location"));
+            tblMedUsage.getColumnModel().getColumn(4).setCellEditor(new DefaultCellEditor(cboLocationCell));
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        }
     }
-
+    
     private void setCategory() {
         if (selectRow >= 0) {
             InpCategory cat = catTableModel.getInpCategory(selectRow);
-
+            
             if (cat.getCatId() != null) {
                 lblCategory.setText(cat.getCatName());
                 srvTableModel.setCatId(cat.getCatId());
@@ -267,11 +279,11 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
             inpMedUsageTableModel.setSrvId(-1);
         }
     }
-
+    
     private void setService() {
         if (selectServiceRow >= 0) {
             InpService srv = srvTableModel.getInpService(selectServiceRow);
-
+            
             if (srv.getServiceId() != null) {
                 //lblService.setText(srv.getServiceName());
                 lblService1.setText(srv.getServiceName());
@@ -285,24 +297,24 @@ public class InpSetup extends javax.swing.JPanel implements KeyPropagate,
             }
         }
     }
-
+    
     @Override
     public void keyEvent(KeyEvent e) {
         if (e.isControlDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
             delete();
         } else if (e.isShiftDown() && (e.getKeyCode() == KeyEvent.VK_F8)) {
-
+            
         } else if (e.getKeyCode() == KeyEvent.VK_F5) {
-
+            
         } else if (e.getKeyCode() == KeyEvent.VK_F7) {
-
+            
         } else if (e.getKeyCode() == KeyEvent.VK_F9) {
-
+            
         } else if (e.getKeyCode() == KeyEvent.VK_F10) {
-
+            
         }
     }
-
+    
     @Override
     public void selected(Object source, Object selectObj) {
         switch (source.toString()) {

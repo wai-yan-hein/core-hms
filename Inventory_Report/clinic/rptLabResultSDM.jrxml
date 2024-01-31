@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptLabResult" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4722a970-c7d9-4699-988b-2dd3dcae09a6">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -26,7 +26,7 @@ where vo.opd_inv_id = lrh.opd_inv_id and vo.service_id = lrh.lab_test_id and lrh
 and lrh.opd_inv_id = $P{invoiceNo}
 and vo.service_id in (select tl.service_id from tmp_lab tl where tl.user_id = $P{user_id})
 and lrh.lab_result_id in (select result_id from tmp_lab_result_filter where user_id = $P{user_id})
-order by vo.result_order, lrh.sort_order]]>
+order by vo.service_name,vo.result_order, lrh.sort_order]]>
 	</queryString>
 	<field name="patient_id" class="java.lang.String"/>
 	<field name="patient_name" class="java.lang.String"/>
@@ -292,7 +292,7 @@ order by vo.result_order, lrh.sort_order]]>
 	</columnHeader>
 	<detail>
 		<band height="22" splitType="Stretch">
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="22" y="1" width="130" height="21" uuid="59bed91f-7227-4ced-be86-6289ee604086">
 					<printWhenExpression><![CDATA[$F{result_type}==0]]></printWhenExpression>
 				</reportElement>
@@ -301,14 +301,14 @@ order by vo.result_order, lrh.sort_order]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{result_text}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement x="161" y="1" width="100" height="21" uuid="78b74586-7166-453a-91cf-9e4e9a3db9e2"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{result}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="322" y="1" width="160" height="21" uuid="73ae3b1b-894a-45ef-b6ec-e156e65576cd"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
@@ -322,14 +322,14 @@ order by vo.result_order, lrh.sort_order]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{result_unit}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement x="482" y="1" width="70" height="21" uuid="a19c5e1c-1f09-43dc-b92d-115d3997b97d"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{remark}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="11" y="1" width="141" height="21" uuid="d1377df9-f236-431f-9332-7cea5ceebe6f">
 					<printWhenExpression><![CDATA[$F{result_type}==-1]]></printWhenExpression>
 				</reportElement>
@@ -338,7 +338,7 @@ order by vo.result_order, lrh.sort_order]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{result_text}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="22" y="1" width="130" height="21" uuid="6097848c-4d16-47fb-b32c-b01eff8efe76">
 					<printWhenExpression><![CDATA[$F{result_type}==2]]></printWhenExpression>
 				</reportElement>

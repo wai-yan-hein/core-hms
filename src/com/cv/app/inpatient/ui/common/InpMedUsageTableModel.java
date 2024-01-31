@@ -4,16 +4,19 @@
  */
 package com.cv.app.inpatient.ui.common;
 
+import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.InpMedUsage;
 import com.cv.app.inpatient.database.entity.MedUsageKey;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.apache.log4j.Logger;
@@ -27,7 +30,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
     static Logger log = Logger.getLogger(InpMedUsageTableModel.class.getName());
     private AbstractDataAccess dao;
     private List<InpMedUsage> listInpMedUsage = new ArrayList();
-    private final String[] columnNames = {"Code", "Description", "Qty", "Unit"};
+    private final String[] columnNames = {"Code", "Description", "Qty", "Unit", "Location"};
     private int srvId = -1;
     private MedicineUP medUp;
     private SelectionObserver observer;
@@ -46,7 +49,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 0 || column == 2;
+        return column == 0 || column == 2 || column == 4;
     }
 
     @Override
@@ -60,6 +63,8 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                 return Integer.class;
             case 3: //Unit
                 return String.class;
+            case 4: //Location
+                return Location.class;
             default:
                 return Object.class;
         }
@@ -107,6 +112,8 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                     } else {
                         return null;
                     }
+                case 4: //Location
+                    return record.getLocation();
                 default:
                     return null;
             }
@@ -152,6 +159,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                         record.setUnit(null);
                         record.setQtySmall(null);
                         record.setUnitQty(null);
+                        record.setCreatedDate(new Date());
                     }
                     break;
                 case 2:
@@ -179,6 +187,14 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                                 record.setQtySmall(record.getUnitQty() * medUp.getQtyInSmallest(key));
                             }
                         }
+                    }
+                    record.setUpdatedDate(new Date());
+                    break;
+                case 4: //Location
+                    if(value == null){
+                        record.setLocation(null);
+                    }else{
+                        record.setLocation((Location)value);
                     }
                     break;
             }
@@ -230,6 +246,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                 String sql;
                 if (NumberUtil.NZeroL(record.getKey().getService()) > 0) {
                     try {
+                        bkRecord(record, "DELETE");
                         dao.open();
                         dao.beginTran();
                         sql = "delete from inp_med_usage where service_id = '" + record.getKey().getService() + "' and med_id='" + record.getKey().getMed().getMedId() + "'";
@@ -282,6 +299,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
 
     private void saveRecord(InpMedUsage record) {
         try {
+            bkRecord(record, "EDIT");
             dao.save(record);
             addNewRow();
             if (!versionUpdate) {
@@ -291,6 +309,24 @@ public class InpMedUsageTableModel extends AbstractTableModel {
         } catch (Exception ex) {
             dao.rollBack();
             log.error("saveRecord : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        } finally {
+            dao.close();
+        }
+    }
+    
+    private void bkRecord(InpMedUsage record, String option) {
+        try {
+            String strSql = "insert into bk_inp_med_usage(service_id, med_id, unit_qty, unit_id, \n"
+                    + "       qty_smallest, created_date, updated_date, bk_date, bk_user, bk_option, location_id)\n"
+                    + "select service_id, med_id, unit_qty, unit_id, \n"
+                    + "       qty_smallest, created_date, updated_date, now(), '" + Global.loginUser.getUserId() + "',\n"
+                    + " '" + option + "', location_id \n"
+                    + "  from inp_med_usage\n"
+                    + " where service_id = " + record.getKey().getService()
+                    + " and med_id = '" + record.getKey().getMed().getMedId() + "'";
+            dao.execSql(strSql);
+        } catch (Exception ex) {
+            log.error("bkRecord : " + ex.getMessage());
         } finally {
             dao.close();
         }

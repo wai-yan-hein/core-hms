@@ -30,7 +30,8 @@ public class VBooking implements Serializable {
     private String bkPhone;
     private Integer bkSerialNo;
     private Boolean bkActive;
-
+    private Integer sessionId;
+    
     @Id
     @Column(name = "bk_id", unique = true, nullable = false, length = 15)
     public Integer getBookingId() {
@@ -117,6 +118,15 @@ public class VBooking implements Serializable {
 
     public void setBkSerialNo(Integer bkSerialNo) {
         this.bkSerialNo = bkSerialNo;
+    }
+
+    @Column(name="session_id")
+    public Integer getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(Integer sessionId) {
+        this.sessionId = sessionId;
     }
 
 }

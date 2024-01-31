@@ -452,6 +452,16 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         switch (Util1.getPropValue("system.app.usage.type")) {
             case "Hospital":
                 cboPayment.setSelectedItem(ptCash);
+                try {
+                    tmpObj = dao.find(Patient.class, Util1.getPropValue("system.default.patient"));
+                    if (tmpObj != null) {
+                        selected("PatientList", tmpObj);
+                    }
+                } catch (Exception ex) {
+                    log.error("assignDefaultValue : " + ex.getMessage());
+                } finally {
+                    dao.close();
+                }
                 break;
             case "School":
                 break;
@@ -913,7 +923,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
                             stockList.add(med, (Location) cboLocation.getSelectedItem());
                         } else if (Util1.getPropValue("system.app.sale.stockBalance").equals("H")) {
-                            stockList.add(med, null);
+                            //stockList.add(med, null);
+                            stockList.add(med, (Location) cboLocation.getSelectedItem());
                             listStock = stockList.getStockList(med.getMedId());
                             if (listStock == null) {
                                 listStock = new ArrayList();
@@ -2419,13 +2430,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
         boolean status = false;
 
-        if (chkAmount.isSelected()) {
-            SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
-                    NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
-                    "Confirm");
-            status = dialog.getConfStatus();
-        }
-
         if (isValidEntry() && saleTableModel.isValidEntry() && expTableModel.isValidEntry()) {
             log.info("Sale Date" + currSaleVou.getSaleDate().toString());
             Date vouSaleDate = DateUtil.toDate(txtSaleDate.getText());
@@ -2435,6 +2439,23 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         + DateUtil.toDateStr(lockDate) + ".",
                         "Locked Data", JOptionPane.ERROR_MESSAGE);
                 return;
+            }
+
+            if (chkAmount.isSelected()) {
+                SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
+                        NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
+                        "Confirm");
+                status = dialog.getConfStatus();
+            }
+
+            String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
+            if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
+                if (currSaleVou.getBalance() != 0) {
+                    log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + currSaleVou.getBalance());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                            "Paid Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
 
             if (status || !chkAmount.isSelected()) {
@@ -2894,6 +2915,8 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
     @Override
     public void print() {
+        boolean status = false;
+
         if (isValidEntry() && saleTableModel.isValidEntry() && expTableModel.isValidEntry()) {
             Date vouSaleDate = DateUtil.toDate(txtSaleDate.getText());
             Date lockDate = PharmacyUtil.getLockDate(dao);
@@ -2902,7 +2925,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 isDataLock = true;
             }
 
-            boolean status = false;
             boolean iAllow = true;
 
             if (lblStatus.getText().equals("EDIT")) {
@@ -2910,13 +2932,25 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     iAllow = false;
                 }
             }
-            if (iAllow == true) {
-                if (chkAmount.isSelected()) {
-                    SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
-                            NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
-                            "Print");
-                    status = dialog.getConfStatus();
+
+            if (chkAmount.isSelected()) {
+                assignValueToObj();
+                SaleConfirmDialog1 dialog = new SaleConfirmDialog1(currSaleVou,
+                        NumberUtil.NZero(txtSaleLastBalance.getValue()), dao,
+                        "Print");
+                status = dialog.getConfStatus();
+            }
+
+            String admissionNo = Util1.isNull(txtAdmissionNo.getText(), "-");
+            if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
+                if (currSaleVou.getBalance() != 0) {
+                    log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + currSaleVou.getBalance());
+                    JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
+                            "Paid Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
+            }
+            if (iAllow == true) {
 
                 if (status || !chkAmount.isSelected()) {
                     //removeEmptyRow();
@@ -3388,15 +3422,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 }
             }
 
-            if (Util1.getPropValue("system.opdpatient.mustpaid").equals("Y") && admissionNo.equals("-")) {
-                if (vouBal != 0) {
-                    log.error("isValidEntry : " + txtVouNo.getText().trim() + " Balance is not zero. " + vouBal);
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Balance is not zero.",
-                            "Paid Error", JOptionPane.ERROR_MESSAGE);
-                    return false;
-                }
-            }
-
             if (!admissionNo.equals("-")) {
                 AdmissionKey key = new AdmissionKey();
                 key.setAmsNo(admissionNo);
@@ -3523,78 +3548,75 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
 
             }
 
-            calculateTotalAmount();
-
-            currSaleVou.setSaleInvId(txtVouNo.getText());
-            currSaleVou.setDueDate(DateUtil.toDate(txtDueDate.getText()));
-            currSaleVou.setLocationId((Location) cboLocation.getSelectedItem());
-            currSaleVou.setPaymentTypeId((PaymentType) cboPayment.getSelectedItem());
-            currSaleVou.setVouStatus((VouStatus) cboVouStatus.getSelectedItem());
-            currSaleVou.setRemark(txtRemark.getText());
-            currSaleVou.setVouTotal(NumberUtil.getDouble(txtVouTotal.getText()));
-            currSaleVou.setPaid(NumberUtil.getDouble(txtVouPaid.getText()));
-            currSaleVou.setDiscount(NumberUtil.getDouble(txtVouDiscount.getText()));
-            currSaleVou.setExpenseTotal(NumberUtil.getDouble(txtTotalExpense.getText()));
-            currSaleVou.setTtlExpenseIn(NumberUtil.getDouble(txtTtlExpIn.getText()));
-            currSaleVou.setBalance(NumberUtil.getDouble(txtVouBalance.getText()));
-            currSaleVou.setDiscP(NumberUtil.getDouble(txtDiscP.getText()));
-            currSaleVou.setTaxP(NumberUtil.getDouble(txtTaxP.getText()));
-            currSaleVou.setTaxAmt(NumberUtil.getDouble(txtTax.getText()));
-            currSaleVou.setDeleted(Util1.getNullTo(currSaleVou.getDeleted()));
-            currSaleVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
-
-            if (lblStatus.getText().equals("NEW")) {
-                currSaleVou.setDeleted(false);
-                currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
-            } else {
-                Date tmpDate = DateUtil.toDate(txtSaleDate.getText());
-                if (!DateUtil.isSameDate(tmpDate, currSaleVou.getSaleDate())) {
-                    currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
-                }
-            }
-            currSaleVou.setCurrencyId((Currency) cboCurrency.getSelectedItem());
-            if (lblStatus.getText().equals("NEW")) {
-                currSaleVou.setCreatedBy(Global.loginUser);
-                if (!isDeleteCopy) {
-                    currSaleVou.setSession(Global.sessionId);
-                }
-            } else {
-                currSaleVou.setUpdatedBy(Global.loginUser);
-                currSaleVou.setUpdatedDate(DateUtil.getTodayDateTime());
-            }
-
-            currSaleVou.setPaidCurrencyExRate(1.0);
-            currSaleVou.setPaidCurrencyAmt(currSaleVou.getPaid());
-            currSaleVou.setPaidCurrency(currSaleVou.getCurrencyId());
-
-            /*if (Util1.getPropValue("system.app.usage.type").equals("School")) {
-                currSaleVou.setStuName(txtCusName.getText());
-            }*/
-            currSaleVou.setAdmissionNo(txtAdmissionNo.getText());
-
-            if (txtBill.getText() == null) {
-                currSaleVou.setOtId(null);
-            } else if (txtBill.getText().isEmpty()) {
-                currSaleVou.setOtId(null);
-            } else {
-                currSaleVou.setOtId(txtBill.getText());
-            }
-
-            currSaleVou.setStuName(txtCusName.getText());
-
-            if (pt != null) {
-                if (pt.getPtType() != null) {
-                    currSaleVou.setPtType(pt.getPtType().getGroupId());
-                }
-            }
-
-            if (NumberUtil.NZeroL(currSaleVou.getExrId()) == 0) {
-                Long exrId = getExchangeId(txtSaleDate.getText(), currSaleVou.getCurrencyId().getCurrencyCode());
-                currSaleVou.setExrId(exrId);
-            }
+            assignValueToObj();
         }
 
         return status;
+    }
+
+    private void assignValueToObj() {
+        calculateTotalAmount();
+
+        currSaleVou.setSaleInvId(txtVouNo.getText());
+        currSaleVou.setDueDate(DateUtil.toDate(txtDueDate.getText()));
+        currSaleVou.setLocationId((Location) cboLocation.getSelectedItem());
+        currSaleVou.setPaymentTypeId((PaymentType) cboPayment.getSelectedItem());
+        currSaleVou.setVouStatus((VouStatus) cboVouStatus.getSelectedItem());
+        currSaleVou.setRemark(txtRemark.getText());
+        currSaleVou.setVouTotal(NumberUtil.getDouble(txtVouTotal.getText()));
+        currSaleVou.setPaid(NumberUtil.getDouble(txtVouPaid.getText()));
+        currSaleVou.setDiscount(NumberUtil.getDouble(txtVouDiscount.getText()));
+        currSaleVou.setExpenseTotal(NumberUtil.getDouble(txtTotalExpense.getText()));
+        currSaleVou.setTtlExpenseIn(NumberUtil.getDouble(txtTtlExpIn.getText()));
+        currSaleVou.setBalance(NumberUtil.getDouble(txtVouBalance.getText()));
+        currSaleVou.setDiscP(NumberUtil.getDouble(txtDiscP.getText()));
+        currSaleVou.setTaxP(NumberUtil.getDouble(txtTaxP.getText()));
+        currSaleVou.setTaxAmt(NumberUtil.getDouble(txtTax.getText()));
+        currSaleVou.setDeleted(Util1.getNullTo(currSaleVou.getDeleted()));
+        currSaleVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
+
+        if (lblStatus.getText().equals("NEW")) {
+            currSaleVou.setDeleted(false);
+            currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
+        } else {
+            Date tmpDate = DateUtil.toDate(txtSaleDate.getText());
+            if (!DateUtil.isSameDate(tmpDate, currSaleVou.getSaleDate())) {
+                currSaleVou.setSaleDate(DateUtil.toDateTime(txtSaleDate.getText()));
+            }
+        }
+        currSaleVou.setCurrencyId((Currency) cboCurrency.getSelectedItem());
+        if (lblStatus.getText().equals("NEW")) {
+            currSaleVou.setCreatedBy(Global.loginUser);
+            if (!isDeleteCopy) {
+                currSaleVou.setSession(Global.sessionId);
+            }
+        } else {
+            currSaleVou.setUpdatedBy(Global.loginUser);
+            currSaleVou.setUpdatedDate(DateUtil.getTodayDateTime());
+        }
+
+        currSaleVou.setPaidCurrencyExRate(1.0);
+        currSaleVou.setPaidCurrencyAmt(currSaleVou.getPaid());
+        currSaleVou.setPaidCurrency(currSaleVou.getCurrencyId());
+
+        /*if (Util1.getPropValue("system.app.usage.type").equals("School")) {
+                currSaleVou.setStuName(txtCusName.getText());
+            }*/
+        currSaleVou.setAdmissionNo(txtAdmissionNo.getText());
+
+        if (txtBill.getText() == null) {
+            currSaleVou.setOtId(null);
+        } else if (txtBill.getText().isEmpty()) {
+            currSaleVou.setOtId(null);
+        } else {
+            currSaleVou.setOtId(txtBill.getText());
+        }
+
+        currSaleVou.setStuName(txtCusName.getText());
+        if (NumberUtil.NZeroL(currSaleVou.getExrId()) == 0) {
+            Long exrId = getExchangeId(txtSaleDate.getText(), currSaleVou.getCurrencyId().getCurrencyCode());
+            currSaleVou.setExrId(exrId);
+        }
     }
 
     private void getCustomerList() {

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LabUsageSummary" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="fe80a5c1-f40a-45a0-93ab-f26625ccdb12">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="New Data Adapter "/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="463"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="523"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<parameter name="compName" class="java.lang.String"/>
+	<parameter name="prm_from" class="java.lang.String"/>
+	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="data_date" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT a.service_id, a.med_id, a.total_lab_test, a.ttl_smallest_qty as ttl_use, a.total_cost, os.service_name, m.med_name,
+       get_qty_in_str(a.ttl_smallest_qty, musr.unit_smallest, musr.unit_str) as ttl_use_str
+  from (SELECT a.service_id, b.med_id, a.total_lab_test, b.ttl_smallest_qty, b.total_cost
+          from (SELECT odh.service_id, sum(odh.qty) as total_lab_test
+                  FROM opd_details_his odh 
+                  join (SELECT DISTINCT vou_no, service_id from med_usaged mu WHERE date(mu.created_date) BETWEEN $P{prm_from} and $P{prm_to}) a
+                    on odh.vou_no = a.vou_no and odh.service_id = a.service_id
+                 group by odh.service_id) a
+          join (SELECT mu.service_id, mu.med_id, SUM(mu.qty_smallest) as ttl_smallest_qty, SUM(ifnull(mu.total_cost,0)) as total_cost
+                  FROM med_usaged mu 
+                 WHERE date(mu.created_date) BETWEEN $P{prm_from} and $P{prm_to}
+                 GROUP BY mu.service_id, mu.med_id) b ON a.service_id = b.service_id) a
+  JOIN opd_service os on a.service_id = os.service_id 
+  JOIN medicine m on a.med_id = m.med_id 
+  JOIN v_med_unit_smallest_rel musr on a.med_id = musr.med_id
+ ORDER by os.service_name, m.med_name]]>
+	</queryString>
+	<field name="service_name" class="java.lang.String"/>
+	<field name="total_lab_test" class="java.lang.Integer"/>
+	<field name="med_name" class="java.lang.String"/>
+	<field name="ttl_use" class="java.lang.String"/>
+	<field name="total_cost" class="java.lang.Double"/>
+	<field name="ttl_use_str" class="java.lang.String"/>
+	<variable name="ttl_amount" class="java.lang.Double" calculation="Sum">
+		<variableExpression><![CDATA[$F{total_cost}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="71" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="20" width="281" height="32" uuid="0744a360-3d21-49ab-bc13-490e233438c1"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Lab Usage Summary]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="1" y="1" width="554" height="20" uuid="1333feb8-3002-4b66-920e-d26f344d3d63"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{compName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="392" y="55" width="71" height="15" uuid="c1750861-13e5-486c-ba6b-3de1e6dba1b8"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<text><![CDATA[Printed Date :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy h.mm a">
+				<reportElement x="463" y="55" width="92" height="15" uuid="cfc6ac8b-e5b6-48b8-9417-0a84109ba523"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="51" width="280" height="20" uuid="9751c152-c45b-456e-9dde-c22d797f3485"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{data_date}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="17" splitType="Stretch">
+			<staticText>
+				<reportElement x="181" y="1" width="60" height="15" uuid="21361a26-c09b-4330-88e3-01fab84728c7">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Qty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="1" width="170" height="15" uuid="7083bd38-99aa-4c7f-a111-55d85de4626f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Lab Test]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="264" y="1" width="146" height="15" uuid="575dccf1-9659-4d37-a434-b840538aaa1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reagent / Test Kit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="485" y="1" width="70" height="15" uuid="54f644d0-cabc-4cb9-89c9-04a9605c7c40"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Cost]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="0" width="555" height="1" uuid="766ee192-ff3f-4c97-a88c-d0d46b53309b"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="16" width="555" height="1" uuid="212bdb17-5f57-457a-b199-38e540ac214d"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="420" y="1" width="62" height="15" uuid="d20e5c8e-7489-4802-a5d8-adc0c0e5e644">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total Qty]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<textField>
+				<reportElement x="181" y="0" width="60" height="15" uuid="331649e3-a5f5-48ff-b971-bef9eea9fd79">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_lab_test}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="170" height="15" uuid="b74fb196-e6a0-434f-be89-8d08c049c452">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{service_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="264" y="0" width="146" height="15" uuid="3b1e36f1-42be-4aaf-9062-9daca17f9ce8">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{med_name}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="485" y="0" width="70" height="15" uuid="5550158e-e92d-4b9b-83ee-88c4ff82b4a2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_cost}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="15" width="555" height="1" uuid="aa4a84ac-de5a-43b0-8a3f-6454c4eb206e"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Dotted"/>
+				</graphicElement>
+			</line>
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="420" y="0" width="62" height="15" uuid="14d2795e-9b99-4a6b-9d29-350a58486ac3">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Zawgyi-One" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ttl_use_str}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="20" splitType="Stretch">
+			<textField pattern="#,##0;(#,##0)">
+				<reportElement x="482" y="1" width="72" height="15" uuid="3030a4db-6f12-47f8-93df-f546622f14a0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{ttl_amount}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="378" y="1" width="50" height="15" uuid="d775f748-b168-48d1-b7d6-03fc4ecce87e"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total : ]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="0" width="555" height="1" uuid="5953d6c6-4cc6-4039-8b08-0177824b1153"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+				</graphicElement>
+			</line>
+		</band>
+	</summary>
+</jasperReport>

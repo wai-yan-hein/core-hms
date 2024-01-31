@@ -5,8 +5,10 @@
 package com.cv.app.opd.ui.common;
 
 import com.cv.app.opd.database.entity.Gender;
+import com.cv.app.opd.database.entity.LabMachine;
 import com.cv.app.opd.database.entity.OPDLabResultInd;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +24,10 @@ public class LabResultTableModelInd extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(LabResultTableModelInd.class.getName());
     private List<OPDLabResultInd> listResultInd = new ArrayList();
-    private final String[] columnNames = {"Low Value", "High Value", "Sex"};
+    private final String[] columnNames = {"Low Oper", "Low Value", "High Oper", 
+        "High Value", "Sex", "Age FOper", "Age From", "Age TOper", "Age To", "Machine",
+        "Description"
+    };
     private final AbstractDataAccess dao;
     private Integer serviceId = -1;
 
@@ -43,12 +48,28 @@ public class LabResultTableModelInd extends AbstractTableModel {
     @Override
     public Class getColumnClass(int column) {
         switch (column) {
-            case 0: //Low Value
+            case 0: //Low Oper
                 return String.class;
-            case 1: //High Value
+            case 1: //Low Value
+                return Float.class;
+            case 2: //High Oper
                 return String.class;
-            case 2: //Sex
+            case 3: //High Value
+                return Float.class;
+            case 4: //Sex
                 return Gender.class;
+            case 5: //Age FOper
+                return String.class;
+            case 6: //Age From
+                return Integer.class;
+            case 7: //Age TOper
+                return String.class;
+            case 8: //Age To
+                return Integer.class;
+            case 9: //Machine
+                return LabMachine.class;
+            case 10://Description
+                return String.class;
             default:
                 return Object.class;
         }
@@ -59,12 +80,28 @@ public class LabResultTableModelInd extends AbstractTableModel {
         OPDLabResultInd result = listResultInd.get(row);
 
         switch (column) {
-            case 0: //Low Value
+            case 0: //Low Oper
+                return result.getLowVOperator();
+            case 1: //Low Value
                 return result.getLowValue();
-            case 1: //High Value
+            case 2: //High Oper
+                return result.getHighVOperator();
+            case 3: //High Value
                 return result.getHighValue();
-            case 2: //Sex
+            case 4: //Sex
                 return result.getSex();
+            case 5: //Age FOper
+                return result.getAfOperator();
+            case 6: //Age From
+                return result.getAgeFrom();
+            case 7: //Age TOper
+                return result.getAtOperator();
+            case 8: //Age To
+                return result.getAgeTo();
+            case 9: //Machine
+                return result.getMachine();
+            case 10: //desp
+                return result.getDesp();
             default:
                 return null;
         }
@@ -75,21 +112,35 @@ public class LabResultTableModelInd extends AbstractTableModel {
         OPDLabResultInd result = listResultInd.get(row);
 
         switch (column) {
-            case 0: //Low Value
+            case 0: //Low Oper
                 if (value != null) {
-                    result.setLowValue(value.toString());
+                    result.setLowVOperator(value.toString());
+                } else {
+                    result.setLowVOperator(null);
+                }
+                break;
+            case 1: //Low Value
+                if (value != null) {
+                    result.setLowValue(NumberUtil.FloatZero(value));
                 } else {
                     result.setLowValue(null);
                 }
                 break;
-            case 1: //High Value
+            case 2: //High Oper
                 if (value != null) {
-                    result.setHighValue(value.toString());
+                    result.setHighVOperator(value.toString());
+                } else {
+                    result.setHighVOperator(null);
+                }
+                break;
+            case 3: //High Value
+                if (value != null) {
+                    result.setHighValue(NumberUtil.FloatZero(value));
                 } else {
                     result.setHighValue(null);
                 }
                 break;
-            case 2: //Sex
+            case 4: //Sex
                 if (value != null) {
                     Gender sex = (Gender) value;
                     result.setSex(sex);
@@ -97,6 +148,50 @@ public class LabResultTableModelInd extends AbstractTableModel {
                     result.setSex(null);
                 }
                 break;
+            case 5: //Age FOper
+                if (value != null) {
+                    result.setAfOperator(value.toString());
+                } else {
+                    result.setAfOperator(null);
+                }
+                break;
+                
+            case 6: //Age From
+                if (value != null) {
+                    result.setAgeFrom(NumberUtil.NZeroInt(value));
+                } else {
+                    result.setAgeFrom(null);
+                }
+                break;
+                
+            case 7: //Age TOper
+                if (value != null) {
+                    result.setAtOperator(value.toString());
+                } else {
+                    result.setAtOperator(null);
+                }
+                break;
+            case 8: //Age To
+                if (value != null) {
+                    result.setAgeTo(NumberUtil.NZeroInt(value));
+                } else {
+                    result.setAgeTo(null);
+                }
+                break;
+            case 9: //Machine
+                if (value != null) {
+                    LabMachine machine = (LabMachine) value;
+                    result.setMachine(machine);
+                } else {
+                    result.setMachine(null);
+                }
+                break;
+            case 10: //Desc
+                if(value != null){
+                    result.setDesp(value.toString());
+                }else{
+                    result.setDesp(null);
+                }
         }
 
         saveRecord(result);

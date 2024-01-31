@@ -2369,8 +2369,8 @@ public class SystemMigration extends javax.swing.JPanel {
 
                             while (rsRCI.next()) {
                                 OPDLabResultInd lri = new OPDLabResultInd();
-                                lri.setHighValue(rsRCI.getString("high_value"));
-                                lri.setLowValue(rsRCI.getString("low_value"));
+                                //lri.setHighValue(rsRCI.getString("high_value"));
+                                //lri.setLowValue(rsRCI.getString("low_value"));
                                 lri.setResultId(lr.getResultId());
                                 Gender sex = (Gender) dao.find(Gender.class, rsRCI.getString("sex"));
                                 lri.setSex(sex);
