@@ -6,7 +6,9 @@ package com.cv.app;
 
 import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
+import com.cv.app.pharmacy.database.entity.MachineInfo;
 import com.cv.app.pharmacy.database.entity.MachineProperty;
+import com.cv.app.util.DateUtil;
 import com.cv.app.util.Util1;
 import java.awt.Dimension;
 import java.awt.Image;
@@ -147,8 +149,10 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
 
     @Override
     public void onPreStartup() {
-        LoginDialog login = new LoginDialog(new JFrame(), true);
-        login.setIconImage(new ImageIcon(this.getClass().getResource("/ui/name_24px.png")).getImage());
+        JFrame frame = new JFrame();
+        LoginDialog login = new LoginDialog(frame, true);
+        Image image =new ImageIcon(this.getClass().getResource("/ui/name_24px.png")).getImage();
+        login.setIconImage(image);
         //WesleyLoginDialog login = new WesleyLoginDialog(new JFrame(), true);
         //Calculate dialog position to centre.
         Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -172,25 +176,32 @@ public class AppLifecycleAdvisor extends DefaultApplicationLifecycleAdvisor {
                         + Global.machineName + "'").toString();
                 dao.close();
             } catch (Exception ex) {
-                /*String machineName = Util1.getComputerName();
-                String ipAddress = Util1.getIPAddress();
-                MachineInfo machine = new MachineInfo();
-
-                machine.setIpAddress(ipAddress);
-                machine.setMachineName(machineName);
-
-                try {
-                    dao.save(machine);
-                    Global.machineId = dao.getMax("machine_id", "machine_info", "machine_name = '"
-                            + Global.machineName + "'").toString();
-                    dao.close();
-
-                } catch (Exception exSave) {
-                    log.error("onPreStartup : " + ex.getStackTrace()[0].getLineNumber() + " - " + exSave.toString());
-                }*/
-                JOptionPane.showMessageDialog(new JFrame(), "Your machie is not registered.",
-                        "Invalid Machine Name", JOptionPane.ERROR_MESSAGE);
-                System.exit(-1);
+                log.error("error : " + ex.getMessage());
+                SecurityDialog dialog = new SecurityDialog(frame);
+                dialog.setIconImage(image);
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                String inputKey = dialog.getKey();
+                String toDayKey = DateUtil.toDateStr(DateUtil.getTodayDate(), "yyyy-MM-dd");
+                toDayKey = toDayKey.replaceAll("-", "");
+                if (inputKey.equals(toDayKey)) {
+                    String machineName = Util1.getComputerName();
+                    String ipAddress = Util1.getIPAddress();
+                    MachineInfo machine = new MachineInfo();
+                    machine.setIpAddress(ipAddress);
+                    machine.setMachineName(machineName);
+                    try {
+                        dao.save(machine);
+                        Global.machineId = dao.getMax("machine_id", "machine_info", "machine_name = '"
+                                + Global.machineName + "'").toString();
+                        dao.close();
+                    } catch (Exception exSave) {
+                        log.error("onPreStartup : " + ex.getStackTrace()[0].getLineNumber() + " - " + exSave.toString());
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Invalid Security Key.");
+                    System.exit(0);
+                }
             }
 
             //Machine property

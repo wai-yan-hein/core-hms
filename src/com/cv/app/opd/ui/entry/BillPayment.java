@@ -328,7 +328,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void search() {
-        String strFilter = "o.deleted = false ";
+        String strFilter = "o.deleted = false and o.adjust = " + String.valueOf(rdoAdjust.isSelected()) + "\n";
 
         if (txtFrom.getText() != null && txtTo.getText() != null) {
             if (strFilter.isEmpty()) {
@@ -360,12 +360,6 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                 strFilter = "o.patientName like '%" + txtSPtName.getText().trim() + "%'";
             } else {
                 strFilter = strFilter + " and o.patientName like '%" + txtSPtName.getText().trim() + "%'";
-            }
-        } else if (rdoAdjust.isSelected()) {
-            if (strFilter.isEmpty()) {
-                strFilter = "o.adjust = true";
-            } else {
-                strFilter += " and o.adjust = true";
             }
         }
 
@@ -721,7 +715,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
 
         txtSTotalPaid.setEditable(false);
         txtSTotalPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txtSTotalPaid.setFont(Global.textFont);
+        txtSTotalPaid.setFont(Global.lableFont);
 
         jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Total : ");
@@ -742,6 +736,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
             }
         });
 
+        rdoAdjust.setFont(Global.lableFont);
         rdoAdjust.setText("Adjust");
         rdoAdjust.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

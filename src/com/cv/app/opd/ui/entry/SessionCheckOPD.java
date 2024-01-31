@@ -658,6 +658,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     private void search() {
         try {
             tableSCModel.setListVSessionClinic(dao.findAllHSQL(getHSQL()));
+            lblRecord.setText(String.valueOf(tableSCModel.getListVSessionClinic().size()));
             applyFilter();
         } catch (Exception ex) {
             log.error("search : " + ex.getMessage());
@@ -1023,6 +1024,8 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         cboSession = new javax.swing.JComboBox();
         butSearch = new javax.swing.JButton();
         butClear = new javax.swing.JButton();
+        jLabel11 = new javax.swing.JLabel();
+        lblRecord = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         cboCurrency = new javax.swing.JComboBox();
@@ -1078,7 +1081,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
 
         cboSession.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
 
-        butSearch.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butSearch.setFont(Global.lableFont);
         butSearch.setText("Search");
         butSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1086,13 +1089,19 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
             }
         });
 
-        butClear.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butClear.setFont(Global.lableFont);
         butClear.setText("Clear");
         butClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butClearActionPerformed(evt);
             }
         });
+
+        jLabel11.setFont(Global.lableFont);
+        jLabel11.setText("Records :");
+
+        lblRecord.setFont(Global.lableFont);
+        lblRecord.setText("0");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -1110,14 +1119,19 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtFrom)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addGap(0, 1, Short.MAX_VALUE)
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addComponent(txtTo)
                                     .addComponent(cboSession, 0, 105, Short.MAX_VALUE)))))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(butSearch)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(butClear, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblRecord, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -1141,7 +1155,11 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(butSearch)
                     .addComponent(butClear))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(lblRecord))
+                .addContainerGap())
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Filter"));
@@ -1190,7 +1208,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
 
         cboUser.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
 
-        butPrint.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butPrint.setFont(Global.lableFont);
         butPrint.setText("Print");
         butPrint.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1217,7 +1235,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     jLabel8.setFont(Global.lableFont);
     jLabel8.setText("Tran Type");
 
-    butPrintD.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+    butPrintD.setFont(Global.lableFont);
     butPrintD.setText("Print D");
     butPrintD.addActionListener(new java.awt.event.ActionListener() {
         public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1225,6 +1243,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         }
     });
 
+    butCheckPoint.setFont(Global.lableFont);
     butCheckPoint.setText("Check Point");
     butCheckPoint.addActionListener(new java.awt.event.ActionListener() {
         public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1274,9 +1293,9 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                                 .addComponent(txtPtName)))))
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addComponent(butPrint, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(butPrintD)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(butCheckPoint)
                     .addGap(0, 0, Short.MAX_VALUE)))
             .addContainerGap())
@@ -1306,7 +1325,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(butPrint)
                         .addComponent(butPrintD)
-                        .addComponent(butCheckPoint))
+                        .addComponent(butCheckPoint, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGap(1, 1, 1))
                 .addGroup(jPanel2Layout.createSequentialGroup()
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1384,7 +1403,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
                 .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
             .addContainerGap())
     );
     }// </editor-fold>//GEN-END:initComponents
@@ -1646,6 +1665,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     private javax.swing.JComboBox cboUser;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1659,6 +1679,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblRecord;
     private javax.swing.JTable tblSession;
     private javax.swing.JTable tblTotal;
     private javax.swing.JTextField txtDrName;
