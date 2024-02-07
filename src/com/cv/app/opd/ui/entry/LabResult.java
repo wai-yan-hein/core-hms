@@ -327,21 +327,43 @@ public class LabResult extends javax.swing.JPanel implements FormAction, KeyProp
                                     strDrName = "";
                                 }
 
-                                if (opdHis.getPatient().getAge() != null) {
-                                    strAge = opdHis.getPatient().getAge().toString();
+                                strAge = "";
+                                if(NumberUtil.NZeroInt(opdHis.getAge()) != 0 || NumberUtil.NZeroInt(opdHis.getAgeM()) != 0
+                                        || NumberUtil.NZeroInt(opdHis.getAgeD()) != 0){
+                                    if(NumberUtil.NZeroInt(opdHis.getAge()) != 0){
+                                        strAge = opdHis.getAge() + "y";
+                                    }
+                                    
+                                    if(NumberUtil.NZeroInt(opdHis.getAgeM()) != 0){
+                                        if(strAge.isEmpty()){
+                                            strAge = opdHis.getAge() + "m";
+                                        } else {
+                                            strAge = strAge + "," + opdHis.getAge() + "m";
+                                        }
+                                    }
+                                    
+                                    if(NumberUtil.NZeroInt(opdHis.getAgeD()) != 0){
+                                        if(strAge.isEmpty()){
+                                            strAge = opdHis.getAge() + "d";
+                                        } else {
+                                            strAge = strAge + "," + opdHis.getAge() + "d";
+                                        }
+                                    }
+                                    
                                 } else {
-                                    strAge = "";
-                                }
-                                if (strAge.equals("0") || strAge.isEmpty()) {
-                                    if (opdHis.getAge() != null) {
-                                        strAge = opdHis.getAge().toString();
+                                    if(opdHis.getPatient() != null){
+                                        if(opdHis.getPatient().getDob() != null){
+                                            strAge = DateUtil.getAge(DateUtil.toDateStr(opdHis.getPatient().getDob()));
+                                        }
                                     }
                                 }
+                                
                                 if (opdHis.getPatient().getSex() != null) {
                                     strSex = opdHis.getPatient().getSex().toString();
                                 } else {
                                     strSex = "";
                                 }
+                                
                                 txtRegNo.setText(opdHis.getPatient().getRegNo());
 
                                 if (opdHis.getAdmissionNo() != null) {

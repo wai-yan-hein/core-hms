@@ -752,6 +752,17 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
             //removeEmptyRow();
             try {
                 if (canEdit) {
+                    log.info("Backup start. : " + new Date());
+                    try {
+                        dao.execProc("bk_transfer",currTransfer.getTranVouId(),
+                                Global.loginUser.getUserId(),Global.machineId);
+                    } catch (Exception ex) {
+                        log.error("bk_opd : " + ex.getStackTrace()[0].getLineNumber() + " - " + currTransfer.getTranVouId() + " - " + ex);
+                    } finally {
+                        dao.close();
+                    }
+                    log.info("Backup end. : " + new Date());
+
                     dao.open();
                     dao.beginTran();
                     List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
@@ -817,6 +828,11 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                     "Locked Data", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        if(!canEdit){
+            JOptionPane.showConfirmDialog(Util1.getParent(), "You don't have permission to deleted this transfer.",
+                    "Transfer voucher delete", JOptionPane.ERROR);
+            return;
+        }
         try {
             if (tblTransfer.getCellEditor() != null) {
                 tblTransfer.getCellEditor().stopCellEditing();
@@ -850,6 +866,17 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
             //removeEmptyRow();
             try {
                 if (canEdit) {
+                    log.info("Backup start. : " + new Date());
+                    try {
+                        dao.execProc("bk_transfer",currTransfer.getTranVouId(),
+                                Global.loginUser.getUserId(),Global.machineId);
+                    } catch (Exception ex) {
+                        log.error("bk_opd : " + ex.getStackTrace()[0].getLineNumber() + " - " + currTransfer.getTranVouId() + " - " + ex);
+                    } finally {
+                        dao.close();
+                    }
+                    log.info("Backup end. : " + new Date());
+                    
                     dao.open();
                     dao.beginTran();
                     List<TransferDetailHis> listTmp = tblTransferModel.getListDetail();
@@ -932,7 +959,7 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                     "Locked Data", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-
+        
         boolean status = true;
 
         if (cboFromLocation.getSelectedItem() == null) {

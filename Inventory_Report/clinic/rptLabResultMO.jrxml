@@ -65,8 +65,8 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 	<pageHeader>
 		<band height="173" splitType="Stretch">
 			<textField>
-				<reportElement x="87" y="107" width="152" height="22" uuid="ef0650d6-b30f-43ab-83e1-2e88858fed75"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="77" y="107" width="152" height="22" uuid="ef0650d6-b30f-43ab-83e1-2e88858fed75"/>
+				<textElement verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{patientName}]]></textFieldExpression>
@@ -79,7 +79,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$P{resultDate}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="11" y="107" width="77" height="22" uuid="b6101a8d-9e3b-49ec-a02c-0ea303f154b3"/>
+				<reportElement x="1" y="107" width="77" height="22" uuid="b6101a8d-9e3b-49ec-a02c-0ea303f154b3"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -107,7 +107,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Reg No :]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="350" y="128" width="20" height="22" uuid="3cd946dc-7de8-4ad4-8b71-ca97530475e7"/>
+				<reportElement x="350" y="128" width="55" height="22" uuid="3cd946dc-7de8-4ad4-8b71-ca97530475e7"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -120,17 +120,10 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				</textElement>
 				<text><![CDATA[Sex :  ]]></text>
 			</staticText>
-			<staticText>
-				<reportElement x="371" y="128" width="20" height="22" uuid="cebcd2e0-52fc-41ae-9692-5c0b22582d86"/>
+			<textField isBlankWhenNull="true">
+				<reportElement x="350" y="107" width="43" height="22" uuid="12b50f7b-607a-44d1-a716-e8242d8ac593"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
-				</textElement>
-				<text><![CDATA[yrs]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement x="349" y="107" width="43" height="22" uuid="12b50f7b-607a-44d1-a716-e8242d8ac593"/>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{sex}]]></textFieldExpression>
 			</textField>
@@ -149,14 +142,14 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Issued Date :]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement x="87" y="128" width="152" height="22" uuid="13e3e0a6-6270-48ca-b0c2-3bf61d1231e7"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="77" y="128" width="152" height="22" uuid="13e3e0a6-6270-48ca-b0c2-3bf61d1231e7"/>
+				<textElement verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{doctor_name}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="11" y="128" width="77" height="22" uuid="590e3b88-4aeb-4afb-a37b-f82026069be2"/>
+				<reportElement x="1" y="128" width="77" height="22" uuid="590e3b88-4aeb-4afb-a37b-f82026069be2"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -177,7 +170,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Laboratory Report Form]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="11" y="149" width="77" height="22" uuid="8e76c4d5-7599-44c7-ab8d-2f7fb3103cd0"/>
+				<reportElement x="1" y="149" width="77" height="22" uuid="8e76c4d5-7599-44c7-ab8d-2f7fb3103cd0"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10"/>
 				</textElement>
@@ -198,7 +191,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Admission :  ]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement x="349" y="149" width="60" height="22" uuid="5dd47f77-1081-42b4-bcaf-43f2b49820f8">
+				<reportElement x="350" y="149" width="60" height="22" uuid="5dd47f77-1081-42b4-bcaf-43f2b49820f8">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -207,8 +200,8 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{admission_no}]]></textFieldExpression>
 			</textField>
 			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
-				<reportElement x="87" y="149" width="143" height="22" uuid="32b378fc-34f2-4a86-b2f7-464609e48524"/>
-				<textElement verticalAlignment="Middle">
+				<reportElement x="77" y="149" width="151" height="22" uuid="32b378fc-34f2-4a86-b2f7-464609e48524"/>
+				<textElement verticalAlignment="Bottom">
 					<font fontName="Zawgyi-One" size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{premark}]]></textFieldExpression>
@@ -234,47 +227,52 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 	<columnHeader>
 		<band height="21" splitType="Stretch">
 			<staticText>
-				<reportElement x="11" y="3" width="141" height="15" uuid="68374c10-f2a4-4bfb-9dee-2cd1093b1fb6"/>
+				<reportElement x="1" y="3" width="141" height="15" uuid="68374c10-f2a4-4bfb-9dee-2cd1093b1fb6"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Test]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="161" y="3" width="100" height="15" uuid="dab72f96-2aa1-4670-bb1f-0f80a1f1a659"/>
+				<reportElement x="251" y="3" width="100" height="15" uuid="dab72f96-2aa1-4670-bb1f-0f80a1f1a659"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Result]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="322" y="3" width="160" height="15" uuid="a22e379c-0d84-4bab-bdc6-87ef1a49a1e8"/>
+				<reportElement x="417" y="3" width="90" height="15" uuid="a22e379c-0d84-4bab-bdc6-87ef1a49a1e8"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Reference Range]]></text>
 			</staticText>
 			<line>
-				<reportElement x="11" y="20" width="542" height="1" uuid="0e59ded6-0501-4faa-9866-78b66ae067e5"/>
+				<reportElement x="0" y="20" width="555" height="1" uuid="0e59ded6-0501-4faa-9866-78b66ae067e5">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<graphicElement>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</line>
 			<line>
-				<reportElement x="11" y="2" width="542" height="1" uuid="f6620153-f05a-41ad-9422-82ff1d2c7f15"/>
+				<reportElement x="0" y="2" width="555" height="1" uuid="f6620153-f05a-41ad-9422-82ff1d2c7f15">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
 				<graphicElement>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</line>
 			<staticText>
-				<reportElement x="261" y="3" width="60" height="15" uuid="308cee4d-c25a-412e-a30b-c5e99af8e2ab"/>
+				<reportElement x="351" y="3" width="60" height="15" uuid="308cee4d-c25a-412e-a30b-c5e99af8e2ab"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Unit]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="482" y="3" width="70" height="15" uuid="b49ad13b-703e-4ad8-bab7-c30dad8b4d95"/>
+				<reportElement x="510" y="3" width="40" height="15" uuid="b49ad13b-703e-4ad8-bab7-c30dad8b4d95"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Arial" size="10" isBold="true"/>
 				</textElement>
@@ -283,9 +281,9 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="23" splitType="Stretch">
+		<band height="22" splitType="Stretch">
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="22" y="1" width="130" height="21" uuid="59bed91f-7227-4ced-be86-6289ee604086">
+				<reportElement x="12" y="1" width="227" height="21" uuid="59bed91f-7227-4ced-be86-6289ee604086">
 					<printWhenExpression><![CDATA[$F{result_type}==0]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -294,7 +292,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{result_text}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="161" y="1" width="100" height="21" uuid="78b74586-7166-453a-91cf-9e4e9a3db9e2">
+				<reportElement x="251" y="1" width="100" height="21" uuid="78b74586-7166-453a-91cf-9e4e9a3db9e2">
 					<printWhenExpression><![CDATA[$F{result_type}!=3]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -303,7 +301,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{result}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="322" y="1" width="160" height="21" uuid="73ae3b1b-894a-45ef-b6ec-e156e65576cd">
+				<reportElement x="417" y="1" width="90" height="21" uuid="73ae3b1b-894a-45ef-b6ec-e156e65576cd">
 					<printWhenExpression><![CDATA[$F{result_type}!=3]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -312,7 +310,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{ref_range}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="261" y="1" width="60" height="21" uuid="c81cf0b4-883b-4c56-8d35-22c3aa39c77e">
+				<reportElement x="351" y="1" width="60" height="21" uuid="c81cf0b4-883b-4c56-8d35-22c3aa39c77e">
 					<printWhenExpression><![CDATA[$F{result_type}!=3]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -321,7 +319,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{result_unit}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="482" y="1" width="70" height="21" uuid="a19c5e1c-1f09-43dc-b92d-115d3997b97d">
+				<reportElement x="510" y="1" width="40" height="21" uuid="a19c5e1c-1f09-43dc-b92d-115d3997b97d">
 					<printWhenExpression><![CDATA[$F{result_type}!=3]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -330,7 +328,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{remark}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="11" y="1" width="141" height="21" uuid="d1377df9-f236-431f-9332-7cea5ceebe6f">
+				<reportElement x="1" y="1" width="238" height="21" uuid="d1377df9-f236-431f-9332-7cea5ceebe6f">
 					<printWhenExpression><![CDATA[$F{result_type}==-1]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -339,7 +337,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{result_text}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="22" y="1" width="130" height="21" uuid="6097848c-4d16-47fb-b32c-b01eff8efe76">
+				<reportElement x="12" y="1" width="227" height="21" uuid="6097848c-4d16-47fb-b32c-b01eff8efe76">
 					<printWhenExpression><![CDATA[$F{result_type}==2]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Middle">
@@ -348,7 +346,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<textFieldExpression><![CDATA[$F{result_text}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="20" y="1" width="533" height="21" uuid="b85e4ce5-447b-49d6-992c-e79ba4a4947e">
+				<reportElement x="10" y="0" width="540" height="21" uuid="b85e4ce5-447b-49d6-992c-e79ba4a4947e">
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -367,7 +365,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 	<pageFooter>
 		<band height="98">
 			<staticText>
-				<reportElement x="408" y="20" width="150" height="15" uuid="7888e602-8f1c-4617-8399-5dcf1f5f1175">
+				<reportElement x="405" y="20" width="150" height="15" uuid="7888e602-8f1c-4617-8399-5dcf1f5f1175">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -377,7 +375,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Dr.Aye Aye Than]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="408" y="35" width="150" height="15" uuid="cb864e47-ec31-4ac5-8f64-c0988b092fcb">
+				<reportElement x="405" y="35" width="150" height="15" uuid="cb864e47-ec31-4ac5-8f64-c0988b092fcb">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.x" value="px"/>
 				</reportElement>
@@ -387,7 +385,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[M.B.B.S(Ygn), M.Med.Sc]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="408" y="50" width="150" height="15" uuid="262bd49f-652a-4e6c-bd7c-6d49247ee817">
+				<reportElement x="405" y="50" width="150" height="15" uuid="262bd49f-652a-4e6c-bd7c-6d49247ee817">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
@@ -396,7 +394,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Ph.D (Clinical Pathology)]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="408" y="65" width="150" height="15" uuid="ab02e884-cdaa-49e2-adc5-caa9d88a49f7">
+				<reportElement x="405" y="65" width="150" height="15" uuid="ab02e884-cdaa-49e2-adc5-caa9d88a49f7">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
@@ -405,7 +403,7 @@ order by ifnull(vo.result_order,vo.service_name), lrh.sort_order]]>
 				<text><![CDATA[Dip in Medical Education]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="408" y="80" width="150" height="15" uuid="09600073-aadf-4016-aec3-be9c7c96762a">
+				<reportElement x="405" y="80" width="150" height="15" uuid="09600073-aadf-4016-aec3-be9c7c96762a">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>

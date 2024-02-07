@@ -69,6 +69,8 @@ public class OPDHis implements java.io.Serializable {
     private Double pkgPrice;
     private String btId; //Bill transfer id
     private Float emgPercent;
+    private Integer ageM;
+    private Integer ageD;
 
     @Id
     @Column(name = "opd_inv_id", unique = true, nullable = false, length = 15)
@@ -445,5 +447,23 @@ public class OPDHis implements java.io.Serializable {
 
     public void setEmgPercent(Float emgPercent) {
         this.emgPercent = emgPercent;
+    }
+
+    @Column(name="agem")
+    public Integer getAgeM() {
+        return ageM;
+    }
+
+    public void setAgeM(Integer ageM) {
+        this.ageM = ageM;
+    }
+
+    @Column(name="aged")
+    public Integer getAgeD() {
+        return ageD;
+    }
+
+    public void setAgeD(Integer ageD) {
+        this.ageD = ageD;
     }
 }

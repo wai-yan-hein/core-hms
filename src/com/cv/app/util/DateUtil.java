@@ -363,7 +363,25 @@ public class DateUtil {
                     year = year - 1;
                 }
 
-                strAge = year + "y," + month + "m," + day + "d";
+                if(year != 0){
+                    strAge = year + "y";
+                }
+                
+                if(month != 0){
+                    if(strAge == null){
+                        strAge = month + "m";
+                    }else{
+                        strAge = strAge + "," + month + "m";
+                    }
+                }
+                
+                if(day != 0){
+                    if(strAge == null){
+                        strAge = day + "d";
+                    }else{
+                        strAge = strAge + "," + day + "d";
+                    }
+                }
             }
         } catch (Exception ex) {
         }

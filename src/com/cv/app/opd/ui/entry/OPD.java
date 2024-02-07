@@ -1616,6 +1616,8 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
             currVou.setPatientName(txtPatientName.getText());
             currVou.setAdmissionNo(txtAdmissionNo.getText());
             currVou.setAge(NumberUtil.NZeroInt(txtAge.getText()));
+            currVou.setAgeM(NumberUtil.NZeroInt(txtMonth.getText()));
+            currVou.setAgeD(NumberUtil.NZeroInt(txtMonth.getText()));
             currVou.setEmgPercent(NumberUtil.FloatZero(txtEmgPercent.getText()));
 
             if (payType == 1) {
