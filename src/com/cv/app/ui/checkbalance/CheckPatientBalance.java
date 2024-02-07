@@ -8,7 +8,6 @@ package com.cv.app.ui.checkbalance;
 import com.cv.app.common.Global;
 import com.cv.app.opd.database.entity.PatientBillPayment;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
-import static com.cv.app.pharmacy.database.entity.GenExpense_.vouNo;
 import com.cv.app.util.DateUtil;
 import com.cv.app.util.NumberUtil;
 import com.cv.app.util.Util1;
