@@ -68,6 +68,11 @@ public class DateUtil {
         return formatter.format(Calendar.getInstance().getTime());
     }
 
+    public static Date getTodayDate() {
+        Calendar calendar = Calendar.getInstance();
+        return calendar.getTime();
+    }
+
     public static String getTodayDateStr(String format) {
         SimpleDateFormat formatter = new SimpleDateFormat(format);
 

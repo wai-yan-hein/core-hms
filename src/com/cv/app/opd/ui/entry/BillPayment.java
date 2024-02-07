@@ -328,7 +328,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     }
 
     private void search() {
-        String strFilter = "o.deleted = false ";
+        String strFilter = "o.deleted = false and o.adjust = " + String.valueOf(rdoAdjust.isSelected()) + "\n";
 
         if (txtFrom.getText() != null && txtTo.getText() != null) {
             if (strFilter.isEmpty()) {
@@ -504,6 +504,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         jLabel11 = new javax.swing.JLabel();
         btnPrint = new javax.swing.JButton();
         butSearch1 = new javax.swing.JButton();
+        rdoAdjust = new javax.swing.JRadioButton();
 
         jButton1.setText("jButton1");
 
@@ -648,7 +649,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                     .addComponent(jLabel12)
                     .addComponent(txtAdmissionNo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTtlBalance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -714,7 +715,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
 
         txtSTotalPaid.setEditable(false);
         txtSTotalPaid.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        txtSTotalPaid.setFont(Global.textFont);
+        txtSTotalPaid.setFont(Global.lableFont);
 
         jLabel11.setFont(Global.lableFont);
         jLabel11.setText("Total : ");
@@ -732,6 +733,14 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         butSearch1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 butSearch1ActionPerformed(evt);
+            }
+        });
+
+        rdoAdjust.setFont(Global.lableFont);
+        rdoAdjust.setText("Adjust");
+        rdoAdjust.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rdoAdjustActionPerformed(evt);
             }
         });
 
@@ -771,6 +780,8 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                         .addComponent(btnPrint))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(rdoAdjust)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtSTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -798,11 +809,12 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
                     .addComponent(btnPrint)
                     .addComponent(butSearch1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 122, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSTotalPaid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel11))
+                    .addComponent(jLabel11)
+                    .addComponent(rdoAdjust))
                 .addContainerGap())
         );
 
@@ -937,6 +949,11 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
         deleteBill();
     }//GEN-LAST:event_butSearch1ActionPerformed
 
+    private void rdoAdjustActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdoAdjustActionPerformed
+        // TODO add your handling code here:
+        search();
+    }//GEN-LAST:event_rdoAdjustActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnPrint;
@@ -963,6 +980,7 @@ public class BillPayment extends javax.swing.JPanel implements FormAction, KeyPr
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblStatus;
+    private javax.swing.JRadioButton rdoAdjust;
     private javax.swing.JTable tblBillPayment;
     private javax.swing.JTable tblBillPaymentSearch;
     private javax.swing.JTextField txtAdmissionNo;
