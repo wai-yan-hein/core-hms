@@ -90,7 +90,8 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             txtCreditLimit.addKeyListener(new NumberKeyListener());
             txtCreditDays.addKeyListener(new NumberKeyListener());
             //cboGroup.setEnabled(false);
-            //butGCC.setEnabled(false);
+            butGCC.setVisible(false);
+            butUploadAll.setVisible(false);
             cboGroup.setSelectedItem(null);
             if (Util1.getPropValue("system.customer.code.editable").equals("True")) {
                 txtId.setEditable(true);
@@ -131,13 +132,13 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         if (strBaseGroup.isEmpty()) {
             strBaseGroup = "-";
         }
-        if (currCustomer.getTraderGroup() == null) {
+        /*if (currCustomer.getTraderGroup() == null) {
             butGCC.setEnabled(true);
         } else if (strBaseGroup.equals(currCustomer.getTraderGroup().getGroupId())) {
             butGCC.setEnabled(true);
         } else {
             butGCC.setEnabled(false);
-        }
+        }*/
         cboType.setSelectedItem(currCustomer.getTypeId());
         txtParent.setText(currCustomer.getParent());
         txtAccountId.setText(currCustomer.getAccountCode());
@@ -168,7 +169,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         cboTownship.setSelectedItem(null);
         txtCode.setText(null);
         selectRow = -1;
-        butGCC.setEnabled(false);
+        //butGCC.setEnabled(false);
         setFocus();
     }
 
