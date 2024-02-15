@@ -8,6 +8,7 @@ import com.cv.app.common.Global;
 import com.cv.app.common.SelectionObserver;
 import com.cv.app.inpatient.database.entity.AdmissionKey;
 import com.cv.app.inpatient.database.entity.Ams;
+import com.cv.app.opd.database.entity.OPDHis;
 import com.cv.app.opd.database.entity.Patient;
 import com.cv.app.opd.database.tempentity.LabUsage;
 import com.cv.app.opd.database.view.VOpd;
@@ -19,6 +20,7 @@ import com.cv.app.opd.ui.util.PatientSearch;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.util.DateUtil;
+import com.cv.app.util.NumberUtil;
 import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.sql.ResultSet;
@@ -43,6 +45,7 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
     private final LabStickerTableModel model = new LabStickerTableModel();
     private final LabStickerTestTableModel lstModel = new LabStickerTestTableModel();
     private final LabStickerMedUseTableModel muModel = new LabStickerMedUseTableModel();
+    private String option = "FILTER";
 
     /**
      * Creates new form LabSticker
@@ -57,27 +60,79 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
 
     private void getPatient() {
         try {
-            if (txtRegNo.getText() == null || txtRegNo.getText().trim().isEmpty()) {
-                txtRegNo.setText("");
-                txtPtName.setText("");
-            } else {
-                String regNo = txtRegNo.getText().trim();
-                List<Patient> listP = dao.findAllHSQL(
-                        "select o from Patient o where o.regNo = '" + regNo + "'");
-                Patient ptt = null;
-                if (listP != null) {
-                    if (!listP.isEmpty()) {
-                        ptt = listP.get(0);
-                    }
-                }
-
-                if (ptt == null) {
-                    JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registerationn no.",
-                            "Reg No.", JOptionPane.ERROR_MESSAGE);
+            if (option.equals("FILTER")) {
+                if (txtRegNo.getText() == null || txtRegNo.getText().trim().isEmpty()) {
+                    txtRegNo.setText("");
                     txtPtName.setText("");
                 } else {
-                    txtRegNo.setText(ptt.getRegNo());
-                    txtPtName.setText(ptt.getPatientName());
+                    String regNo = txtRegNo.getText().trim();
+                    List<Patient> listP = dao.findAllHSQL(
+                            "select o from Patient o where o.regNo = '" + regNo + "'");
+                    Patient ptt = null;
+                    if (listP != null) {
+                        if (!listP.isEmpty()) {
+                            ptt = listP.get(0);
+                        }
+                    }
+
+                    if (ptt == null) {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registerationn no.",
+                                "Reg No.", JOptionPane.ERROR_MESSAGE);
+                        txtPtName.setText("");
+                    } else {
+                        txtRegNo.setText(ptt.getRegNo());
+                        txtPtName.setText(ptt.getPatientName());
+                    }
+                }
+            } else {
+                if (txtRegNo1.getText() == null || txtRegNo1.getText().trim().isEmpty()) {
+                    txtRegNo1.setText("");
+                    txtPtName1.setText("");
+                } else {
+                    String regNo = txtRegNo1.getText().trim();
+                    List<Patient> listP = dao.findAllHSQL(
+                            "select o from Patient o where o.regNo = '" + regNo + "'");
+                    Patient ptt = null;
+                    if (listP != null) {
+                        if (!listP.isEmpty()) {
+                            ptt = listP.get(0);
+                        }
+                    }
+
+                    if (ptt == null) {
+                        JOptionPane.showMessageDialog(Util1.getParent(), "Invalid registerationn no.",
+                                "Reg No.", JOptionPane.ERROR_MESSAGE);
+                        txtPtName1.setText("");
+                    } else {
+                        txtRegNo1.setText(ptt.getRegNo());
+                        txtPtName1.setText(ptt.getPatientName());
+                        if (ptt.getDob() != null) {
+                            txtAge.setText(DateUtil.getAge(DateUtil.toDateStr(ptt.getDob())));
+                        }
+                        
+                        if (ptt.getAdmissionNo() != null) {
+                            if (!ptt.getAdmissionNo().isEmpty()) {
+                                txtAdmNo1.setText(ptt.getAdmissionNo());
+                                AdmissionKey key = new AdmissionKey();
+                                key.setAmsNo(ptt.getAdmissionNo());
+                                key.setRegister(ptt);
+                                Ams ams = (Ams) dao.find(Ams.class, key);
+                                if (ams != null) {
+                                    if (ams.getBuildingStructure() != null) {
+                                        if (ams.getBuildingStructure().getCode() != null) {
+                                            if (!ams.getBuildingStructure().getCode().isEmpty()) {
+                                                txtBedNo.setText(ams.getBuildingStructure().getCode());
+                                            } else {
+                                                txtBedNo.setText(ams.getBuildingStructure().getDescription());
+                                            }
+                                        } else {
+                                            txtBedNo.setText(ams.getBuildingStructure().getDescription());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -92,8 +147,13 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
         switch (source.toString()) {
             case "PatientSearch":
                 Patient ptt = (Patient) selectObj;
-                txtRegNo.setText(ptt.getRegNo());
-                txtPtName.setText(ptt.getPatientName());
+                if (option.equals("FILTER")) {
+                    txtRegNo.setText(ptt.getRegNo());
+                    txtPtName.setText(ptt.getPatientName());
+                } else {
+                    txtRegNo1.setText(ptt.getRegNo());
+                    txtPtName1.setText(ptt.getPatientName());
+                }
                 break;
         }
     }
@@ -188,12 +248,12 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                 assignLabTest(vou.getInvNo());
             }
         });
-        
+
         tblLabTest.getColumnModel().getColumn(0).setPreferredWidth(150);//Lab Test
         tblLabTest.getColumnModel().getColumn(1).setPreferredWidth(10);//Qty
         tblLabTest.getColumnModel().getColumn(2).setPreferredWidth(20);//Price
         tblLabTest.getColumnModel().getColumn(3).setPreferredWidth(30);//Amount
-        
+
         tblLabTest.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblLabTest.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
             int selectRow = -1;
@@ -207,7 +267,7 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                 assignLabStock(txtVouNo.getText(), serviceId);
             }
         });
-        
+
         tblLabUsage.getColumnModel().getColumn(0).setPreferredWidth(30);//Med Id
         tblLabUsage.getColumnModel().getColumn(1).setPreferredWidth(150);//Description
         tblLabUsage.getColumnModel().getColumn(2).setPreferredWidth(10);//Qty
@@ -246,25 +306,54 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
             }
 
             try {
-                String regNo = vou.getCusNo();
-                Patient pt = (Patient) dao.find(Patient.class, regNo);
-                if (pt != null) {
-                    if (donorOrExternal) {
+                OPDHis opdHis = (OPDHis) dao.find(OPDHis.class, vou.getInvNo());
+                String strAge = "";
+                if (NumberUtil.NZeroInt(opdHis.getAge()) != 0 || NumberUtil.NZeroInt(opdHis.getAgeM()) != 0
+                        || NumberUtil.NZeroInt(opdHis.getAgeD()) != 0) {
+                    if (NumberUtil.NZeroInt(opdHis.getAge()) != 0) {
+                        strAge = opdHis.getAge() + "y";
+                    }
 
-                    } else {
-                        if (pt.getDob() != null) {
-                            txtAge.setText(DateUtil.getAge(DateUtil.toDateStr(pt.getDob())));
+                    if (NumberUtil.NZeroInt(opdHis.getAgeM()) != 0) {
+                        if (strAge.isEmpty()) {
+                            strAge = opdHis.getAge() + "m";
+                        } else {
+                            strAge = strAge + "," + opdHis.getAge() + "m";
                         }
                     }
 
-                    if (vou.getRefNo() != null) {
-                        if (!vou.getRefNo().isEmpty()) {
-                            AdmissionKey key = new AdmissionKey(pt, vou.getRefNo());
-                            Ams adm = (Ams) dao.find(Ams.class, key);
-                            if (adm != null) {
-                                if (adm.getBuildingStructure() != null) {
-                                    txtBedNo.setText(adm.getBuildingStructure().getDescription());
-                                }
+                    if (NumberUtil.NZeroInt(opdHis.getAgeD()) != 0) {
+                        if (strAge.isEmpty()) {
+                            strAge = opdHis.getAge() + "d";
+                        } else {
+                            strAge = strAge + "," + opdHis.getAge() + "d";
+                        }
+                    }
+
+                }
+
+                if (!strAge.isEmpty()) {
+                    txtAge.setText(strAge);
+                } else {
+                    Patient pt = opdHis.getPatient();
+                    if (pt != null) {
+                        if (donorOrExternal) {
+
+                        } else {
+                            if (pt.getDob() != null) {
+                                txtAge.setText(DateUtil.getAge(DateUtil.toDateStr(pt.getDob())));
+                            }
+                        }
+                    }
+                }
+
+                if (opdHis.getAdmissionNo() != null) {
+                    if (!opdHis.getAdmissionNo().isEmpty()) {
+                        AdmissionKey key = new AdmissionKey(opdHis.getPatient(), opdHis.getAdmissionNo());
+                        Ams adm = (Ams) dao.find(Ams.class, key);
+                        if (adm != null) {
+                            if (adm.getBuildingStructure() != null) {
+                                txtBedNo.setText(adm.getBuildingStructure().getDescription());
                             }
                         }
                     }
@@ -341,12 +430,12 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                     + "  FROM med_usaged mu \n"
                     + "  JOIN medicine m on mu.med_id = m.med_id \n"
                     + "  JOIN location l on mu.location_id = l.location_id \n"
-                    + " WHERE mu.vou_type = 'OPD' and mu.vou_no = '" + vouNo 
+                    + " WHERE mu.vou_type = 'OPD' and mu.vou_no = '" + vouNo
                     + "' and mu.service_id = " + serviceId;
             ResultSet rs = dao.execSQL(strSql);
-            if(rs != null){
+            if (rs != null) {
                 List<LabUsage> list = new ArrayList();
-                while(rs.next()){
+                while (rs.next()) {
                     LabUsage lu = new LabUsage();
                     lu.setCreatedDate(rs.getDate("created_date"));
                     lu.setDesc(rs.getString("med_name"));
@@ -362,10 +451,10 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                     lu.setUpdatedDate(rs.getDate("updated_date"));
                     lu.setVouNo(rs.getString("vou_no"));
                     lu.setVouType(rs.getString("vou_type"));
-                    
+
                     list.add(lu);
                 }
-                
+
                 muModel.setList(list);
             }
         } catch (Exception ex) {
@@ -504,14 +593,23 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
         txtVouNo.setEditable(false);
         txtVouNo.setBorder(javax.swing.BorderFactory.createTitledBorder("Vou No"));
 
-        txtRegNo1.setEditable(false);
         txtRegNo1.setBorder(javax.swing.BorderFactory.createTitledBorder("Reg No."));
+        txtRegNo1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtRegNo1ActionPerformed(evt);
+            }
+        });
 
         txtAdmNo1.setEditable(false);
         txtAdmNo1.setBorder(javax.swing.BorderFactory.createTitledBorder("Adm No."));
 
         txtPtName1.setEditable(false);
         txtPtName1.setBorder(javax.swing.BorderFactory.createTitledBorder("Name"));
+        txtPtName1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                txtPtName1MouseClicked(evt);
+            }
+        });
 
         txtBedNo.setEditable(false);
         txtBedNo.setBorder(javax.swing.BorderFactory.createTitledBorder("Room No"));
@@ -540,7 +638,7 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtAdmNo1, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtPtName1, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                .addComponent(txtPtName1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtBedNo, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -605,7 +703,7 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jFormattedTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBox1, 0, 156, Short.MAX_VALUE)
+                        .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton1))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
@@ -630,8 +728,8 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
             .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2)
                     .addComponent(jScrollPane3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -667,11 +765,13 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
     }// </editor-fold>//GEN-END:initComponents
 
     private void txtRegNoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtRegNoActionPerformed
+        option = "FILTER";
         getPatient();
     }//GEN-LAST:event_txtRegNoActionPerformed
 
     private void txtPtNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtPtNameMouseClicked
         if (evt.getClickCount() == 2) {
+            option = "FILTER";
             PatientSearch dialog = new PatientSearch(dao, this);
         }
     }//GEN-LAST:event_txtPtNameMouseClicked
@@ -683,6 +783,18 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
     private void butPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butPrintActionPerformed
         print();
     }//GEN-LAST:event_butPrintActionPerformed
+
+    private void txtPtName1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtPtName1MouseClicked
+        if (evt.getClickCount() == 2) {
+            option = "STIKER";
+            PatientSearch dialog = new PatientSearch(dao, this);
+        }
+    }//GEN-LAST:event_txtPtName1MouseClicked
+
+    private void txtRegNo1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtRegNo1ActionPerformed
+        option = "STIKER";
+        getPatient();
+    }//GEN-LAST:event_txtRegNo1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

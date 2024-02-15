@@ -772,7 +772,7 @@ public class DCEntry1 extends javax.swing.JPanel implements FormAction, KeyPropa
                                             odf.setUniqueId(maxUniqueId++);
                                         }
                                         odf.setDcDetailId(odh.getOpdDetailId());
-                                        odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
+                                        //odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());
 
                                         if (odf.getDrFeeId() == null) {
                                             odf.setDrFeeId(odh.getOpdDetailId() + "-" + odf.getUniqueId().toString());

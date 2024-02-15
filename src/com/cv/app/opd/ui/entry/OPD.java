@@ -920,12 +920,13 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                 if (listTAL != null) {
                     if (!listTAL.isEmpty()) {
                         AmountLinkDialog dialog = new AmountLinkDialog(listTAL);
-                        if (!chkA5.isSelected()) {
+                        dialog.setVisible(true);
+                        /*if (!chkA5.isSelected()) {
                             dialog.setVisible(true);
                         }
                         if (!chkA4.isSelected()) {
                             dialog.setVisible(true);
-                        }
+                        }*/
                         double ttlLinkAmt = dialog.getTtlAmt();
                         double ttlDiscount = dialog.getTtlDisount();
                         params.put("p_ttl_discount", ttlDiscount + NumberUtil.NZero(currVou.getDiscountA()));

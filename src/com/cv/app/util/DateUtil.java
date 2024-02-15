@@ -334,18 +334,22 @@ public class DateUtil {
     public static String getAge(String dob) {
         String strAge = null;
         Date birthDate = toDate(dob);
-
+        Date todayDate = toDate(getTodayDateStr());    
         try {
             if (birthDate != null) {
-                Date todayDate = toDate(getTodayDateStr());
-                int dobYear = birthDate.getYear();
-                int dobMonth = birthDate.getMonth();
-                int dobDay = birthDate.getDate();
-                int currYear = todayDate.getYear();
-                int currMonth = todayDate.getMonth();
-                int currDay = todayDate.getDate();
+                Calendar cal1 = Calendar.getInstance();
+                cal1.setTime(birthDate);
+                Calendar cal2 = Calendar.getInstance();
+                cal2.setTime(todayDate);
+                
+                int dobYear = cal1.get(Calendar.YEAR); //birthDate.getYear();
+                int dobMonth = cal1.get(Calendar.MONTH); //birthDate.getMonth();
+                int dobDay = cal1.get(Calendar.DAY_OF_MONTH); //birthDate.getDate();
+                int currYear = cal2.get(Calendar.YEAR);
+                int currMonth = cal2.get(Calendar.MONTH);
+                int currDay = cal2.get(Calendar.DAY_OF_MONTH);
                 int year = currYear - dobYear;
-                int month = (currMonth + 1) - dobMonth;
+                int month = currMonth - dobMonth;
                 int day = currDay - dobDay;
                 int[] dayInMonth = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -368,22 +372,26 @@ public class DateUtil {
                     year = year - 1;
                 }
 
-                if(year != 0){
+                if (year != 0) {
                     strAge = year + "y";
                 }
-                
-                if(month != 0){
-                    if(strAge == null){
+
+                if (month != 0) {
+                    if (strAge == null) {
                         strAge = month + "m";
-                    }else{
+                    } else {
                         strAge = strAge + "," + month + "m";
                     }
                 }
+
+                if(day == 0 && year == 0 & month == 0){
+                    day = 1;
+                }
                 
-                if(day != 0){
-                    if(strAge == null){
+                if (day != 0) {
+                    if (strAge == null) {
                         strAge = day + "d";
-                    }else{
+                    } else {
                         strAge = strAge + "," + day + "d";
                     }
                 }
@@ -510,12 +518,18 @@ public class DateUtil {
         String output = null;
 
         try {
-            Date currDate = new Date();
-            int ttlDayInYear = year * 365;
+            //Date currDate = new Date();
+
+            /*int ttlDayInYear = year * 365;
             int ttlDayInMonth = month * 30;
             int totalDays = (ttlDayInYear + ttlDayInMonth + day) * -1;
 
-            output = subDateTo(currDate, totalDays);
+            output = subDateTo(currDate, totalDays);*/
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.YEAR, -year);
+            cal.add(Calendar.MONTH, -month);
+            cal.add(Calendar.DAY_OF_YEAR, -day);
+            output = toDateStr(cal.getTime());
         } catch (Exception ex) {
 
         }

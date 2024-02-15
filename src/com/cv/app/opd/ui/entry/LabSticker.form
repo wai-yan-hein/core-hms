@@ -177,12 +177,12 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Component id="jPanel3" alignment="0" max="32767" attributes="0"/>
               <Group type="102" attributes="0">
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                      <Component id="jScrollPane2" pref="522" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="jScrollPane2" max="32767" attributes="0"/>
                       <Component id="jScrollPane3" max="32767" attributes="0"/>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
                   <Component id="jPanel4" max="32767" attributes="0"/>
               </Group>
           </Group>
@@ -221,7 +221,7 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="txtAdmNo1" min="-2" pref="107" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="txtPtName1" pref="115" max="32767" attributes="0"/>
+                      <Component id="txtPtName1" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="txtBedNo" min="-2" pref="100" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -274,13 +274,15 @@
             </Component>
             <Component class="javax.swing.JTextField" name="txtRegNo1">
               <Properties>
-                <Property name="editable" type="boolean" value="false"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
                     <TitledBorder title="Reg No."/>
                   </Border>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="txtRegNo1ActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JTextField" name="txtAdmNo1">
               <Properties>
@@ -301,6 +303,9 @@
                   </Border>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="txtPtName1MouseClicked"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JTextField" name="txtBedNo">
               <Properties>
@@ -388,7 +393,7 @@
                           <Group type="102" attributes="0">
                               <Component id="jFormattedTextField1" min="-2" pref="113" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="jComboBox1" pref="156" max="32767" attributes="0"/>
+                              <Component id="jComboBox1" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jButton1" min="-2" max="-2" attributes="0"/>
                           </Group>
