@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PaymentList" pageWidth="595" pageHeight="850" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PaymentListByGroup" pageWidth="595" pageHeight="850" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abec2f24-45c2-45a8-9db4-24b8f5cda4c7">
 	<property name="ireport.zoom" value="1.0514816984441842"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -23,27 +23,81 @@
 	<parameter name="user_id" class="java.lang.String"/>
 	<parameter name="prm_from" class="java.lang.String"/>
 	<parameter name="prm_to" class="java.lang.String"/>
+	<parameter name="prm_cus_group" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select ph.pay_date, ph.trader_id, t.trader_name, 
-if(t.discriminator='C', ph.paid_amtc, 0) cash_in,
-if(t.discriminator='S', ph.paid_amtc, 0) cash_out
-from payment_his ph, trader t
-where ph.trader_id = t.trader_id and deleted = false
-and ph.pay_date between  $P{prm_from} and  $P{prm_to} 
-and ph.trader_id in (select distinct trader_id from tmp_trader_bal_filter where user_id =  $P{user_id} )
-order by ph.pay_date, t.trader_name]]>
+		<![CDATA[select ph.pay_date, ph.trader_id, t.trader_name, if(t.discriminator='S', 'SUP', ifnull(t.group_id,'T')) as group_id,
+       ifnull(cg.group_name,'Supplier') as group_name,sum(if(t.discriminator='C', ph.paid_amtc, 0)) cash_in,
+       sum(if(t.discriminator='S', ph.paid_amtc, 0)) cash_out
+  from payment_his ph join (select discriminator, trader_id, trader_name, ifnull(group_id,sys_prop_value) as group_id
+  from trader t, (select sys_prop_value from sys_prop where sys_prop_desp = 'system.cus.base.group') a) t on ph.trader_id = t.trader_id
+  left join customer_group cg on t.group_id = cg.group_id
+ where deleted = false and (t.group_id = $P{prm_cus_group} or $P{prm_cus_group} = 'All')
+   and ph.pay_date between $P{prm_from} and $P{prm_to} 
+   and ph.trader_id in (select distinct trader_id from tmp_trader_bal_filter where user_id =  $P{user_id})
+  group by ph.pay_date, ph.trader_id, t.trader_name, if(t.discriminator='S', 'SUP', ifnull(t.group_id,'T')),
+       ifnull(cg.group_name,'Supplier')
+ order by  ifnull(cg.group_name,'Supplier'), t.trader_name, ph.pay_date]]>
 	</queryString>
 	<field name="pay_date" class="java.sql.Date"/>
 	<field name="trader_id" class="java.lang.String"/>
 	<field name="trader_name" class="java.lang.String"/>
 	<field name="cash_in" class="java.lang.Double"/>
 	<field name="cash_out" class="java.lang.Double"/>
+	<field name="group_id" class="java.lang.String"/>
+	<field name="group_name" class="java.lang.String"/>
 	<variable name="ttl_cash_in" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{cash_in}]]></variableExpression>
 	</variable>
 	<variable name="ttl_cash_out" class="java.lang.Double" calculation="Sum">
 		<variableExpression><![CDATA[$F{cash_out}]]></variableExpression>
 	</variable>
+	<variable name="ttl_g_cash_in" class="java.lang.Double" resetType="Group" resetGroup="cus_group" calculation="Sum">
+		<variableExpression><![CDATA[$F{cash_in}]]></variableExpression>
+	</variable>
+	<variable name="ttl_g_cash_out" class="java.lang.Double" resetType="Group" resetGroup="cus_group" calculation="Sum">
+		<variableExpression><![CDATA[$F{cash_out}]]></variableExpression>
+	</variable>
+	<group name="cus_group">
+		<groupExpression><![CDATA[$F{group_name}]]></groupExpression>
+		<groupFooter>
+			<band height="17">
+				<line>
+					<reportElement x="355" y="0" width="200" height="1" uuid="bb11996d-b121-454f-81f1-969f88b4e12e">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+				</line>
+				<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+					<reportElement x="384" y="2" width="80" height="15" uuid="86948bd3-2b74-4bd0-9bd1-3e6af7c8464c"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_g_cash_in}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.###;(#,##0.###)" isBlankWhenNull="true">
+					<reportElement x="465" y="2" width="88" height="15" uuid="2a88f224-7593-4ece-b86f-7fd396240e38"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{ttl_g_cash_out}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="349" y="2" width="31" height="15" uuid="067d72f2-7f9b-4119-baf2-c2f924ccccb1"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total : ]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="220" y="2" width="128" height="15" uuid="232c6ec0-98bd-4004-b87e-e8fd1d32c8de"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Arial" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{group_name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -61,7 +115,7 @@ order by ph.pay_date, t.trader_name]]>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Arial" size="20" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Payment List]]></text>
+				<text><![CDATA[Payment List by Group]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="388" y="51" width="78" height="15" uuid="80e72331-c4bd-40c2-bc18-882e217917c7"/>
@@ -192,8 +246,8 @@ order by ph.pay_date, t.trader_name]]>
 			</line>
 			<textField>
 				<reportElement x="123" y="0" width="192" height="15" uuid="0b18f328-4e03-4550-96bc-69aeebcb7a0d"/>
-				<textElement textAlignment="Left" verticalAlignment="Middle">
-					<font fontName="Arial" size="8"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{trader_name}]]></textFieldExpression>
 			</textField>

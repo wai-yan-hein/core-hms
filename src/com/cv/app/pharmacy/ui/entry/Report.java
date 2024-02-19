@@ -1565,7 +1565,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         params.put("prm_vou_type", getVouStatus());
         params.put("reg_no", Util1.getString(txtRegNo.getText(), "-"));
         params.put("prm_location_group", getLocationGroup());
-
+        params.put("prm_cus_group", getCusGroup());
+        
         String toLocationName = "All";
         int toLocationId = 0;
         if (cboToLocation.getSelectedItem() instanceof Location) {

@@ -419,7 +419,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                             strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
                                     + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
                                     + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                    + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                     + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                     + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                     + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -428,7 +428,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                             strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
                                     + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
                                     + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                    + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                     + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                     + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                     + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -438,7 +438,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -447,7 +447,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(vdfp.amount,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -473,7 +473,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + selectedDrId + "',srv_fees5,0),0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id  "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -484,7 +484,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + selectedDrId + "',srv_fees5,0),0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -511,7 +511,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + selectedDrId + "',srv_fees6,0),0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -522,7 +522,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + selectedDrId + "',srv_fees6,0),0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -554,7 +554,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees2,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) \n"
@@ -565,7 +565,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees2,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) \n"
@@ -605,7 +605,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                     + selectedDrId + "', srv_fees4,0),0)) as amount, veac.exp_acc_id \n"
                                     + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                     + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                    + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                     + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                     + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                     + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -616,7 +616,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                             strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees4,0)) as amount, veac.exp_acc_id \n"
                                     + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                     + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                    + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                    + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                     + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                     + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                     + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -629,7 +629,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                                 + selectedDrId + "', srv_fees4,0),0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -639,7 +639,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees4,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) "
@@ -675,7 +675,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees3,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt_adm = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt_adm,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) \n"
@@ -686,7 +686,7 @@ public class OPDDoctorPayment extends javax.swing.JPanel implements KeyPropagate
                         strSqlExp = "select source_acc_id, acc_id, dept_code, use_for, sum(ifnull(srv_fees3,0)) as amount, veac.exp_acc_id \n"
                                 + "from v_opd_dr_fee_payment vdfp, (select cus_group_id, source_acc_id, acc_id, dept_code, use_for, exp_acc_id "
                                 + "from v_expense_acc where expense_type_id = " + et.getExpenseId().toString() + ") veac\n"
-                                + "where vdfp.payable_acc_opt = veac.use_for\n"
+                                + "where ifnull(vdfp.payable_acc_opt,'-') = veac.use_for\n"
                                 + " and date(opd_date) between '" + DateUtil.toDateStrMYSQL(txtFrom.getText())
                                 + "' and '" + DateUtil.toDateStrMYSQL(txtTo.getText()) + "'\n"
                                 + " and cat_id in (select opd_cat_id from opd_cus_lab_group_detail a where cus_grp_id = veac.cus_group_id) \n"

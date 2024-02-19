@@ -216,18 +216,18 @@ public class TestPanel extends javax.swing.JPanel {
                     String relStr = med.getRelStr().replace("*", ",");
                     String[] arrRelStr = relStr.split(",");
                     if (arrRelStr.length > 1) {
-                        if (arrRelStr[1].equals("10H")) {
-                            List<RelationGroup> list = med.getRelationGroupId();
-                            if (list != null) {
-                                RelationGroup rg = list.get(1);
-                                ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, "xTen");
-                                rg.setUnitId(iu);
-                                if (arrRelStr.length == 3) {
-                                    med.setRelStr(arrRelStr[0] + "*10xTen*" + arrRelStr[2]);
+                        if (arrRelStr.length == 3) {
+                            if (arrRelStr[2].equals("5Ap")) {
+                                List<RelationGroup> list = med.getRelationGroupId();
+                                if (list != null) {
+                                    RelationGroup rg = list.get(2);
+                                    ItemUnit iu = (ItemUnit) dao.find(ItemUnit.class, "Amp");
+                                    rg.setUnitId(iu);
+                                    med.setRelStr(arrRelStr[0] + "*" + arrRelStr[1] + "*5Amp");
+                                    med.setRelationGroupId(list);
+                                    dao.save(med);
+                                    log.info("med_id : " + medId);
                                 }
-                                med.setRelationGroupId(list);
-                                dao.save(med);
-                                log.info("med_id : " + medId);
                             }
                         }
                     }
