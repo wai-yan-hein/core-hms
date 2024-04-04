@@ -229,7 +229,7 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
                     vouEngine.updateVouNo();
                     vouNo = vouEngine.getVouNo();
                     txtVouNo.setText(vouNo);
-                    listPH = null;
+                    //listPH = null;
                     listPH = dao.findAllHSQL(
                             "select o from PurHis o where o.purInvId = '" + txtVouNo.getText() + "'");
 

@@ -19,6 +19,7 @@ import com.cv.app.opd.database.entity.OPDCusLabGroup;
 import com.cv.app.opd.database.entity.OPDGroup;
 import com.cv.app.opd.database.entity.OPDLabGroup;
 import com.cv.app.opd.database.entity.Patient;
+import com.cv.app.opd.database.helper.PaymentTypeFilter;
 import com.cv.app.opd.excel.AdmissionByDoctorExcel;
 import com.cv.app.opd.excel.CraftGroupRptExcel;
 import com.cv.app.opd.excel.DCIncomeByDoctorExcel;
@@ -39,6 +40,7 @@ import com.cv.app.opd.excel.OtIncomeByServiceDetailExcel;
 import com.cv.app.opd.excel.PatientBalanceExcel;
 import com.cv.app.opd.excel.PatientSummaryWHOlExcel;
 import com.cv.app.opd.ui.common.OPDTableCellEditor;
+import com.cv.app.opd.ui.common.PaymentTypeFilterTableModel;
 import com.cv.app.opd.ui.common.RptOPDServiceFilterTableModel;
 import com.cv.app.ot.database.entity.OTProcedureGroup;
 import com.cv.app.ot.ui.common.OTTableCellEditor;
@@ -62,7 +64,7 @@ import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +88,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private final RptOPDServiceFilterTableModel tblServiceTableModel = new RptOPDServiceFilterTableModel();
     private final RptDCServiceFilterTableModel tblDCServiceTableModel = new RptDCServiceFilterTableModel();
     private final RptOTServiceFilterTableModel tblOTServiceTableModel = new RptOTServiceFilterTableModel();
+    private final PaymentTypeFilterTableModel ptfTableMode = new PaymentTypeFilterTableModel();
 
     /**
      * Creates new form Report
@@ -192,6 +195,33 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         tblOTService.getColumnModel().getColumn(1).setPreferredWidth(150);
         tblOTServiceTableModel.setParent(tblOTService);
         tblOTServiceTableModel.addEmptyRow();
+
+        tblPayType.getColumnModel().getColumn(0).setPreferredWidth(150);
+        tblPayType.getColumnModel().getColumn(1).setPreferredWidth(30);
+
+        try {
+            String strSql = "select pt.payment_type_id, payment_type_name, if(tpt.pay_type_id is null, false, true) as pstatus\n"
+                    + "  from payment_type pt\n"
+                    + "  left join tmp_pay_type tpt on pt.payment_type_id = tpt.pay_type_id\n"
+                    + " where (mac_id = '" + Global.machineId + "' or '" + Global.machineId + "'='" + Global.machineId + "')";
+            ResultSet rs = dao.execSQL(strSql);
+            List<PaymentTypeFilter> list = new ArrayList();
+            if(rs != null){
+                while(rs.next()){
+                    PaymentTypeFilter ptf = new PaymentTypeFilter();
+                    ptf.setStatus(rs.getBoolean("pstatus"));
+                    ptf.setTypeId(rs.getInt("payment_type_id"));
+                    ptf.setTypeName(rs.getString("payment_type_name"));
+                    
+                    list.add(ptf);
+                }
+            }
+            ptfTableMode.setList(list);
+        } catch (Exception ex) {
+            log.error("initTable : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
     }
 
     private void actionMapping() {
@@ -1297,6 +1327,8 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         butCraftRpt = new javax.swing.JButton();
         butExcel = new javax.swing.JButton();
         butPrint = new javax.swing.JButton();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        tblPayType = new javax.swing.JTable();
 
         tblReport.setFont(Global.textFont);
         tblReport.setModel(tableModel);
@@ -1706,6 +1738,13 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addGap(0, 22, Short.MAX_VALUE))
         );
 
+        jScrollPane5.setBorder(javax.swing.BorderFactory.createTitledBorder("Payment Type"));
+
+        tblPayType.setFont(Global.textFont);
+        tblPayType.setModel(ptfTableMode);
+        tblPayType.setRowHeight(23);
+        jScrollPane5.setViewportView(tblPayType);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -1720,18 +1759,20 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 364, Short.MAX_VALUE)
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 295, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 288, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
@@ -1740,16 +1781,20 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(32, 32, 32))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(cboReportType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(37, 37, 37))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                                .addGap(364, 364, 364)))
+                        .addContainerGap())))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -2010,8 +2055,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JTable tblDCService;
     private javax.swing.JTable tblOTService;
+    private javax.swing.JTable tblPayType;
     private javax.swing.JTable tblReport;
     private javax.swing.JTable tblService;
     private javax.swing.JTextField txtAdmNo;

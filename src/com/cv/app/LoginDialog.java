@@ -73,8 +73,8 @@ public class LoginDialog extends javax.swing.JDialog {
 
     private void runAlready(java.awt.Frame parent) {
         try {
-            Global.sock = new ServerSocket(10000);//Pharmacy
-            //Global.sock = new ServerSocket(10001);//Clinic
+            //Global.sock = new ServerSocket(10000);//Pharmacy
+            Global.sock = new ServerSocket(10001);//Clinic
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(parent, "You cannot run two program at the same time in the same machine.",
                     "Duplicate Program running.", JOptionPane.ERROR_MESSAGE);

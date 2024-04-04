@@ -46,6 +46,7 @@ public class Patient implements java.io.Serializable {
     private Township township;
     private CustomerGroup ptType;
     private String otId;
+    private String bGroup;
 
     @Id
     @Column(name = "reg_no", unique = true, nullable = false, length = 15)
@@ -244,5 +245,14 @@ public class Patient implements java.io.Serializable {
 
     public void setOtId(String otId) {
         this.otId = otId;
+    }
+
+    @Column(name="blood_group")
+    public String getbGroup() {
+        return bGroup;
+    }
+
+    public void setbGroup(String bGroup) {
+        this.bGroup = bGroup;
     }
 }

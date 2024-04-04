@@ -6093,9 +6093,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         vouEngine.setPeriod(DateUtil.getPeriod(txtSaleDate.getText()));
                         genVouNo();
                         if (currSaleVou.getCustomerId() != null) {
-                            int creditDay = NumberUtil.NZeroInt(((Customer) currSaleVou.getCustomerId()).getCreditDays());
-                            if (creditDay != 0) {
-                                txtDueDate.setText(DateUtil.subDateTo(DateUtil.toDate(strDate), creditDay));
+                            Trader t = currSaleVou.getCustomerId();
+                            if (t instanceof Customer) {
+                                int creditDay = NumberUtil.NZeroInt(((Customer) currSaleVou.getCustomerId()).getCreditDays());
+                                if (creditDay != 0) {
+                                    txtDueDate.setText(DateUtil.subDateTo(DateUtil.toDate(strDate), creditDay));
+                                }
                             } else {
                                 txtDueDate.setText(null);
                             }

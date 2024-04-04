@@ -13,6 +13,7 @@ import com.cv.app.common.NumberKeyListener;
 import com.cv.app.common.StartWithRowFilter;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.BusinessType;
+import com.cv.app.pharmacy.database.entity.CompoundKey;
 import com.cv.app.pharmacy.database.entity.Customer;
 import com.cv.app.pharmacy.database.entity.CustomerGroup;
 import com.cv.app.pharmacy.database.entity.Location;
@@ -20,6 +21,7 @@ import com.cv.app.pharmacy.database.entity.PayMethod;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.entity.TraderType;
+import com.cv.app.pharmacy.database.entity.VouId;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.ui.common.TraderTableModel;
 import com.cv.app.pharmacy.ui.util.GenChildCustomer;
@@ -83,6 +85,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             lblStatus.setText("NEW");
             chkActive.setSelected(true);
             assignCusId();
+            assignCusCode();
             dao.close();
             sorter = new TableRowSorter(tblCustomer.getModel());
             tblCustomer.setRowSorter(sorter);
@@ -170,6 +173,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         txtCode.setText(null);
         selectRow = -1;
         //butGCC.setEnabled(false);
+        assignCusId();
         setFocus();
     }
 
@@ -463,7 +467,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         return status;
     }
 
-    private void assignCusId() {
+    private void assignCusCode() {
         String strFilter;
         Object maxCusId;
         CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
@@ -522,12 +526,43 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
 
             if (cg == null) {
-                txtId.setText("CUS" + maxCusId.toString());
+                txtCode.setText("CUS" + maxCusId.toString());
             } else {
-                txtId.setText("CUS" + cg.getGroupId() + maxCusId.toString());
+                txtCode.setText("CUS" + cg.getGroupId() + maxCusId.toString());
             }
         } catch (Exception ex) {
             log.error("assignCusId : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        }
+    }
+
+    private void assignCusId() {
+        try {
+            VouId vouId = (VouId) dao.find(VouId.class, new CompoundKey("CUSID", "CUSID", "CUSID"));
+            int lastVouNo = 1;
+            if (vouId != null) {
+                lastVouNo = vouId.getVouNo();
+            }
+            int maxLength = NumberUtil.NZeroInt(Util1.getPropValue("system.customer.code.length"));
+            String cusId = "CUS" + String.format("%0" + maxLength + "d", lastVouNo);
+            txtId.setText(cusId);
+        } catch (Exception ex) {
+            log.error("assignCusId : " + ex.getMessage());
+        }
+    }
+
+    private void updateCusId() {
+        try {
+            VouId vouId = (VouId) dao.find(VouId.class, new CompoundKey("CUSID", "CUSID", "CUSID"));
+            int lastVouNo = 1;
+            if (vouId == null) {
+                vouId = new VouId(new CompoundKey("CUSID", "CUSID", "CUSID"), lastVouNo);
+            } else {
+                lastVouNo = vouId.getVouNo();
+                vouId.setVouNo(lastVouNo + 1);
+            }
+            dao.save(vouId);
+        } catch (Exception ex) {
+            log.error("assignCusId : " + ex.getMessage());
         }
     }
 
@@ -545,6 +580,9 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                 }
                 //For BK Pagolay
                 dao.save(currCustomer);
+                if (!lblStatus.getText().equals("EDIT")) {
+                    updateCusId();
+                }
 
                 //For integration with account
                 if (Global.mqConnection != null) {
@@ -795,121 +833,58 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
 
         jScrollPane1 = new javax.swing.JScrollPane();
         tblCustomer = new javax.swing.JTable();
-        jLabel1 = new javax.swing.JLabel();
-        txtId = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        txtName = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        txtAddress = new javax.swing.JTextArea();
-        jLabel4 = new javax.swing.JLabel();
-        txtPhone = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        txtEMail = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        txtCreditLimit = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
-        txtCreditDays = new javax.swing.JTextField();
-        jLabel8 = new javax.swing.JLabel();
-        cboGroup = new javax.swing.JComboBox();
-        jLabel9 = new javax.swing.JLabel();
-        txtParent = new javax.swing.JTextField();
-        jLabel10 = new javax.swing.JLabel();
-        chkActive = new javax.swing.JCheckBox();
         txtFilter = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
-        txtAccountId = new javax.swing.JTextField();
-        jLabel12 = new javax.swing.JLabel();
-        cboType = new javax.swing.JComboBox();
-        lblStatus = new javax.swing.JLabel();
-        butGroup = new javax.swing.JButton();
-        jLabel13 = new javax.swing.JLabel();
-        cboTownship = new javax.swing.JComboBox();
-        butTownship = new javax.swing.JButton();
-        jLabel14 = new javax.swing.JLabel();
-        cboPayMethod = new javax.swing.JComboBox();
-        jLabel15 = new javax.swing.JLabel();
-        txtRemark = new javax.swing.JTextField();
-        butGCC = new javax.swing.JButton();
-        butUploadAll = new javax.swing.JButton();
-        jLabel16 = new javax.swing.JLabel();
-        butBusiness = new javax.swing.JButton();
-        cboBusinessType = new javax.swing.JComboBox();
-        jLabel17 = new javax.swing.JLabel();
-        txtCode = new javax.swing.JTextField();
         cboFilterTownship = new javax.swing.JComboBox<>();
         cboLocation = new javax.swing.JComboBox<>();
         chkFilter = new javax.swing.JCheckBox();
         cboCusGroup = new javax.swing.JComboBox<>();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel17 = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        txtCode = new javax.swing.JTextField();
+        txtId = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel12 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
+        jLabel13 = new javax.swing.JLabel();
+        jLabel14 = new javax.swing.JLabel();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        cboGroup = new javax.swing.JComboBox();
+        butGroup = new javax.swing.JButton();
+        cboBusinessType = new javax.swing.JComboBox();
+        butBusiness = new javax.swing.JButton();
+        txtName = new javax.swing.JTextField();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtAddress = new javax.swing.JTextArea();
+        txtPhone = new javax.swing.JTextField();
+        txtEMail = new javax.swing.JTextField();
+        txtCreditLimit = new javax.swing.JTextField();
+        txtCreditDays = new javax.swing.JTextField();
+        cboType = new javax.swing.JComboBox();
+        txtParent = new javax.swing.JTextField();
+        txtAccountId = new javax.swing.JTextField();
+        butTownship = new javax.swing.JButton();
+        cboTownship = new javax.swing.JComboBox();
+        cboPayMethod = new javax.swing.JComboBox();
+        txtRemark = new javax.swing.JTextField();
+        chkActive = new javax.swing.JCheckBox();
+        lblStatus = new javax.swing.JLabel();
+        butUploadAll = new javax.swing.JButton();
+        butGCC = new javax.swing.JButton();
 
         tblCustomer.setFont(Global.textFont);
         tblCustomer.setModel(tableModel);
         tblCustomer.setRowHeight(23);
         jScrollPane1.setViewportView(tblCustomer);
-
-        jLabel1.setFont(Global.lableFont);
-        jLabel1.setText("ID");
-
-        txtId.setEditable(false);
-        txtId.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-
-        jLabel2.setFont(Global.lableFont);
-        jLabel2.setText("Name");
-
-        txtName.setFont(Global.textFont);
-
-        jLabel3.setFont(Global.lableFont);
-        jLabel3.setText("Address");
-
-        txtAddress.setColumns(20);
-        txtAddress.setFont(Global.textFont);
-        txtAddress.setRows(5);
-        jScrollPane2.setViewportView(txtAddress);
-
-        jLabel4.setFont(Global.lableFont);
-        jLabel4.setText("Phone");
-
-        txtPhone.setFont(Global.textFont);
-
-        jLabel5.setFont(Global.lableFont);
-        jLabel5.setText("E-Mail");
-
-        txtEMail.setFont(Global.textFont);
-
-        jLabel6.setFont(Global.lableFont);
-        jLabel6.setText("Credit Limit");
-
-        txtCreditLimit.setFont(Global.textFont);
-        txtCreditLimit.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-
-        jLabel7.setFont(Global.lableFont);
-        jLabel7.setText("Credit Days");
-
-        txtCreditDays.setFont(Global.textFont);
-        txtCreditDays.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-
-        jLabel8.setFont(Global.lableFont);
-        jLabel8.setText("Group");
-
-        cboGroup.setFont(Global.textFont);
-        cboGroup.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboGroupItemStateChanged(evt);
-            }
-        });
-        cboGroup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboGroupActionPerformed(evt);
-            }
-        });
-
-        jLabel9.setFont(Global.lableFont);
-        jLabel9.setText("Parent");
-
-        txtParent.setFont(Global.textFont);
-
-        jLabel10.setFont(Global.lableFont);
-        jLabel10.setText("Active");
 
         txtFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         txtFilter.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -946,86 +921,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
         });
 
-        jLabel11.setFont(Global.lableFont);
-        jLabel11.setText("Acc ID");
-
-        txtAccountId.setFont(Global.textFont);
-
-        jLabel12.setFont(Global.lableFont);
-        jLabel12.setText("Price Type");
-
-        cboType.setFont(Global.textFont);
-
-        lblStatus.setText("NEW");
-
-        butGroup.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butGroup.setText("...");
-        butGroup.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butGroupActionPerformed(evt);
-            }
-        });
-
-        jLabel13.setFont(Global.lableFont);
-        jLabel13.setText("Township ");
-
-        cboTownship.setFont(Global.textFont);
-        cboTownship.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboTownshipActionPerformed(evt);
-            }
-        });
-
-        butTownship.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butTownship.setText("...");
-        butTownship.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butTownshipActionPerformed(evt);
-            }
-        });
-
-        jLabel14.setFont(Global.lableFont);
-        jLabel14.setText("Pay Method");
-
-        cboPayMethod.setFont(Global.textFont);
-
-        jLabel15.setFont(Global.lableFont);
-        jLabel15.setText("Remark");
-
-        txtRemark.setFont(Global.textFont);
-
-        butGCC.setText("Gen-Child-Cus");
-        butGCC.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butGCCActionPerformed(evt);
-            }
-        });
-
-        butUploadAll.setText("Upload All");
-        butUploadAll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butUploadAllActionPerformed(evt);
-            }
-        });
-
-        jLabel16.setText("Business");
-        jLabel16.setFont(Global.lableFont);
-
-        butBusiness.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
-        butBusiness.setText("...");
-        butBusiness.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                butBusinessActionPerformed(evt);
-            }
-        });
-
-        cboBusinessType.setFont(Global.textFont);
-
-        jLabel17.setFont(Global.lableFont);
-        jLabel17.setText("Code");
-
-        txtCode.setFont(Global.textFont);
-
         cboFilterTownship.setFont(Global.textFont);
         cboFilterTownship.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1053,6 +948,335 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
             }
         });
 
+        jLabel17.setFont(Global.lableFont);
+        jLabel17.setText("Code");
+
+        jLabel1.setFont(Global.lableFont);
+        jLabel1.setText("ID");
+
+        txtCode.setFont(Global.textFont);
+
+        txtId.setEditable(false);
+        txtId.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+
+        jLabel8.setFont(Global.lableFont);
+        jLabel8.setText("Group");
+
+        jLabel16.setText("Business");
+        jLabel16.setFont(Global.lableFont);
+
+        jLabel2.setFont(Global.lableFont);
+        jLabel2.setText("Name");
+
+        jLabel3.setFont(Global.lableFont);
+        jLabel3.setText("Address");
+
+        jLabel4.setFont(Global.lableFont);
+        jLabel4.setText("Phone");
+
+        jLabel5.setFont(Global.lableFont);
+        jLabel5.setText("E-Mail");
+
+        jLabel6.setFont(Global.lableFont);
+        jLabel6.setText("Credit Limit");
+
+        jLabel7.setFont(Global.lableFont);
+        jLabel7.setText("Credit Days");
+
+        jLabel12.setFont(Global.lableFont);
+        jLabel12.setText("Price Type");
+
+        jLabel9.setFont(Global.lableFont);
+        jLabel9.setText("Parent");
+
+        jLabel11.setFont(Global.lableFont);
+        jLabel11.setText("Acc ID");
+
+        jLabel13.setFont(Global.lableFont);
+        jLabel13.setText("Township ");
+
+        jLabel14.setFont(Global.lableFont);
+        jLabel14.setText("Pay Method");
+
+        jLabel15.setFont(Global.lableFont);
+        jLabel15.setText("Remark");
+
+        jLabel10.setFont(Global.lableFont);
+        jLabel10.setText("Active");
+
+        cboGroup.setFont(Global.textFont);
+        cboGroup.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboGroupItemStateChanged(evt);
+            }
+        });
+        cboGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboGroupActionPerformed(evt);
+            }
+        });
+
+        butGroup.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butGroup.setText("...");
+        butGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butGroupActionPerformed(evt);
+            }
+        });
+
+        cboBusinessType.setFont(Global.textFont);
+
+        butBusiness.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butBusiness.setText("...");
+        butBusiness.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butBusinessActionPerformed(evt);
+            }
+        });
+
+        txtName.setFont(Global.textFont);
+
+        txtAddress.setColumns(20);
+        txtAddress.setFont(Global.textFont);
+        txtAddress.setRows(5);
+        jScrollPane2.setViewportView(txtAddress);
+
+        txtPhone.setFont(Global.textFont);
+
+        txtEMail.setFont(Global.textFont);
+
+        txtCreditLimit.setFont(Global.textFont);
+        txtCreditLimit.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        txtCreditDays.setFont(Global.textFont);
+        txtCreditDays.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+
+        cboType.setFont(Global.textFont);
+
+        txtParent.setFont(Global.textFont);
+
+        txtAccountId.setFont(Global.textFont);
+
+        butTownship.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        butTownship.setText("...");
+        butTownship.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butTownshipActionPerformed(evt);
+            }
+        });
+
+        cboTownship.setFont(Global.textFont);
+        cboTownship.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboTownshipActionPerformed(evt);
+            }
+        });
+
+        cboPayMethod.setFont(Global.textFont);
+
+        txtRemark.setFont(Global.textFont);
+
+        lblStatus.setText("NEW");
+
+        butUploadAll.setText("Upload All");
+        butUploadAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butUploadAllActionPerformed(evt);
+            }
+        });
+
+        butGCC.setText("Gen-Child-Cus");
+        butGCC.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                butGCCActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel17)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtCode))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtId))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtName))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtPhone))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtEMail))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtCreditLimit))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtCreditDays))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtParent))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel13)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboTownship, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butTownship))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtAccountId))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel14)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboPayMethod, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel15)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtRemark))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                .addComponent(jLabel16)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cboBusinessType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                .addComponent(jLabel8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cboGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(butGroup)
+                            .addComponent(butBusiness)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(chkActive)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addGap(0, 108, Short.MAX_VALUE)
+                        .addComponent(butUploadAll)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butGCC)))
+                .addContainerGap())
+        );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel11, jLabel12, jLabel13, jLabel14, jLabel15, jLabel16, jLabel17, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
+
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(txtId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel17)
+                    .addComponent(txtCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel8)
+                    .addComponent(cboGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butGroup))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(cboBusinessType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(butBusiness))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(txtPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(txtEMail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(txtCreditLimit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7)
+                    .addComponent(txtCreditDays, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel12)
+                    .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(txtParent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtAccountId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel13)
+                    .addComponent(butTownship)
+                    .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(cboPayMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel15)
+                    .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(163, 163, 163))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(chkActive, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(butGCC)
+                            .addComponent(butUploadAll))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {butGroup, cboBusinessType, cboGroup});
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {txtCode, txtId});
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -1071,202 +1295,27 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
                         .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(chkFilter)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtId, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(cboGroup, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butGroup))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel17)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtCode))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9)
-                            .addComponent(jLabel11)
-                            .addComponent(jLabel13))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtParent)
-                            .addComponent(txtAccountId)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(cboTownship, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(butTownship))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel10)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(chkActive)
-                        .addGap(18, 18, 18)
-                        .addComponent(lblStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel14)
-                            .addComponent(jLabel15))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(cboPayMethod, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtRemark)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(butUploadAll)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butGCC))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel7)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel16))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(cboBusinessType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(butBusiness))
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE)
-                            .addComponent(txtCreditDays)
-                            .addComponent(txtCreditLimit)
-                            .addComponent(txtEMail)
-                            .addComponent(txtPhone)
-                            .addComponent(txtName)
-                            .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
-
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel11, jLabel12, jLabel17, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
-
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(txtId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cboFilterTownship, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(chkFilter)
-                    .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel17)
-                            .addComponent(txtCode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(jLabel8)
-                                .addComponent(butGroup))
-                            .addComponent(cboGroup, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(butBusiness)
-                                .addComponent(cboBusinessType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(8, 8, 8)
-                                .addComponent(jLabel16)))
-                        .addGap(5, 5, 5)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3))
-                        .addGap(7, 7, 7)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(txtPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(txtEMail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel6)
-                            .addComponent(txtCreditLimit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel7)
-                            .addComponent(txtCreditDays, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel12)
-                            .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel9)
-                            .addComponent(txtParent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel11)
-                            .addComponent(txtAccountId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel13)
-                            .addComponent(cboTownship, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(butTownship))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel14)
-                            .addComponent(cboPayMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel15)
-                            .addComponent(txtRemark, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(chkActive, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(butGCC)
-                            .addComponent(butUploadAll))
-                        .addGap(0, 55, Short.MAX_VALUE)))
+                    .addComponent(chkFilter, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboFilterTownship, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cboCusGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1)
                 .addContainerGap())
+            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 584, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
-
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {butGroup, cboBusinessType, cboGroup});
-
-        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {txtCode, txtId});
-
     }// </editor-fold>//GEN-END:initComponents
-
-    private void cboGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGroupActionPerformed
-        try {
-            if (currCustomer != null) {
-                if (currCustomer.getTraderId() == null) {
-                    if (!bindStatus) {
-                        assignCusId();
-                    }
-                }
-            }
-            dao.close();
-        } catch (Exception ex) {
-            log.error("cboGroupActionPerformed : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
-        }
-    }//GEN-LAST:event_cboGroupActionPerformed
-
-    private void cboGroupItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGroupItemStateChanged
-        System.out.println("Item State Changed");
-    }//GEN-LAST:event_cboGroupItemStateChanged
 
   private void txtFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFilterKeyReleased
       /*if (statusFilter) {
@@ -1282,86 +1331,6 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
           sorter.setRowFilter(RowFilter.regexFilter(txtFilter.getText()));
       }
   }//GEN-LAST:event_txtFilterKeyReleased
-
-    private void butGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGroupActionPerformed
-        try {
-            showDialog("Customer Group Setup");
-            CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
-            BindingUtil.BindCombo(cboGroup,
-                    dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
-            cboGroup.setSelectedItem(cg);
-        } catch (Exception ex) {
-            log.error("butGroupActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }//GEN-LAST:event_butGroupActionPerformed
-
-  private void butTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTownshipActionPerformed
-      try {
-          TownshipSetup setup = new TownshipSetup();
-          setup.setVisible(true);
-          Township ts = (Township) cboTownship.getSelectedItem();
-          BindingUtil.BindCombo(cboTownship, dao.findAll("Township"));
-          cboTownship.setSelectedItem(ts);
-      } catch (Exception ex) {
-          log.error("butTownshipActionPerformed : " + ex.getMessage());
-      } finally {
-          dao.close();
-      }
-  }//GEN-LAST:event_butTownshipActionPerformed
-
-    private void butGCCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGCCActionPerformed
-        GenChildCustomer gcc = new GenChildCustomer(currCustomer, dao);
-        gcc = null;
-    }//GEN-LAST:event_butGCCActionPerformed
-
-    private void butUploadAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butUploadAllActionPerformed
-        List<Trader> listCus = tableModel.getListTrader();
-        if (listCus != null) {
-            if (Global.mqConnection != null) {
-                ActiveMQConnection mq = Global.mqConnection;
-                if (mq.isStatus()) {
-                    //uploadCustomer((Customer) listCus.get(1));
-                    for (Trader tr : listCus) {
-                        uploadCustomer((Customer) tr);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "ActiveMQ is not connected.",
-                            "ActiveMQ", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "ActiveMQ is not initialize.",
-                        "ActiveMQ", JOptionPane.ERROR_MESSAGE);
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "No customer list.",
-                    "Customer", JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_butUploadAllActionPerformed
-
-    private void butBusinessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBusinessActionPerformed
-        // TODO add your handling code here:
-        //showDialog("Business Type SetUp");
-        try {
-            BusinessTypeSetup setup = new BusinessTypeSetup();
-            setup.setSize(800, 600);
-            setup.setTitle("Business Type Setup");
-            setup.setLocationRelativeTo(this);
-            setup.setVisible(true);
-            BusinessType bst = (BusinessType) cboBusinessType.getSelectedItem();
-            BindingUtil.BindCombo(cboBusinessType, dao.findAll("BusinessType"));
-            cboBusinessType.setSelectedItem(bst);
-        } catch (Exception ex) {
-            log.error("butBusinessActionPerformed : " + ex.getMessage());
-        } finally {
-            dao.close();
-        }
-    }//GEN-LAST:event_butBusinessActionPerformed
-
-    private void cboTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTownshipActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cboTownshipActionPerformed
 
     private void txtFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtFilterActionPerformed
         // TODO add your handling code here:
@@ -1411,6 +1380,106 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
         }
     }//GEN-LAST:event_cboCusGroupActionPerformed
 
+    private void butBusinessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butBusinessActionPerformed
+        // TODO add your handling code here:
+        //showDialog("Business Type SetUp");
+        try {
+            BusinessTypeSetup setup = new BusinessTypeSetup();
+            setup.setSize(800, 600);
+            setup.setTitle("Business Type Setup");
+            setup.setLocationRelativeTo(this);
+            setup.setVisible(true);
+            BusinessType bst = (BusinessType) cboBusinessType.getSelectedItem();
+            BindingUtil.BindCombo(cboBusinessType, dao.findAll("BusinessType"));
+            cboBusinessType.setSelectedItem(bst);
+        } catch (Exception ex) {
+            log.error("butBusinessActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }//GEN-LAST:event_butBusinessActionPerformed
+
+    private void cboGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboGroupActionPerformed
+        try {
+            if (currCustomer != null) {
+                if (currCustomer.getTraderId() == null) {
+                    if (!bindStatus) {
+                        //assignCusId();
+                        assignCusCode();
+                    }
+                }
+            }
+            dao.close();
+        } catch (Exception ex) {
+            log.error("cboGroupActionPerformed : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+        }
+    }//GEN-LAST:event_cboGroupActionPerformed
+
+    private void cboGroupItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboGroupItemStateChanged
+        System.out.println("Item State Changed");
+    }//GEN-LAST:event_cboGroupItemStateChanged
+
+    private void butUploadAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butUploadAllActionPerformed
+        List<Trader> listCus = tableModel.getListTrader();
+        if (listCus != null) {
+            if (Global.mqConnection != null) {
+                ActiveMQConnection mq = Global.mqConnection;
+                if (mq.isStatus()) {
+                    //uploadCustomer((Customer) listCus.get(1));
+                    for (Trader tr : listCus) {
+                        uploadCustomer((Customer) tr);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "ActiveMQ is not connected.",
+                            "ActiveMQ", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "ActiveMQ is not initialize.",
+                        "ActiveMQ", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No customer list.",
+                    "Customer", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_butUploadAllActionPerformed
+
+    private void butGCCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGCCActionPerformed
+        GenChildCustomer gcc = new GenChildCustomer(currCustomer, dao);
+        gcc = null;
+    }//GEN-LAST:event_butGCCActionPerformed
+
+    private void butTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butTownshipActionPerformed
+        try {
+            TownshipSetup setup = new TownshipSetup();
+            setup.setVisible(true);
+            Township ts = (Township) cboTownship.getSelectedItem();
+            BindingUtil.BindCombo(cboTownship, dao.findAll("Township"));
+            cboTownship.setSelectedItem(ts);
+        } catch (Exception ex) {
+            log.error("butTownshipActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }//GEN-LAST:event_butTownshipActionPerformed
+
+    private void cboTownshipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboTownshipActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cboTownshipActionPerformed
+
+    private void butGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butGroupActionPerformed
+        try {
+            showDialog("Customer Group Setup");
+            CustomerGroup cg = (CustomerGroup) cboGroup.getSelectedItem();
+            BindingUtil.BindCombo(cboGroup,
+                    dao.findAllHSQL("select o from CustomerGroup o where o.useFor = 'CUS' order by o.groupName"));
+            cboGroup.setSelectedItem(cg);
+        } catch (Exception ex) {
+            log.error("butGroupActionPerformed : " + ex.getMessage());
+        } finally {
+            dao.close();
+        }
+    }//GEN-LAST:event_butGroupActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butBusiness;
     private javax.swing.JButton butGCC;
@@ -1444,6 +1513,7 @@ public class CustomerSetup extends javax.swing.JPanel implements FormAction, Key
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblStatus;
