@@ -346,14 +346,14 @@ public class ItemSetupKS extends javax.swing.JPanel implements SelectionObserver
             try {
                 if (lblStatus.getText().equals("NEW")) {
                     List<RelationGroup> lstTmp = new ArrayList();
-                    lstTmp.addAll(rpTableMode.getDetail());
+                    lstTmp.addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                     currMedicine.setRelationGroupId(lstTmp);
                 } else if (currMedicine.getRelationGroupId() != null) {
                     currMedicine.getRelationGroupId().removeAll(currMedicine.getRelationGroupId());
-                    currMedicine.setRelationGroupId(rpTableMode.getDetail());
+                    currMedicine.setRelationGroupId(rpTableMode.getDetail(currMedicine.getMedId()));
                 } else {
                     List<RelationGroup> lstTmp = new ArrayList();
-                    lstTmp.addAll(rpTableMode.getDetail());
+                    lstTmp.addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                     currMedicine.setRelationGroupId(lstTmp);
                 }
                 //For BK Pagolay

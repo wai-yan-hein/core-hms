@@ -47,11 +47,16 @@ public class MedicineUP {
     public void add(Medicine med) {
         if (!hasUnit.containsKey(med.getMedId())) {
             try {
-                med = (Medicine) dao.find(Medicine.class, med.getMedId());
+                //med = (Medicine) dao.find(Medicine.class, med.getMedId());
+                if (med.getRelationGroupId() == null || med.getRelationGroupId().isEmpty()) {
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                            + med.getMedId() + "' order by o.relUniqueId");
+                    med.setRelationGroupId(listRel);
+                }
                 if (med.getRelationGroupId() != null) {
-                    if (med.getRelationGroupId().size() > 0) {
+                    /*if (med.getRelationGroupId().size() > 0) {
                         med.setRelationGroupId(med.getRelationGroupId());
-                    }
+                    }*/
                     List<ItemUnit> listItemUnit = new ArrayList();
                     hasRelation.put(med.getMedId(), med.getRelationGroupId());
 

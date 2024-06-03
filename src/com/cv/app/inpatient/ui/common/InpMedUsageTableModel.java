@@ -11,6 +11,7 @@ import com.cv.app.inpatient.database.entity.MedUsageKey;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
@@ -144,10 +145,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
 
                         dao.open();
                         Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
-                        if (med.getRelationGroupId().size() > 0) {
-                            medUp.add(med);
-                        }
+                        medUp.add(med);
 
                         if (record.getKey() == null) {
                             MedUsageKey key = new MedUsageKey(srvId, med);
@@ -191,10 +189,10 @@ public class InpMedUsageTableModel extends AbstractTableModel {
                     record.setUpdatedDate(new Date());
                     break;
                 case 4: //Location
-                    if(value == null){
+                    if (value == null) {
                         record.setLocation(null);
-                    }else{
-                        record.setLocation((Location)value);
+                    } else {
+                        record.setLocation((Location) value);
                     }
                     break;
             }
@@ -313,7 +311,7 @@ public class InpMedUsageTableModel extends AbstractTableModel {
             dao.close();
         }
     }
-    
+
     private void bkRecord(InpMedUsage record, String option) {
         try {
             String strSql = "insert into bk_inp_med_usage(service_id, med_id, unit_qty, unit_id, \n"

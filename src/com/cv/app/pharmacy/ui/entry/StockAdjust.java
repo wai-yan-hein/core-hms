@@ -15,6 +15,7 @@ import com.cv.app.pharmacy.database.entity.AdjHis;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
 import com.cv.app.pharmacy.ui.common.CurrencyEditor;
@@ -439,6 +440,9 @@ public class StockAdjust extends javax.swing.JPanel implements SelectionObserver
                 try {
                 dao.open();
                 Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
+                med.setRelationGroupId(listRel);
                 medUp.add(med);
                 int selectRow = tblAdjDetail.getSelectedRow();
                 adjTableModel.setMed(med, selectRow);

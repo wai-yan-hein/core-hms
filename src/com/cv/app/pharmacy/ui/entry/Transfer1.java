@@ -468,17 +468,11 @@ public class Transfer1 extends javax.swing.JPanel implements SelectionObserver, 
                 try {
                 dao.open();
                 Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                List<RelationGroup> listRel = med.getRelationGroupId();
-                med.setRelationGroupId(listRel);
 
-                if (listRel.size() > 0) {
-                    medUp.add(med);
-                    stockList.add(med, (Location) cboFromLocation.getSelectedItem());
-                    int selectRow = tblTransfer.getSelectedRow();
-                    tblTransferModel.setMed(med, selectRow, stockList);
-                } else {
-                    System.out.println("Transfer.selected MedicineList : Cannot get relation group");
-                }
+                medUp.add(med);
+                stockList.add(med, (Location) cboFromLocation.getSelectedItem());
+                int selectRow = tblTransfer.getSelectedRow();
+                tblTransferModel.setMed(med, selectRow, stockList);
             } catch (Exception ex) {
                 log.error("MedicineList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {

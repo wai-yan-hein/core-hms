@@ -19,6 +19,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import org.hibernate.annotations.GenerationTime;
 
 /**
@@ -130,10 +131,11 @@ public class Medicine implements java.io.Serializable {
         this.relStr = relStr;
     }
 
-    @OneToMany(cascade= CascadeType.ALL, fetch=FetchType.LAZY)
+    /*@OneToMany(cascade= CascadeType.ALL, fetch=FetchType.LAZY)
     @JoinTable(name = "med_rel", joinColumns = { @JoinColumn(name = "med_id") }, 
             inverseJoinColumns = { @JoinColumn(name = "rel_group_id") })
-    @OrderBy("relUniqueId")
+    @OrderBy("relUniqueId")*/
+    @Transient
     public List<RelationGroup> getRelationGroupId() {
         return relationGroupId;
     }

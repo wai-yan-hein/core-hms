@@ -28,12 +28,11 @@
          where sh.deleted = false and date(sale_date) between $P{prm_from} and $P{prm_to}
          group by sdh.med_id) a
   join v_med_unit_smallest_rel b on a.med_id = b.med_id
-  join (select vmr.med_id, vmr.sale_price
+  join (select distinct vmr.med_id, vmr.sale_price
           from v_med_rel vmr
-          join (select mr.med_id, min(rg.smallest_qty) as unit_small
-                  from med_rel mr
-                  JOIN relation_group rg on mr.rel_group_id = rg.rel_group_id
-                 group by mr.med_id) vmrs on vmr.med_id = vmrs.med_id and vmr.smallest_qty = vmrs.unit_small) c
+          join (select rg.med_id, min(rg.smallest_qty) as unit_small
+                  from relation_group rg 
+                 group by rg.med_id) vmrs on vmr.med_id = vmrs.med_id and vmr.smallest_qty = vmrs.unit_small) c
 		on a.med_id = c.med_id
  where ifnull(a.ttl_samllest_qty,0)<>0
  order by b.med_name;]]>

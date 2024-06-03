@@ -7,6 +7,7 @@ package com.cv.app.pharmacy.ui.common;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.StockReceiveDetailHis;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.StockOutstanding;
@@ -314,18 +315,22 @@ public class ReceiveTableModel extends AbstractTableModel {
     }
 
     public void setListDetail(List<StockReceiveDetailHis> listDetail) {
-        this.listDetail = listDetail;
-        if (this.listDetail != null) {
-            if (listDetail != null) {
-                if (!listDetail.isEmpty()) {
-                    StockReceiveDetailHis tmpD = listDetail.get(listDetail.size() - 1);
-                    maxUniqueId = tmpD.getUniqueId();
+        try {
+            this.listDetail = listDetail;
+            if (this.listDetail != null) {
+                if (listDetail != null) {
+                    if (!listDetail.isEmpty()) {
+                        StockReceiveDetailHis tmpD = listDetail.get(listDetail.size() - 1);
+                        maxUniqueId = tmpD.getUniqueId();
+                    }
                 }
+                for (StockReceiveDetailHis srdh : this.listDetail) {
+                    medUp.add(srdh.getRecMed());
+                }
+                fireTableDataChanged();
             }
-            for (StockReceiveDetailHis srdh : this.listDetail) {
-                medUp.add(srdh.getRecMed());
-            }
-            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("setListDetail : " + ex.getMessage());
         }
     }
 
@@ -470,6 +475,9 @@ public class ReceiveTableModel extends AbstractTableModel {
                     + medCode + "' and active = true");
 
             if (medicine != null) {
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                        + medicine.getMedId() + "' order by o.relUniqueId");
+                medicine.setRelationGroupId(listRel);
                 setMed(medicine, srdh);
             } else {
                 JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",

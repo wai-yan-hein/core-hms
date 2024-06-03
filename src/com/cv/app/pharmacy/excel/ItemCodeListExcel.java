@@ -36,9 +36,9 @@ public class ItemCodeListExcel extends GenExcel {
                 + "group_concat(concat(rg.sale_pric_b, '/',rg.item_unit) separator ',') sale_pric_b,\n"
                 + "group_concat(concat(rg.sale_pric_c, '/',rg.item_unit) separator ',') sale_pric_c,\n"
                 + "group_concat(concat(rg.sale_pric_d, '/',rg.item_unit) separator ',') sale_pric_d\n"
-                + "from medicine med, med_rel mr, relation_group rg, item_type itp,\n"
+                + "from medicine med, relation_group rg, item_type itp,\n"
                 + "(select distinct med_id from tmp_stock_filter where user_id = $P{user_id}) filt\n"
-                + "where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id\n"
+                + "where med.med_id = rg.med_id \n"
                 + "and med.med_id = filt.med_id and med.med_type_id = itp.item_type_code\n"
                 + "group by med.med_id, med.med_name, med.med_rel_str, itp.item_type_name, med.med_type_id\n"
                 + "order by itp.item_type_name, med.med_name";

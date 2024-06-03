@@ -32,6 +32,8 @@ import com.cv.app.pharmacy.database.entity.SaleHis;
 import com.cv.app.pharmacy.ui.common.FormAction;
 import com.cv.app.pharmacy.util.PharmacyUtil;
 import com.cv.app.util.BindingUtil;
+import com.cv.app.util.DateUtil;
+import com.cv.app.util.ReportUtil;
 import com.cv.app.util.Util1;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -40,14 +42,17 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
@@ -120,6 +125,10 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         txtCode.setText(null);
         cboSpeciality.setSelectedItem(null);
         txtNIRC.setText(null);
+        txtDegree.setText(null);
+        txtMMSpeciality.setText(null);
+        txtMMName.setText(null);
+        txtTime.setText(null);
         lblStatus.setText("NEW");
         chkActive.setSelected(true);
         currDoctor = new Doctor();
@@ -170,7 +179,7 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         //Adding table row selection listener.
         tblDoctor.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
             int row = tblDoctor.getSelectedRow();
-            
+
             selectRow = -1;
             if (row != -1) {
                 selectRow = tblDoctor.convertRowIndexToModel(row);
@@ -229,6 +238,10 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
             chkActive.setSelected(currDoctor.isActive());
             lblStatus.setText("EDIT");
             cboType.setSelectedItem(currDoctor.getDrType());
+            txtDegree.setText(currDoctor.getDegree());
+            txtMMSpeciality.setText(currDoctor.getMmSpeciality());
+            txtMMName.setText(currDoctor.getMmName());
+            txtTime.setText(currDoctor.getWkTime());
         } catch (Exception ex) {
             log.error("setCurrDoctor : " + ex.getMessage());
         } finally {
@@ -285,6 +298,10 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
             } else {
                 currDoctor.setDrType(null);
             }
+            currDoctor.setDegree(txtDegree.getText().trim());
+            currDoctor.setMmSpeciality(txtMMSpeciality.getText().trim());
+            currDoctor.setMmName(txtMMName.getText().trim());
+            currDoctor.setWkTime(txtTime.getText().trim());
         }
 
         return status;
@@ -587,6 +604,120 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, newBackwardKeys);
     }
 
+    private void printDoctorInfo() {
+        if (currDoctor.getDoctorId() == null) {
+            JOptionPane.showMessageDialog(Util1.getParent(),
+                    "Please select the doctor for print.", "No Doctor Select",
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+            try {
+                if (isValidEntry()) {
+                    List<DoctorFeesMapping> listDFM = currDoctor.getListFees();
+                    dao.open();
+                    dao.beginTran();
+                    String drId = currDoctor.getDoctorId();
+                    for (DoctorFeesMapping dfm : listDFM) {
+                        dfm.setDrId(drId);
+                        dao.save1(dfm);
+                    }
+
+                    List<DoctorFeesMappingDC> listDFMDC = currDoctor.getListDFMDC();
+                    for (DoctorFeesMappingDC dfmDC : listDFMDC) {
+                        dfmDC.setDrId(drId);
+                        dao.save1(dfmDC);
+                    }
+
+                    List<DoctorFeesMappingOT> listDFMOT = currDoctor.getListDFMOT();
+                    for (DoctorFeesMappingOT dfmOT : listDFMOT) {
+                        dfmOT.setDrId(drId);
+                        dao.save1(dfmOT);
+                    }
+                    dao.save1(currDoctor);
+                    dao.commit();
+
+                    //tblDoctor.setRowSorter(null);
+                    if (lblStatus.getText().equals("NEW")) {
+                        tableModel.addDoctor(currDoctor);
+                        PharmacyUtil.updateSeq("Doctor", dao);
+                    } else {
+                        tableModel.setDoctor(selectRow, currDoctor);
+
+                        String deleteList = feesMapTableModel.getDeletedList();
+                        if (deleteList != null) {
+                            String strSQL = "delete from doctor_fees_map where map_id in ("
+                                    + deleteList + ")";
+                            dao.execSql(strSQL);
+                        }
+
+                        String deleteListDC = dcMapTableModel.getDeletedList();
+                        if (deleteList != null) {
+                            String strSQL = "delete from doctor_fees_map_dc where map_id in ("
+                                    + deleteListDC + ")";
+                            dao.execSql(strSQL);
+                        }
+
+                        String deleteListOT = otMapTableModel.getDeletedList();
+                        if (deleteList != null) {
+                            String strSQL = "delete from doctor_fees_map_ot where map_id in ("
+                                    + deleteListOT + ")";
+                            dao.execSql(strSQL);
+                        }
+                    }
+                    String printMode = Util1.getPropValue("report.vou.printer.mode");
+                    String propReport = Util1.getPropValue("doctorinfo.report");
+                    String path = Util1.getAppWorkFolder() + Util1.getPropValue("report.folder.path")
+                            + "clinic/" + propReport;
+                    String printerName = Util1.getPropValue("label.printer");
+
+                    Map<String, Object> p = new HashMap();
+                    String drName = txtMMName.getText().trim();
+                    if(drName == null || drName.isEmpty()){
+                        drName = txtName.getText().trim();
+                    }
+                    
+                    if(currDoctor.getInitialID() != null){
+                        drName = currDoctor.getInitialID().getInitialName() + drName;
+                    }
+                    
+                    p.put("p_drname", drName);
+                    String[] degree = txtDegree.getText().trim().split("~");
+                    p.put("p_degree", degree[0]);
+                    if(degree.length > 1){
+                        p.put("p_degree1", degree[1]);
+                    }else{
+                        p.put("p_degree1", "");
+                    }
+                    p.put("p_mmspeciality", txtMMSpeciality.getText().trim());
+                    String[] pTime = txtTime.getText().trim().split("~");
+                    p.put("p_wktime", pTime[0]);
+                    if(pTime.length > 1){
+                        p.put("p_wktime1", pTime[1]);
+                    } else{
+                        p.put("p_wktime1", "");
+                    }
+                    
+                    if (printMode.equals("View")) {
+                        ReportUtil.viewReport(path, p, dao.getConnection());
+                    } else {
+                        JasperPrint jp = ReportUtil.getReport(path, p, dao.getConnection());
+                        ReportUtil.printJasper(jp, printerName);
+                    }
+                    
+                    clear();
+                }
+            } catch (ConstraintViolationException ex) {
+                JOptionPane.showMessageDialog(this, "Duplicate entry.",
+                        "Doctor", JOptionPane.ERROR_MESSAGE);
+                dao.rollBack();
+            } catch (Exception e) {
+                log.error(e.toString());
+            } finally {
+                dao.close();
+            }
+
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -619,7 +750,6 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         txtName = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         chkActive = new javax.swing.JCheckBox();
-        jLabel8 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tblFeesMap = new javax.swing.JTable();
         cboSpeciality = new javax.swing.JComboBox();
@@ -630,6 +760,14 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         tblOT = new javax.swing.JTable();
         jScrollPane4 = new javax.swing.JScrollPane();
         tblDC = new javax.swing.JTable();
+        jLabel10 = new javax.swing.JLabel();
+        txtDegree = new javax.swing.JTextField();
+        jLabel11 = new javax.swing.JLabel();
+        txtMMSpeciality = new javax.swing.JTextField();
+        jButton1 = new javax.swing.JButton();
+        txtMMName = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        txtTime = new javax.swing.JTextField();
 
         txtFilter.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
         txtFilter.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -649,7 +787,6 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         tblDoctor.setFont(Global.textFont);
         tblDoctor.setModel(tableModel);
         tblDoctor.setRowHeight(23);
-        tblDoctor.setShowVerticalLines(false);
         jScrollPane1.setViewportView(tblDoctor);
 
         jLabel5.setFont(Global.lableFont);
@@ -716,9 +853,9 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
             }
         });
 
-        txtNIRC.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtNIRC.setFont(Global.textFont);
 
-        txtName.setFont(new java.awt.Font("Zawgyi-One", 0, 12)); // NOI18N
+        txtName.setFont(Global.textFont);
         txtName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtNameActionPerformed(evt);
@@ -727,8 +864,6 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
 
         jLabel7.setFont(Global.lableFont);
         jLabel7.setText("Active");
-
-        jLabel8.setText("  ");
 
         jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("OPD Fees Mapping"));
 
@@ -768,6 +903,30 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
         tblDC.setRowHeight(23);
         jScrollPane4.setViewportView(tblDC);
 
+        jLabel10.setFont(Global.lableFont);
+        jLabel10.setText("Degree");
+
+        txtDegree.setFont(Global.textFont);
+
+        jLabel11.setFont(Global.lableFont);
+        jLabel11.setText("Speciality");
+
+        txtMMSpeciality.setFont(Global.textFont);
+
+        jButton1.setText("Print");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        txtMMName.setFont(Global.textFont);
+
+        jLabel8.setFont(Global.lableFont);
+        jLabel8.setText("Time");
+
+        txtTime.setFont(Global.textFont);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -775,31 +934,8 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 452, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3))
-                        .addGap(18, 18, 18)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(cboSex, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGap(8, 8, 8)
-                                .addComponent(butSex))
-                            .addComponent(txtName)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addGap(18, 18, 18)
-                        .addComponent(chkActive)
-                        .addGap(6, 6, 6)
-                        .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butSave, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(butClear))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addGap(18, 18, 18)
@@ -812,26 +948,66 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                         .addGap(18, 18, 18)
                         .addComponent(txtCode))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addGap(18, 18, 18)
-                        .addComponent(cboInitial, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(butInitial, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(2, 2, 2))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addGap(18, 18, 18)
                         .addComponent(txtNIRC))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addGap(18, 18, 18)
+                        .addComponent(chkActive)
+                        .addGap(6, 6, 6)
+                        .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButton1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butSave, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butClear))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel10)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtDegree))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel9)
                         .addGap(18, 18, 18)
-                        .addComponent(cboType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(cboType, 0, 361, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtMMSpeciality))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel2)
+                                    .addComponent(jLabel3))
+                                .addGap(18, 18, 18)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(cboSex, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGap(8, 8, 8)
+                                        .addComponent(butSex))
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(txtName)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(txtMMName))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel5)
+                                .addGap(18, 18, 18)
+                                .addComponent(cboInitial, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(butInitial, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(2, 2, 2))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtTime)))
                 .addContainerGap())
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel9});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel10, jLabel11, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butClear, butSave, jButton1});
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {butInitial, butSex, butSpeciality});
 
@@ -849,7 +1025,8 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                    .addComponent(jLabel2)
+                    .addComponent(txtMMName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboSex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -869,24 +1046,39 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                     .addComponent(jLabel9)
                     .addComponent(cboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel10)
+                    .addComponent(txtDegree, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtMMSpeciality, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel8)
                     .addComponent(chkActive, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(lblStatus)
                         .addComponent(jLabel7))
-                    .addComponent(butClear)
-                    .addComponent(butSave))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(butClear)
+                        .addComponent(butSave))
+                    .addComponent(jButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {cboInitial, cboSex, txtNIRC});
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {butClear, butSave, jButton1});
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -914,7 +1106,7 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
                             .addComponent(txtFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(butFilter))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 629, Short.MAX_VALUE))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -991,6 +1183,10 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
       }
   }//GEN-LAST:event_butFilterActionPerformed
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        printDoctorInfo();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton butClear;
     private javax.swing.JButton butFilter;
@@ -1003,7 +1199,10 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     private javax.swing.JComboBox cboSpeciality;
     private javax.swing.JComboBox<String> cboType;
     private javax.swing.JCheckBox chkActive;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1023,8 +1222,12 @@ public class DoctorSetup extends javax.swing.JPanel implements FormAction, KeyPr
     private javax.swing.JTable tblFeesMap;
     private javax.swing.JTable tblOT;
     private javax.swing.JTextField txtCode;
+    private javax.swing.JTextField txtDegree;
     private javax.swing.JTextField txtFilter;
+    private javax.swing.JTextField txtMMName;
+    private javax.swing.JTextField txtMMSpeciality;
     private javax.swing.JTextField txtNIRC;
     private javax.swing.JTextField txtName;
+    private javax.swing.JTextField txtTime;
     // End of variables declaration//GEN-END:variables
 }

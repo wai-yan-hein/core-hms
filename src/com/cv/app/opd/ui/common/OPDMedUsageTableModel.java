@@ -11,6 +11,7 @@ import com.cv.app.opd.database.entity.OPDMedUsage;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
@@ -132,10 +133,7 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
 
                         dao.open();
                         Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
-                        if (med.getRelationGroupId().size() > 0) {
-                            medUp.add(med);
-                        }
+                        medUp.add(med);
 
                         if (record.getKey() == null) {
                             MedUsageKey key = new MedUsageKey(srvId, med);
@@ -180,16 +178,16 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
                     record.setUpdatedDate(new Date());
                     break;
                 case 4: //Location
-                    if(value == null){
+                    if (value == null) {
                         record.setLocation(null);
-                    }else{
-                        record.setLocation((Location)value);
+                    } else {
+                        record.setLocation((Location) value);
                     }
                     break;
                 case 5: //Calc Status
-                    if(value == null){
+                    if (value == null) {
                         record.setCalcStatus("AUTO");
-                    }else{
+                    } else {
                         record.setCalcStatus(value.toString());
                     }
                     break;
@@ -239,11 +237,11 @@ public class OPDMedUsageTableModel extends AbstractTableModel {
         getMedUsage();
     }
 
-    public void setMachineId(int machineId){
+    public void setMachineId(int machineId) {
         this.machineId = machineId;
         getMedUsage();
     }
-    
+
     private void getMedUsage() {
         try {
             listOPDMedUsage = dao.findAll("OPDMedUsage", "key.service = " + srvId + " and key.labMachine = " + machineId);

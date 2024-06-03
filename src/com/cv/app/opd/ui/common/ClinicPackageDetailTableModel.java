@@ -14,6 +14,7 @@ import com.cv.app.ot.database.entity.OTProcedure;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
@@ -143,6 +144,9 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
                             String medId = record.getMedId();
                             if (medUp.getUnitList(medId) == null) {
                                 Medicine med = (Medicine) dao.find(Medicine.class, medId);
+                                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                        + med.getMedId() + "' order by o.relUniqueId");
+                                med.setRelationGroupId(listRel);
                                 medUp.add(med);
                             }
                             if (medUp.getUnitList(medId) != null) {
@@ -234,6 +238,9 @@ public class ClinicPackageDetailTableModel extends AbstractTableModel {
                 try {
                 String medId = item.getItemCode();
                 Medicine med = (Medicine) dao.find(Medicine.class, medId);
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                        + med.getMedId() + "' order by o.relUniqueId");
+                med.setRelationGroupId(listRel);
                 medUp.add(med);
                 record.setSysPrice(null);
                 record.setUnitQty(null);

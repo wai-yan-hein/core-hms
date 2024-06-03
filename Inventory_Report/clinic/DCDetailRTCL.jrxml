@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PatientRegisteration" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DCDetailRTCL" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6d2b0f1d-be5e-44cc-ac4a-c87a4beed6ad">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
 	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
 	<parameter name="adm_no" class="java.lang.String"/>
 	<parameter name="tran_date" class="java.lang.String"/>
 	<parameter name="adm_date" class="java.lang.String"/>
@@ -29,18 +30,18 @@ TRAN_OPTION,TRAN_OPTION1
 from (
 select concat('PHARMACY(',loc.location_name,')') AS tran_type, date(sale_date) tran_date, sale_inv_id desp, sum(sale_qty) qty, sum(sale_amount) amount, sum(sale_amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
-from v_sale,location loc
+from v_sale1,location loc
 where deleted = false and admission_no = $P{adm_no} and reg_no =  $P{reg_no} 
-and v_sale.location_id = loc.location_id
+and v_sale1.location_id = loc.location_id
 and date(sale_date) between date($P{adm_date}) and date($P{tran_date})
-group by date(sale_date), sale_inv_id,loc.location_name
+group by date(sale_date), sale_inv_id,loc.location_name, unique_id
 union all
 select og.group_name as tran_type, date(vo.opd_date) tran_date, vo.service_name desp, sum(qty) qty, sum(vo.amount) amount, sum(vo.amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
 from v_opd vo, opd_group og
 where vo.group_id = og.group_id and deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no} 
 and date(vo.opd_date) between date($P{adm_date}) and date($P{tran_date})
-group by og.group_name, date(vo.opd_date), vo.service_name
+group by og.group_name, date(vo.opd_date), vo.service_name, vo.unique_id
 union all
 select 'DC' as tran_type, date(dc_date) tran_date,service_name  desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
@@ -51,18 +52,19 @@ and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
 and v_dc.service_id not in (select sys_prop_value from sys_prop
 								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.disc.id','system.dc.paid.id',
                                     'system.dc.refund.id'))
-group by date(dc_date), service_name
-union
- select 'DC' as tran_type,date(dc_date) tran_date,concat(service_name,' (',d.doctor_name,')') desp, sum(qty) qty, sum(amount) amount,sum(amount) amount1,
-'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
-from v_dc ,dc_doctor_fee ddf,doctor d
-where deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no}  and v_dc.dc_detail_id = ddf.dc_detail_id
-and ddf.doctor_id = d.doctor_id
-and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
-and v_dc.service_id not in (select sys_prop_value from sys_prop
-								    where sys_prop_desp in ('system.dc.deposite.id','system.dc.disc.id','system.dc.paid.id',
-                                    'system.dc.refund.id'))
-group by date(dc_date), service_name,d.doctor_name
+group by date(dc_date), service_name, v_dc.unique_id
+union all
+select 'DC' as tran_type,date(dc_date) tran_date,concat(service_name,' (',i.initial_name,d.doctor_name,')') desp, sum(qty) qty, sum(amount) amount,sum(amount) amount1,
+                'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
+   from v_dc
+     join dc_doctor_fee ddf on v_dc.dc_detail_id = ddf.dc_detail_id
+     join doctor d on ddf.doctor_id = d.doctor_id
+     left join initial i on d.initial_id = i.initial_id
+where deleted = false and admission_no = $P{adm_no} and patient_id =  $P{reg_no} 
+     and date(dc_date) between date($P{adm_date}) and date($P{tran_date})
+     and v_dc.service_id not in (select sys_prop_value from sys_prop
+								                                 where sys_prop_desp in ('system.dc.deposite.id','system.dc.disc.id','system.dc.paid.id', 'system.dc.refund.id'))
+group by date(dc_date), service_name,d.doctor_name, v_dc.unique_id
 union all
 select 'OT' as tran_type, date(ot_date) tran_date, service_name desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
@@ -73,8 +75,8 @@ and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
 and v_ot.service_id not in (select sys_prop_value from sys_prop
 								    where sys_prop_desp in ('system.ot.deposite.id','system.ot.disc.id','system.ot.paid.id',
                                     'system.ot.refund.id'))
-group by date(ot_date), service_name
-union
+group by date(ot_date), service_name, v_ot.unique_id
+union all
 select 'OT' as tran_type, date(ot_date) tran_date, concat(service_name,' (',d.doctor_name,')') desp, sum(qty) qty, sum(amount) amount, sum(amount) amount1,
 'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1
 from v_ot,ot_doctor_fee odf,doctor d
@@ -84,7 +86,7 @@ and date(ot_date) between date($P{adm_date}) and date($P{tran_date})
 and v_ot.service_id not in (select sys_prop_value from sys_prop
 								    where sys_prop_desp in ('system.ot.deposite.id','system.ot.disc.id','system.ot.paid.id',
                                     'system.ot.refund.id'))
-group by date(ot_date), service_name,d.doctor_name
+group by date(ot_date), service_name,d.doctor_name, v_ot.unique_id
 union all
 select 'RETURN IN ' as tran_type, date(ret_in_date) tran_date, med_name desp, concat(ret_in_qty, item_unit) qty,
 sum(ret_in_amount*-1) amount, sum(ret_in_amount*-1) amount1,'Total Expenses : ' AS TRAN_OPTION, 1 AS TRAN_OPTION1

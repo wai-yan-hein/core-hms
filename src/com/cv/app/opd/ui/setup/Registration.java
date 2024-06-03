@@ -356,7 +356,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
         txtBillID.setText(null);
         txtAdmissionNo.setText(null);
         lblAgeStr.setText(null);
-        butBillID.setEnabled(true);
+        butBillID.setEnabled(Util1.hashPrivilege("RegBillId"));
         txtBGroup.setText(null);
         print = false;
         billIdStatus = false;
@@ -545,7 +545,7 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     if (currPatient.getOtId() != null) {
                         butBillID.setEnabled(false);
                     } else {
-                        butBillID.setEnabled(true);
+                        butBillID.setEnabled(Util1.hashPrivilege("RegBillId"));
                     }
                     txtBGroup.setText(currPatient.getbGroup());
                 }
@@ -1195,6 +1195,15 @@ public final class Registration extends javax.swing.JPanel implements FormAction
                     regNo.updateRegNo();
                     butBillID.setEnabled(false);
                     billIdStatus = true;
+                    
+                    BillOpeningHis boh = new BillOpeningHis();
+                    boh.setAdmNo(pt.getAdmissionNo());
+                    boh.setBillId(pt.getOtId());
+                    boh.setBillOPDate(new Date());
+                    boh.setOpenBy(Global.loginUser.getUserId());
+                    boh.setRegNo(pt.getRegNo());
+                    boh.setStatus(true);
+                    dao.save(boh);
                 } else {
                     JOptionPane.showMessageDialog(Util1.getParent(), "Patient is already opened bill.",
                             "Bill Id", JOptionPane.ERROR_MESSAGE);

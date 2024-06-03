@@ -235,11 +235,11 @@ public class ItemPackagingSetup extends javax.swing.JPanel implements SelectionO
             try {
                 if (lblStatus.getText().equals("NEW")) {
                     List<RelationGroup> lstTmp = new ArrayList();
-                    lstTmp.addAll(rpTableMode.getDetail());
+                    lstTmp.addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                     currMedicine.setRelationGroupId(lstTmp);
                 } else {
                     currMedicine.getRelationGroupId().removeAll(currMedicine.getRelationGroupId());
-                    currMedicine.getRelationGroupId().addAll(rpTableMode.getDetail());
+                    currMedicine.getRelationGroupId().addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                 }
 
                 dao.open();

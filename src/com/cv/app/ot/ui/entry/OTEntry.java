@@ -207,7 +207,6 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
         butAdmit.setEnabled(false);
         butAdmit.setVisible(false);
         butOTID.setEnabled(false);
-        butOTID.setEnabled(false);
         txtBill.setText(null);
         tableModel.setOtInvId(txtVouNo.getText());
     }
@@ -971,7 +970,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     butOTID.setEnabled(false);
                     txtBill.setText(patient.getOtId());
                 } else {
-                    butOTID.setEnabled(true);
+                    butOTID.setEnabled(Util1.hashPrivilege("OTBillId"));
                     txtBill.setText(null);
                 }
                 if (patient.getDoctor() != null) {
@@ -1041,11 +1040,11 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                 tableModel.setVouStatus("EDIT");
                 txtBill.setText(currVou.getOtId());
                 if (txtBill.getText() == null) {
-                    butOTID.setEnabled(true);
+                    butOTID.setEnabled(Util1.hashPrivilege("OTBillId"));
                 } else if (!txtBill.getText().isEmpty()) {
                     butOTID.setEnabled(false);
                 } else {
-                    butOTID.setEnabled(true);
+                    butOTID.setEnabled(Util1.hashPrivilege("OTBillId"));
                 }
                 tableModel.setOtInvId(txtVouNo.getText());
             } catch (Exception ex) {
@@ -1242,7 +1241,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
                     txtPatientNo.setText(null);
                     txtPatientName.setText(null);
                     currVou.setPatient(null);
-                    butOTID.setEnabled(true);
+                    butOTID.setEnabled(Util1.hashPrivilege("OTBillId"));
                     txtBill.setText(null);
 
                     JOptionPane.showMessageDialog(Util1.getParent(),
@@ -1260,7 +1259,7 @@ public class OTEntry extends javax.swing.JPanel implements FormAction, KeyPropag
             txtPatientName.setText(null);
             currVou.setPatient(null);
             txtPatientName.setEditable(true);
-            butOTID.setEnabled(true);
+            butOTID.setEnabled(Util1.hashPrivilege("OTBillId"));
             txtBill.setText(null);
         }
     }

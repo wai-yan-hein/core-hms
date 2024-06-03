@@ -27,7 +27,11 @@ public class Doctor implements java.io.Serializable{
     private String drType;
     private List<DoctorFeesMappingDC> listDFMDC;
     private List<DoctorFeesMappingOT> listDFMOT;
-    
+    private String degree;
+    private String mmSpeciality;
+    private String mmName;
+    private String wkTime;
+        
     @Id
     @Column(name = "doctor_id", unique = true, nullable = false, length = 15)
     public String getDoctorId() {
@@ -166,5 +170,41 @@ public class Doctor implements java.io.Serializable{
 
     public void setListDFMOT(List<DoctorFeesMappingOT> listDFMOT) {
         this.listDFMOT = listDFMOT;
+    }
+
+    @Column(name="degree", length=255)
+    public String getDegree() {
+        return degree;
+    }
+
+    public void setDegree(String degree) {
+        this.degree = degree;
+    }
+
+    @Column(name="mm_speciality", length=255)
+    public String getMmSpeciality() {
+        return mmSpeciality;
+    }
+
+    public void setMmSpeciality(String mmSpeciality) {
+        this.mmSpeciality = mmSpeciality;
+    }
+
+    @Column(name="mm_name", length=255)
+    public String getMmName() {
+        return mmName;
+    }
+
+    public void setMmName(String mmName) {
+        this.mmName = mmName;
+    }
+
+    @Column(name="wk_time", length=255)
+    public String getWkTime() {
+        return wkTime;
+    }
+
+    public void setWkTime(String wkTime) {
+        this.wkTime = wkTime;
     }
 }

@@ -42,8 +42,8 @@ public class ItemCodeListWithPurPriceExcel extends GenExcel {
             "pcost.smallest_pur_cost\n" +
             "from (select distinct med.med_id, med.med_name,med.med_type_id,med.med_rel_str,med.active, med.pur_price,\n" +
             "             (med.pur_price/rg.smallest_qty) pur_smallest_price, med.brand_id\n" +
-            "        from medicine med, med_rel mr, relation_group rg\n" +
-            "       where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id\n" +
+            "        from medicine med, relation_group rg\n" +
+            "       where med.med_id = rg.med_id \n" +
             "         and (med.pur_unit = rg.item_unit or med.pur_unit is null)) med\n" +
             "left join item_brand ib on med.brand_id =ib.brand_id\n" +
             "join med_rel mr on med.med_id = mr.med_id\n" +

@@ -302,7 +302,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
             return;
         }
 
-        try {
+        /*try {
             med = (Medicine) dao.find(Medicine.class, med.getMedId());
             if (!med.getRelationGroupId().isEmpty()) {
                 med.setRelationGroupId(med.getRelationGroupId());
@@ -311,8 +311,7 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
             log.error("setMed1 : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
         } finally {
             dao.close();
-        }
-
+        }*/
         PriceChangeMedHis1 record = null;
 
         try {
@@ -416,20 +415,32 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
                 List<PriceChangeUnitHis1> listUnit = new ArrayList();
 
                 List<RelationGroup> listRelation = med.getRelationGroupId();
-                for (RelationGroup rg : listRelation) {
-                    PriceChangeUnitHis1 pcuh = new PriceChangeUnitHis1(rg.getUnitId(), rg.getSalePrice(),
-                            rg.getSalePriceA(), rg.getSalePriceB(), rg.getSalePriceC(),
-                            rg.getSalePriceD(), rg.getStdCost());
-                    double costPrice = smallestCost * NumberUtil.FloatZero(rg.getSmallestQty());
-                    pcuh.setCostPrice(costPrice);
-                    listUnit.add(pcuh);
+
+                try {
+                    if (listRelation == null) {
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        listRelation = listRel;
+                        med.setRelationGroupId(listRel);
+                    }
+                    
+                    for (RelationGroup rg : listRelation) {
+                        PriceChangeUnitHis1 pcuh = new PriceChangeUnitHis1(rg.getUnitId(), rg.getSalePrice(),
+                                rg.getSalePriceA(), rg.getSalePriceB(), rg.getSalePriceC(),
+                                rg.getSalePriceD(), rg.getStdCost());
+                        double costPrice = smallestCost * NumberUtil.FloatZero(rg.getSmallestQty());
+                        pcuh.setCostPrice(costPrice);
+                        listUnit.add(pcuh);
+                    }
+
+                    listDetailUnit.removeAll(listDetailUnit);
+                    listDetailUnit.addAll(listUnit);
+                    listDetail.get(pos).setListUnit(listUnit);
+
+                    unitModel.dataChange();
+                } catch (Exception ex) {
+                    log.error("Relation Error : " + ex.getMessage());
                 }
-
-                listDetailUnit.removeAll(listDetailUnit);
-                listDetailUnit.addAll(listUnit);
-                listDetail.get(pos).setListUnit(listUnit);
-
-                unitModel.dataChange();
             }
         }
 
@@ -564,10 +575,10 @@ public class PChangeMedTableModel1 extends AbstractTableModel {
         }
     }
 
-    public List<PriceChangeMedHis1> getListDetail(){
+    public List<PriceChangeMedHis1> getListDetail() {
         return listDetail;
     }
-    
+
     public int getLastIndex() {
         return listDetail.size() - 1;
     }

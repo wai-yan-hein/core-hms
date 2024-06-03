@@ -8,6 +8,7 @@ import com.cv.app.common.Global;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.ReOrderLevel;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.view.VReOrderLevel;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
@@ -152,7 +153,6 @@ public class ReOrderLevelTableModel extends AbstractTableModel {
                         } else {
                             String medId = record.getKey().getMed();
                             Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
                             medUp.add(med);
                             dao.close();
 
@@ -200,7 +200,6 @@ public class ReOrderLevelTableModel extends AbstractTableModel {
                         } else {
                             String medId = record.getKey().getMed();
                             Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
                             medUp.add(med);
                             dao.close();
                             if (medUp.getUnitList(medId).size() > 1) {
@@ -246,7 +245,6 @@ public class ReOrderLevelTableModel extends AbstractTableModel {
                         } else {
                             String medId = record.getKey().getMed();
                             Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
                             medUp.add(med);
                             dao.close();
                             if (medUp.getUnitList(medId).size() > 1) {
@@ -341,7 +339,7 @@ public class ReOrderLevelTableModel extends AbstractTableModel {
             tmpRec.setOrderQtySmallest(record.getOrderQtySmallest());
             tmpRec.setOrderUnit(record.getOrderUnit());
             dao.save(tmpRec);
-            
+
             String strSql = "update re_order_level rol left join (select user_id, location_id, med_id, sum(ifnull(bal_qty,0)) ttl_qty\n"
                     + "	from tmp_stock_balance_exp\n"
                     + "	where user_id = '" + Global.machineId + "' and location_id = " + locationId.toString() + "\n"

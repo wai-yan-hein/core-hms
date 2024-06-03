@@ -52,6 +52,7 @@ public class OPDTableModel extends AbstractTableModel {
     String useOPDFactor = Util1.getPropValue("system.opd.chargetype.factor");
     private CalculateObserver calObserver;
     private String bookType = "-";
+    private String deleteServiceList;
 
     public OPDTableModel(AbstractDataAccess dao, SelectionObserver observer) {
         this.dao = dao;
@@ -409,6 +410,12 @@ public class OPDTableModel extends AbstractTableModel {
                     deletedList = "'" + opdh.getOpdDetailId() + "'";
                 } else {
                     deletedList = deletedList + ",'" + opdh.getOpdDetailId() + "'";
+                }
+                
+                if(deleteServiceList == null){
+                    deleteServiceList = opdh.getService().getServiceId().toString();
+                } else {
+                    deleteServiceList = deleteServiceList + "'" + opdh.getService().getServiceId().toString();
                 }
             }
 
@@ -1011,5 +1018,9 @@ public class OPDTableModel extends AbstractTableModel {
             }
         }
         fireTableDataChanged();
+    }
+
+    public String getDeleteServiceList() {
+        return deleteServiceList;
     }
 }

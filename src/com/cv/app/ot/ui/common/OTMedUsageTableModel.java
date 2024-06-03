@@ -11,6 +11,7 @@ import com.cv.app.ot.database.entity.OTMedUsageKey;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.ui.util.UnitAutoCompleter;
 import com.cv.app.pharmacy.util.MedicineUP;
 import com.cv.app.util.NumberUtil;
@@ -127,10 +128,10 @@ public class OTMedUsageTableModel extends AbstractTableModel {
 
                         dao.open();
                         Medicine med = (Medicine) dao.find(Medicine.class, medId);
-
-                        if (med.getRelationGroupId().size() > 0) {
-                            medUp.add(med);
-                        }
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
+                        medUp.add(med);
 
                         if (record.getKey() == null) {
                             OTMedUsageKey key = new OTMedUsageKey(srvId, med);
@@ -174,10 +175,10 @@ public class OTMedUsageTableModel extends AbstractTableModel {
                     record.setUpdatedDate(new Date());
                     break;
                 case 4: //Location
-                    if(value == null){
+                    if (value == null) {
                         record.setLocation(null);
-                    }else{
-                        record.setLocation((Location)value);
+                    } else {
+                        record.setLocation((Location) value);
                     }
                     break;
             }

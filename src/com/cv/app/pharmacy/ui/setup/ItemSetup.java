@@ -300,14 +300,14 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
             try {
                 if (lblStatus.getText().equals("NEW")) {
                     List<RelationGroup> lstTmp = new ArrayList();
-                    lstTmp.addAll(rpTableMode.getDetail());
+                    lstTmp.addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                     currMedicine.setRelationGroupId(lstTmp);
                 } else if (currMedicine.getRelationGroupId() != null) {
                     currMedicine.getRelationGroupId().removeAll(currMedicine.getRelationGroupId());
-                    currMedicine.setRelationGroupId(rpTableMode.getDetail());
+                    currMedicine.setRelationGroupId(rpTableMode.getDetail(currMedicine.getMedId()));
                 } else {
                     List<RelationGroup> lstTmp = new ArrayList();
-                    lstTmp.addAll(rpTableMode.getDetail());
+                    lstTmp.addAll(rpTableMode.getDetail(currMedicine.getMedId()));
                     currMedicine.setRelationGroupId(lstTmp);
                 }
                 //For BK Pagolay
@@ -335,7 +335,11 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 } else {
                     //For BK Pagolay
                     dao.save(currMedicine);
-                    String deleteSQL;
+                    dao.execSql("delete from relation_group where med_id = '" + currMedicine.getMedId() + "'");
+                    for(RelationGroup rg : listRG){
+                        dao.save(rg);
+                    }
+                    /*String deleteSQL;
                     if (lblStatus.getText().equals("EDIT")) {
                         //All detail section need to explicity delete
                         //because of save function only delete to join table
@@ -343,7 +347,7 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                         if (deleteSQL != null) {
                             dao.execSql(deleteSQL);
                         }
-                    }
+                    }*/
 
                     //dao.execSql("update machine_info set action_status = 'ITEM' where machine_name is not null");
                 }
@@ -1281,8 +1285,10 @@ public class ItemSetup extends javax.swing.JPanel implements SelectionObserver, 
                 dao.open();
                 currMedicine = (Medicine) dao.find(Medicine.class,
                         ((VMedicine1) selectObj).getMedId());
-
-                List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
+                
+                //List<RelationGroup> listRelationGroup = currMedicine.getRelationGroupId();
+                List<RelationGroup> listRelationGroup = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + currMedicine.getMedId() + "' order by o.relUniqueId");
 
                 if (listRelationGroup != null) {
                     if (!listRelationGroup.isEmpty()) {

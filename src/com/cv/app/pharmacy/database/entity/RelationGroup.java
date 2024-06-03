@@ -15,7 +15,7 @@ import static javax.persistence.GenerationType.IDENTITY;
 @Table(name = "relation_group")
 public class RelationGroup implements java.io.Serializable {
 
-    private Integer relGId;
+    private String relGId;
     private Float unitQty;
     private ItemUnit unitId;
     private Double salePrice;
@@ -27,18 +27,19 @@ public class RelationGroup implements java.io.Serializable {
     private Float smallestQty;
     private String unitBarcode;
     private Double stdCost;
+    private String medId;
     
     public RelationGroup() {
     }
 
     @Id
-    @GeneratedValue(strategy = IDENTITY)
+    //@GeneratedValue(strategy = IDENTITY)
     @Column(name = "rel_group_id", unique = true, nullable = false)
-    public Integer getRelGId() {
+    public String getRelGId() {
         return relGId;
     }
 
-    public void setRelGId(Integer relGId) {
+    public void setRelGId(String relGId) {
         this.relGId = relGId;
     }
 
@@ -140,5 +141,14 @@ public class RelationGroup implements java.io.Serializable {
 
     public void setStdCost(Double stdCost) {
         this.stdCost = stdCost;
+    }
+
+    @Column(name="med_id", length=15)
+    public String getMedId() {
+        return medId;
+    }
+
+    public void setMedId(String medId) {
+        this.medId = medId;
     }
 }
