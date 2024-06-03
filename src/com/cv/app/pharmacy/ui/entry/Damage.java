@@ -16,6 +16,7 @@ import com.cv.app.pharmacy.database.entity.DamageDetailHis;
 import com.cv.app.pharmacy.database.entity.DamageHis;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.helper.VoucherSearch;
 import com.cv.app.pharmacy.database.tempentity.TmpEXRate;
 import com.cv.app.pharmacy.ui.common.CurrencyEditor;
@@ -442,6 +443,9 @@ public class Damage extends javax.swing.JPanel implements SelectionObserver, For
                 case "MedicineList":
                     Medicine med = (Medicine) dao.find(Medicine.class,
                             ((Medicine) selectObj).getMedId());
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
+                    med.setRelationGroupId(listRel);
                     medUp.add(med);
                     int selectRow = tblDamage.getSelectedRow();
                     dmgTableModel.setMed(med, selectRow);

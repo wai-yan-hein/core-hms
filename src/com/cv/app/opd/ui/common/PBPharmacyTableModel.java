@@ -15,6 +15,7 @@ import com.cv.app.pharmacy.database.entity.ItemUnit;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.PurchaseIMEINo;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.SaleDetailHis;
 import com.cv.app.pharmacy.database.helper.Stock;
 import com.cv.app.pharmacy.ui.util.StockBalListDialog;
@@ -44,7 +45,7 @@ public class PBPharmacyTableModel extends AbstractTableModel {
 
     static Logger log = Logger.getLogger(PBPharmacyTableModel.class.getName());
     private List<SaleDetailHis> listDetail;
-    private String[] columnNames = {"Code", "Description", "Qty",  "Sale Price"};
+    private String[] columnNames = {"Code", "Description", "Qty", "Sale Price"};
     private JTable parent;
     private AbstractDataAccess dao;
     private MedicineUP medUp;
@@ -122,7 +123,6 @@ public class PBPharmacyTableModel extends AbstractTableModel {
         return columnNames[column];
     }
 
-
     @Override
     public boolean isCellEditable(int row, int column) {
         if (listDetail == null) {
@@ -156,9 +156,9 @@ public class PBPharmacyTableModel extends AbstractTableModel {
 //                return record.getMedId().getMedId() != null;
             case 2: //Qty
                 return record.getMedId().getMedId() != null;
-          
+
             case 3: //Sale Price
-                return Util1.hashPrivilege("SalePriceChange");           
+                return Util1.hashPrivilege("SalePriceChange");
             default:
                 return false;
         }
@@ -302,7 +302,7 @@ public class PBPharmacyTableModel extends AbstractTableModel {
 //                                }
 //                            }
 //                        }
-                     
+
                     }
                     break;
                 case 1: //Medicine Name
@@ -366,7 +366,7 @@ public class PBPharmacyTableModel extends AbstractTableModel {
 //                    //parent.setColumnSelectionInterval(5, 5);
 //                    //record.setChargeId(defaultChargeType);
 //                    //For unit popup
-                break;
+                    break;
                 case 3: //Sale Price
                     record.setSalePriceP(Double.MAX_VALUE);
                     String tmpSalePriceStr = NumberUtil.getEngNumber(value.toString());
@@ -575,7 +575,7 @@ public class PBPharmacyTableModel extends AbstractTableModel {
 
         if (med.getBrand() != null) {
 
-        //    lblItemBrand.setText(med.getBrand().getBrandName());
+            //    lblItemBrand.setText(med.getBrand().getBrandName());
         }
         record.setMedId(med);
         record.setChargeId(defaultChargeType);
@@ -1053,6 +1053,9 @@ public class PBPharmacyTableModel extends AbstractTableModel {
                 itemId = purImeiNo.getKey().getItemId();
                 medicine = (Medicine) dao.find("Medicine", "med_id = '"
                         + itemId + "'");
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                        + medicine.getMedId() + "' order by o.relUniqueId");
+                medicine.setRelationGroupId(listRel);
                 medUp.add(medicine);
 
                 record.getMedId().setMedId(itemId);
@@ -1258,25 +1261,25 @@ public class PBPharmacyTableModel extends AbstractTableModel {
     public void setBookType(String bookType) {
         this.bookType = bookType;
     }
-    
-    public void addEMGPercent(float percent){
-        for(SaleDetailHis record : listDetail){
-            if(record.getMedId() != null){
-                if(record.getMedId().getMedId() != null){
+
+    public void addEMGPercent(float percent) {
+        for (SaleDetailHis record : listDetail) {
+            if (record.getMedId() != null) {
+                if (record.getMedId().getMedId() != null) {
                     ChargeType ct = record.getChargeId();
-                    if(ct.getChargeTypeId() != 2){
+                    if (ct.getChargeTypeId() != 2) {
                         //double price = NumberUtil.NZero(record.getPrice());
                         String key = record.getMedId().getMedId() + "-" + record.getUnitId().getItemUnitCode();
                         double price = medUp.getPrice(key, getCusType(), record.getQuantity());
-                        double incValue = price * (percent/100);
+                        double incValue = price * (percent / 100);
                         record.setPrice(price + incValue);
-                        record.setAmount(NumberUtil.FloatZero(record.getQuantity())*
-                                NumberUtil.NZero(record.getPrice()));
+                        record.setAmount(NumberUtil.FloatZero(record.getQuantity())
+                                * NumberUtil.NZero(record.getPrice()));
                     }
                 }
             }
         }
-        
+
         fireTableDataChanged();
     }
 }

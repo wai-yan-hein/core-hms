@@ -14,6 +14,7 @@ import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Location;
 import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.PaymentType;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.RetOutDetailHis;
 import com.cv.app.pharmacy.database.entity.RetOutHis;
 import com.cv.app.pharmacy.database.entity.Trader;
@@ -397,7 +398,9 @@ public class ReturnOut extends javax.swing.JPanel implements SelectionObserver, 
                 try {
                 Medicine med = (Medicine) dao.find(Medicine.class,
                         ((Medicine) selectObj).getMedId());
-
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
+                med.setRelationGroupId(listRel);
                 medUp.add(med);
                 int selectRow = tblRetOut.getSelectedRow();
                 retOutTableModel.setMed(med, selectRow);

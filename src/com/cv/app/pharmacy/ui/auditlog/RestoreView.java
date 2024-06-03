@@ -611,10 +611,11 @@ public class RestoreView extends javax.swing.JPanel implements SelectionObserver
                 try {
                     dao.open();
                     med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    List<RelationGroup> listRel = med.getRelationGroupId();
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
                     med.setRelationGroupId(listRel);
 
-                    if (listRel.size() > 0) {
+                    if (!listRel.isEmpty()) {
                         medUp.add(med);
                         if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
                             stockList.add(med, (Location) cboLocation.getSelectedItem());

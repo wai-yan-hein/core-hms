@@ -1777,7 +1777,7 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
                         butOTID.setEnabled(false);
                         txtBill.setText(patient.getOtId());
                     } else {
-                        butOTID.setEnabled(true);
+                        butOTID.setEnabled(Util1.hashPrivilege("OPDBillId"));
                         txtBill.setText(null);
                     }
                     getPatientBill(patient.getRegNo());
@@ -2343,12 +2343,19 @@ public class OPD extends javax.swing.JPanel implements FormAction, KeyPropagate,
 
     private void deleteDetail() {
         String deleteSQL;
-
+        String vouNo = currVou.getOpdInvId();
         //All detail section need to explicity delete
         //because of save function only delete to join table
         try {
             deleteSQL = tableModel.getDeleteSql();
             if (deleteSQL != null) {
+                dao.execSql(deleteSQL);
+            }
+            String deleteServiceList = tableModel.getDeleteServiceList();
+            if(deleteServiceList != null){
+                deleteSQL = "delete from med_usaged where vou_type = 'OPD' "
+                        + "and vou_no = '" + vouNo + "' and service_id in (" 
+                        + deleteServiceList + ")";
                 dao.execSql(deleteSQL);
             }
         } catch (Exception ex) {

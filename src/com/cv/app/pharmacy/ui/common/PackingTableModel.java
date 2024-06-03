@@ -177,11 +177,15 @@ public class PackingTableModel extends AbstractTableModel {
     }
 
     public void setListPI(List<PackingItem> listPI) {
-        this.listPI = listPI;
-        fireTableDataChanged();
+        try {
+            this.listPI = listPI;
+            fireTableDataChanged();
 
-        for (PackingItem pi : listPI) {
-            medUp.add(pi.getKey().getItem());
+            for (PackingItem pi : listPI) {
+                medUp.add(pi.getKey().getItem());
+            }
+        } catch (Exception ex) {
+
         }
     }
 
@@ -194,31 +198,15 @@ public class PackingTableModel extends AbstractTableModel {
                         + medCode + "' and active = true");
 
                 if (medicine != null) {
-                    //selected("MedicineList", medicine);
-                    List<RelationGroup> listRel = medicine.getRelationGroupId();
-                    medicine.setRelationGroupId(listRel);
-
-                    if (listRel.size() > 0) {
-                        medUp.add(medicine);
-                        return medicine;
-                    } else {
-                        log.error("getMedInfo - relationGroup : " + medicine.getMedId());
-                    }
+                    medUp.add(medicine);
+                    return medicine;
                 } else { //For barcode
                     medicine = (Medicine) dao.find("Medicine", "barcode = '"
                             + medCode + "' and active = true");
 
                     if (medicine != null) {
-                        //selected("MedicineList", medicine);
-                        List<RelationGroup> listRel = medicine.getRelationGroupId();
-                        medicine.setRelationGroupId(listRel);
-
-                        if (listRel.size() > 0) {
-                            medUp.add(medicine);
-                            return medicine;
-                        } else {
-                            log.error("getMedInfo - relationGroup : " + medicine.getMedId());
-                        }
+                        medUp.add(medicine);
+                        return medicine;
                     } else {
                         JOptionPane.showMessageDialog(Util1.getParent(), "Invalid medicine code.",
                                 "Invalid.", JOptionPane.ERROR_MESSAGE);

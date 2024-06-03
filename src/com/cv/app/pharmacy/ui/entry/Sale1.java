@@ -839,29 +839,23 @@ public class Sale1 extends javax.swing.JPanel implements SelectionObserver, Form
                         return;
                     }
 
-                    List<RelationGroup> listRel = med.getRelationGroupId();
-                    med.setRelationGroupId(listRel);
-
-                    if (listRel.size() > 0) {
-                        medUp.add(med);
-                        if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
-                            stockList.add(med, (Location) cboLocation.getSelectedItem());
-                        } else if (Util1.getPropValue("system.app.sale.stockBalance").equals("H")) {
-                            stockList.add(med, null);
-                            List<Stock> listStock = stockList.getStockList(med.getMedId());
-                            if (listStock == null) {
-                                listStock = new ArrayList();
-                            }
-                            stockTableModel.setListStock(listStock);
+                    medUp.add(med);
+                    if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
+                        stockList.add(med, (Location) cboLocation.getSelectedItem());
+                    } else if (Util1.getPropValue("system.app.sale.stockBalance").equals("H")) {
+                        stockList.add(med, null);
+                        List<Stock> listStock = stockList.getStockList(med.getMedId());
+                        if (listStock == null) {
+                            listStock = new ArrayList();
                         }
-
-                        int selectRow = tblSale.getSelectedRow();
-                        saleTableModel.setMed(med, selectRow, stockList);
-                        //Calculate total items of voucher
-                        txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
-                    } else {
-                        System.out.println("Sale.select MedicineList : Cannot get relation group");
+                        stockTableModel.setListStock(listStock);
                     }
+
+                    int selectRow = tblSale.getSelectedRow();
+                    saleTableModel.setMed(med, selectRow, stockList);
+                    //Calculate total items of voucher
+                    txtTotalItem.setText(Integer.toString((listDetail.size() - 1)));
+
                 } catch (Exception ex) {
                     log.error("selected MedicineList : " + selectObj.toString()
                             + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -1922,9 +1916,6 @@ public class Sale1 extends javax.swing.JPanel implements SelectionObserver, Form
                     if (sdh.getMedId() != null) {
                         if (sdh.getMedId().getMedId() != null) {
                             Medicine med = (Medicine) dao.find(Medicine.class, sdh.getMedId().getMedId());
-                            if (med.getRelationGroupId().size() > 0) {
-                                med.setRelationGroupId(med.getRelationGroupId());
-                            }
                             medUp.add(med);
                         }
                     }

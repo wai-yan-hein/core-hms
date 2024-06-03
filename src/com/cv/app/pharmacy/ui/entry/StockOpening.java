@@ -147,7 +147,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         strRecDate = "";
         initFilterTable();
         addCodeFilterModelListener();
-        
+
         try {
             dao.deleteSQL("delete from tmp_stock_op_detail_his where user_id = '"
                     + Global.machineId + "'");
@@ -382,6 +382,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 butCost.setEnabled(true);
             } else if (source.toString().equals("MedicineList")) {
                 Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                        + med.getMedId() + "' order by o.relUniqueId");
+                med.setRelationGroupId(listRel);
                 medUp.add(med);
                 int selectRow = tblGround.convertRowIndexToModel(tblGround.getSelectedRow());
                 sopTableModel.setMed(med, selectRow);
@@ -392,7 +395,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             dao.close();
         }
     }
-    
+
     private void initOpTable() {
         if (Util1.getPropValue("system.grid.cell.selection").equals("Y")) {
             tblGround.setCellSelectionEnabled(true);
@@ -850,6 +853,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     if (prvMedId.equals("-")) {
                         prvMedId = medId;
                         med = (Medicine) dao.find(Medicine.class, medId);
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
                     }
 
                     String sKey = locationId + "-" + medId;
@@ -883,6 +889,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                         //listMinusStock = new ArrayList();
                         //listPlusStock = new ArrayList();
                         med = (Medicine) dao.find(Medicine.class, medId);
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
                         hmMP = new HashMap();
                         locList = new ArrayList();
                         //locList.add(sKey);
@@ -902,7 +911,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
                     String strExpDate = rs.getString("exp_date");
                     Date expDate = DateUtil.toDate("01/01/1900");
-                    if(!strExpDate.equals("0000-00-00")){
+                    if (!strExpDate.equals("0000-00-00")) {
                         expDate = rs.getDate("exp_date");
                     }
                     if (qty < 0) {
@@ -1465,6 +1474,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
         butFillZero = new javax.swing.JButton();
         butCost = new javax.swing.JButton();
         butCSV = new javax.swing.JButton();
+        cboMethod = new javax.swing.JComboBox<>();
 
         jLabel3.setFont(Global.lableFont);
         jLabel3.setText("Date ");
@@ -1704,6 +1714,8 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
             }
         });
 
+        cboMethod.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "AVG", "AVG (OP&PUR)", "FIFO", "FIFO (OP&PUR)" }));
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1729,7 +1741,9 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(butFillZero)
-                        .addGap(98, 98, 98)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboMethod, 0, 86, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butCost)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(butCSV)
@@ -1786,7 +1800,8 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
                     .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(butFillZero)
                     .addComponent(butCost)
-                    .addComponent(butCSV))
+                    .addComponent(butCSV)
+                    .addComponent(cboMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE))
         );
@@ -1895,7 +1910,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
 
     private void butCostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butCostActionPerformed
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        sopTableModel.reAssignCost(txtOpId.getText());
+        sopTableModel.reAssignCost(txtOpId.getText(), cboMethod.getSelectedItem().toString());
         setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }//GEN-LAST:event_butCostActionPerformed
 
@@ -1933,6 +1948,7 @@ public class StockOpening extends javax.swing.JPanel implements SelectionObserve
     private javax.swing.JComboBox cboItemType;
     private javax.swing.JComboBox cboItemType1;
     private javax.swing.JComboBox cboLocation;
+    private javax.swing.JComboBox<String> cboMethod;
     private javax.swing.JComboBox cboStockLocation;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

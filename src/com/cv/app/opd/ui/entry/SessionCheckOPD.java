@@ -1572,6 +1572,7 @@ public class SessionCheckOPD extends javax.swing.JPanel implements SelectionObse
         params.put("prm_from", DateUtil.toDateStrMYSQL(txtFrom.getText()));
         params.put("prm_to", DateUtil.toDateStrMYSQL(txtTo.getText()));
         params.put("p_user_id", userId);
+        params.put("session_user_id", userId);
         params.put("p_user_name", cboUser.getSelectedItem().toString());
         params.put("p_session_name", cboSession.getSelectedItem().toString());
         params.put("sess_id", sessionId);

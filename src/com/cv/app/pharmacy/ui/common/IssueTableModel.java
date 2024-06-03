@@ -9,6 +9,7 @@ import com.cv.app.common.SelectionObserver;
 import com.cv.app.pharmacy.database.controller.AbstractDataAccess;
 import com.cv.app.pharmacy.database.entity.Currency;
 import com.cv.app.pharmacy.database.entity.Medicine;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.StockIssueDetailHis;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.helper.CurrencyTtl;
@@ -420,15 +421,19 @@ public class IssueTableModel extends AbstractTableModel {
 
     public void setListDetail(List<StockIssueDetailHis> listDetail) {
         this.listDetail = listDetail;
-        if (this.listDetail != null) {
-            if (!listDetail.isEmpty()) {
-                StockIssueDetailHis tmpD = listDetail.get(listDetail.size() - 1);
-                maxUniqueId = tmpD.getUniqueId();
+        try {
+            if (this.listDetail != null) {
+                if (!listDetail.isEmpty()) {
+                    StockIssueDetailHis tmpD = listDetail.get(listDetail.size() - 1);
+                    maxUniqueId = tmpD.getUniqueId();
+                }
+                for (StockIssueDetailHis sidh : listDetail) {
+                    medUp.add(sidh.getIssueMed());
+                }
+                fireTableDataChanged();
             }
-            for (StockIssueDetailHis sidh : listDetail) {
-                medUp.add(sidh.getIssueMed());
-            }
-            fireTableDataChanged();
+        } catch (Exception ex) {
+            log.error("setListDetail : " + ex.getMessage());
         }
     }
 
@@ -568,8 +573,7 @@ public class IssueTableModel extends AbstractTableModel {
         try {
             StockIssueDetailHis record = listDetail.get(row);
             dao.open();
-            Medicine tmpMed = (Medicine) dao.find(Medicine.class,
-                    med.getMedId());
+            Medicine tmpMed = (Medicine) dao.find(Medicine.class, med.getMedId());
             medUp.add(tmpMed);
             record.setIssueMed(tmpMed);
             dao.close();

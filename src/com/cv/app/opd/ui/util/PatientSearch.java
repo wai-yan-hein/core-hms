@@ -45,10 +45,14 @@ public class PatientSearch extends javax.swing.JDialog {
         initComponents();
         this.dao = dao;
         this.observer = observer;
-        //initDate();
         initCombo();
         initTable();
-        //search();
+        
+        if (Util1.getPropValue("system.opd.reg.datefilter").equals("Y")) {
+            initDate();
+            search();
+        }
+        
         sorter = new TableRowSorter(tblPatient.getModel());
         tblPatient.setRowSorter(sorter);
         Dimension screen = Util1.getScreenSize();

@@ -605,16 +605,9 @@ public class TransferTableModel extends AbstractTableModel {
         try {
             dao.open();
             Medicine med = (Medicine) dao.find(Medicine.class, medicine.getMedId());
-            List<RelationGroup> listRel = med.getRelationGroupId();
-            med.setRelationGroupId(listRel);
-
-            if (listRel.size() > 0) {
-                medUp.add(med);
-                stockList.add(med, location);
-                setMed(med, index, stockList);
-            } else {
-                System.out.println("Transfer.selected MedicineList : Cannot get relation group");
-            }
+            medUp.add(med);
+            stockList.add(med, location);
+            setMed(med, index, stockList);
         } catch (Exception ex) {
             log.error("MedicineList : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
         } finally {

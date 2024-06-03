@@ -26,6 +26,7 @@ import com.cv.app.pharmacy.database.entity.Medicine;
 import com.cv.app.pharmacy.database.entity.Menu;
 import com.cv.app.pharmacy.database.entity.PaymentType;
 import com.cv.app.pharmacy.database.entity.PharmacySystem;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.Session;
 import com.cv.app.pharmacy.database.entity.Township;
 import com.cv.app.pharmacy.database.entity.VouStatus;
@@ -1236,10 +1237,10 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     + "             union all \n"
                     + "            select if(prm_tran_opt = 'Balance', 'Damage', prm_tran_opt) tran_option,\n"
                     + "                   mu.location_id, mu.med_id, null as exp_date, \n"
-                    + "                   sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n" 
-                    + "              from med_usaged mu, tmp_stock_filter tsf \n" 
-                    + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n" 
-                    + "               and date(mu.created_date) between tsf.op_date and prm_stock_date and tsf.user_id = prm_user_id\n" 
+                    + "                   sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n"
+                    + "              from med_usaged mu, tmp_stock_filter tsf \n"
+                    + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n"
+                    + "               and date(mu.created_date) between tsf.op_date and prm_stock_date and tsf.user_id = prm_user_id\n"
                     + "             group by mu.location_id, mu.med_id \n"
                     + ") A,\n"
                     + "            v_med_unit_smallest_rel B\n"
@@ -1566,7 +1567,7 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
         params.put("reg_no", Util1.getString(txtRegNo.getText(), "-"));
         params.put("prm_location_group", getLocationGroup());
         params.put("prm_cus_group", getCusGroup());
-        
+
         String toLocationName = "All";
         int toLocationId = 0;
         if (cboToLocation.getSelectedItem() instanceof Location) {
@@ -3071,6 +3072,9 @@ public class Report extends javax.swing.JPanel implements SelectionObserver, Key
                     if (prvMedId.equals("-")) {
                         prvMedId = medId;
                         med = (Medicine) dao.find(Medicine.class, medId);
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
                     }
 
                     String sKey = locationId + "-" + medId;

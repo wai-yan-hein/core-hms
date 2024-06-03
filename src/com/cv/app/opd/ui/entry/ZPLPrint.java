@@ -445,7 +445,9 @@ public class ZPLPrint extends javax.swing.JPanel implements SelectionObserver, F
                         return;
                     }
                    
-                    List<RelationGroup> listRel = med.getRelationGroupId();
+                    //List<RelationGroup> listRel = med.getRelationGroupId();
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
                     med.setRelationGroupId(listRel);
                     List<Stock> listStock = null;
               

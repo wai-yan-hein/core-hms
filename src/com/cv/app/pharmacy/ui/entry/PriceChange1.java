@@ -359,9 +359,9 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             switch (strSource) {
                 case "MedicineList":
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    if (selectedMed.getRelationGroupId().size() > 0) {
-                        selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                    }
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                            + selectedMed.getMedId() + "' order by o.relUniqueId");
+                    selectedMed.setRelationGroupId(listRel);
                     medUp.add(selectedMed);
                     int selectRow = tblMedicine.getSelectedRow();
                     medTableModel.setMed(selectedMed, selectRow);
@@ -651,9 +651,14 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                 //dao.open();
                 for (PriceChangeMedHis1 pcmHis : listDetail) {
                     log.info("Med Id : " + pcmHis.getMed().getMedId() + " remark : " + pcmHis.getRemark());
+                    if(pcmHis.getMed().getMedId().equals("03190002")){
+                        log.info("medId:");
+                    }
                     if (pcmHis.getListUnit() != null) {
                         Medicine med = (Medicine) dao.find(Medicine.class, pcmHis.getMed().getMedId());
-
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
                         List<RelationGroup> listRg = med.getRelationGroupId();
                         List<PriceChangeUnitHis1> listPcUh = pcmHis.getListUnit();
                         int index = 0;
@@ -682,6 +687,10 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                             if (pcUh.getePriceNew() != null) {
                                 listRg.get(index).setStdCost(pcUh.getePriceNew());
                             }
+
+                            RelationGroup rg = listRg.get(index);
+                            dao.save(rg);
+
                             index++;
                         }
 
@@ -1070,9 +1079,6 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
             String[] medIdList = selectedMedId.split(",");
             for (String medId : medIdList) {
                 Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId.replace("'", ""));
-                if (selectedMed.getRelationGroupId().size() > 0) {
-                    selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                }
                 medUp.add(selectedMed);
                 int selectRow = medTableModel.getLastIndex();
                 medTableModel.setMed(selectedMed, selectRow);
@@ -1207,7 +1213,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     }
                 }
             } catch (Exception ex) {
-                log.error("fillByPercent : location : " + ex.toString());
+                log.error("search : location : " + ex.toString());
             } finally {
                 dao.close();
             }
@@ -1239,7 +1245,7 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
                     rs1.close();
                 }
             } catch (Exception ex) {
-                log.error("fillByPercent : " + ex.toString());
+                log.error("search : " + ex.toString());
             } finally {
                 //selectIds = "";
                 dao.close();
@@ -1262,32 +1268,24 @@ public class PriceChange1 extends javax.swing.JPanel implements SelectionObserve
 
         if (filter != null) {
             strSql = strSql + " where " + filter;
-
-            String selectedMedId = null;
             try {
                 ResultSet rs = dao.execSQL(strSql);
                 while (rs.next()) {
-                    selectedMedId = rs.getString("med_id");
-                    Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (selectedMed.getRelationGroupId() == null) {
-                        log.error("Error Med : " + selectedMedId);
-                    } else {
-                        if (!selectedMed.getRelationGroupId().isEmpty()) {
-                            selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                        }
-                        medUp.add(selectedMed);
-                        int selectRow = medTableModel.getLastIndex();
-                        medTableModel.setMed(selectedMed, selectRow);
-                        //unitTableModel.setCurrMed(selectedMed);
-                        /*if (selectedMedId == null) {
-                        selectedMedId = "'" + rs.getString("med_id") + "'";
-                    } else {
-                        selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
+                    String medId = rs.getString("med_id");
+                    log.info("medId: " + medId);
+                    /*if(medId.equals("03190002")){
+                        
                     }*/
-                    }
+                    Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId);
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                            + selectedMed.getMedId() + "' order by o.relUniqueId");
+                    selectedMed.setRelationGroupId(listRel);
+                    medUp.add(selectedMed);
+                    int selectRow = medTableModel.getLastIndex();
+                    medTableModel.setMed(selectedMed, selectRow);
                 }
             } catch (Exception ex) {
-                log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                log.error("search : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
             } finally {
                 dao.closeStatment();
             }

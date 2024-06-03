@@ -19,6 +19,7 @@ import com.cv.app.pharmacy.database.entity.PurDetailHis;
 import com.cv.app.pharmacy.database.entity.PurHis;
 import com.cv.app.pharmacy.database.entity.PurchaseExpense;
 import com.cv.app.pharmacy.database.entity.PurchaseOutstand;
+import com.cv.app.pharmacy.database.entity.RelationGroup;
 import com.cv.app.pharmacy.database.entity.Supplier;
 import com.cv.app.pharmacy.database.entity.Trader;
 import com.cv.app.pharmacy.database.entity.Trader1;
@@ -517,7 +518,9 @@ public class Purchase extends javax.swing.JPanel implements SelectionObserver, F
 
                 case "MedicineList":
                     Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
+                    med.setRelationGroupId(listRel);
                     medUp.add(med);
 
                     //Medicine med1 = new Medicine();

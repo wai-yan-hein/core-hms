@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptCodeListPrice" language="groovy" pageWidth="725" pageHeight="842" columnWidth="685" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cca4f321-290c-484e-adbc-e7c4432c94f5">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
 	<parameter name="compName" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
@@ -26,8 +29,7 @@ from (select distinct med.med_id, med.med_name,med.med_type_id,med.med_rel_str,m
        where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id
          and (med.pur_unit = rg.item_unit or med.pur_unit is null)) med
 left join item_brand ib on med.brand_id =ib.brand_id
-join med_rel mr on med.med_id = mr.med_id
-join relation_group rg on mr.rel_group_id = rg.rel_group_id
+join relation_group rg on med.med_id = rg.med_id
 join item_type itp on med.med_type_id = itp.item_type_code
 join v_med_rel_smallest_unit vmrs on rg.rel_group_id = vmrs.rel_group_id and med.med_id = vmrs.med_id
 join (select distinct med_id from tmp_stock_filter where user_id = $P{user_id}) filt on med.med_id = filt.med_id
@@ -243,42 +245,42 @@ order by med.active,med.med_type_id,med.med_id,rg.rel_group_id,ib.brand_name]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{item_unit}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="262" y="1" width="152" height="15" uuid="a0ce492d-2de0-4d06-9f00-7d25725747a7"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{brand_name}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
 				<reportElement x="504" y="1" width="50" height="15" uuid="1a1ffdfa-b02f-465f-b3ab-1d4cd4765c65"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{pur_price}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="414" y="1" width="65" height="15" uuid="2b38beaf-0afd-47f4-9414-97857a0e12f1"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{med_rel_str}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
 				<reportElement x="604" y="1" width="50" height="15" uuid="d8997a0c-e05e-4612-8aaa-bde5accd9f0f"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{sale_price}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
 				<reportElement x="554" y="1" width="50" height="15" uuid="c9b5ac65-1e4e-460f-ad6b-1a9726bb63b4"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{smallest_pur_cost}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
+			<textField textAdjust="StretchHeight" pattern="#,##0;(#,##0)" isBlankWhenNull="true">
 				<reportElement x="654" y="1" width="30" height="15" uuid="9456c2e4-161c-44e7-8b5d-a65e99918e27"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Zawgyi-One" size="8"/>

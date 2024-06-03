@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="rptCodeListPrice" language="groovy" pageWidth="725" pageHeight="842" columnWidth="685" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cca4f321-290c-484e-adbc-e7c4432c94f5">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -17,15 +18,16 @@ ifnull(rg.sale_pric_b,' ') sale_pric_b,
 ifnull(rg.sale_pric_c,' ') sale_pric_c,
 ifnull(rg.sale_pric_d,' ') sale_pric_d,
 ifnull(ib.brand_name,'-') brand_name
-from medicine med left join item_brand ib on med.brand_id =ib.brand_id, med_rel mr, relation_group rg, item_type itp,v_med_rel_smallest_unit vmrs,
-(select distinct med_id from tmp_stock_filter where user_id = $P!{user_id}) filt
-where med.med_id = mr.med_id and mr.rel_group_id = rg.rel_group_id
-and med.med_id = filt.med_id and med.med_type_id = itp.item_type_code
-and rg.rel_group_id = vmrs.rel_group_id and med.med_id = vmrs.med_id
+from medicine med 
+left join item_brand ib on med.brand_id =ib.brand_id
+join relation_group rg on med.med_id = rg.med_id
+left join item_type itp on med.med_type_id = itp.item_type_code
+join v_med_rel_smallest_unit vmrs on rg.rel_group_id = vmrs.rel_group_id and med.med_id = vmrs.med_id
+join (select distinct med_id from tmp_stock_filter where user_id = $P!{user_id}) filt on med.med_id = filt.med_id
 group by med.med_id, med.med_name, rg.item_unit,rg.sale_price,rg.sale_pric_a,rg.sale_pric_b
 ,rg.sale_pric_c,rg.sale_pric_d, itp.item_type_name, med.med_type_id,
 ib.brand_name,med.med_rel_str,med.active
-order by med.active,med.med_type_id,med.med_id,rg.rel_group_id,ib.brand_name;]]>
+order by med.active,med.med_type_id,med.med_id,rg.rel_group_id,ib.brand_name]]>
 	</queryString>
 	<field name="med_id" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
@@ -216,14 +218,14 @@ order by med.active,med.med_type_id,med.med_id,rg.rel_group_id,ib.brand_name;]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{item_unit}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="259" y="2" width="148" height="20" uuid="a0ce492d-2de0-4d06-9f00-7d25725747a7"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{brand_name}]]></textFieldExpression>
 			</textField>
-			<textField isStretchWithOverflow="true">
+			<textField textAdjust="StretchHeight">
 				<reportElement x="579" y="2" width="102" height="20" uuid="8c02e497-f9f4-4b3e-9be2-1bfc420565b1"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Zawgyi-One"/>

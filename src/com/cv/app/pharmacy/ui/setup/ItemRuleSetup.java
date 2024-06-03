@@ -227,54 +227,48 @@ public class ItemRuleSetup extends javax.swing.JPanel implements SelectionObserv
         switch (source.toString()) {
             case "Medicine":
                 try {
-                    dao.open();
-                    currMedicine = (Medicine) dao.find(Medicine.class,
-                            ((VMedicine1) selectObj).getMedId());
-                    lblMedName.setText(currMedicine.getMedName());
-                    lblMedID.setText(currMedicine.getMedId());
-                    itemRuleTableModel.setMedID(currMedicine.getMedId());
+                dao.open();
+                currMedicine = (Medicine) dao.find(Medicine.class,
+                        ((VMedicine1) selectObj).getMedId());
+                lblMedName.setText(currMedicine.getMedName());
+                lblMedID.setText(currMedicine.getMedId());
+                itemRuleTableModel.setMedID(currMedicine.getMedId());
 
-                    String str = "select o from ItemRule o where o.med_id='" + currMedicine.getMedId() + "'";
-                    List<ItemRule> listiItemRules = dao.findAllHSQL(str);
-                    if (!listiItemRules.isEmpty()) {
-                        itemRuleTableModel.setListDetail(listiItemRules);
-                    } else {
-                        listiItemRules.removeAll(listItemRule);
-                        itemRuleTableModel.setListDetail(listiItemRules);
+                String str = "select o from ItemRule o where o.med_id='" + currMedicine.getMedId() + "'";
+                List<ItemRule> listiItemRules = dao.findAllHSQL(str);
+                if (!listiItemRules.isEmpty()) {
+                    itemRuleTableModel.setListDetail(listiItemRules);
+                } else {
+                    listiItemRules.removeAll(listItemRule);
+                    itemRuleTableModel.setListDetail(listiItemRules);
 
-                        List<ItemRule> listRG = itemRuleTableModel.getItemRule();
+                    List<ItemRule> listRG = itemRuleTableModel.getItemRule();
 
-                        for (ItemRule rg : listRG) {
-                            rg.setMed_id(currMedicine.getMedId());
-                        }
+                    for (ItemRule rg : listRG) {
+                        rg.setMed_id(currMedicine.getMedId());
                     }
-
-                    Medicine med;
-                    med = (Medicine) dao.find(Medicine.class, ((VMedicine1) selectObj).getMedId());
-                    List<RelationGroup> listRel = med.getRelationGroupId();
-                    med.setRelationGroupId(listRel);
-
-                    if (listRel.size() > 0) {
-                        medUp.add(med);
-                    }
-
-                } catch (Exception ex) {
-                    log.error("select Medicine : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
-                } finally {
-                    dao.close();
                 }
-                break;
+
+                Medicine med = (Medicine) dao.find(Medicine.class, ((VMedicine1) selectObj).getMedId());
+                medUp.add(med);
+
+            } catch (Exception ex) {
+                log.error("select Medicine : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex);
+            } finally {
+                dao.close();
+            }
+            break;
             case "ItemRule":
                 try {
-                    if (((ItemRule) selectObj).getRuleId() != null) {
-                        dao.open();
-                        currItemRule = (ItemRule) dao.find(ItemRule.class,
-                                ((ItemRule) selectObj).getRuleId());
-                        dao.close();
-                    }
-                } catch (Exception ex) {
-                    log.error("select ItemRule : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+                if (((ItemRule) selectObj).getRuleId() != null) {
+                    dao.open();
+                    currItemRule = (ItemRule) dao.find(ItemRule.class,
+                            ((ItemRule) selectObj).getRuleId());
+                    dao.close();
                 }
+            } catch (Exception ex) {
+                log.error("select ItemRule : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
+            }
         }
     }
 

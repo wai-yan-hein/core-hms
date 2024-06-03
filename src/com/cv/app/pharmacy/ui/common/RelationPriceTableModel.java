@@ -391,9 +391,9 @@ public class RelationPriceTableModel extends AbstractTableModel {
         if (record != null) {
             if (NumberUtil.NZeroL(record.getRelGId()) > 0) {
                 if (deletedList == null) {
-                    deletedList = record.getRelGId().toString();
+                    deletedList = record.getRelGId();
                 } else {
-                    deletedList = deletedList + "," + record.getRelGId().toString();
+                    deletedList = deletedList + "," + record.getRelGId();
                 }
             }
 
@@ -428,7 +428,7 @@ public class RelationPriceTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public List<RelationGroup> getDetail() {
+    public List<RelationGroup> getDetail(String medId) {
         if (listRelationGroup != null) {
             RelationGroup relationGroup = listRelationGroup.get(listRelationGroup.size() - 1);
             if (relationGroup.getUnitId() == null) {
@@ -436,6 +436,14 @@ public class RelationPriceTableModel extends AbstractTableModel {
             }
         }
 
+        for(RelationGroup rg : listRelationGroup){
+            if(rg.getMedId() == null){
+                rg.setMedId(medId);
+            }
+            if(rg.getRelGId() == null || rg.getRelGId().isEmpty()){
+                rg.setRelGId(medId + "-" + rg.getRelUniqueId());
+            }
+        }
         return listRelationGroup;
     }
 

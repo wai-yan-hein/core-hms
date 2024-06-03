@@ -751,7 +751,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 try {
                 txtAdmissionNo.setText(null);
                 txtBill.setText(null);
-                butOTID.setEnabled(true);
+                butOTID.setEnabled(Util1.hashPrivilege("SaleBillId"));
                 butAdmit.setEnabled(true);
                 Patient ptt = (Patient) selectObj;
                 currSaleVou.setPatientId(ptt);
@@ -796,7 +796,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         butOTID.setEnabled(false);
                         txtBill.setText(ptt.getOtId());
                     } else {
-                        butOTID.setEnabled(true);
+                        butOTID.setEnabled(Util1.hashPrivilege("SaleBillId"));
                         txtBill.setText(null);
                     }
 
@@ -914,7 +914,9 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         return;
                     }
 
-                    List<RelationGroup> listRel = med.getRelationGroupId();
+                    //List<RelationGroup> listRel = med.getRelationGroupId();
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                            + med.getMedId() + "' order by o.relUniqueId");
                     med.setRelationGroupId(listRel);
                     List<Stock> listStock = null;
 
@@ -923,7 +925,14 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         if (Util1.getPropValue("system.app.sale.stockBalance").equals("Y")) {
                             stockList.add(med, (Location) cboLocation.getSelectedItem());
                         } else if (Util1.getPropValue("system.app.sale.stockBalance").equals("H")) {
-                            //stockList.add(med, null);
+                            stockList.add(med, null);
+                            //stockList.add(med, (Location) cboLocation.getSelectedItem());
+                            listStock = stockList.getStockList(med.getMedId());
+                            if (listStock == null) {
+                                listStock = new ArrayList();
+                            }
+                            stockTableModel.setListStock(listStock);
+                        } else if (Util1.getPropValue("system.app.sale.stockBalance").equals("L")) {
                             stockList.add(med, (Location) cboLocation.getSelectedItem());
                             listStock = stockList.getStockList(med.getMedId());
                             if (listStock == null) {
@@ -1146,6 +1155,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                         + vouNo + "' order by o.uniqueId"
                 );
                 for (SaleDetailHis sdh : listDetail) {
+
                     medUp.add(sdh.getMedId());
                 }
                 saleTableModel.setListDetail(listDetail);
@@ -1178,7 +1188,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                 txtBill.setText(currSaleVou.getOtId());
                 //cboPayment.setSelectedItem(ptCredit);
                 if (txtBill.getText() == null) {
-                    butOTID.setEnabled(true);
+                    butOTID.setEnabled(Util1.hashPrivilege("SaleBillId"));
                 } else if (!txtBill.getText().isEmpty()) {
                     butOTID.setEnabled(false);
                 } else {
@@ -1491,7 +1501,42 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     if (medicine != null) {
                         selected("MedicineList", medicine);
                     } else {
-                        String strSql = "select distinct o from Medicine o join o.relationGroupId r "
+                        ResultSet rs1 = dao.execSQL("select distinct med_id from relation_group where unit_barcode = '" + medCode + "'");
+                        String medId = "-";
+                        if (rs1 != null) {
+                            if (rs1.next()) {
+                                medId = rs1.getString("med_id");
+                                rs1.close();
+                            }
+                        }
+
+                        if (medId.equals("-")) {
+                            ResultSet rs2 = dao.execSQL("select distinct med_id from relation_group where concat(med_id,rel_unique_id) = '" + medCode + "'");
+                            if (rs2 != null) {
+                                if (rs2.next()) {
+                                    medId = rs2.getString("med_id");
+                                    rs2.close();
+                                }
+                            }
+
+                        }
+
+                        Medicine med = (Medicine) dao.find(Medicine.class, medId);
+                        List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                                + med.getMedId() + "' order by o.relUniqueId");
+                        med.setRelationGroupId(listRel);
+                        for (int i = 0; i < listRel.size(); i++) {
+                            RelationGroup rg = listRel.get(i);
+                            if (rg.getUnitBarcode() != null) {
+                                if (rg.getUnitBarcode().equals(medCode)) {
+                                    saleTableModel.setStrBarcodeUnit(rg.getUnitId().getItemUnitCode());
+                                    i = listRel.size();
+                                }
+                            }
+                        }
+                        selected("MedicineList", med);
+
+                        /*String strSql = "select distinct o from Medicine o join o.relationGroupId r "
                                 + "where r.unitBarcode = '" + medCode + "'";
                         List<Medicine> listMed = dao.findAllHSQL(strSql);
                         if (listMed != null) {
@@ -1541,21 +1586,12 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                                         if (purimeino != null) {
                                             selected("PurIMEINoList", purimeino);
                                         } else {
-                                            /*JOptionPane.showMessageDialog(Util1.getParent(), "Invalid Item code.",
-                                                    "Invalid.", JOptionPane.ERROR_MESSAGE);*/
- /*try {
-                                                if (tblSale.getCellEditor() != null) {
-                                                    tblSale.getCellEditor().stopCellEditing();
-                                                }
-                                            } catch (Exception ex) {
-
-                                            }*/
                                         }
 
                                     }
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             } else {
@@ -2048,9 +2084,6 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
                     if (sdh.getMedId() != null) {
                         if (sdh.getMedId().getMedId() != null) {
                             Medicine med = (Medicine) dao.find(Medicine.class, sdh.getMedId().getMedId());
-                            if (med.getRelationGroupId().size() > 0) {
-                                med.setRelationGroupId(med.getRelationGroupId());
-                            }
                             medUp.add(med);
                         }
                     }
@@ -4076,7 +4109,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
             txtRemark1.setEnabled(true);
             txtDrCode.setEnabled(true);
             txtDrName.setEnabled(true);
-            butOTID.setEnabled(true);
+            butOTID.setEnabled(Util1.hashPrivilege("SaleBillId"));
         } else {
             txtCusId.setEditable(false);
             cboCurrency.setEnabled(false);
@@ -4108,6 +4141,7 @@ public class Sale extends javax.swing.JPanel implements SelectionObserver, FormA
         lblDifference.setVisible(Util1.hashPrivilege("SaleCustomerInfoShow"));
         txtDifference.setVisible(Util1.hashPrivilege("SaleCustomerInfoShow"));
         butOutstanding.setVisible(Util1.hashPrivilege("SaleExpenseEntry"));
+        butOTID.setEnabled(Util1.hashPrivilege("SaleBillId"));
     }
 
     private void addSelectionListenerTblTransaction() {

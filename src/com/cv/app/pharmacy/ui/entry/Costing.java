@@ -320,10 +320,10 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "               and date(vd.dmg_date) <= prm_stock_date and vd.deleted = false\n"
                 + "             group by vd.med_id\n"
                 + "             union all \n"
-                + "            select mu.med_id, sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n" 
-                + "              from med_usaged mu, tmp_stock_filter tsf \n" 
-                + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n" 
-                + "               and date(mu.created_date) between tsf.op_date and prm_stock_date \n" 
+                + "            select mu.med_id, sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n"
+                + "              from med_usaged mu, tmp_stock_filter tsf \n"
+                + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n"
+                + "               and date(mu.created_date) between tsf.op_date and prm_stock_date \n"
                 + "               and tsf.user_id = prm_user_id \n"
                 + "             group by mu.med_id\n"
                 + "             union all\n"
@@ -361,11 +361,11 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 coa.setAccountId(rs.getString("unit_smallest"));
                 coa.setDesp(rs.getString("unit_str"));
                 String medId = rs.getString("med_id");
-                
+
                 hmMedRel.put(medId, coa);
             }
             rs.close();
-            
+
             List<StockCosting> listSC = dao.findAllHSQL("select o from StockCosting o where o.key.userId = '" + userId + "'");
             for (StockCosting sc : listSC) {
                 String medId = sc.getKey().getMedicine().getMedId();
@@ -388,7 +388,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, pur_unit_cost cost_price, \n"
                 + "                 (pur_unit_cost/vm.smallest_qty) smallest_cost, vpur.pur_unit item_unit\n"
                 + "            from v_purchase vpur, (select med_id, min(op_date) op_date\n"
-                + "								     from tmp_stock_filter where user_id = prm_user_id\n"
+                + "					from tmp_stock_filter where user_id = prm_user_id\n"
                 + "                                    group by med_id) tsf,\n"
                 + "				 v_medicine vm\n"
                 + "           where vpur.med_id = tsf.med_id and deleted = false and date(pur_date) >= op_date\n"
@@ -409,11 +409,13 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "   order by item_id, cost_price.tran_date desc, cost_price desc";
 
         if (method.equals("AVG (OP&PUR)")) {
-            strSql = "select tsc.med_id item_id, sum(bal_qty) ttl_stock, prm_cost_date as tran_date, '-' as tran_option, \n"
-                    + "         sum(cost_price.ttl_qty) as ttl_qty, sum(if(cost_price.ttl_qty=0,0,(cost_price.ttl_cost/cost_price.ttl_qty))) as smallest_cost, \n"
-                    + "         sum(cost_price.ttl_cost) as cost_price, '-' as item_unit\n"
+            strSql = "select tsc.med_id item_id, bal_qty as ttl_stock, prm_cost_date as tran_date, '-' as tran_option, \n"
+                    + "         cost_price.ttl_qty, if(cost_price.ttl_qty=0,0,(cost_price.ttl_cost/cost_price.ttl_qty)) as smallest_cost, \n"
+                    + "         cost_price.ttl_cost as cost_price, '-' as item_unit\n"
                     + "    from tmp_stock_costing tsc, \n"
-                    + "         (select 'Purchase' tran_option, vpur.med_id item_id, \n"
+                    + "         (select a.item_id, sum(a.ttl_qty) as ttl_qty, sum(a.ttl_cost) as ttl_cost"
+                    + "            from ("
+                    + "          select 'Purchase' tran_option, vpur.med_id item_id, \n"
                     + "                 sum(pur_smallest_qty+ifnull(pur_foc_smallest_qty,0)) ttl_qty, sum(pur_qty*pur_unit_cost) ttl_cost\n"
                     + "            from v_purchase vpur, (select med_id, min(op_date) op_date\n"
                     + "								     from tmp_stock_filter where user_id = prm_user_id\n"
@@ -430,15 +432,15 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                     + "		   where vso.med_id = tsf.med_id and vso.location = tsf.location_id\n"
                     + "             and vso.med_id = vm.med_id and vso.item_unit = vm.item_unit\n"
                     + "             and vso.op_date = tsf.op_date and tsf.user_id = prm_user_id\n"
-                    + "           group by vso.med_id) cost_price\n"
+                    + "           group by vso.med_id) a group by a.item_id) cost_price\n"
                     + "   where tsc.med_id = cost_price.item_id and tsc.user_id = prm_user_id and tsc.tran_option = 'Opening'\n"
-                    + "   group by tsc.med_id\n"
                     + "   order by item_id";
         }
 
         strSql = strSql.replace("prm_user_id", "'" + userId + "'")
                 .replace("prm_cost_date", "'" + costDate + "'")
                 .replace("prm_cost_for", "'" + costFor + "'");
+        //log.info("strSql : " + strSql);
         try {
             dao.execSql(strDelete);
             ResultSet rs = dao.execSQL(strSql);
@@ -464,8 +466,8 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
 
                 while (rs.next()) {
                     itemId = rs.getString("item_id");
-                    if (itemId.equals("101094")) {
-                        log.info("Error Tran : " + itemId);
+                    if (itemId.equals("986004")) {
+                        log.info("insertCostDetailPurOP : medId : " + itemId);
                     }
                     totalStock = rs.getDouble("ttl_stock");
                     tranDate = DateUtil.toDateStrMYSQL(DateUtil.toDateStr(rs.getDate("tran_date")));
@@ -529,14 +531,22 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                             .replace("prm_cost_for", "'" + costFor + "'");
                     dao.execSql(tmpSql2);
                 } else if (method.equals("AVG (OP&PUR)")) {
-                    String tmpSql3 = "update tmp_costing_detail tcd, (\n"
+                    /*String tmpSql3 = "update tmp_costing_detail tcd, (\n"
                             + "	select user_id, item_id, sum(ttl_qty) ttl_qty, sum(ttl_qty*smallest_cost) ttl_amt, \n"
                             + "		(sum(ttl_qty*smallest_cost)/sum(ttl_qty)) as avg_cost\n"
                             + "	  from tmp_costing_detail\n"
                             + "	  where user_id = prm_user_id and cost_for = prm_cost_for\n"
                             + "	  group by user_id,item_id) avgc\n"
                             + "	set tcd.smallest_cost = avgc.avg_cost\n"
-                            + "	where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";
+                            + "	where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";*/
+                    String tmpSql3 = "update tmp_costing_detail tcd, \n"
+                            + "(select a.user_id, a.item_id, a.ttl_qty, a.ttl_amt, (a.ttl_amt/a.ttl_qty) as avg_cost\n"
+                            + "   from (select user_id, item_id, sum(ttl_qty) ttl_qty, sum(ttl_qty*smallest_cost) ttl_amt\n"
+                            + "           from tmp_costing_detail\n"
+                            + "          where user_id = prm_user_id and cost_for = prm_cost_for\n"
+                            + "          group by user_id,item_id) a where ifnull(a.ttl_qty,0) <> 0) avgc\n"
+                            + "set tcd.smallest_cost = avgc.avg_cost\n"
+                            + "where tcd.item_id = avgc.item_id and tcd.user_id = avgc.user_id and tcd.user_id = prm_user_id";
                     tmpSql3 = tmpSql3.replace("prm_user_id", "'" + userId + "'")
                             .replace("prm_cost_for", "'" + costFor + "'");
                     String tmpSql4 = "update tmp_stock_costing tsc, \n"
@@ -553,7 +563,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 }
             }
         } catch (Exception ex) {
-            log.error("insertCostDetail : " + ex.toString());
+            log.error("insertCostDetailPurOP : " + ex.toString());
         } finally {
             //dao.close();
         }
@@ -712,12 +722,13 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
                 + "               and (vd.location = prm_location or prm_location  = 0)\n"
                 + "             group by vd.location, vd.med_id, vd.expire_date\n"
                 + "             union all \n"
-                + "            select if(prm_tran_opt = 'Balance', 'Damage', prm_tran_opt) tran_option,\n"
+                + "            select if(prm_tran_opt = 'Balance', 'Lab Usage', prm_tran_opt) tran_option,\n"
                 + "                   mu.location_id, mu.med_id, null as exp_date, \n"
-                + "                   sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n" 
-                + "              from med_usaged mu, tmp_stock_filter tsf \n" 
-                + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n" 
-                + "               and date(mu.created_date) between tsf.op_date and prm_stock_date and tsf.user_id = prm_user_id\n" 
+                + "                   sum(ifnull(mu.qty_smallest,0)*-1) ttl_qty\n"
+                + "              from med_usaged mu, tmp_stock_filter tsf \n"
+                + "             where mu.location_id = tsf.location_id and mu.med_id = tsf.med_id\n"
+                + "               and date(mu.created_date) between tsf.op_date and prm_stock_date and tsf.user_id = prm_user_id\n"
+                + "               and (mu.location_id = prm_location or prm_location = 0) \n"
                 + "             group by mu.location_id, mu.med_id \n"
                 + "             union all\n"
                 + "	       select if(prm_tran_opt = 'Balance', 'Sale', prm_tran_opt) tran_option,\n"
@@ -1707,6 +1718,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
 
     private void cboLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLocationActionPerformed
         if (!isInit) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             calculateLocation();
             applyFilter();
             String despQty = "Location Qty";
@@ -1726,6 +1738,7 @@ public class Costing extends javax.swing.JPanel implements SelectionObserver, Ke
             th.repaint();
 
             lblLocationTotalCost.setText(despCost);
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }//GEN-LAST:event_cboLocationActionPerformed
 

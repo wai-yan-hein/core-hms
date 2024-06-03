@@ -666,11 +666,13 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
         jScrollPane2.setBorder(javax.swing.BorderFactory.createTitledBorder("Lab Test"));
 
         tblLabTest.setModel(lstModel);
+        tblLabTest.setRowHeight(23);
         jScrollPane2.setViewportView(tblLabTest);
 
         jScrollPane3.setBorder(javax.swing.BorderFactory.createTitledBorder("Lab Usage"));
 
         tblLabUsage.setModel(muModel);
+        tblLabUsage.setRowHeight(23);
         jScrollPane3.setViewportView(tblLabUsage);
 
         jFormattedTextField1.setBorder(javax.swing.BorderFactory.createTitledBorder("Date"));
@@ -692,6 +694,7 @@ public class LabSticker extends javax.swing.JPanel implements SelectionObserver 
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        jTable2.setRowHeight(23);
         jScrollPane4.setViewportView(jTable2);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);

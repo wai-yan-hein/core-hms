@@ -508,10 +508,12 @@ public class Transfer extends javax.swing.JPanel implements SelectionObserver, F
                 try {
                 dao.open();
                 Medicine med = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                List<RelationGroup> listRel = med.getRelationGroupId();
+                //List<RelationGroup> listRel = med.getRelationGroupId();
+                List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '" 
+                        + med.getMedId() + "' order by o.relUniqueId");
                 med.setRelationGroupId(listRel);
 
-                if (listRel.size() > 0) {
+                if (!listRel.isEmpty()) {
                     medUp.add(med);
                     stockList.add(med, (Location) cboFromLocation.getSelectedItem());
                     int selectRow = tblTransfer.getSelectedRow();

@@ -364,9 +364,9 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
             switch (strSource) {
                 case "MedicineList":
                     Medicine selectedMed = (Medicine) dao.find(Medicine.class, ((Medicine) selectObj).getMedId());
-                    if (!selectedMed.getRelationGroupId().isEmpty()) {
-                        selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                    }
+                    List<RelationGroup> listRel = dao.findAllHSQL("select o from RelationGroup o where o.medId = '"
+                            + selectedMed.getMedId() + "' order by o.relUniqueId");
+                    selectedMed.setRelationGroupId(listRel);
                     medUp.add(selectedMed);
                     int selectRow = tblMedicine.getSelectedRow();
                     medTableModel.setMed(selectedMed, selectRow);
@@ -1077,9 +1077,6 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
             String[] medIdList = selectedMedId.split(",");
             for (String medId : medIdList) {
                 Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId.replace("'", ""));
-                if (selectedMed.getRelationGroupId().size() > 0) {
-                    selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                }
                 medUp.add(selectedMed);
                 int selectRow = medTableModel.getLastIndex();
                 medTableModel.setMed(selectedMed, selectRow);
@@ -1278,29 +1275,14 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
         if (filter != null) {
             strSql = strSql + " where " + filter;
 
-            String selectedMedId = null;
-
             try {
                 ResultSet rs = dao.execSQL(strSql);
                 while (rs.next()) {
-                    selectedMedId = rs.getString("med_id");
-                    Medicine selectedMed = (Medicine) dao.find(Medicine.class, selectedMedId);
-                    if (selectedMed.getRelationGroupId() == null) {
-                        log.error("Error Med : " + selectedMedId);
-                    } else {
-                        if (!selectedMed.getRelationGroupId().isEmpty()) {
-                            selectedMed.setRelationGroupId(selectedMed.getRelationGroupId());
-                        }
-                        medUp.add(selectedMed);
-                        int selectRow = medTableModel.getLastIndex();
-                        medTableModel.setMed(selectedMed, selectRow);
-                        //unitTableModel.setCurrMed(selectedMed);
-                        /*if (selectedMedId == null) {
-                        selectedMedId = "'" + rs.getString("med_id") + "'";
-                    } else {
-                        selectedMedId = selectedMedId + ",'" + rs.getString("med_id") + "'";
-                    }*/
-                    }
+                    String medId = rs.getString("med_id");
+                    Medicine selectedMed = (Medicine) dao.find(Medicine.class, medId);
+                    medUp.add(selectedMed);
+                    int selectRow = medTableModel.getLastIndex();
+                    medTableModel.setMed(selectedMed, selectRow);
                 }
             } catch (SQLException ex) {
                 log.error("fillByPercent : " + ex.getStackTrace()[0].getLineNumber() + " - " + ex.toString());
@@ -1324,7 +1306,7 @@ public class PriceChange extends javax.swing.JPanel implements SelectionObserver
         boolean isFillWithCostPrice = chkFillWithCostPrice.isSelected();
         boolean isFillWithPurPrice = chkFillWithSalePrice.isSelected();
         listDetail = medTableModel.getListDetail();
-        
+
         for (PriceChangeMedHis1 pcmh : listDetail) {
             if (count < listDetail.size() - 1) {
                 List<PriceChangeUnitHis1> listUnit = pcmh.getListUnit();
