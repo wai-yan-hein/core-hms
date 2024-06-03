@@ -68,9 +68,7 @@
 		 group by ic.cat_name, oh.pay_type
 	) a
  join payment_type pt on a.pay_type = pt.payment_type_id
-order by pt.payment_type_name, a.tran_type,  a.tran_option
-
-]]>
+order by pt.payment_type_name, a.tran_type,  a.tran_option]]>
 	</queryString>
 	<field name="tran_type" class="java.lang.String"/>
 	<field name="tran_option" class="java.lang.String"/>
@@ -98,7 +96,7 @@ order by pt.payment_type_name, a.tran_type,  a.tran_option
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font fontName="Arial" size="8" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$V{ttl_bal}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$V{ttl_bal_p}]]></textFieldExpression>
 				</textField>
 				<textField isBlankWhenNull="true">
 					<reportElement x="274" y="1" width="160" height="15" uuid="ff8eb2ab-484a-4150-829b-400a7bc9d15e"/>
